@@ -128,12 +128,17 @@ export default function AiNewsSection() {
         aria-expanded={expanded}
         className="flex w-full flex-col items-stretch overflow-hidden border border-border bg-surface-elevated text-left transition-colors hover:border-accent sm:flex-row"
       >
-        <div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden sm:aspect-square sm:w-64">
+        <div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden bg-black sm:aspect-square sm:w-64">
+          {/* Nutzerkorrektur 19.09.2026: "dieses titel bild ... sieht man auf
+              handy kaum also nicht das gesamtes bild" — auf Handy wird das
+              Bild jetzt komplett angezeigt (object-contain), statt es per
+              object-cover anzuschneiden. Ab sm: wieder object-cover, da dort
+              genug Fläche vorhanden ist. */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src="/branding/consciousness.png"
             alt="Zwei Gestalten aus leuchtenden neuronalen Netzwerken berühren sich mit dem Finger"
-            className="h-full w-full object-cover"
+            className="h-full w-full object-contain sm:object-cover"
           />
         </div>
         <div className="flex flex-1 flex-col justify-center p-6 sm:p-10">
