@@ -126,12 +126,6 @@ export default function YoutubePlayer({
         playerVars: { autoplay: 1, playsinline: 1 },
         events: {
           onReady: () => {
-            // Nutzerwunsch 19.09.2026: "gute audioqualität aber vlt
-            // schlechte video fokus auf audio" — Video bewusst auf die
-            // niedrigste Stufe zwingen. Die Audiospur läuft bei YouTube mit
-            // fester Bitrate unabhängig von der Videoauflösung, spart also
-            // nur Datenvolumen/Akku, ohne den Ton zu verschlechtern.
-            playerRef.current?.setPlaybackQuality("tiny");
             setIsReady(true);
           },
           onStateChange: (e) => {
@@ -160,7 +154,6 @@ export default function YoutubePlayer({
   useEffect(() => {
     if (isReady && song && playerRef.current) {
       playerRef.current.loadVideoById(song.id);
-      playerRef.current.setPlaybackQuality("tiny");
       setCurrentTime(0);
       setDuration(0);
     }
