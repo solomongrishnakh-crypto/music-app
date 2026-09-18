@@ -108,9 +108,17 @@ export default function Home() {
             kein Abo.
           </p>
         </div>
-        <div className="pointer-events-none absolute bottom-24 left-6 text-xs text-muted sm:bottom-8 sm:left-8">
+        <div className="pointer-events-none absolute bottom-24 left-6 max-w-[220px] text-xs text-muted sm:bottom-8 sm:left-8">
           <p className="label-mono uppercase">// Copyright {new Date().getFullYear()}</p>
           <p>Centaurian.</p>
+          {/* Nutzerwunsch 19.09.2026: Hinweis, dass gemerkte Songs im
+              privaten Fenster nicht erhalten bleiben, da sie lokal im
+              Browser (localStorage) gespeichert werden. */}
+          <p className="mt-2 leading-relaxed">
+            Hinweis: Gemerkte Songs werden lokal in diesem Browser
+            gespeichert. Im privaten/Inkognito-Fenster gehen sie beim
+            Schließen verloren.
+          </p>
         </div>
       </div>
 
