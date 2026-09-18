@@ -47,7 +47,10 @@ export default function ThreeBackground() {
     // --- Partikelwolke -------------------------------------------------
     // Kompakte, symmetrische Kugelverteilung um das Zentrum (statt einer
     // zufälligen, gestreckten Box) — wirkt aufgeräumter und ausgewogener.
-    const PARTICLE_COUNT = 750;
+    // Nutzerwunsch 19.09.2026: "bisschen mehr partikel über linien . und
+    // bisschen schneller bewegen" — mehr Partikel (mehr Verkehr auf den
+    // Verbindungslinien) und höheres Lauftempo (railSpeed unten).
+    const PARTICLE_COUNT = 1000;
     const CLOUD_RADIUS = 13;
     const positions = new Float32Array(PARTICLE_COUNT * 3);
     const basePositions = new Float32Array(PARTICLE_COUNT * 3);
@@ -327,7 +330,7 @@ export default function ThreeBackground() {
           ? neighbors[Math.floor(Math.random() * neighbors.length)]
           : i;
       railT[i] = Math.random(); // zufälliger Startfortschritt, damit nicht alle synchron laufen
-      railSpeed[i] = 0.04 + Math.random() * 0.06;
+      railSpeed[i] = 0.07 + Math.random() * 0.09;
     }
 
     const lineGeometry = new THREE.BufferGeometry();
