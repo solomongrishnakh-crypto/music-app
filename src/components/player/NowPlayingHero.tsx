@@ -57,24 +57,26 @@ export default function NowPlayingHero({
       <p className="mt-1 truncate text-xs text-muted sm:text-sm">{song.artist}</p>
 
       {/* Vor/Zurück-Steuerung (Nutzerwunsch 18.09.2026: "ich brauche eine
-          option hier das man nächstes music abspielen kann und letzte"). */}
-      <div className="mt-6 flex items-center gap-4">
+          option hier das man nächstes music abspielen kann und letzte").
+          Nutzerkorrektur 19.09.2026: Buttons größer und mittig, damit die
+          Zeile mehr Gewicht bekommt. */}
+      <div className="mt-6 flex w-full items-center justify-center gap-6">
         <button
           onClick={onPrevious}
           disabled={!hasPrevious}
-          className="flex h-11 w-11 items-center justify-center border border-border text-foreground transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-border disabled:hover:text-foreground"
+          className="flex h-14 w-14 items-center justify-center border border-border text-foreground transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-border disabled:hover:text-foreground"
           aria-label="Letzter Song"
         >
-          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
             <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" />
           </svg>
         </button>
         <button
           onClick={onNext}
-          className="flex h-11 w-11 items-center justify-center border border-border text-foreground transition-colors hover:border-accent hover:text-accent"
+          className="flex h-14 w-14 items-center justify-center border border-border text-foreground transition-colors hover:border-accent hover:text-accent"
           aria-label="Nächster Song"
         >
-          <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+          <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
             <path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z" />
           </svg>
         </button>
