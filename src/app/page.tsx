@@ -111,14 +111,6 @@ export default function Home() {
         <div className="pointer-events-none absolute bottom-24 left-6 max-w-[220px] text-xs text-muted sm:bottom-8 sm:left-8">
           <p className="label-mono uppercase">// Copyright {new Date().getFullYear()}</p>
           <p>Centaurian.</p>
-          {/* Nutzerwunsch 19.09.2026: Hinweis, dass gemerkte Songs im
-              privaten Fenster nicht erhalten bleiben, da sie lokal im
-              Browser (localStorage) gespeichert werden. */}
-          <p className="mt-2 leading-relaxed">
-            Hinweis: Gemerkte Songs werden lokal in diesem Browser
-            gespeichert. Im privaten/Inkognito-Fenster gehen sie beim
-            Schließen verloren.
-          </p>
         </div>
       </div>
 
@@ -148,6 +140,16 @@ export default function Home() {
         <div className="mx-auto w-full max-w-2xl">
           <SearchBar onSearch={handleSearch} />
         </div>
+
+        {!showHero && (
+          <p className="mx-auto mt-3 max-w-2xl text-center text-[11px] leading-relaxed text-muted">
+            {/* Nutzerwunsch 19.09.2026: Hinweis muss auch auf dem Handy
+                sichtbar sein, nicht nur in der Desktop-Ecken-UI. */}
+            Hinweis: Gemerkte Songs werden lokal in diesem Browser
+            gespeichert — im privaten/Inkognito-Fenster gehen sie beim
+            Schließen verloren.
+          </p>
+        )}
 
         {showFavorites && (
           <div className="glass-card mx-auto mt-4 flex w-full max-w-2xl items-center justify-between gap-3 px-4 py-3">
