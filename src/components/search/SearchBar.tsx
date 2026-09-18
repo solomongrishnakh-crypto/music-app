@@ -18,7 +18,7 @@ export default function SearchBar({
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => onSearch(value), 200);
+    debounceRef.current = setTimeout(() => onSearch(value), 350);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { searchYoutubeMusic } from "@/lib/youtube/search";
+import { getClientIp, isRateLimited } from "@/lib/security/rateLimit";
 
 /**
  * GET /api/search?q=...
@@ -10,38 +11,27 @@ import { searchYoutubeMusic } from "@/lib/youtube/search";
  * Google-API direkt.
  */
 
-// Sehr einfaches In-Memory-Rate-Limiting pro IP, um das kostenlose
-// API-Kontingent vor Missbrauch zu schützen. Für Produktionsbetrieb mit
-// mehreren Server-Instanzen sollte das durch einen externen Store (z. B.
-// Redis) ersetzt werden.
 const RATE_LIMIT_WINDOW_MS = 60_000;
-const RATE_LIMIT_MAX_REQUESTS = 20;
-const requestLog = new Map<string, number[]>();
-
-function isRateLimited(ip: string): boolean {
-  const now = Date.now();
-  const timestamps = (requestLog.get(ip) ?? []).filter(
-    (t) => now - t < RATE_LIMIT_WINDOW_MS
-  );
-  timestamps.push(now);
-  requestLog.set(ip, timestamps);
-  return timestamps.length > RATE_LIMIT_MAX_REQUESTS;
-}
+const RATE_LIMIT_MAX_REQUESTS = 60;
+const MAX_QUERY_LENGTH = 100;
 
 export async function GET(req: NextRequest) {
-  const ip =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const ip = getClientIp(req);
 
-  if (isRateLimited(ip)) {
+  if (isRateLimited(`search:${ip}`, RATE_LIMIT_WINDOW_MS, RATE_LIMIT_MAX_REQUESTS)) {
     return NextResponse.json(
       { error: "Zu viele Anfragen, bitte kurz warten." },
       { status: 429 }
     );
   }
 
-  const query = req.nextUrl.searchParams.get("q")?.trim() ?? "";
+  let query = req.nextUrl.searchParams.get("q")?.trim() ?? "";
   if (!query) {
     return NextResponse.json({ songs: [] });
+  }
+  // Verhindert übergroße/missbräuchliche Suchanfragen an die YouTube-API.
+  if (query.length > MAX_QUERY_LENGTH) {
+    query = query.slice(0, MAX_QUERY_LENGTH);
   }
 
   const apiKey = process.env.YOUTUBE_API_KEY;

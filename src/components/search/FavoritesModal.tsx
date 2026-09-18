@@ -48,30 +48,32 @@ export default function FavoritesModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between gap-3 border-b border-border px-6 py-4 sm:px-10">
+          {/* Deutlich sichtbarer "← Zurück"-Button statt nur eines reinen
+              X-Icons (Nutzerkorrektur 18.09.2026: "fühle ein zeichen für
+              zurück"). */}
+          <button
+            onClick={onClose}
+            className="label-mono flex shrink-0 items-center gap-1.5 border border-border px-3 py-1.5 text-xs uppercase text-foreground transition-colors hover:border-accent hover:text-accent"
+            aria-label="Zurück"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            Zurück
+          </button>
           <p className="label-mono text-xs uppercase">
             // Gemerkte Musics <span className="ml-1">🔀</span>
           </p>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={onShufflePlay}
-              className="flex shrink-0 items-center gap-1.5 border border-border px-3 py-1.5 text-[11px] uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent"
-              aria-label="Zufällig abspielen"
-            >
-              <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M8 5v14l11-7z" />
-              </svg>
-              Zufällig
-            </button>
-            <button
-              onClick={onClose}
-              className="flex h-8 w-8 shrink-0 items-center justify-center border border-border text-muted transition-colors hover:border-accent hover:text-accent"
-              aria-label="Schließen"
-            >
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-              </svg>
-            </button>
-          </div>
+          <button
+            onClick={onShufflePlay}
+            className="flex shrink-0 items-center gap-1.5 border border-border px-3 py-1.5 text-[11px] uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent"
+            aria-label="Zufällig abspielen"
+          >
+            <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+            Zufällig
+          </button>
         </div>
 
         <div className="flex flex-col divide-y divide-border overflow-y-auto">
@@ -102,6 +104,7 @@ export default function FavoritesModal({
                     alt={`Titelbild für ${song.title}`}
                     className="relative h-9 w-9 shrink-0"
                     sizes="36px"
+                    coverUrl={song.coverUrl}
                   />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-xs font-medium uppercase text-foreground">

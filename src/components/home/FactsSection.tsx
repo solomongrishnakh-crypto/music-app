@@ -1,8 +1,10 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import Typewriter from "@/components/ui/Typewriter";
 import DetailModal from "@/components/ui/DetailModal";
+import SpaceNewsSection from "@/components/home/SpaceNewsSection";
 import { useInView } from "@/hooks/useInView";
 
 interface UniverseFact {
@@ -203,9 +205,39 @@ export default function FactsSection() {
         ))}
       </div>
 
+      {/* Space News direkt unter "Universum in Zahlen" (Nutzerwunsch
+          18.09.2026: "bring diese box mit space news unter universum in
+          zahlen"), statt weiter unten nach den Imperien. */}
+      <SpaceNewsSection />
+
       <div className="mb-10 mt-20 border-b border-border pb-4">
         <p className="label-mono text-xs uppercase">// Große Imperien der Geschichte</p>
       </div>
+
+      {/* Verweis auf die interaktive Karten-Seite /imperien, direkt unter
+          der Überschrift "Große Imperien der Geschichte" statt in einem
+          eigenen, separat beschrifteten Abschnitt (Nutzerkorrektur
+          18.09.2026: "mach diese zeile(ganze box) mit 'große imperien der
+          geschichte' in einem zeil unter 'die welt durch die
+          Jahrhunderte'" — ein Titel/eine Zeile statt zwei getrennter). */}
+      <Link
+        href="/imperien"
+        className="group mb-10 flex flex-col items-start justify-between gap-4 border border-border bg-surface-elevated p-6 transition-colors hover:border-accent sm:flex-row sm:items-center sm:p-10"
+      >
+        <div>
+          <p className="font-display text-lg font-bold text-accent sm:text-2xl">
+            Die Welt durch die Jahrhunderte
+          </p>
+          <p className="mt-3 max-w-xl text-xs leading-relaxed text-muted sm:text-sm">
+            Historische Weltkarte mit Jahres-Regler — von der Antike bis
+            heute, große Reiche wie Rom, die Mongolen oder das British
+            Empire farblich hervorgehoben.
+          </p>
+        </div>
+        <p className="label-mono inline-flex shrink-0 items-center gap-2 text-xs uppercase text-foreground transition-colors group-hover:text-accent">
+          Karte ansehen ↗
+        </p>
+      </Link>
 
       <div className="grid grid-cols-1 gap-px bg-border sm:grid-cols-2">
         {EMPIRE_FACTS.map((empire, i) => (

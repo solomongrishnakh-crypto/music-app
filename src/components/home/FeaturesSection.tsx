@@ -1,4 +1,4 @@
-import Image from "next/image";
+import UniverseTypewriter from "./UniverseTypewriter";
 
 const FEATURES = [
   {
@@ -45,26 +45,7 @@ export default function FeaturesSection() {
         ))}
       </div>
 
-      <div className="mt-16 grid grid-cols-1 gap-px bg-border sm:grid-cols-2">
-        <div className="relative aspect-video overflow-hidden bg-background sm:aspect-auto">
-          <Image
-            src="/branding/default-cover.jpg"
-            alt="Centaurian — visuelle Identität"
-            fill
-            sizes="(min-width: 640px) 50vw, 100vw"
-            className="object-cover opacity-90"
-          />
-        </div>
-        <div className="glass-card flex flex-col justify-center p-6 sm:p-10">
-          <p className="label-mono mb-3 text-xs uppercase">// Über das Projekt</p>
-          <p className="text-sm leading-relaxed text-muted sm:text-base">
-            Centaurian ist ein schlankes Frontend zum Entdecken und Anhören
-            von Musik — ohne Werbe-Tracking-Schnickschnack, ohne
-            aufgeblähtes Interface. Die Wiedergabe läuft ausschließlich über
-            offizielle, dokumentierte Schnittstellen.
-          </p>
-        </div>
-      </div>
+      <UniverseTypewriter />
     </div>
   );
 }

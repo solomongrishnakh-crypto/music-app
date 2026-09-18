@@ -84,13 +84,29 @@ interface YoutubePlayerProps {
   song: Song | null;
   onEnded?: () => void;
   onClose?: () => void;
+  onPlayingChange?: (isPlaying: boolean) => void;
+  /** Nächster/vorheriger Song — auch für die Media-Session-Steuerung
+   * (Sperrbildschirm/Benachrichtigung) genutzt. */
+  onNext?: () => void;
+  onPrevious?: () => void;
+  hasPrevious?: boolean;
 }
 
-export default function YoutubePlayer({ song, onEnded, onClose }: YoutubePlayerProps) {
+export default function YoutubePlayer({
+  song,
+  onEnded,
+  onClose,
+  onPlayingChange,
+  onNext,
+  onPrevious,
+  hasPrevious,
+}: YoutubePlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YTPlayerInstance | null>(null);
   const onEndedRef = useRef(onEnded);
   onEndedRef.current = onEnded;
+  const onPlayingChangeRef = useRef(onPlayingChange);
+  onPlayingChangeRef.current = onPlayingChange;
 
   const [isReady, setIsReady] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -111,7 +127,9 @@ export default function YoutubePlayer({ song, onEnded, onClose }: YoutubePlayerP
           onReady: () => setIsReady(true),
           onStateChange: (e) => {
             if (!window.YT) return;
-            setIsPlaying(e.data === window.YT.PlayerState.PLAYING);
+            const playing = e.data === window.YT.PlayerState.PLAYING;
+            setIsPlaying(playing);
+            onPlayingChangeRef.current?.(playing);
             if (e.data === window.YT.PlayerState.ENDED) {
               onEndedRef.current?.();
             }
@@ -165,6 +183,56 @@ export default function YoutubePlayer({ song, onEnded, onClose }: YoutubePlayerP
     onClose?.();
   }
 
+  // Media Session API: zeigt Titel/Künstler/Cover in der System-Medien-
+  // steuerung (Sperrbildschirm, Benachrichtigung, Kopfhörer-Tasten) und
+  // erlaubt Play/Pause/Weiter/Zurück von dort aus — auch wenn der Browser-
+  // Tab im Hintergrund ist oder das Handy gesperrt wurde (Nutzerwunsch
+  // 18.09.2026: "falls jemand aus browser(handy) raus geht sollte man auch
+  // nächste spielen können. also music soll auch im hintergrund spielen
+  // können").
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+    if (!song) {
+      navigator.mediaSession.metadata = null;
+      return;
+    }
+    if (typeof MediaMetadata !== "undefined") {
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: song.title,
+        artist: song.artist,
+        artwork: song.coverUrl
+          ? [
+              { src: song.coverUrl, sizes: "96x96", type: "image/jpeg" },
+              { src: song.coverUrl, sizes: "256x256", type: "image/jpeg" },
+              { src: song.coverUrl, sizes: "512x512", type: "image/jpeg" },
+            ]
+          : [],
+      });
+    }
+  }, [song]);
+
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+    navigator.mediaSession.setActionHandler("play", () => playerRef.current?.playVideo());
+    navigator.mediaSession.setActionHandler("pause", () => playerRef.current?.pauseVideo());
+    navigator.mediaSession.setActionHandler(
+      "previoustrack",
+      onPrevious ? () => onPrevious() : null
+    );
+    navigator.mediaSession.setActionHandler("nexttrack", onNext ? () => onNext() : null);
+    return () => {
+      navigator.mediaSession.setActionHandler("play", null);
+      navigator.mediaSession.setActionHandler("pause", null);
+      navigator.mediaSession.setActionHandler("previoustrack", null);
+      navigator.mediaSession.setActionHandler("nexttrack", null);
+    };
+  }, [onNext, onPrevious]);
+
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+    navigator.mediaSession.playbackState = isPlaying ? "playing" : "paused";
+  }, [isPlaying]);
+
   function handleSeekChange(e: React.ChangeEvent<HTMLInputElement>) {
     setIsSeeking(true);
     setCurrentTime(Number(e.target.value));
@@ -199,6 +267,20 @@ export default function YoutubePlayer({ song, onEnded, onClose }: YoutubePlayerP
             <p className="truncate text-[11px] text-muted">{song?.artist ?? ""}</p>
           </div>
 
+          {/* Vor/Zurück auch in der überall sichtbaren Mini-Leiste, nicht
+              nur im großen Now-Playing-Bereich — funktioniert dadurch auch
+              auf anderen Seiten (z.B. /imperien). */}
+          <button
+            onClick={onPrevious}
+            disabled={!song || !hasPrevious}
+            className="flex h-8 w-8 shrink-0 items-center justify-center text-white transition-colors hover:text-accent disabled:cursor-not-allowed disabled:opacity-30"
+            aria-label="Letzter Song"
+          >
+            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" />
+            </svg>
+          </button>
+
           <button
             onClick={togglePlayback}
             disabled={!song}
@@ -214,6 +296,17 @@ export default function YoutubePlayer({ song, onEnded, onClose }: YoutubePlayerP
                 <path d="M8 5v14l11-7z" />
               </svg>
             )}
+          </button>
+
+          <button
+            onClick={onNext}
+            disabled={!song}
+            className="flex h-8 w-8 shrink-0 items-center justify-center text-white transition-colors hover:text-accent disabled:cursor-not-allowed disabled:opacity-30"
+            aria-label="Nächster Song"
+          >
+            <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+              <path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z" />
+            </svg>
           </button>
 
           <button

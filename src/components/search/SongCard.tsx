@@ -29,6 +29,7 @@ export default function SongCard({
           alt={`Titelbild für ${song.title}`}
           className="absolute inset-0 transition-transform duration-500 group-hover:scale-110"
           sizes="(min-width: 1024px) 220px, (min-width: 640px) 33vw, 50vw"
+          coverUrl={song.coverUrl}
         />
         <button
           onClick={() => onPlay(song)}

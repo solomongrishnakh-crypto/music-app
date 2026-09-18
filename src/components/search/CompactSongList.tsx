@@ -54,7 +54,7 @@ export default function CompactSongList({
                   alt={`Titelbild für ${song.title}`}
                   className="relative h-9 w-9 shrink-0"
                   sizes="36px"
-                  withParticles={false}
+                  coverUrl={song.coverUrl}
                 />
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-xs font-medium uppercase text-foreground">

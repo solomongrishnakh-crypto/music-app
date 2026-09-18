@@ -6,43 +6,40 @@ import SearchBar from "@/components/search/SearchBar";
 import SearchResults from "@/components/search/SearchResults";
 import CompactSongList from "@/components/search/CompactSongList";
 import FavoritesModal from "@/components/search/FavoritesModal";
-import YoutubePlayer from "@/components/player/YoutubePlayer";
 import NowPlayingHero from "@/components/player/NowPlayingHero";
 import FeaturesSection from "@/components/home/FeaturesSection";
 import FactsSection from "@/components/home/FactsSection";
-import SpaceNewsSection from "@/components/home/SpaceNewsSection";
-import ConsciousnessSection from "@/components/home/ConsciousnessSection";
+import AiNewsSection from "@/components/home/AiNewsSection";
 import ContactSection from "@/components/home/ContactSection";
+import AboutSiteSection from "@/components/home/AboutSiteSection";
 import TypedWordmark from "@/components/ui/TypedWordmark";
 import { Song } from "@/types/music";
-import {
-  addToRecentlyPlayed,
-  loadRecentlyPlayed,
-} from "@/lib/history/recentlyPlayed";
-import {
-  isFavorite as checkIsFavorite,
-  loadFavorites,
-  toggleFavorite,
-} from "@/lib/history/favorites";
+import { usePlayer } from "@/contexts/PlayerContext";
 
+/**
+ * Der eigentliche Wiedergabe-Zustand (aktueller Song, Verlauf, Favoriten,
+ * Play/Pause) lebt seit 18.09.2026 im globalen PlayerContext im Root-Layout,
+ * nicht mehr hier — dadurch spielt Musik über Seitenwechsel hinweg einfach
+ * weiter, statt beim Verlassen der Startseite abzubrechen. Diese Seite
+ * kümmert sich nur noch um Suche + die eigene "Now Playing"-Ansicht.
+ */
 export default function Home() {
+  const player = usePlayer();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Song[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [currentSong, setCurrentSong] = useState<Song | null>(null);
   const [showHero, setShowHero] = useState(false);
-  const [recentlyPlayed, setRecentlyPlayed] = useState<Song[]>([]);
-  const [favorites, setFavorites] = useState<Song[]>([]);
-  const [shuffleFavorites, setShuffleFavorites] = useState(false);
   const [showAllFavorites, setShowAllFavorites] = useState(false);
   const requestIdRef = useRef(0);
 
-  // Verlauf & gemerkte Songs beim ersten Laden aus dem Browser des Besuchers holen
+  // Aktuelle Suchergebnisse laufend als "Weiter"-Warteschlange im globalen
+  // Player hinterlegen, damit der Nächster-Button dieselbe Reihenfolge nutzt
+  // wie vorher.
   useEffect(() => {
-    setRecentlyPlayed(loadRecentlyPlayed());
-    setFavorites(loadFavorites());
-  }, []);
+    if (results.length > 0) player.setQueue(results);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [results]);
 
   async function handleSearch(q: string) {
     setQuery(q);
@@ -79,79 +76,36 @@ export default function Home() {
   }
 
   function handlePlay(song: Song) {
-    setCurrentSong(song);
+    player.play(song, results.length > 0 ? results : undefined);
     setShowHero(true);
-    setShuffleFavorites(false);
-    setRecentlyPlayed(addToRecentlyPlayed(song));
-  }
-
-  function pickRandomSong(list: Song[], excludeId?: string): Song | undefined {
-    const pool = list.length > 1 ? list.filter((s) => s.id !== excludeId) : list;
-    if (pool.length === 0) return undefined;
-    return pool[Math.floor(Math.random() * pool.length)];
   }
 
   function handleShufflePlayFavorites() {
-    const song = pickRandomSong(favorites);
-    if (!song) return;
-    setCurrentSong(song);
+    player.playRandomFavorite();
     setShowHero(true);
-    setShuffleFavorites(true);
-    setRecentlyPlayed(addToRecentlyPlayed(song));
   }
 
   function handleBackToHome() {
     setShowHero(false);
   }
 
-  function handleClosePlayer() {
-    setCurrentSong(null);
-    setShowHero(false);
-  }
-
-  function handleToggleFavorite(song: Song) {
-    setFavorites((prev) => toggleFavorite(prev, song));
-  }
-
-  function handleEnded() {
-    if (!currentSong) return;
-
-    // Im Zufalls-Modus (gemerkte Songs) geht es mit einem weiteren
-    // zufälligen gemerkten Song weiter, statt der normalen Listenreihenfolge.
-    if (shuffleFavorites) {
-      const next = pickRandomSong(favorites, currentSong.id);
-      if (next) {
-        setCurrentSong(next);
-        setRecentlyPlayed(addToRecentlyPlayed(next));
-      }
-      return;
-    }
-
-    // Sonst: nächsten Song aus der aktuellen Ergebnisliste spielen, falls vorhanden.
-    const list = results.length > 0 ? results : recentlyPlayed;
-    const idx = list.findIndex((s) => s.id === currentSong.id);
-    const next = idx >= 0 ? list[idx + 1] : undefined;
-    if (next) handlePlay(next);
-  }
-
-  const showFavorites = !query.trim() && favorites.length > 0;
+  const showFavorites = !query.trim() && player.favorites.length > 0;
 
   return (
     <main className="relative min-h-screen">
       <SiteBackground />
 
-      {/* Ecken-UI im igloo.inc-Stil: schmale Wordmark oben links, kurzer
-          Info-Block oben rechts, dezenter Hinweis unten links. */}
+      {/* Ecken-UI im igloo.inc-Stil: kurzer Info-Block oben rechts, dezenter
+          Hinweis unten links. Die Wordmark oben links und die Menüleiste
+          (Musik/AI News/Kontakte) wurden entfernt (Nutzerkorrektur
+          18.09.2026: "diese centaurian text oben link und diese ganz
+          obere leiste entfernen"). */}
       <div className="pointer-events-none fixed inset-0 z-10 hidden select-none p-6 sm:block sm:p-8">
-        <div className="pointer-events-auto absolute left-6 top-6 sm:left-8 sm:top-8">
-          <p className="text-sm font-bold uppercase tracking-[0.15em] text-foreground">
-            <TypedWordmark speed={60} />
-          </p>
-        </div>
         <div className="pointer-events-auto absolute right-6 top-6 max-w-[220px] text-right text-xs leading-relaxed sm:right-8 sm:top-8">
           <p className="label-mono mb-1 uppercase">// Info</p>
           <p className="text-muted">
-            Songs suchen und direkt im Browser hören. Kein Login, kein Abo.
+            Musik, KI-News und mehr — alles auf einer Seite. Kein Login,
+            kein Abo.
           </p>
         </div>
         <div className="pointer-events-none absolute bottom-24 left-6 text-xs text-muted sm:bottom-8 sm:left-8">
@@ -160,9 +114,18 @@ export default function Home() {
         </div>
       </div>
 
-      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-28 pt-24 sm:px-8 sm:pt-32">
-        {showHero && currentSong ? (
-          <NowPlayingHero song={currentSong} onBack={handleBackToHome} />
+      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-20 pt-24 sm:px-8 sm:pt-32">
+        <div id="musik" className="scroll-mt-24" />
+
+        {showHero && player.currentSong ? (
+          <NowPlayingHero
+            song={player.currentSong}
+            onBack={handleBackToHome}
+            isPlaying={player.isPlaying}
+            onNext={player.next}
+            onPrevious={player.previous}
+            hasPrevious={player.hasPrevious}
+          />
         ) : (
           <header className="mb-10 text-center sm:mb-14">
             <h1 className="text-4xl font-bold uppercase tracking-tight sm:text-6xl">
@@ -182,7 +145,7 @@ export default function Home() {
           <div className="glass-card mx-auto mt-4 flex w-full max-w-2xl items-center justify-between gap-3 px-4 py-3">
             <p className="label-mono text-xs uppercase">
               // Gemerkte Musics <span className="ml-1">🔀</span>
-              <span className="ml-2 text-muted">({favorites.length})</span>
+              <span className="ml-2 text-muted">({player.favorites.length})</span>
             </p>
             <button
               onClick={handleShufflePlayFavorites}
@@ -199,11 +162,11 @@ export default function Home() {
 
         {showFavorites && (
           <CompactSongList
-            songs={favorites}
+            songs={player.favorites}
             title="// Gemerkt 🔀"
             onPlay={handlePlay}
-            onToggleFavorite={handleToggleFavorite}
-            activeSongId={currentSong?.id}
+            onToggleFavorite={player.toggleFavorite}
+            activeSongId={player.currentSong?.id}
             limit={3}
             onShowMore={() => setShowAllFavorites(true)}
           />
@@ -211,11 +174,11 @@ export default function Home() {
 
         {showAllFavorites && (
           <FavoritesModal
-            songs={favorites}
-            activeSongId={currentSong?.id}
+            songs={player.favorites}
+            activeSongId={player.currentSong?.id}
             onPlay={handlePlay}
             onShufflePlay={handleShufflePlayFavorites}
-            onToggleFavorite={handleToggleFavorite}
+            onToggleFavorite={player.toggleFavorite}
             onClose={() => setShowAllFavorites(false)}
           />
         )}
@@ -227,9 +190,9 @@ export default function Home() {
             isLoading={isLoading}
             errorMessage={errorMessage}
             onPlay={handlePlay}
-            activeSongId={currentSong?.id}
-            isFavorite={(songId) => checkIsFavorite(favorites, songId)}
-            onToggleFavorite={handleToggleFavorite}
+            activeSongId={player.currentSong?.id}
+            isFavorite={player.isFavorite}
+            onToggleFavorite={player.toggleFavorite}
           />
         )}
 
@@ -237,18 +200,14 @@ export default function Home() {
           <>
             <FeaturesSection />
             <FactsSection />
-            <SpaceNewsSection />
-            <ConsciousnessSection />
-            <ContactSection />
+            <AiNewsSection />
+            <AboutSiteSection />
+            <div id="kontakte" className="scroll-mt-24">
+              <ContactSection />
+            </div>
           </>
         )}
       </div>
-
-      <YoutubePlayer
-        song={currentSong}
-        onEnded={handleEnded}
-        onClose={handleClosePlayer}
-      />
     </main>
   );
 }

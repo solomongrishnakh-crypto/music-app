@@ -40,7 +40,7 @@ export default function ThreeBackground() {
     camera.position.z = 9;
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3));
     renderer.setSize(window.innerWidth, window.innerHeight);
     mount.appendChild(renderer.domElement);
 
@@ -119,11 +119,11 @@ export default function ThreeBackground() {
     const circleTexture = createCircleTexture();
 
     const material = new THREE.PointsMaterial({
-      size: 0.09,
+      size: 0.12,
       map: circleTexture,
       vertexColors: true,
       transparent: true,
-      opacity: 0.9,
+      opacity: 1,
       blending: THREE.AdditiveBlending,
       depthWrite: false,
       sizeAttenuation: true,
@@ -182,11 +182,12 @@ export default function ThreeBackground() {
     dustGeometry.setAttribute("color", new THREE.BufferAttribute(dustColors, 3));
 
     const dustMaterial = new THREE.PointsMaterial({
-      size: 0.022,
+      size: 0.032,
       map: circleTexture,
       vertexColors: true,
       transparent: true,
-      opacity: 0.55,
+      opacity: 0.75,
+      blending: THREE.AdditiveBlending,
       depthWrite: false,
       sizeAttenuation: true,
     });
@@ -267,13 +268,6 @@ export default function ThreeBackground() {
     galaxy.rotation.x = 0.35; // leichte Neigung für 3D-Perspektive
     scene.add(galaxy);
 
-    // --- Bodenraster (Tron-artiges perspektivisches Grid für Tiefe) -----
-    const grid = new THREE.GridHelper(60, 60, 0xff5a4d, 0x2a1512);
-    grid.position.y = -5.5;
-    (grid.material as THREE.Material & { transparent: boolean; opacity: number }).transparent = true;
-    (grid.material as THREE.Material & { transparent: boolean; opacity: number }).opacity = 0.16;
-    scene.add(grid);
-
     // --- Verbindungslinien zwischen nahen Partikeln (einmalig berechnet) ---
     // Zusätzlich wird für jeden Punkt gemerkt, mit welchen Nachbarn er
     // verbunden ist (adjacency) — die Partikel bewegen sich danach entlang
@@ -344,7 +338,7 @@ export default function ThreeBackground() {
     const lineMaterial = new THREE.LineBasicMaterial({
       color: 0xff8a75,
       transparent: true,
-      opacity: 0.12,
+      opacity: 0.22,
       blending: THREE.AdditiveBlending,
     });
     const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
@@ -467,9 +461,6 @@ export default function ThreeBackground() {
       // Kleine Spiralgalaxie: sehr langsame, gleichmäßige Eigendrehung
       galaxy.rotation.y = elapsed * 0.05;
 
-      // Bodenraster: sehr langsame, endlose Drift-Bewegung nach vorn
-      grid.position.z = (elapsed * 0.6) % 2;
-
       // Kamera-Parallaxe: sanft zur Zielposition interpolieren + leichtes
       // autonomes Driften, damit auch ohne Mausbewegung Leben in der Szene ist
       currentRotX += (targetRotX - currentRotX) * 0.03;
@@ -490,9 +481,6 @@ export default function ThreeBackground() {
       lines.scale.setScalar(compress);
       dust.scale.setScalar(compress);
       galaxy.scale.setScalar(1 - currentScrollProgress * 0.4);
-      grid.position.y = -5.5 + currentScrollProgress * 2.5;
-      (grid.material as THREE.Material).opacity =
-        0.16 * (1 - currentScrollProgress * 0.7);
 
       renderer.render(scene, camera);
       animationId = requestAnimationFrame(animate);
@@ -513,8 +501,6 @@ export default function ThreeBackground() {
       galaxyMaterial.dispose();
       dustGeometry.dispose();
       dustMaterial.dispose();
-      grid.geometry.dispose();
-      (grid.material as THREE.Material).dispose();
       renderer.dispose();
       if (mount.contains(renderer.domElement)) {
         mount.removeChild(renderer.domElement);

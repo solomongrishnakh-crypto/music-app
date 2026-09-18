@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Orbitron } from "next/font/google";
 import "./globals.css";
+import { PlayerProvider } from "@/contexts/PlayerContext";
+import PersistentPlayerBar from "@/components/player/PersistentPlayerBar";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -63,7 +65,16 @@ export default function RootLayout({
             />
           </filter>
         </svg>
-        {children}
+        {/* PlayerProvider + der eigentliche Player leben hier im
+            Root-Layout statt auf der Startseite — dadurch überlebt die
+            Musikwiedergabe einen Seitenwechsel (z.B. zur /imperien-Karte),
+            statt beim Verlassen der Startseite abzubrechen (Nutzerwunsch
+            18.09.2026: "music soll auch hier gespielt werden nicht
+            abbrechen wenn ich die karte oder was anderes ... öffne"). */}
+        <PlayerProvider>
+          {children}
+          <PersistentPlayerBar />
+        </PlayerProvider>
       </body>
     </html>
   );
