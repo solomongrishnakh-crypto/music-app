@@ -238,8 +238,12 @@ export default function YoutubePlayer({
     setCurrentTime(Number(e.target.value));
   }
 
-  function handleSeekCommit(e: React.ChangeEvent<HTMLInputElement>) {
-    const seconds = Number(e.target.value);
+  // React.SyntheticEvent statt ChangeEvent, weil diese Funktion sowohl an
+  // onMouseUp (MouseEvent) als auch onTouchEnd (TouchEvent) gebunden wird —
+  // ChangeEvent passt nur zu onChange und ließ den strengen Produktions-
+  // Build von Vercel fehlschlagen ("Type error: ... not assignable").
+  function handleSeekCommit(e: React.SyntheticEvent<HTMLInputElement>) {
+    const seconds = Number(e.currentTarget.value);
     playerRef.current?.seekTo(seconds, true);
     setIsSeeking(false);
   }
