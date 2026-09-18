@@ -40,7 +40,7 @@ function CardThumbnail({ src, alt }: CardThumbnailProps) {
   const [failed, setFailed] = useState(false);
   if (failed || !src) return null;
   return (
-    <div className="aspect-[16/9] w-full overflow-hidden bg-surface-elevated">
+    <div className="h-24 w-24 shrink-0 overflow-hidden bg-surface-elevated sm:h-auto sm:w-full sm:aspect-[16/9]">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
@@ -181,24 +181,29 @@ export default function AiNewsSection() {
                     href={item.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex flex-col overflow-hidden border border-border bg-surface-elevated transition-colors hover:border-accent"
+                    className="group flex flex-row overflow-hidden border border-border bg-surface-elevated transition-colors hover:border-accent sm:flex-col"
                   >
                     <CardThumbnail src={item.imageUrl} alt={item.title} />
-                    <div className="flex flex-1 flex-col p-4">
+                    {/* Kompaktere Karte auf Handy (Nutzerkorrektur 19.09.2026:
+                        "mach ki news klein es nimmt unnötige platz") — kleines
+                        Vorschaubild links, Zusammenfassung/Kategorien nur ab
+                        sm: sichtbar, damit auf dem Handy mehr News ohne
+                        endloses Scrollen passen. */}
+                    <div className="flex min-w-0 flex-1 flex-col p-3 sm:p-4">
                       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
-                        <p className="label-mono text-[10px] uppercase text-accent">
+                        <p className="label-mono truncate text-[10px] uppercase text-accent">
                           // {item.source}
                           {author ? ` · ${author}` : ""}
                         </p>
-                        <p className="label-mono text-[10px] uppercase text-muted">
+                        <p className="label-mono hidden text-[10px] uppercase text-muted sm:block">
                           {formatDate(item.publishedAt)}
                         </p>
                       </div>
-                      <h3 className="font-display mt-3 text-sm font-bold uppercase leading-snug text-foreground sm:text-base">
+                      <h3 className="font-display mt-2 text-xs font-bold uppercase leading-snug text-foreground sm:mt-3 sm:text-base">
                         {item.title}
                       </h3>
                       {categories.length > 0 && (
-                        <div className="mt-2 flex flex-wrap gap-1.5">
+                        <div className="mt-2 hidden flex-wrap gap-1.5 sm:flex">
                           {categories.map((cat) => (
                             <span
                               key={cat}
@@ -209,10 +214,10 @@ export default function AiNewsSection() {
                           ))}
                         </div>
                       )}
-                      <p className="mt-3 flex-1 text-xs leading-relaxed text-muted sm:text-sm">
+                      <p className="mt-2 hidden flex-1 text-xs leading-relaxed text-muted sm:mt-3 sm:block sm:text-sm">
                         {item.summary}
                       </p>
-                      <p className="label-mono mt-4 inline-flex items-center gap-2 text-xs uppercase text-foreground transition-colors group-hover:text-accent">
+                      <p className="label-mono mt-2 hidden items-center gap-2 text-xs uppercase text-foreground transition-colors group-hover:text-accent sm:mt-4 sm:inline-flex">
                         Artikel lesen ↗
                       </p>
                     </div>
