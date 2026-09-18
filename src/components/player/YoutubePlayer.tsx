@@ -27,6 +27,7 @@ interface YTPlayerInstance {
   seekTo: (seconds: number, allowSeekAhead: boolean) => void;
   getCurrentTime: () => number;
   getDuration: () => number;
+  setPlaybackQuality: (quality: string) => void;
   destroy: () => void;
 }
 
@@ -124,7 +125,15 @@ export default function YoutubePlayer({
         videoId: song?.id ?? "",
         playerVars: { autoplay: 1, playsinline: 1 },
         events: {
-          onReady: () => setIsReady(true),
+          onReady: () => {
+            // Nutzerwunsch 19.09.2026: "gute audioqualität aber vlt
+            // schlechte video fokus auf audio" — Video bewusst auf die
+            // niedrigste Stufe zwingen. Die Audiospur läuft bei YouTube mit
+            // fester Bitrate unabhängig von der Videoauflösung, spart also
+            // nur Datenvolumen/Akku, ohne den Ton zu verschlechtern.
+            playerRef.current?.setPlaybackQuality("tiny");
+            setIsReady(true);
+          },
           onStateChange: (e) => {
             if (!window.YT) return;
             const playing = e.data === window.YT.PlayerState.PLAYING;
@@ -151,6 +160,7 @@ export default function YoutubePlayer({
   useEffect(() => {
     if (isReady && song && playerRef.current) {
       playerRef.current.loadVideoById(song.id);
+      playerRef.current.setPlaybackQuality("tiny");
       setCurrentTime(0);
       setDuration(0);
     }
