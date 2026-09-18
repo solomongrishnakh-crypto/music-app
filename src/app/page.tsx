@@ -142,13 +142,24 @@ export default function Home() {
         </div>
 
         {!showHero && (
-          <p className="mx-auto mt-3 max-w-2xl text-center text-[11px] leading-relaxed text-muted">
+          <div className="mx-auto mt-3 max-w-2xl space-y-1 text-center text-[11px] leading-relaxed text-muted">
             {/* Nutzerwunsch 19.09.2026: Hinweis muss auch auf dem Handy
                 sichtbar sein, nicht nur in der Desktop-Ecken-UI. */}
-            Hinweis: Gemerkte Songs werden lokal in diesem Browser
-            gespeichert — im privaten/Inkognito-Fenster gehen sie beim
-            Schließen verloren.
-          </p>
+            <p>
+              Hinweis: Gemerkte Songs werden lokal in diesem Browser
+              gespeichert — im privaten/Inkognito-Fenster gehen sie beim
+              Schließen verloren.
+            </p>
+            {/* Nutzerwunsch 19.09.2026: "füge info das manche browser
+                hintgrundabspiel blockiert" — manche Browser (v.a. iOS
+                Safari) pausieren die Wiedergabe, sobald man die App
+                verlässt/das Handy sperrt. */}
+            <p>
+              Manche Browser (z.B. Safari auf dem iPhone) pausieren die
+              Wiedergabe im Hintergrund, wenn die Seite verlassen oder das
+              Gerät gesperrt wird.
+            </p>
+          </div>
         )}
 
         {showFavorites && (
