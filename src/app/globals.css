@@ -1,0 +1,146 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: #030303;
+  color: #f2f2f0;
+  overscroll-behavior: none;
+}
+
+/* Minimaler, ruhiger Scrollbar-Stil (igloo.inc-artig) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #232320;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #3a3a35;
+}
+
+/* Utility: dünner, ruhiger Rahmen statt bunter Glow-Panels */
+.glass-panel {
+  background: rgba(0, 0, 0, 0.55);
+  border: 1px solid rgba(242, 242, 240, 0.12);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.text-gradient {
+  color: #f2f2f0;
+}
+
+/* Halbtransparente "Glas"-Boxen für Info-/Fakten-Karten — lassen die
+   3D-Partikel-/Galaxie-Szene dahinter leicht durchscheinen, plus ein
+   simulierter Glanz-/Reflexions-Schimmer (typisch futuristisches HUD-Glas). */
+.glass-card {
+  position: relative;
+  background: rgba(20, 18, 18, 0.05);
+  backdrop-filter: url(#glass-distortion) blur(0.5px) saturate(1.4)
+    brightness(1.15);
+  -webkit-backdrop-filter: blur(1.5px) saturate(1.4) brightness(1.15);
+  overflow: hidden;
+  transition: background-color 0.3s ease;
+}
+
+/* Safari unterstützt kein backdrop-filter: url(#svg-filter) — dort bleibt
+   es bei reinem Blur statt Verzerrung (siehe -webkit-backdrop-filter oben). */
+
+/* Feiner Glanzstreifen oben links — simuliert Licht, das auf Glas fällt */
+.glass-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 242, 238, 0.05) 0%,
+    rgba(255, 242, 238, 0) 35%
+  );
+  pointer-events: none;
+}
+
+/* Warmer Unterglanz — als würden Partikel/Galaxie aus dem Hintergrund
+   durch das dunkle Glas hindurch leicht hineinscheinen */
+.glass-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    120% 90% at 15% 120%,
+    rgba(255, 90, 77, 0.1) 0%,
+    rgba(255, 90, 77, 0) 55%
+  );
+  box-shadow:
+    inset 0 1px 0 rgba(255, 242, 238, 0.08),
+    inset 0 0 50px rgba(255, 90, 77, 0.07);
+  pointer-events: none;
+}
+
+.glass-card:hover {
+  background: rgba(10, 10, 10, 0.32);
+}
+
+/* Kleingeschriebene, ausgedünnte Labels wie bei igloo.inc ("// Manifesto") */
+.label-mono {
+  letter-spacing: 0.08em;
+  color: rgba(242, 242, 240, 0.55);
+}
+
+/* Website-Hintergrundbild: langsame, endlose Ken-Burns-Bewegung + Leuchten */
+@keyframes bg-drift {
+  0% {
+    transform: scale(1.08) translate(0%, 0%);
+    filter: brightness(0.9) saturate(1.1);
+  }
+  50% {
+    transform: scale(1.16) translate(-1.5%, -1%);
+    filter: brightness(1.05) saturate(1.3);
+  }
+  100% {
+    transform: scale(1.08) translate(0%, 0%);
+    filter: brightness(0.9) saturate(1.1);
+  }
+}
+
+.animate-bg-drift {
+  animation: bg-drift 22s ease-in-out infinite;
+  will-change: transform, filter;
+}
+
+/* "Lebendiges", ständig leuchtendes Titelbild (SongCover-Komponente) */
+@keyframes cover-glow {
+  0%,
+  100% {
+    filter: brightness(1) saturate(1.05) contrast(1.05);
+    box-shadow: inset 0 0 30px rgba(255, 60, 60, 0.15);
+  }
+  50% {
+    filter: brightness(1.18) saturate(1.35) contrast(1.1);
+    box-shadow: inset 0 0 50px rgba(255, 90, 90, 0.35);
+  }
+}
+
+.animate-cover-glow {
+  animation: cover-glow 3.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
