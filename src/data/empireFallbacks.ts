@@ -116,6 +116,26 @@ const FALLBACKS: Record<string, EmpireFallbackEntry> = {
       "Das Gupta-Reich (ca. 320–550 n. Chr.) umfasste weite Teile des indischen Subkontinents und gilt als goldenes Zeitalter indischer Kunst, Wissenschaft und Literatur.",
     language: "Sanskrit",
   },
+  // Nutzerkorrektur 20.09.2026 ("von vielen imperien soll die Sprache
+  // bekannt sein zb ghuriden haben persisch gesprochen") — Wikidata hat zu
+  // diesen (und vielen aehnlichen) historischen Dynastien keine
+  // strukturierten Sprachdaten (P37/P2936/P103), obwohl ihre Sprache(n)
+  // historisch gut belegt sind. Der Eintrag wird auch dann als
+  // Sprach-Fallback genutzt, wenn Wikipedia selbst schon eine echte
+  // Beschreibung liefert (siehe route.ts) — extract/title hier sind dann
+  // ungenutzt, nur "language" zaehlt in diesem Fall.
+  "Ghurid Dynasty": {
+    title: "Ghuriden",
+    extract:
+      "Die Ghuriden waren eine Dynastie aus der Gebirgsregion Ghur im heutigen Afghanistan, die in der zweiten Haelfte des 12. Jahrhunderts das Ghaznawidenreich eroberte und zeitweise bis nach Bengalen vorstiess, bevor sie 1215 vom Choresm-Schah vernichtet wurde.",
+    language: "Persisch (Hof- und Verwaltungssprache), regionale Sprachen wie Paschtu",
+  },
+  "Kara-Khitans": {
+    title: "Kara Khitai (Westliches Liao)",
+    extract:
+      "Die Kara Khitai (auch Westliches Liao) wurden von Fluechtlingen der untergegangenen chinesischen Liao-Dynastie gegruendet und beherrschten von 1124 bis 1218 weite Teile Zentralasiens, bevor sie im Mongolenreich aufgingen.",
+    language: "Khitanisch, Chinesisch, Persisch (Verwaltung)",
+  },
   Göktürks: {
     title: "Göktürken",
     extract:

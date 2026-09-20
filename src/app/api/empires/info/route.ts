@@ -355,17 +355,19 @@ async function fetchLanguageLabels(
 
 async function fetchLanguage(qid: string, lang: WikiLang): Promise<string | null> {
   try {
-    // Nutzerwunsch 20.09.2026: "sprache soll hier bekannt sein" — P37
-    // ("Amtssprache") und P2936 ("verwendete Sprache") fehlen bei vielen
-    // historischen Dynastien auf Wikidata; P103 ("Muttersprache/Landessprache")
-    // ist bei genau solchen Einträgen oft die einzige gepflegte Angabe.
+    // Nutzerwunsch 20.09.2026 ("es ladet immer noch lang") — statt P37,
+    // P2936 und P103 in drei GETRENNTEN Anfragen nacheinander abzufragen,
+    // holt EIN Aufruf ohne "&property=" ALLE Claims der Q-ID auf einmal;
+    // die drei Sprach-Eigenschaften werden danach nur noch lokal aus der
+    // bereits geladenen Antwort herausgefiltert — spart 2 Netzwerk-Runden.
+    const claimsUrl =
+      `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${qid}&format=json&origin=*`;
+    const claimsRes = await fetchWithRetry(claimsUrl);
+    if (!claimsRes || !claimsRes.ok) return null;
+    const data = await claimsRes.json();
+    // P37 "Amtssprache", P2936 "verwendete Sprache", P103 "Muttersprache"
+    // (bei historischen Dynastien oft die einzige gepflegte Angabe).
     for (const property of ["P37", "P2936", "P103"]) {
-      const url =
-        `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${qid}` +
-        `&property=${property}&format=json&origin=*`;
-      const res = await fetchWithRetry(url);
-      if (!res || !res.ok) continue;
-      const data = await res.json();
       const claims = data?.claims?.[property];
       if (!Array.isArray(claims) || claims.length === 0) continue;
       const qids = claims
@@ -486,6 +488,15 @@ export async function GET(req: NextRequest) {
     debugQid = await fetchWikidataId(lang, data.title);
   }
   if (debugQid) language = await fetchLanguage(debugQid, lang);
+  if (!language) {
+    // Nutzerkorrektur 20.09.2026: "von vielen imperien soll die Sprache
+    // bekannt sein zb ghuriden haben persisch gesprochen" — Wikidata fehlt
+    // bei vielen historischen Dynastien die strukturierte Sprachangabe,
+    // obwohl sie gut dokumentiert ist. Fällt auf die kuratierte Liste
+    // zurück (empireFallbacks.ts) — auch wenn die Beschreibung selbst
+    // gerade von Wikipedia kam.
+    language = getEmpireFallback(name)?.language ?? null;
+  }
 
   return NextResponse.json({
     found: true,
