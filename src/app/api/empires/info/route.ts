@@ -263,6 +263,29 @@ async function fetchWikidataId(lang: WikiLang, title: string): Promise<string | 
   }
 }
 
+// Nutzerwunsch 20.09.2026: "kann diese fenster auch übersetzt werden?" — der
+// Info-Text im Detailfenster blieb bei manchen Reichen Englisch, obwohl es
+// durchaus einen Artikel in der UI-Sprache gibt (z.B. "Seljuk Empire" vs.
+// deutsch "Seldschuken") — die reine Titel-Rateunion in titleCandidates()
+// findet solche abweichend benannten Artikel nicht. Über Wikidata (Q-ID des
+// bereits gefundenen Artikels) lässt sich der ECHTE Artikeltitel in jeder
+// anderen Sprache nachschlagen (sitelinks), statt weiter zu raten.
+async function fetchSitelinkTitle(qid: string, lang: WikiLang): Promise<string | null> {
+  try {
+    const site = `${lang}wiki`;
+    const url =
+      `https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${qid}` +
+      `&props=sitelinks&sitefilter=${site}&format=json&origin=*`;
+    const res = await fetchWithRetry(url);
+    if (!res || !res.ok) return null;
+    const data = await res.json();
+    const title = data?.entities?.[qid]?.sitelinks?.[site]?.title;
+    return typeof title === "string" ? title : null;
+  } catch {
+    return null;
+  }
+}
+
 // P31 ("ist ein(e)") in Kleinbuchstaben, englisch — nur für den
 // Fehltreffer-Check in isPlausibleHistoricalEntity oben, nicht für die
 // Anzeige.
@@ -372,8 +395,29 @@ export async function GET(req: NextRequest) {
   if ((!data || !data.extract) && uiLang !== "en") {
     const enData = await resolveSummary("en", name, debug ? trace : undefined);
     if (enData && enData.extract) {
-      data = enData;
-      lang = "en";
+      // Nutzerwunsch 20.09.2026: "kann diese fenster auch übersetzt werden?"
+      // — bevor auf Englisch zurückgefallen wird, über Wikidata prüfen, ob
+      // es unter einem ANDEREN Titel doch einen Artikel in der UI-Sprache
+      // gibt (z.B. "Seljuk Empire" -> QID -> deutscher Sitelink "Seldschuken",
+      // den die reine Titel-Rateunion oben nicht finden konnte).
+      let uiLangData: WikiSummary | null = null;
+      if (enData.title) {
+        const qid = await fetchWikidataId("en", enData.title);
+        if (qid) {
+          const uiTitle = await fetchSitelinkTitle(qid, uiLang);
+          if (debug) trace.push(`sitelink:${qid}:${uiLang} -> ${uiTitle ?? "null"}`);
+          if (uiTitle) {
+            uiLangData = await fetchSummary(uiLang, uiTitle, debug ? trace : undefined);
+          }
+        }
+      }
+      if (uiLangData && uiLangData.extract) {
+        data = uiLangData;
+        lang = uiLang;
+      } else {
+        data = enData;
+        lang = "en";
+      }
     }
   }
 
