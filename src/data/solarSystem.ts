@@ -207,7 +207,8 @@ export const DWARF_PLANETS: PlanetData[] = [
       moons: "0",
     },
     description:
-      "Ceres ist der größte Körper im Asteroidengürtel zwischen Mars und Jupiter und der einzige Zwergplanet im inneren Sonnensystem.",
+      "Ceres ist der größte Körper im Asteroidengürtel zwischen Mars und Jupiter und der einzige Zwergplanet im inneren Sonnensystem — sie macht rund ein Drittel der Gesamtmasse des gesamten Gürtels aus. Unter ihrer Oberfläche vermutet man eine Schicht aus Wassereis oder sogar einen flüssigen Ozean, und helle Flecken im Occator-Krater bestehen aus Salzablagerungen. Die Raumsonde Dawn umkreiste Ceres von 2015 bis 2018 und lieferte die bislang detailliertesten Aufnahmen.",
+    image: commonsFile("PIA19562-Ceres-DwarfPlanet-Dawn-RC3-image19-20150506.jpg"),
   },
   {
     id: "pluto",
@@ -225,7 +226,8 @@ export const DWARF_PLANETS: PlanetData[] = [
       moons: "5 (u. a. Charon)",
     },
     description:
-      "Pluto galt bis 2006 als neunter Planet und wurde dann als Zwergplanet neu eingestuft. Sein größter Mond Charon ist halb so groß wie Pluto selbst.",
+      "Pluto galt bis 2006 als neunter Planet und wurde dann als Zwergplanet neu eingestuft, nachdem klar wurde, dass es im Kuipergürtel viele ähnliche Objekte gibt. Sein größter Mond Charon ist halb so groß wie Pluto selbst — beide umkreisen einen gemeinsamen Schwerpunkt außerhalb Plutos, weshalb man sie manchmal als Doppel-Zwergplanet bezeichnet. Die NASA-Sonde New Horizons flog 2015 als bislang einzige Mission an Pluto vorbei und entdeckte u. a. das herzförmige Gletschergebiet Tombaugh Regio.",
+    image: commonsFile("Pluto.jpg"),
   },
   {
     id: "haumea",
@@ -243,7 +245,8 @@ export const DWARF_PLANETS: PlanetData[] = [
       moons: "2",
     },
     description:
-      "Haumea rotiert so schnell (in nur 4 Stunden), dass sie zu einer stark abgeflachten, eiförmigen Form verzerrt ist — einzigartig unter den bekannten Zwergplaneten.",
+      "Haumea rotiert so schnell (in nur 4 Stunden), dass sie zu einer stark abgeflachten, eiförmigen Form verzerrt ist — einzigartig unter den bekannten Zwergplaneten. Sie besitzt zwei kleine Monde (Hiʻiaka und Namaka) sowie ein dünnes Ringsystem, das 2017 entdeckt wurde — der erste bekannte Ring um ein Objekt jenseits des Neptun. Vermutlich entstand ihre ungewöhnliche Form durch eine gewaltige Kollision in der Frühzeit des Sonnensystems.",
+    image: commonsFile("Haumea_Hubble.png"),
   },
   {
     id: "makemake",
@@ -261,7 +264,8 @@ export const DWARF_PLANETS: PlanetData[] = [
       moons: "1",
     },
     description:
-      "Makemake ist nach dem Schöpfergott der Rapa Nui (Osterinsel) benannt und einer der größten bekannten Kuipergürtel-Objekte nach Pluto.",
+      "Makemake ist nach dem Schöpfergott der Rapa Nui (Osterinsel) benannt und einer der größten bekannten Kuipergürtel-Objekte nach Pluto. Seine sehr helle, rötliche Oberfläche besteht vermutlich aus gefrorenem Methan und Ethan — ähnlich wie bei Pluto. Erst 2016 entdeckte das Hubble-Weltraumteleskop seinen einzigen bekannten Mond, inoffiziell 'MK 2' genannt.",
+    image: commonsFile("Makemake_and_its_moon.jpg"),
   },
   {
     id: "eris",
@@ -279,7 +283,8 @@ export const DWARF_PLANETS: PlanetData[] = [
       moons: "1 (Dysnomia)",
     },
     description:
-      "Eris ist fast so groß wie Pluto und war 2005 der Auslöser für die Debatte, die zur Neudefinition von 'Planet' und Plutos Herabstufung führte.",
+      "Eris ist fast so groß wie Pluto, aber deutlich massereicher, und war 2005 der Auslöser für die Debatte, die zur Neudefinition von 'Planet' und Plutos Herabstufung führte. Ihr Name stammt von der griechischen Göttin der Zwietracht — passend zu der Kontroverse, die sie auslöste. Eris liegt auf einer stark elliptischen, geneigten Umlaufbahn und war zum Entdeckungszeitpunkt eines der am weitesten entfernten je beobachteten Objekte im Sonnensystem.",
+    image: commonsFile("Eris_and_dysnomia2.jpg"),
   },
 ];
 

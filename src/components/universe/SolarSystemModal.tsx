@@ -19,6 +19,11 @@ interface SolarSystemModalProps {
  */
 export default function SolarSystemModal({ onClose }: SolarSystemModalProps) {
   const [selected, setSelected] = useState<PlanetData | null>(null);
+  const [imageFailed, setImageFailed] = useState(false);
+
+  useEffect(() => {
+    setImageFailed(false);
+  }, [selected]);
 
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
@@ -81,7 +86,7 @@ export default function SolarSystemModal({ onClose }: SolarSystemModalProps) {
             <h3 className="font-display mt-0.5 text-base font-bold uppercase tracking-tight text-foreground sm:mt-1 sm:text-2xl">
               {selected.name}
             </h3>
-            {selected.image && (
+            {selected.image && !imageFailed && (
               <div className="mt-1.5 aspect-[16/9] max-h-32 w-full overflow-hidden rounded border border-border bg-black sm:mt-2 sm:max-h-56">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
@@ -89,6 +94,7 @@ export default function SolarSystemModal({ onClose }: SolarSystemModalProps) {
                   alt={selected.name}
                   className="h-full w-full object-contain"
                   loading="lazy"
+                  onError={() => setImageFailed(true)}
                 />
               </div>
             )}
