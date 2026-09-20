@@ -74,18 +74,94 @@ function formatYear(year: number | undefined): string {
   return year < 0 ? `${Math.abs(year)} v. Chr.` : `${year} n. Chr.`;
 }
 
-// Jedes nicht-imperiale Gebiet bekommt eine eigene, aber deterministische
-// Farbe (Hash des Namens -> Farbton) statt einer einzigen Einheitsfarbe —
-// dadurch wirkt die Karte "realistisch" bunt wie bei klassischen
-// historischen Atlanten, bleibt zwischen zwei Renders aber stabil (gleicher
-// Name = gleiche Farbe).
-function hashColor(name: string): string {
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+// Jedes Gebiet bekommt eine eigene Farbe statt eines Einheitsbreis. Vorher
+// wurde die Farbe rein per Namens-Hash bestimmt — das führte dazu, dass
+// benachbarte Gebiete zufällig sehr ähnliche oder identische Farbtöne
+// bekommen konnten (Nutzerkorrektur 20.09.2026: "imperien die nebeneinander
+// sind sollen nicht gleiche farben haben"). Jetzt wird pro geladenem
+// Kartenstand eine "Graphenfärbung" berechnet: Gebiete, deren Bounding-Box
+// sich überschneidet (= mögliche Nachbarn), bekommen bewusst
+// unterschiedliche Farben aus einer festen Palette von 24 gleichmäßig
+// verteilten Farbtönen (siehe assignDistinctColors weiter unten).
+const HUE_PALETTE = Array.from({ length: 24 }, (_, i) => i * 15);
+
+interface BBox {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function getBBox(geometry: any): BBox {
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function walk(coords: any) {
+    if (typeof coords[0] === "number") {
+      const [x, y] = coords;
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+      if (y < minY) minY = y;
+      if (y > maxY) maxY = y;
+    } else if (Array.isArray(coords)) {
+      coords.forEach(walk);
+    }
   }
-  const hue = Math.abs(hash) % 360;
-  return `hsl(${hue}, 42%, 46%)`;
+  if (geometry?.coordinates) walk(geometry.coordinates);
+  if (!isFinite(minX)) return { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+  return { minX, minY, maxX, maxY };
+}
+
+function bboxesOverlap(a: BBox, b: BBox, padDeg: number): boolean {
+  return (
+    a.minX - padDeg <= b.maxX &&
+    b.minX - padDeg <= a.maxX &&
+    a.minY - padDeg <= b.maxY &&
+    b.minY - padDeg <= a.maxY
+  );
+}
+
+// Weist jedem Feature (in der übergebenen Reihenfolge, große Gebiete
+// zuerst) einen Farbton zu, der sich von allen bereits eingefärbten
+// "Nachbarn" (sich überschneidende Bounding-Box, +1,5° Puffer für direkt
+// aneinandergrenzende Gebiete) unterscheidet. Ein kleiner geografischer
+// Puffer ersetzt eine echte Polygon-Nachbarschaftsprüfung (die bei
+// hunderten Gebieten pro Jahr zu teuer wäre), reicht aber, um harte
+// Farbkollisionen zwischen direkt nebeneinanderliegenden Reichen
+// zuverlässig zu vermeiden.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function assignDistinctColors(features: any[]): Map<string, string> {
+  const boxes = features.map((f) => getBBox(f.geometry));
+  const colorIdx: number[] = new Array(features.length).fill(0);
+
+  for (let i = 0; i < features.length; i++) {
+    const usedByNeighbors = new Set<number>();
+    for (let j = 0; j < i; j++) {
+      if (bboxesOverlap(boxes[i], boxes[j], 1.5)) {
+        usedByNeighbors.add(colorIdx[j]);
+      }
+    }
+    let chosen = 0;
+    for (let c = 0; c < HUE_PALETTE.length; c++) {
+      if (!usedByNeighbors.has(c)) {
+        chosen = c;
+        break;
+      }
+      chosen = c;
+    }
+    colorIdx[i] = chosen;
+  }
+
+  const map = new Map<string, string>();
+  features.forEach((f, i) => {
+    const name: string = f.properties?.NAME ?? "";
+    const hue = HUE_PALETTE[colorIdx[i]];
+    map.set(name, `hsl(${hue}, 48%, 46%)`);
+  });
+  return map;
 }
 
 // Chaikin-Corner-Cutting: rundet die Ecken eines Koordinatenrings ab, statt
@@ -101,9 +177,12 @@ function chaikinSmooth(ring: any[], iterations = 2): any[] {
   if (!Array.isArray(ring) || ring.length < 5) return ring;
   let points = ring;
   // Sehr detailreiche Ringe vorab ausdünnen (jeden n-ten Punkt behalten),
-  // sonst wird die Glättung bei komplexen Küstenlinien zu teuer.
-  if (points.length > 400) {
-    const step = Math.ceil(points.length / 400);
+  // sonst wird die Glättung bei komplexen Küstenlinien zu teuer. Schwelle
+  // angehoben (Nutzerwunsch 20.09.2026: "mach grafik von karte und
+  // teritorium höher . sowohl grenzen") — mehr Originalpunkte bleiben
+  // erhalten, Grenzen wirken dadurch feiner statt grob vereinfacht.
+  if (points.length > 900) {
+    const step = Math.ceil(points.length / 900);
     points = points.filter((_, i) => i % step === 0);
   }
   const isClosed =
@@ -388,27 +467,47 @@ export default function ImperienPage() {
           (a, b) => bboxArea(b.geometry) - bboxArea(a.geometry)
         );
         const sortedGeojson = { ...geojson, features: sortedFeatures };
-        const permanentLabelCount = Math.min(18, sortedFeatures.length);
-        const permanentLabelNames = new Set(
-          sortedFeatures.slice(0, permanentLabelCount).map((f) => f.properties?.NAME)
+
+        // Nutzerkorrektur 20.09.2026: "es fehlt auch imperium namen über
+        // territorium" — JEDES tatsächliche Imperium/Reich (Name enthält
+        // "Empire", "Khanate" usw., siehe isEmpireName) bekommt jetzt immer
+        // eine dauerhafte Beschriftung, unabhängig von seiner Größe. Nur
+        // bei den übrigen, nicht-imperialen Gebieten (Königreiche, Stämme
+        // etc.) bleibt es bei den größten 18, sonst wäre die Karte bei
+        // hunderten Kleinstaaten unlesbar überfüllt.
+        const empireLabelNames = new Set(
+          sortedFeatures
+            .filter((f) => isEmpireName(f.properties?.NAME ?? ""))
+            .map((f) => f.properties?.NAME)
         );
+        const nonEmpireSorted = sortedFeatures.filter(
+          (f) => !empireLabelNames.has(f.properties?.NAME)
+        );
+        const extraLabelCount = Math.min(18, nonEmpireSorted.length);
+        const permanentLabelNames = new Set([
+          ...empireLabelNames,
+          ...nonEmpireSorted.slice(0, extraLabelCount).map((f) => f.properties?.NAME),
+        ]);
+
+        // Farben pro Gebiet: Graphenfärbung statt Namens-Hash, damit
+        // benachbarte Gebiete nie dieselbe/eine sehr ähnliche Farbe
+        // bekommen (Nutzerkorrektur 20.09.2026, siehe assignDistinctColors).
+        const colorByName = assignDistinctColors(sortedFeatures);
 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const layer = L.geoJSON(sortedGeojson, {
           // Leaflet vereinfacht/rundet Linien beim Zeichnen zusätzlich zur
-          // eigenen Chaikin-Glättung oben — zusammen wirken die Grenzen
-          // spürbar weniger eckig als die rohen Geodaten.
-          smoothFactor: 2.5,
+          // eigenen Chaikin-Glättung oben — niedrigerer Wert = weniger
+          // Vereinfachung = feinere Grenzen (Nutzerwunsch 20.09.2026: "mach
+          // grafik ... höher . sowohl grenzen").
+          smoothFactor: 1.1,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           style: (feature: any) => {
             const name: string = feature?.properties?.NAME ?? "";
-            // Jedes Gebiet bekommt seine eigene Farbe statt eines
-            // Rot-Einheitsbreis — sonst sind sich überlappende Reiche
-            // (z.B. mehrere Khanate gleichzeitig) nicht auseinanderzuhalten.
-            const c = hashColor(name);
+            const c = colorByName.get(name) ?? "hsl(0, 0%, 50%)";
             return {
               color: c,
-              weight: 1.4,
+              weight: 1.6,
               fillColor: c,
               fillOpacity: 0.42,
               // Runde statt spitze Ecken an den Grenzlinien — wirkt weniger
@@ -725,7 +824,10 @@ export default function ImperienPage() {
           <p className="mb-4 text-xs text-muted">{errorMessage}</p>
         )}
 
-        <div className="relative aspect-[16/10] w-full overflow-hidden border border-border bg-surface-elevated sm:aspect-[16/8]">
+        {/* Nutzerwunsch 20.09.2026: "mach grafik von karte und teritorium
+            höher" — deutlich mehr Bildschirmhöhe statt fixem 16:10/16:8-
+            Seitenverhältnis, damit Grenzen/Beschriftungen mehr Platz haben. */}
+        <div className="relative h-[70vh] min-h-[420px] w-full overflow-hidden border border-border bg-surface-elevated sm:h-[80vh]">
           <div ref={mapContainerRef} className="absolute inset-0" />
           {(!leafletReady || (isLoadingBorders && years.length === 0)) && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/70">
