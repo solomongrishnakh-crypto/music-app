@@ -72,7 +72,17 @@ async function fetchWithRetry(url: string): Promise<Response | null> {
     }
     return res;
   } catch {
-    return null;
+    // Nutzerkorrektur 20.09.2026 ("ungenaue beschreibung" — "Roman Empire"
+    // landete bei einem unrelated Nachschlagewerk-Artikel): ein einmaliger
+    // Netzwerk-Fehler (Exception, nicht 429) liess den DIREKTEN
+    // Exakt-Namen-Treffer zuvor sofort aufgeben und in die deutlich
+    // unsicherere Volltextsuche abrutschen, statt es einfach nochmal zu
+    // versuchen. Ein einziger stiller Retry hier verhindert genau das.
+    try {
+      return await fetch(url, { cache: "no-store", headers: FETCH_HEADERS });
+    } catch {
+      return null;
+    }
   }
 }
 
@@ -162,10 +172,29 @@ async function searchTitle(lang: WikiLang, words: string[]): Promise<string | nu
     if (typeof title !== "string") return null;
     const titleLower = title.toLowerCase();
     const allPresent = words.every((w) => titleLower.includes(w.toLowerCase()));
-    return allPresent ? title : null;
+    if (!allPresent) return null;
+    // Nutzerkorrektur 20.09.2026 ("ungenaue beschreibung" — "Roman Empire"
+    // landete bei "The Prosopography of the Later Roman Empire", einem
+    // akademischen Nachschlagewerk ÜBER das Römische Reich, nicht dem Reich
+    // selbst — enthielt zufaellig alle gesuchten Wörter im Titel). Zwei
+    // zusaetzliche Filter: (1) Nachschlagewerk-/Meta-Titel explizit
+    // ausschliessen, (2) ein Titel, der mehr als doppelt so viele Wörter hat
+    // wie die Originalsuche, ist so gut wie nie der gesuchte Artikel selbst,
+    // sondern ein Artikel, der das Thema nur ausfuehrlich im Titel erwaehnt.
+    if (isReferenceWorkTitle(title)) return null;
+    if (title.split(/\s+/).length > words.length * 2) return null;
+    return title;
   } catch {
     return null;
   }
+}
+
+// Siehe Kommentar in searchTitle oben.
+const REFERENCE_WORK_PATTERN =
+  /^(the\s+)?(prosopography|bibliography|historiography|encyclopedia|encyclopaedia|dictionary|glossary|index|catalogue|catalog|timeline|chronology|list|who'?s who|database)\b|\bbibliography of\b|\bdictionary of\b|\bencyclopedia of\b/i;
+
+function isReferenceWorkTitle(title: string): boolean {
+  return REFERENCE_WORK_PATTERN.test(title);
 }
 
 // Wikipedia-interne Weiterleitungen können einen abgeleiteten Titel
@@ -184,6 +213,13 @@ const BAD_INSTANCE_WORDS = [
   "film", "television series", "web series", "video game", "novel", "comic",
   "company", "business", "corporation", "brand",
   "professional wrestling", "wrestler",
+  // Nutzerkorrektur 20.09.2026 ("ungenaue beschreibung") — akademische
+  // Nachschlagewerke UEBER ein Reich (Buecher, Datenbanken, Journale)
+  // werden sonst faelschlich als der Artikel ÜBER das Reich selbst
+  // akzeptiert.
+  "book", "reference work", "academic journal", "scholarly journal",
+  "encyclopedia", "database", "bibliography", "prosopography",
+  "biographical dictionary", "monograph",
 ];
 
 async function isPlausibleHistoricalEntity(
