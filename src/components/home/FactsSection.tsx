@@ -5,7 +5,6 @@ import { useState, type ReactNode } from "react";
 import Typewriter from "@/components/ui/Typewriter";
 import DetailModal from "@/components/ui/DetailModal";
 import SpaceNewsSection from "@/components/home/SpaceNewsSection";
-import TopEmpiresGrid from "@/components/home/TopEmpiresGrid";
 import { useInView } from "@/hooks/useInView";
 
 interface UniverseFact {
@@ -178,8 +177,6 @@ export default function FactsSection() {
           Karte ansehen ↗
         </p>
       </Link>
-
-      <TopEmpiresGrid />
 
       {selected?.type === "universe" && (
         <DetailModal
