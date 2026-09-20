@@ -504,6 +504,17 @@ export default function ImperienPage() {
   // neu, ein "nächstgelegener Kartenstand" wird nicht mehr gebraucht.
   const [sliderYear, setSliderYear] = useState(1200);
   const [isLoadingBorders, setIsLoadingBorders] = useState(false);
+  // Nutzerkorrektur 20.09.2026: "es ladet sekunden bis imperien angezeigt
+  // werden nach dem ich die seite geöffnet hab" — die Ladeanzeige (Spinner)
+  // war so gebaut, dass sie verschwand, sobald der Jahresbereich (yearRange)
+  // geladen war, obwohl DANACH noch der eigentliche Grenzen-Fetch für das
+  // erste Jahr läuft (der Cliopatria-Datensatz ist groß, das dauert ein
+  // paar Sekunden) — in dieser Lücke sah die Karte leer/leblos aus, ganz
+  // ohne Hinweis, dass noch geladen wird. Dieser Zustand merkt sich, ob
+  // schon mindestens einmal wirklich Grenzen gezeichnet wurden, damit der
+  // Spinner genau bis dahin sichtbar bleibt (und danach beim normalen
+  // Jahre-Scrubben nicht mehr störend aufblitzt).
+  const [hasRenderedBorders, setHasRenderedBorders] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selected, setSelected] = useState<SelectedFeature | null>(null);
   const [info, setInfo] = useState<EmpireInfo | null>(null);
@@ -749,6 +760,7 @@ export default function ImperienPage() {
 
     geoLayerRef.current = layer;
     setErrorMessage(null);
+    setHasRenderedBorders(true);
   }
   renderBordersGeojsonRef.current = renderBordersGeojson;
 
@@ -1112,7 +1124,7 @@ export default function ImperienPage() {
             Seitenverhältnis, damit Grenzen/Beschriftungen mehr Platz haben. */}
         <div className="relative h-[70vh] min-h-[420px] w-full overflow-hidden border border-border bg-surface-elevated sm:h-[80vh]">
           <div ref={mapContainerRef} className="absolute inset-0" />
-          {(!leafletReady || (isLoadingBorders && !yearRange)) && (
+          {(!leafletReady || (isLoadingBorders && !hasRenderedBorders)) && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/70">
               <Spinner />
             </div>
