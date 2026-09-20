@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { loadCliopatriaFeatures } from "@/lib/history/cliopatria";
 
+// Das Cliopatria-ZIP ist ~42 MB (entpackt ~165 MB) — Herunterladen +
+// Entpacken kann beim ersten (kalten) Aufruf länger als die Standard-10s
+// dauern, deshalb das Funktions-Zeitlimit hier explizit anheben.
+export const maxDuration = 60;
+
 /**
  * GET /api/empires/index
  *

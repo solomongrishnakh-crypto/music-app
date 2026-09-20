@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loadCliopatriaFeatures } from "@/lib/history/cliopatria";
 
+// Siehe /api/empires/index/route.ts — derselbe Grund (großer Datensatz,
+// erster Aufruf lädt/entpackt ~165 MB).
+export const maxDuration = 60;
+
 /**
  * GET /api/empires/borders?year=1200
  *
