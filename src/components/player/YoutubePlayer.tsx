@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Song } from "@/types/music";
 import { usePlayer } from "@/contexts/PlayerContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
  * YoutubePlayer
@@ -104,6 +105,7 @@ export default function YoutubePlayer({
   hasPrevious,
 }: YoutubePlayerProps) {
   const { reportProgress, registerControls, heroActive } = usePlayer();
+  const { t } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YTPlayerInstance | null>(null);
   const onEndedRef = useRef(onEnded);
@@ -303,7 +305,7 @@ export default function YoutubePlayer({
         <div className="flex items-center gap-3">
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-medium uppercase text-foreground">
-              {song?.title ?? "Kein Song ausgewählt"}
+              {song?.title ?? t("noSongSelected")}
             </p>
             <p className="truncate text-[11px] text-muted">{song?.artist ?? ""}</p>
           </div>
@@ -315,7 +317,7 @@ export default function YoutubePlayer({
             onClick={onPrevious}
             disabled={!song || !hasPrevious}
             className="flex h-8 w-8 shrink-0 items-center justify-center text-white transition-colors hover:text-accent disabled:cursor-not-allowed disabled:opacity-30"
-            aria-label="Letzter Song"
+            aria-label={t("lastSongAria")}
           >
             <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" />
@@ -326,7 +328,7 @@ export default function YoutubePlayer({
             onClick={togglePlayback}
             disabled={!song}
             className="flex h-8 w-8 shrink-0 items-center justify-center border border-foreground/30 text-white transition-colors hover:border-accent disabled:cursor-not-allowed disabled:opacity-40"
-            aria-label={isPlaying ? "Pause" : "Abspielen"}
+            aria-label={isPlaying ? t("playerPause") : t("playerPlay")}
           >
             {isPlaying ? (
               <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -343,7 +345,7 @@ export default function YoutubePlayer({
             onClick={onNext}
             disabled={!song}
             className="flex h-8 w-8 shrink-0 items-center justify-center text-white transition-colors hover:text-accent disabled:cursor-not-allowed disabled:opacity-30"
-            aria-label="Nächster Song"
+            aria-label={t("nextSongAria")}
           >
             <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
               <path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z" />
@@ -353,7 +355,7 @@ export default function YoutubePlayer({
           <button
             onClick={handleClose}
             className="flex h-8 w-8 shrink-0 items-center justify-center text-muted transition-colors hover:text-accent"
-            aria-label="Player schließen"
+            aria-label={t("playerCloseAria")}
           >
             <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 6l12 12M18 6L6 18" />
@@ -380,7 +382,7 @@ export default function YoutubePlayer({
             style={{
               background: `linear-gradient(to right, #ff5a4d ${progressPercent}%, #232320 ${progressPercent}%)`,
             }}
-            aria-label="Wiedergabeposition"
+            aria-label={t("playbackPositionAria")}
           />
           <span className="w-9 shrink-0 text-[10px] tabular-nums text-muted">
             {formatTime(duration)}

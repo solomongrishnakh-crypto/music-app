@@ -62,7 +62,7 @@ export default function SearchBar({ onSearch, placeholder }: SearchBarProps) {
             type="button"
             onClick={() => setValue("")}
             className="shrink-0 rounded-full p-1 text-muted transition-colors hover:bg-white/5 hover:text-foreground"
-            aria-label="Suche zurücksetzen"
+            aria-label={t("clearSearchAria")}
           >
             <svg
               className="h-5 w-5"

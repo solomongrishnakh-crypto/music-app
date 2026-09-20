@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { Song } from "@/types/music";
 import SongCover from "@/components/ui/SongCover";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface FavoritesModalProps {
   songs: Song[];
@@ -26,6 +27,7 @@ export default function FavoritesModal({
   onToggleFavorite,
   onClose,
 }: FavoritesModalProps) {
+  const { t } = useLanguage();
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -54,25 +56,25 @@ export default function FavoritesModal({
           <button
             onClick={onClose}
             className="label-mono flex shrink-0 items-center gap-1.5 border border-border px-3 py-1.5 text-xs uppercase text-foreground transition-colors hover:border-accent hover:text-accent"
-            aria-label="Zurück"
+            aria-label={t("back")}
           >
             <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
-            Zurück
+            {t("back")}
           </button>
           <p className="label-mono text-xs uppercase">
-            // Gemerkte Musics <span className="ml-1">🔀</span>
+            {t("favoritesLabel")} <span className="ml-1">🔀</span>
           </p>
           <button
             onClick={onShufflePlay}
             className="flex shrink-0 items-center gap-1.5 border border-border px-3 py-1.5 text-[11px] uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent"
-            aria-label="Zufällig abspielen"
+            aria-label={t("shufflePlayAria")}
           >
             <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 24 24">
               <path d="M8 5v14l11-7z" />
             </svg>
-            Zufällig
+            {t("shuffleWord")}
           </button>
         </div>
 

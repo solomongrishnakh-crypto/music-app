@@ -1,3 +1,7 @@
+"use client";
+
+import { useLanguage } from "@/contexts/LanguageContext";
+
 const CONTACTS = [
   {
     label: "Telegram",
@@ -24,10 +28,11 @@ const CONTACTS = [
  * Text, die in einem neuen Tab zu Telegram bzw. X führen.
  */
 export default function ContactSection() {
+  const { t } = useLanguage();
   return (
     <div className="mx-auto mb-4 mt-20 w-full max-w-5xl sm:mt-28">
       <div className="mb-6 border-b border-border pb-4">
-        <p className="label-mono text-xs uppercase">// Kontakte</p>
+        <p className="label-mono text-xs uppercase">{t("contactsLabel")}</p>
       </div>
       <div className="flex items-center gap-6">
         {CONTACTS.map((contact) => (

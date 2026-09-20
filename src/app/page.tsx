@@ -74,14 +74,14 @@ export default function Home() {
       if (requestId !== requestIdRef.current) return;
 
       if (!res.ok) {
-        setErrorMessage(data.error ?? "Suche fehlgeschlagen.");
+        setErrorMessage(data.error ?? t("searchFailed"));
         setResults([]);
       } else {
         setResults(data.songs ?? []);
       }
     } catch {
       if (requestId !== requestIdRef.current) return;
-      setErrorMessage("Suche fehlgeschlagen. Bitte Internetverbindung prüfen.");
+      setErrorMessage(t("searchFailedConn"));
       setResults([]);
     } finally {
       if (requestId === requestIdRef.current) setIsLoading(false);
@@ -119,14 +119,11 @@ export default function Home() {
 
       <div className="pointer-events-none fixed inset-0 z-10 hidden select-none p-6 sm:block sm:p-8">
         <div className="pointer-events-auto absolute right-6 top-16 max-w-[220px] text-right text-xs leading-relaxed sm:right-8 sm:top-20">
-          <p className="label-mono mb-1 uppercase">// Info</p>
-          <p className="text-muted">
-            Musik, KI-News und mehr — alles auf einer Seite. Kein Login,
-            kein Abo.
-          </p>
+          <p className="label-mono mb-1 uppercase">{t("infoLabel")}</p>
+          <p className="text-muted">{t("infoText")}</p>
         </div>
         <div className="pointer-events-none absolute bottom-24 left-6 max-w-[220px] text-xs text-muted sm:bottom-8 sm:left-8">
-          <p className="label-mono uppercase">// Copyright {new Date().getFullYear()}</p>
+          <p className="label-mono uppercase">{t("copyrightLabel")} {new Date().getFullYear()}</p>
           <p>Centaurian.</p>
         </div>
       </div>
@@ -153,7 +150,7 @@ export default function Home() {
               <TypedWordmark speed={90} />
             </h1>
             <p className="mx-auto mt-3 max-w-xl text-xs text-muted sm:text-sm">
-              // Song suchen und direkt hier abspielen.
+              // {t("homeSubtitle")}
             </p>
           </header>
         )}
@@ -169,16 +166,8 @@ export default function Home() {
           // kleinen (i)-Symbol zum Antippen.
           <div className="mx-auto mt-3 flex justify-center">
             <InfoHint>
-              <p>
-                Hinweis: Gemerkte Songs werden lokal in diesem Browser
-                gespeichert — im privaten/Inkognito-Fenster gehen sie beim
-                Schließen verloren.
-              </p>
-              <p>
-                Manche Browser (z.B. Safari auf dem iPhone) pausieren die
-                Wiedergabe im Hintergrund, wenn die Seite verlassen oder das
-                Gerät gesperrt wird.
-              </p>
+              <p>{t("infoHintNote1")}</p>
+              <p>{t("infoHintNote2")}</p>
             </InfoHint>
           </div>
         )}
@@ -186,18 +175,18 @@ export default function Home() {
         {showFavorites && (
           <div className="glass-card mx-auto mt-4 flex w-full max-w-2xl items-center justify-between gap-3 px-4 py-3">
             <p className="label-mono text-xs uppercase">
-              // Gemerkte Musics <span className="ml-1">🔀</span>
+              {t("favoritesLabel")} <span className="ml-1">🔀</span>
               <span className="ml-2 text-muted">({player.favorites.length})</span>
             </p>
             <button
               onClick={handleShufflePlayFavorites}
               className="flex shrink-0 items-center gap-1.5 border border-border px-3 py-1.5 text-[11px] uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent"
-              aria-label="Gemerkte Musics zufällig abspielen"
+              aria-label={t("shufflePlayAria")}
             >
               <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5" />
               </svg>
-              Zufällig abspielen
+              {t("shufflePlay")}
             </button>
           </div>
         )}
@@ -205,7 +194,7 @@ export default function Home() {
         {showFavorites && (
           <CompactSongList
             songs={player.favorites}
-            title="// Gemerkt 🔀"
+            title={`${t("favoritesCompactLabel")} 🔀`}
             onPlay={handlePlay}
             onToggleFavorite={player.toggleFavorite}
             activeSongId={player.currentSong?.id}

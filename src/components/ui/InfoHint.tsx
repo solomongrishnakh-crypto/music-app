@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
  * Kleines Info-Symbol (ⓘ) statt sichtbarem Fließtext auf der Startseite
@@ -10,6 +11,7 @@ import { useState } from "react";
  * sie wieder.
  */
 export default function InfoHint({ children }: { children: React.ReactNode }) {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
 
   return (
@@ -17,7 +19,7 @@ export default function InfoHint({ children }: { children: React.ReactNode }) {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        aria-label="Hinweise anzeigen"
+        aria-label={t("infoHintAriaLabel")}
         aria-expanded={open}
         className="flex h-5 w-5 items-center justify-center rounded-full border border-border text-[11px] text-muted transition-colors hover:border-accent hover:text-accent"
       >

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface DetailModalProps {
   eyebrow: string;
@@ -28,6 +29,7 @@ export default function DetailModal({
   imageCredit,
   onClose,
 }: DetailModalProps) {
+  const { t } = useLanguage();
   const [imageFailed, setImageFailed] = useState(false);
 
   useEffect(() => {
@@ -54,7 +56,7 @@ export default function DetailModal({
         <button
           onClick={onClose}
           className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center border border-border text-muted transition-colors hover:border-accent hover:text-accent"
-          aria-label="Schließen"
+          aria-label={t("close")}
         >
           <svg
             className="h-4 w-4"

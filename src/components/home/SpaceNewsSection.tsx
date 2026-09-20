@@ -3,6 +3,7 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useInView } from "@/hooks/useInView";
 import Spinner from "@/components/ui/Spinner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SpaceNewsArticle {
   id: number;
@@ -78,6 +79,7 @@ function formatDate(iso: string): string {
  * statischer/erfundener Inhalt). Kleine, kompakte Kachel-Boxen.
  */
 export default function SpaceNewsSection() {
+  const { t } = useLanguage();
   const [news, setNews] = useState<SpaceNewsArticle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -101,7 +103,7 @@ export default function SpaceNewsSection() {
         }
       })
       .catch(() => {
-        if (!cancelled) setErrorMessage("Space News konnten nicht geladen werden.");
+        if (!cancelled) setErrorMessage(t("spaceNewsLoadError"));
       })
       .finally(() => {
         if (!cancelled) setIsLoading(false);
@@ -128,12 +130,12 @@ export default function SpaceNewsSection() {
           >
             ▶
           </span>
-          // Space News
+          // {t("spaceNewsLabel")}
           {!isLoading && news.length > 0 && (
             <span className="text-muted">({news.length})</span>
           )}
         </span>
-        <span className="label-mono text-[10px] uppercase text-muted">Live</span>
+        <span className="label-mono text-[10px] uppercase text-muted">{t("liveLabel")}</span>
       </button>
 
       {isExpanded && (
@@ -188,6 +190,7 @@ interface NewsDetailModalProps {
 /** Eigenes, reichhaltigeres Detail-Fenster für News — mit echtem klickbarem
  * Artikel-Link, Autoren und Quelle, statt eines reinen Textblocks. */
 function NewsDetailModal({ article, onClose }: NewsDetailModalProps) {
+  const { t } = useLanguage();
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
@@ -199,7 +202,7 @@ function NewsDetailModal({ article, onClose }: NewsDetailModalProps) {
       >
         <button
           onClick={onClose}
-          aria-label="Schließen"
+          aria-label={t("close")}
           className="absolute right-4 top-4 flex h-7 w-7 items-center justify-center border border-border text-muted transition-colors hover:border-accent hover:text-accent"
         >
           ✕
@@ -226,10 +229,10 @@ function NewsDetailModal({ article, onClose }: NewsDetailModalProps) {
         <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[10px] uppercase tracking-wide text-muted">
           <span>{formatDate(article.publishedAt)}</span>
           {article.authors.length > 0 && (
-            <span>Von {article.authors.join(", ")}</span>
+            <span>{t("byAuthor")} {article.authors.join(", ")}</span>
           )}
-          {article.launch && <span>Mission: {article.launch}</span>}
-          {article.event && <span>Event: {article.event}</span>}
+          {article.launch && <span>{t("missionLabel")}: {article.launch}</span>}
+          {article.event && <span>{t("eventLabel")}: {article.event}</span>}
         </div>
 
         <p className="mt-4 text-sm leading-relaxed text-muted">
@@ -242,7 +245,7 @@ function NewsDetailModal({ article, onClose }: NewsDetailModalProps) {
           rel="noopener noreferrer"
           className="label-mono mt-6 inline-flex items-center gap-2 border border-border px-4 py-2 text-xs uppercase text-foreground transition-colors hover:border-accent hover:text-accent"
         >
-          Artikel lesen ↗
+          {t("readArticle")} ↗
         </a>
       </div>
     </div>

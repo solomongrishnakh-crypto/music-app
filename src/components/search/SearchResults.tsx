@@ -2,6 +2,7 @@
 
 import { Song } from "@/types/music";
 import SongCard from "./SongCard";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SearchResultsProps {
   songs: Song[];
@@ -26,6 +27,7 @@ export default function SearchResults({
   isFavorite,
   onToggleFavorite,
 }: SearchResultsProps) {
+  const { t } = useLanguage();
   if (errorMessage) {
     return (
       <div className="mt-10 border border-border p-8 text-center text-xs text-muted">
@@ -47,7 +49,7 @@ export default function SearchResults({
   if (songs.length === 0) {
     return (
       <div className="mt-10 border border-border p-8 text-center text-xs text-muted">
-        {query ? `Keine Ergebnisse für „${query}".` : "Suche nach einem Song oder Künstler."}
+        {query ? `${t("noResultsFor")} „${query}".` : t("searchPrompt")}
       </div>
     );
   }
@@ -55,7 +57,7 @@ export default function SearchResults({
   return (
     <div className="mt-10">
       <h2 className="label-mono mb-4 text-xs uppercase">
-        {title ?? (query ? `Ergebnisse für „${query}"` : "Ergebnisse")}
+        {title ?? (query ? `${t("resultsFor")} „${query}"` : t("resultsLabel"))}
       </h2>
       <div className="grid grid-cols-2 gap-px bg-border sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
         {songs.map((song) => (

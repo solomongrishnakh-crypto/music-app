@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Song } from "@/types/music";
 import SongCover from "@/components/ui/SongCover";
 import EqualizerVisualizer from "@/components/ui/EqualizerVisualizer";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface NowPlayingHeroProps {
   song: Song;
@@ -53,6 +54,7 @@ export default function NowPlayingHero({
   onTogglePlay,
   onSeek,
 }: NowPlayingHeroProps) {
+  const { t } = useLanguage();
   const [isSeeking, setIsSeeking] = useState(false);
   const [seekValue, setSeekValue] = useState(0);
 
@@ -67,14 +69,14 @@ export default function NowPlayingHero({
       <button
         onClick={onBack}
         className="label-mono mb-6 flex items-center gap-1.5 self-start border border-border px-3 py-1.5 text-xs uppercase text-foreground transition-colors hover:border-accent hover:text-accent"
-        aria-label="Zurück zur Startseite"
+        aria-label={t("backToHomeAria")}
       >
         <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
         </svg>
-        Zurück
+        {t("back")}
       </button>
-      <p className="label-mono mb-4 text-xs uppercase">// Now Playing</p>
+      <p className="label-mono mb-4 text-xs uppercase">{t("nowPlayingLabel")}</p>
       <SongCover
         alt={`Titelbild für ${song.title}`}
         className="relative aspect-square w-56 border border-border sm:w-72"
@@ -101,7 +103,7 @@ export default function NowPlayingHero({
           onClick={onPrevious}
           disabled={!hasPrevious}
           className="flex h-14 w-14 items-center justify-center border border-border text-foreground transition-colors hover:border-accent hover:text-accent disabled:cursor-not-allowed disabled:opacity-30 disabled:hover:border-border disabled:hover:text-foreground"
-          aria-label="Letzter Song"
+          aria-label={t("lastSongAria")}
         >
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
             <path d="M6 6h2v12H6zm3.5 6 8.5 6V6z" />
@@ -110,7 +112,7 @@ export default function NowPlayingHero({
         <button
           onClick={onTogglePlay}
           className="flex h-16 w-16 items-center justify-center border border-accent text-foreground transition-colors hover:bg-accent hover:text-background"
-          aria-label={isPlaying ? "Pause" : "Abspielen"}
+          aria-label={isPlaying ? t("playerPause") : t("playerPlay")}
         >
           {isPlaying ? (
             <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
@@ -125,7 +127,7 @@ export default function NowPlayingHero({
         <button
           onClick={onNext}
           className="flex h-14 w-14 items-center justify-center border border-border text-foreground transition-colors hover:border-accent hover:text-accent"
-          aria-label="Nächster Song"
+          aria-label={t("nextSongAria")}
         >
           <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
             <path d="M16 6h2v12h-2zM6 6l8.5 6L6 18z" />
@@ -163,7 +165,7 @@ export default function NowPlayingHero({
           style={{
             background: `linear-gradient(to right, #ff5a4d ${progressPercent}%, #232320 ${progressPercent}%)`,
           }}
-          aria-label="Wiedergabeposition"
+          aria-label={t("playbackPositionAria")}
         />
         <span className="w-9 shrink-0 text-[10px] tabular-nums text-muted">
           {formatTime(duration)}

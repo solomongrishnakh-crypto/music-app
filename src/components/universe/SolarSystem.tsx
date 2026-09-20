@@ -42,7 +42,7 @@ export default function SolarSystem({
   selectedId,
   className = "",
 }: SolarSystemProps) {
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawnRef = useRef<DrawnPlanet[]>([]);
@@ -460,7 +460,7 @@ export default function SolarSystem({
         onPointerLeave={handlePointerUp}
         onWheel={handleWheel}
         className={interactive ? "cursor-grab touch-none" : ""}
-        aria-label="Sonnensystem-Visualisierung"
+        aria-label={t("solarSystemVisAria")}
       />
     </div>
   );

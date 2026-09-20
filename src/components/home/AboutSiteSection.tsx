@@ -18,9 +18,13 @@
  * lags") — daher jetzt `SeamlessLoopVideo`, das per Crossfade zwischen
  * zwei synchronisierten Videos den Loop-Sprung unsichtbar macht.
  */
+"use client";
+
 import SeamlessLoopVideo from "@/components/ui/SeamlessLoopVideo";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function AboutSiteSection() {
+  const { t } = useLanguage();
   return (
     <div className="mx-auto mt-16 w-full max-w-5xl sm:mt-20">
       <div className="grid grid-cols-1 gap-px bg-border sm:grid-cols-2">
@@ -38,20 +42,9 @@ export default function AboutSiteSection() {
           />
         </div>
         <div className="glass-card flex flex-col justify-center p-6 sm:p-10">
-          <p className="label-mono mb-3 text-xs uppercase">// Über die Webseite</p>
+          <p className="label-mono mb-3 text-xs uppercase">{t("aboutLabel")}</p>
           <p className="text-sm leading-relaxed text-muted sm:text-base">
-            Centaurian ist ein privates, nicht-kommerzielles Hobby-Projekt —
-            kein offizieller Dienst, ohne Werbe-Tracking-Schnickschnack und
-            ohne aufgeblähtes Interface. Mehr als nur Musik: Neben Suche und
-            Wiedergabe gehören eine interaktive Weltkarte zum Erkunden der
-            Geschichte und eine Übersicht zum Kennenlernen des Universums
-            dazu — Centaurian als kleiner Ort, um Wissen über die Existenz
-            zu entdecken. Die Musik-Suche und Wiedergabe laufen
-            ausschließlich über die offizielle YouTube Data API und den
-            offiziellen YouTube-Player; es wird nichts heruntergeladen,
-            kopiert oder auf dieser Seite gespeichert. Da nur öffentlich
-            dokumentierte, offizielle Schnittstellen genutzt werden, ist die
-            Nutzung dieser Seite legal.
+            {t("aboutText")}
           </p>
         </div>
       </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Spinner from "@/components/ui/Spinner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AiNewsArticle {
   id: string;
@@ -74,6 +75,7 @@ function CardThumbnail({ src, alt }: CardThumbnailProps) {
  * falls ein Artikel diese Felder mal nicht liefert.
  */
 export default function AiNewsSection() {
+  const { t } = useLanguage();
   const [expanded, setExpanded] = useState(false);
   const [news, setNews] = useState<AiNewsArticle[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -98,7 +100,7 @@ export default function AiNewsSection() {
           }
         })
         .catch(() => {
-          if (!cancelled) setErrorMessage("KI-News konnten nicht geladen werden.");
+          if (!cancelled) setErrorMessage(t("aiNewsLoadError"));
         })
         .finally(() => {
           if (!cancelled) setIsLoading(false);
@@ -121,7 +123,7 @@ export default function AiNewsSection() {
   return (
     <div id="ai-news" className="mx-auto mt-20 w-full max-w-5xl scroll-mt-24 sm:mt-28">
       <div className="mb-10 border-b border-border pb-4">
-        <p className="label-mono text-xs uppercase">// AI News</p>
+        <p className="label-mono text-xs uppercase">// {t("navAiNews")}</p>
       </div>
 
       <button
@@ -144,14 +146,13 @@ export default function AiNewsSection() {
         </div>
         <div className="flex flex-1 flex-col justify-center p-6 sm:p-10">
           <p className="font-display text-lg font-bold text-accent sm:text-2xl">
-            Was gerade in der KI passiert
+            {t("aiNewsHeroTitle")}
           </p>
           <p className="mt-3 max-w-xl text-xs leading-relaxed text-muted sm:text-sm">
-            Aktuelle Schlagzeilen rund um künstliche Intelligenz — live
-            geladen, keine erfundenen Meldungen.
+            {t("aiNewsHeroText")}
           </p>
           <p className="label-mono mt-4 inline-flex items-center gap-2 text-xs uppercase text-foreground">
-            {expanded ? "Einklappen" : "Alle News anzeigen"}
+            {expanded ? t("collapse") : t("showAllNews")}
             <span aria-hidden className={`transition-transform ${expanded ? "rotate-180" : ""}`}>
               ▾
             </span>
@@ -217,7 +218,7 @@ export default function AiNewsSection() {
                         {item.summary}
                       </p>
                       <p className="label-mono mt-2 hidden items-center gap-2 text-xs uppercase text-foreground transition-colors group-hover:text-accent sm:mt-4 sm:inline-flex">
-                        Artikel lesen ↗
+                        {t("readArticle")} ↗
                       </p>
                     </div>
                   </a>
@@ -228,7 +229,7 @@ export default function AiNewsSection() {
 
           {!isLoading && news.length === 0 && !errorMessage && (
             <p className="label-mono text-xs uppercase text-muted">
-              // Aktuell keine News verfügbar
+              // {t("noNewsAvailable")}
             </p>
           )}
         </div>

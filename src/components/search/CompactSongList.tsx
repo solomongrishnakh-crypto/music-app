@@ -2,6 +2,7 @@
 
 import { Song } from "@/types/music";
 import SongCover from "@/components/ui/SongCover";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface CompactSongListProps {
   songs: Song[];
@@ -27,6 +28,7 @@ export default function CompactSongList({
   limit,
   onShowMore,
 }: CompactSongListProps) {
+  const { t } = useLanguage();
   if (songs.length === 0) return null;
 
   const visibleSongs = limit ? songs.slice(0, limit) : songs;
@@ -85,7 +87,7 @@ export default function CompactSongList({
           onClick={onShowMore}
           className="label-mono mt-2 w-full border-b border-border py-2 text-center text-[11px] uppercase text-muted transition-colors hover:text-accent"
         >
-          + {remaining} mehr anzeigen
+          + {remaining} {t("moreShow")}
         </button>
       )}
     </div>
