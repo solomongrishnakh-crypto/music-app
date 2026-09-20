@@ -25,18 +25,17 @@ export default function AboutSiteSection() {
     <div className="mx-auto mt-16 w-full max-w-5xl sm:mt-20">
       <div className="grid grid-cols-1 gap-px bg-border sm:grid-cols-2">
         <div className="relative aspect-video overflow-hidden bg-background opacity-90 sm:aspect-auto">
+          {/* Nutzerkorrektur 20.09.2026: "man sieht immer noch kling ai
+              kannst vlt das video bisschen kleiner schneiden so das man es
+              nicht sieht" — der Verlaufs-Fade-Versuch hat das eingebrannte
+              "KlingAI"-Wasserzeichen unten rechts nicht zuverlässig
+              abgedeckt. Jetzt stattdessen die Videodatei selbst unten
+              beschnitten (der Streifen mit dem Wasserzeichen ist komplett
+              herausgeschnitten) — sauberer als jede CSS-Abdeckung. */}
           <SeamlessLoopVideo
             src="/branding/about-video.mp4"
             ariaLabel="Centaurian — visuelle Identität"
           />
-          {/* Nutzerkorrektur 20.09.2026: "da sieht man klingai wasserzeichen
-              bitte versteck es" — das KI-generierte Video trägt unten ein
-              eingebranntes "KlingAI"-Wasserzeichen, das sich aus dem
-              Video selbst nicht entfernen lässt. Ein Verlaufs-"Vignette"
-              am unteren Rand blendet diesen Bereich zur Hintergrundfarbe
-              hin aus, statt ihn mit einer sichtbaren, kantigen Box
-              abzudecken. */}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background via-background/70 to-transparent sm:h-20" />
         </div>
         <div className="glass-card flex flex-col justify-center p-6 sm:p-10">
           <p className="label-mono mb-3 text-xs uppercase">// Über die Webseite</p>
