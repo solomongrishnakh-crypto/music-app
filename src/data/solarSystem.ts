@@ -227,7 +227,7 @@ export const DWARF_PLANETS: PlanetData[] = [
     },
     description:
       "Pluto galt bis 2006 als neunter Planet und wurde dann als Zwergplanet neu eingestuft, nachdem klar wurde, dass es im Kuipergürtel viele ähnliche Objekte gibt. Sein größter Mond Charon ist halb so groß wie Pluto selbst — beide umkreisen einen gemeinsamen Schwerpunkt außerhalb Plutos, weshalb man sie manchmal als Doppel-Zwergplanet bezeichnet. Die NASA-Sonde New Horizons flog 2015 als bislang einzige Mission an Pluto vorbei und entdeckte u. a. das herzförmige Gletschergebiet Tombaugh Regio.",
-    image: commonsFile("Pluto.jpg"),
+    image: commonsFile("Pluto_in_True_Color_-_High-Res.jpg"),
   },
   {
     id: "haumea",
