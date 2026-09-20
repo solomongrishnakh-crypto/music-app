@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import SiteBackground from "@/components/particles/SiteBackground";
 import TopEmpiresGrid from "@/components/home/TopEmpiresGrid";
 import Spinner from "@/components/ui/Spinner";
+import { getEmpiresForYear, getEmpiresYearRange, preloadEmpiresData } from "@/lib/history/empiresClient";
 
 const LEAFLET_CSS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
 const LEAFLET_JS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
@@ -475,9 +476,11 @@ function geometryLabelPoint(geometry: any): [number, number] | null {
  * (Nutzerkorrektur 20.09.2026: "fast jedes jahr aendert sich die
  * territoriums"), auch sehr kurzlebige Reiche werden dadurch exakt sichtbar.
  * Vorher: historical-basemaps (GPL-3.0), nur alle paar Jahrzehnte ein
- * fester Kartenstand. Geladen ueber /api/empires/index (liefert nur noch
- * den Jahresbereich) + /api/empires/borders?year=... (liefert die fuer
- * genau dieses Jahr gueltigen Gebiete), siehe src/lib/history/cliopatria.ts.
+ * fester Kartenstand. Seit 20.09.2026 kommt der (vorab gefilterte und
+ * geometrisch vereinfachte) Datensatz als statische Datei direkt vom
+ * Browser, siehe src/lib/history/empiresClient.ts — kein Server-seitiges
+ * Entpacken/Parsen des ~165 MB Rohdatensatzes mehr pro Anfrage (das war
+ * die Ursache der zuvor minutenlangen Ladezeit).
  *
  * Leaflet wird bewusst per CDN-<script>/<link> geladen statt per npm
  * (im Entwicklungs-Sandbox-Netz war der npm-Registry-Zugriff blockiert;
@@ -599,18 +602,17 @@ export default function ImperienPage() {
   }, [leafletReady]);
 
   // Verfuegbaren Jahresbereich einmalig laden (Cliopatria deckt 3400 v.
-  // Chr. bis 2024 n. Chr. ab, jedes Jahr dazwischen ist gueltig).
+  // Chr. bis 2024 n. Chr. ab, jedes Jahr dazwischen ist gueltig). Seit
+  // 20.09.2026 kommt der komplette Datensatz als EINE statische Datei
+  // direkt vom Browser (siehe empiresClient.ts) — kein Server-Umweg mehr,
+  // der das ~165 MB Cliopatria-Archiv erst live entpacken müsste (das war
+  // die eigentliche Ursache für die minutenlange Wartezeit).
   useEffect(() => {
     let cancelled = false;
-    fetch("/api/empires/index")
-      .then((res) => res.json())
-      .then((data) => {
-        if (cancelled) return;
-        if (data.error || typeof data.minYear !== "number" || typeof data.maxYear !== "number") {
-          setErrorMessage(data.error ?? "Zeitleiste konnte nicht geladen werden.");
-          return;
-        }
-        setYearRange({ minYear: data.minYear, maxYear: data.maxYear });
+    preloadEmpiresData();
+    getEmpiresYearRange()
+      .then((range) => {
+        if (!cancelled) setYearRange(range);
       })
       .catch(() => {
         if (!cancelled) setErrorMessage("Zeitleiste konnte nicht geladen werden.");
@@ -798,14 +800,9 @@ export default function ImperienPage() {
         return;
       }
       setIsLoadingBorders(true);
-      fetch(`/api/empires/borders?year=${year}`)
-        .then((res) => res.json())
+      getEmpiresForYear(year)
         .then((geojson) => {
           if (cancelled) return;
-          if (geojson.error) {
-            setErrorMessage(geojson.error);
-            return;
-          }
           bordersCacheRef.current.set(year, geojson);
           renderBordersGeojson(geojson);
         })
@@ -1119,10 +1116,12 @@ export default function ImperienPage() {
           <p className="mb-4 text-xs text-muted">{errorMessage}</p>
         )}
 
-        {/* Nutzerwunsch 20.09.2026: "mach grafik von karte und teritorium
-            höher" — deutlich mehr Bildschirmhöhe statt fixem 16:10/16:8-
-            Seitenverhältnis, damit Grenzen/Beschriftungen mehr Platz haben. */}
-        <div className="relative h-[70vh] min-h-[420px] w-full overflow-hidden border border-border bg-surface-elevated sm:h-[80vh]">
+        {/* Nutzerkorrektur 20.09.2026: "minimiere die fenster von karte
+            sodas man vorspulen auch sieht" — die Karte war so hoch
+            (70-80vh), dass Jahres-Regler und Abspiel-Buttons erst nach dem
+            Scrollen sichtbar wurden. Jetzt deutlich kompakter, damit beides
+            ohne Scrollen auf den Bildschirm passt. */}
+        <div className="relative h-[42vh] min-h-[280px] max-h-[440px] w-full overflow-hidden border border-border bg-surface-elevated sm:h-[52vh] sm:max-h-[520px]">
           <div ref={mapContainerRef} className="absolute inset-0" />
           {(!leafletReady || (isLoadingBorders && !hasRenderedBorders)) && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/70">

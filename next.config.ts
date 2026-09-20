@@ -75,6 +75,20 @@ const nextConfig: NextConfig = {
         source: "/:path*",
         headers: securityHeaders,
       },
+      // Der vorab gefilterte/vereinfachte Cliopatria-Datensatz für die
+      // /imperien-Karte (siehe src/lib/history/empiresClient.ts) ändert
+      // sich praktisch nie — "immutable" heißt: der Browser fragt nach dem
+      // ersten Laden nie wieder nach, spätere Kartenaufrufe brauchen dann
+      // gar keinen Netzwerk-Request mehr für die Grenzdaten. Bei einer
+      // künftigen Aktualisierung bitte den Dateinamen hochzählen
+      // (empires-v2.json etc.), sonst liefern Browser mit warmem Cache
+      // weiter die alte Version aus.
+      {
+        source: "/data/:path*",
+        headers: [
+          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+        ],
+      },
     ];
   },
 };
