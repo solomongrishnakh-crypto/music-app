@@ -328,6 +328,10 @@ function makePoleCell(x: number, y: number, h: number, rings: number[][][]): Pol
 // werden auch dünne/konkave/ringförmige Flächen zuverlässig erfasst, statt
 // nur ein festes Gitter stumpf abzutasten.
 function poleOfInaccessibility(rings: number[][][]): [number, number] {
+  return poleOfInaccessibilityWithDist(rings).point;
+}
+
+function poleOfInaccessibilityWithDist(rings: number[][][]): { point: [number, number]; dist: number } {
   const outer = rings[0];
   let minX = Infinity;
   let minY = Infinity;
@@ -349,7 +353,7 @@ function poleOfInaccessibility(rings: number[][][]): [number, number] {
       sx += x;
       sy += y;
     }
-    return [sx / outer.length, sy / outer.length];
+    return { point: [sx / outer.length, sy / outer.length], dist: 0 };
   }
 
   const cellSize = Math.min(width, height);
@@ -398,7 +402,7 @@ function poleOfInaccessibility(rings: number[][][]): [number, number] {
     cellQueue.push(makePoleCell(cell.x + half, cell.y + half, half, rings));
   }
 
-  return [best.x, best.y];
+  return { point: [best.x, best.y], dist: best.d };
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -408,29 +412,30 @@ function geometryLabelPoint(geometry: any): [number, number] | null {
     return poleOfInaccessibility(geometry.coordinates);
   }
   if (geometry.type === "MultiPolygon") {
-    // Größten Teil auswählen, damit die Beschriftung eines Reichs mit
-    // Exklaven im Hauptgebiet landet statt auf einer kleinen Insel.
-    // Nutzerkorrektur 20.09.2026: die BOUNDING-BOX-Fläche war hier der
-    // falsche Maßstab — ein schmaler, weit ausladender Küstenstreifen (wie
-    // Roms Randgebiet ums Mittelmeer) hat eine riesige Bounding-Box, aber
-    // kaum tatsächliche Fläche, und wurde so fälschlich vor einem kompakten,
-    // wirklich großen Teilgebiet (z.B. Gallien) ausgewählt. Jetzt die
-    // echte Ringfläche (Shoelace-Formel) verwenden.
-    let bestPart: number[][][] | null = null;
-    let bestArea = -Infinity;
+    // Nutzerkorrektur 20.09.2026 (x3): weder die Bounding-Box-Fläche noch
+    // die echte Ringfläche sind hier der richtige Maßstab. Ein Reich wie
+    // Rom besteht oft aus mehreren getrennten Teilflächen — z.B. einem
+    // kompakten "Klotz" wie Gallien/Britannien UND einem langen, aber
+    // dünnen Küstenstreifen quer durchs ganze Mittelmeer (Spanien-Italien-
+    // Balkan-Anatolien-Levante-Ägypten). Dieser Streifen kann in reiner
+    // Fläche sogar GRÖSSER sein als der kompakte Klotz, obwohl er überall
+    // schmal und damit für eine Beschriftung ungeeignet ist ("die name von
+    // den imperien soll immer in der mitte sein"). Der richtige Maßstab
+    // ist deshalb, für JEDEN Teil den "Pole of Inaccessibility" (= Radius
+    // des größten einbeschriebenen Kreises) zu berechnen und den Teil mit
+    // dem GRÖSSTEN Radius zu wählen — das ist genau die visuell "fetteste",
+    // am ehesten als Blickfang wahrgenommene Region, unabhängig davon, wie
+    // lang ein dünnerer Streifen anderswo ist.
+    let bestPoint: [number, number] | null = null;
+    let bestDist = -Infinity;
     for (const part of geometry.coordinates as number[][][][]) {
-      const ring = part[0];
-      let area = 0;
-      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-        area += ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1];
-      }
-      area = Math.abs(area) / 2;
-      if (area > bestArea) {
-        bestArea = area;
-        bestPart = part;
+      const { point, dist } = poleOfInaccessibilityWithDist(part);
+      if (dist > bestDist) {
+        bestDist = dist;
+        bestPoint = point;
       }
     }
-    return bestPart ? poleOfInaccessibility(bestPart) : null;
+    return bestPoint;
   }
   return null;
 }
