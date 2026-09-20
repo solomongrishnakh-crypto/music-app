@@ -197,16 +197,26 @@ async function resolveSummary(
   name: string,
   debugTrace?: string[]
 ): Promise<WikiSummary | null> {
+  // Nutzerwunsch 20.09.2026 ("es ladet sehr langsam") — die bis zu 3
+  // Titel-Kandidaten UND die Volltextsuche liefen vorher alle NACHEINANDER
+  // (bis zu 4-5 Anfragen in Reihe), bevor bei einem Reich ohne Artikel
+  // aufgegeben wurde. Jetzt parallel abgefeuert: die Gesamtwartezeit ist
+  // dann nur noch die langsamste einzelne Anfrage statt die Summe aller.
+  const candidates = titleCandidates(name);
+  const meaningfulWords = name.split(/\s+/).filter((w) => w.length >= 4);
+  const [directResults, foundTitle] = await Promise.all([
+    Promise.all(candidates.map((c) => fetchSummary(lang, c, debugTrace))),
+    meaningfulWords.length >= 2 ? searchTitle(lang, meaningfulWords) : Promise.resolve(null),
+  ]);
+
   // 1) Direkte Treffer über mehrere plausible Titel-Varianten. Der erste
   //    Kandidat ist immer der unveränderte Original-Name — der wird
   //    vertraut. Abgeleitete Varianten (dynasty/Plural) werden zusätzlich
   //    über Wikidata gegengeprüft (siehe isPlausibleHistoricalEntity oben).
-  const candidates = titleCandidates(name);
   for (let i = 0; i < candidates.length; i++) {
-    const candidate = candidates[i];
-    const direct = await fetchSummary(lang, candidate, debugTrace);
+    const direct = directResults[i];
     debugTrace?.push(
-      `direct:${candidate} -> ${direct ? direct.title + " (" + direct.type + ")" : "null"}`
+      `direct:${candidates[i]} -> ${direct ? direct.title + " (" + direct.type + ")" : "null"}`
     );
     if (direct && direct.type !== "disambiguation" && direct.extract) {
       if (i === 0 || !direct.title) return direct;
@@ -222,21 +232,17 @@ async function resolveSummary(
   //    Artikel zuerst brachte). Lieber "keine Beschreibung gefunden" als
   //    ein falscher Treffer (Nutzerpräferenz: Antworten müssen geprüft/
   //    korrekt sein).
-  const meaningfulWords = name.split(/\s+/).filter((w) => w.length >= 4);
-  if (meaningfulWords.length >= 2) {
-    const foundTitle = await searchTitle(lang, meaningfulWords);
-    debugTrace?.push(`search:${meaningfulWords.join(",")} -> ${foundTitle ?? "null"}`);
-    if (foundTitle) {
-      const viaSearch = await fetchSummary(lang, foundTitle);
-      if (
-        viaSearch &&
-        viaSearch.type !== "disambiguation" &&
-        viaSearch.extract &&
-        viaSearch.title &&
-        (await isPlausibleHistoricalEntity(lang, viaSearch.title, debugTrace))
-      ) {
-        return viaSearch;
-      }
+  debugTrace?.push(`search:${meaningfulWords.join(",")} -> ${foundTitle ?? "null"}`);
+  if (foundTitle) {
+    const viaSearch = await fetchSummary(lang, foundTitle, debugTrace);
+    if (
+      viaSearch &&
+      viaSearch.type !== "disambiguation" &&
+      viaSearch.extract &&
+      viaSearch.title &&
+      (await isPlausibleHistoricalEntity(lang, viaSearch.title, debugTrace))
+    ) {
+      return viaSearch;
     }
   }
   return null;
@@ -248,9 +254,13 @@ async function resolveSummary(
 // statt Vermutung; bleibt leer, wenn Wikidata dazu nichts hat.
 async function fetchWikidataId(lang: WikiLang, title: string): Promise<string | null> {
   try {
+    // Nutzerwunsch 20.09.2026: "sprache soll hier bekannt sein" — ohne
+    // redirects=1 lieferte die Query-API keine Wikidata-ID, wenn der Titel
+    // (z.B. ein über die Volltextsuche gefundener) intern eine Weiterleitung
+    // ist, statt automatisch zur Zielseite aufzulösen.
     const url =
       `https://${lang}.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}` +
-      `&prop=pageprops&ppprop=wikibase_item&format=json&origin=*`;
+      `&redirects=1&prop=pageprops&ppprop=wikibase_item&format=json&origin=*`;
     const res = await fetchWithRetry(url);
     if (!res || !res.ok) return null;
     const data = await res.json();
@@ -345,7 +355,11 @@ async function fetchLanguageLabels(
 
 async function fetchLanguage(qid: string, lang: WikiLang): Promise<string | null> {
   try {
-    for (const property of ["P37", "P2936"]) {
+    // Nutzerwunsch 20.09.2026: "sprache soll hier bekannt sein" — P37
+    // ("Amtssprache") und P2936 ("verwendete Sprache") fehlen bei vielen
+    // historischen Dynastien auf Wikidata; P103 ("Muttersprache/Landessprache")
+    // ist bei genau solchen Einträgen oft die einzige gepflegte Angabe.
+    for (const property of ["P37", "P2936", "P103"]) {
       const url =
         `https://www.wikidata.org/w/api.php?action=wbgetclaims&entity=${qid}` +
         `&property=${property}&format=json&origin=*`;
@@ -389,11 +403,27 @@ export async function GET(req: NextRequest) {
   // aktuell gewählten UI-Sprache suchen (?lang=…), sonst direkt Englisch.
   const uiLang = parseWikiLang(req.nextUrl.searchParams.get("lang"));
 
-  let data = await resolveSummary(uiLang, name, debug ? trace : undefined);
+  // Nutzerwunsch 20.09.2026 ("es ladet sehr langsam") — Zielsprache UND
+  // Englisch (als Fallback) werden IMMER gleichzeitig abgefragt statt erst
+  // die Zielsprache zu Ende zu versuchen und danach separat Englisch zu
+  // starten. Das braucht bei Erfolg in der Zielsprache zwar eine unnötige
+  // Anfrage mehr, macht aber den "nicht gefunden"-Fall (beide schlagen
+  // fehl) doppelt so schnell, weil beide Versuche parallel statt
+  // nacheinander laufen.
+  const [uiResult, enPreload] =
+    uiLang === "en"
+      ? [await resolveSummary("en", name, debug ? trace : undefined), null]
+      : await Promise.all([
+          resolveSummary(uiLang, name, debug ? trace : undefined),
+          resolveSummary("en", name, debug ? trace : undefined),
+        ]);
+
+  let data = uiResult;
   let lang: WikiLang = uiLang;
+  let resolvedQid: string | null = null;
 
   if ((!data || !data.extract) && uiLang !== "en") {
-    const enData = await resolveSummary("en", name, debug ? trace : undefined);
+    const enData = enPreload;
     if (enData && enData.extract) {
       // Nutzerwunsch 20.09.2026: "kann diese fenster auch übersetzt werden?"
       // — bevor auf Englisch zurückgefallen wird, über Wikidata prüfen, ob
@@ -401,11 +431,12 @@ export async function GET(req: NextRequest) {
       // gibt (z.B. "Seljuk Empire" -> QID -> deutscher Sitelink "Seldschuken",
       // den die reine Titel-Rateunion oben nicht finden konnte).
       let uiLangData: WikiSummary | null = null;
+      let enQid: string | null = null;
       if (enData.title) {
-        const qid = await fetchWikidataId("en", enData.title);
-        if (qid) {
-          const uiTitle = await fetchSitelinkTitle(qid, uiLang);
-          if (debug) trace.push(`sitelink:${qid}:${uiLang} -> ${uiTitle ?? "null"}`);
+        enQid = await fetchWikidataId("en", enData.title);
+        if (enQid) {
+          const uiTitle = await fetchSitelinkTitle(enQid, uiLang);
+          if (debug) trace.push(`sitelink:${enQid}:${uiLang} -> ${uiTitle ?? "null"}`);
           if (uiTitle) {
             uiLangData = await fetchSummary(uiLang, uiTitle, debug ? trace : undefined);
           }
@@ -414,9 +445,15 @@ export async function GET(req: NextRequest) {
       if (uiLangData && uiLangData.extract) {
         data = uiLangData;
         lang = uiLang;
+        // Nutzerwunsch 20.09.2026: "sprache soll hier bekannt sein" — die
+        // Q-ID kennen wir hier schon (aus dem Sitelink-Schritt) und müssen
+        // sie NICHT nochmal über den (ggf. leicht abweichenden) Titel in
+        // der UI-Sprache neu auflösen, was zuvor manchmal fehlschlug.
+        resolvedQid = enQid;
       } else {
         data = enData;
         lang = "en";
+        resolvedQid = enQid;
       }
     }
   }
@@ -444,11 +481,11 @@ export async function GET(req: NextRequest) {
   }
 
   let language: string | null = null;
-  let debugQid: string | null = null;
-  if (data.title) {
+  let debugQid: string | null = resolvedQid;
+  if (!debugQid && data.title) {
     debugQid = await fetchWikidataId(lang, data.title);
-    if (debugQid) language = await fetchLanguage(debugQid, lang);
   }
+  if (debugQid) language = await fetchLanguage(debugQid, lang);
 
   return NextResponse.json({
     found: true,
