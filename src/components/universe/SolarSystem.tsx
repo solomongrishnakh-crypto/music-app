@@ -180,6 +180,25 @@ export default function SolarSystem({
         drawn.push({ planet: SUN, x: cx, y: cy, r: sunR });
       }
 
+      // Nutzerwunsch 20.09.2026 ("bei mobile ansicht ist alles dicht"):
+      // Auf schmalen Canvas-Breiten kleinere Schrift + Labels, die sich zu
+      // nah kämen, werden übersprungen (der Punkt bleibt aber sichtbar).
+      const smallCanvas = size.w < 420;
+      const minLabelGap = smallCanvas ? 24 : 15;
+      const labelRects: { x: number; y: number }[] = [];
+      function drawLabel(text: string, x: number, y: number, color: string, font: string, force = false) {
+        if (!force) {
+          for (const r of labelRects) {
+            if (Math.abs(r.x - x) < minLabelGap && Math.abs(r.y - y) < 11) return;
+          }
+        }
+        ctx.font = font;
+        ctx.fillStyle = color;
+        ctx.textAlign = "center";
+        ctx.fillText(text, x, y);
+        labelRects.push({ x, y });
+      }
+
       bodies.forEach((planet, i) => {
         const isDwarf = planet.kind === "dwarf";
         const isProbe = planet.kind === "probe";
@@ -202,6 +221,15 @@ export default function SolarSystem({
           ctx.stroke();
           ctx.restore();
 
+          const isSelectedProbe = interactive && selectedId === planet.id;
+          if (isSelectedProbe) {
+            ctx.beginPath();
+            ctx.arc(x, y, pr + 6, 0, Math.PI * 2);
+            ctx.strokeStyle = "rgba(255,90,77,0.9)";
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+          }
+
           ctx.save();
           ctx.translate(x, y);
           ctx.rotate(Math.PI / 4);
@@ -210,10 +238,14 @@ export default function SolarSystem({
           ctx.restore();
 
           if (mode === "full") {
-            ctx.font = "9px var(--font-mono, monospace)";
-            ctx.fillStyle = "rgba(242,242,240,0.65)";
-            ctx.textAlign = "center";
-            ctx.fillText(planet.name, x, y - pr - 6);
+            drawLabel(
+              planet.name,
+              x,
+              y - pr - 6,
+              isSelectedProbe ? "#ff5a4d" : "rgba(242,242,240,0.65)",
+              smallCanvas ? "8px var(--font-mono, monospace)" : "9px var(--font-mono, monospace)",
+              true
+            );
           }
 
           drawn.push({ planet, x, y, r: pr + 4 });
@@ -286,14 +318,19 @@ export default function SolarSystem({
         ctx.globalAlpha = 1;
 
         if (mode === "full") {
-          ctx.font = isDwarf ? "9px var(--font-mono, monospace)" : "10px var(--font-mono, monospace)";
-          ctx.fillStyle = isSelected
+          const font = isDwarf
+            ? smallCanvas
+              ? "7px var(--font-mono, monospace)"
+              : "9px var(--font-mono, monospace)"
+            : smallCanvas
+              ? "8px var(--font-mono, monospace)"
+              : "10px var(--font-mono, monospace)";
+          const color = isSelected
             ? "#ff5a4d"
             : isDwarf
               ? "rgba(242,242,240,0.5)"
               : "rgba(242,242,240,0.75)";
-          ctx.textAlign = "center";
-          ctx.fillText(planet.name, x, y - pr - 6);
+          drawLabel(planet.name, x, y - pr - 6, color, font, isSelected);
         }
       });
 

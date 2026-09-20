@@ -39,13 +39,13 @@ export default function SolarSystemModal({ onClose }: SolarSystemModalProps) {
 
   return (
     <div className="fixed inset-0 z-[2000] flex flex-col bg-background">
-      <div className="flex items-center justify-between border-b border-border px-4 py-3 sm:px-6">
-        <div>
-          <p className="label-mono text-xs uppercase text-accent">// Sonnensystem</p>
-          <p className="font-display text-sm font-bold text-foreground sm:text-base">
-            Auf einen Planeten tippen für Details
+      <div className="flex items-center justify-between border-b border-border px-3 py-2 sm:px-6 sm:py-3">
+        <div className="min-w-0">
+          <p className="label-mono text-[10px] uppercase text-accent sm:text-xs">// Sonnensystem</p>
+          <p className="font-display truncate text-xs font-bold text-foreground sm:text-base">
+            Planet tippen für Details
           </p>
-          <p className="mt-0.5 text-[10px] uppercase tracking-wide text-muted sm:text-xs">
+          <p className="mt-0.5 text-[9px] uppercase tracking-wide text-muted sm:text-xs">
             Ziehen: drehen &amp; neigen · Scrollen: zoomen
           </p>
         </div>
@@ -54,9 +54,9 @@ export default function SolarSystemModal({ onClose }: SolarSystemModalProps) {
           onClick={onClose}
           aria-label="Schließen"
           title="Schließen"
-          className="flex h-9 w-9 shrink-0 items-center justify-center border border-border text-muted transition-colors hover:border-accent hover:text-accent"
+          className="flex h-7 w-7 shrink-0 items-center justify-center border border-border text-muted transition-colors hover:border-accent hover:text-accent sm:h-9 sm:w-9"
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
           </svg>
         </button>
@@ -66,33 +66,33 @@ export default function SolarSystemModal({ onClose }: SolarSystemModalProps) {
         <SolarSystem mode="full" onSelectPlanet={setSelected} selectedId={selected?.id ?? null} />
 
         {selected && (
-          <div className="absolute inset-x-0 bottom-0 max-h-[55%] overflow-y-auto border-t border-border bg-background/95 p-5 backdrop-blur-sm sm:p-6">
+          <div className="absolute inset-x-0 bottom-0 max-h-[68%] overflow-y-auto border-t border-border bg-background/95 p-3 backdrop-blur-sm sm:max-h-[55%] sm:p-6">
             <button
               type="button"
               onClick={() => setSelected(null)}
               aria-label="Info schließen"
-              className="absolute right-3 top-3 flex h-7 w-7 items-center justify-center border border-border text-muted transition-colors hover:border-accent hover:text-accent"
+              className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center border border-border text-muted transition-colors hover:border-accent hover:text-accent sm:right-3 sm:top-3 sm:h-7 sm:w-7"
             >
               ×
             </button>
-            <p className="label-mono text-xs uppercase" style={{ color: selected.color }}>
+            <p className="label-mono text-[10px] uppercase sm:text-xs" style={{ color: selected.color }}>
               // {selected.kind === "star" ? "Stern" : selected.kind === "dwarf" ? "Zwergplanet" : selected.kind === "probe" ? "Raumsonde" : "Planet"}
             </p>
-            <h3 className="font-display mt-1 text-xl font-bold uppercase tracking-tight text-foreground sm:text-2xl">
+            <h3 className="font-display mt-0.5 text-base font-bold uppercase tracking-tight text-foreground sm:mt-1 sm:text-2xl">
               {selected.name}
             </h3>
             {selected.image && (
-              <div className="mt-3 overflow-hidden rounded border border-border bg-black/40">
+              <div className="mt-1.5 aspect-[16/9] max-h-32 w-full overflow-hidden rounded border border-border bg-black sm:mt-2 sm:max-h-56">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={selected.image}
                   alt={selected.name}
-                  className="h-32 w-full object-cover sm:h-44"
+                  className="h-full w-full object-contain"
                   loading="lazy"
                 />
               </div>
             )}
-            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-[11px] uppercase tracking-wide text-muted sm:grid-cols-4 sm:text-xs">
+            <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px] uppercase tracking-wide text-muted sm:mt-3 sm:grid-cols-4 sm:gap-x-4 sm:gap-y-2 sm:text-xs">
               <div>
                 <p className="text-muted">{selected.factLabels?.[0] ?? "Abstand zur Sonne"}</p>
                 <p className="mt-0.5 font-semibold text-foreground">{selected.facts.distance}</p>
@@ -110,7 +110,7 @@ export default function SolarSystemModal({ onClose }: SolarSystemModalProps) {
                 <p className="mt-0.5 font-semibold text-foreground">{selected.facts.moons}</p>
               </div>
             </div>
-            <p className="mt-4 text-xs leading-relaxed text-foreground sm:text-sm">
+            <p className="mt-2.5 text-[11px] leading-relaxed text-foreground sm:mt-4 sm:text-sm">
               {selected.description}
             </p>
           </div>

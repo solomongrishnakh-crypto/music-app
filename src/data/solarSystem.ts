@@ -306,8 +306,9 @@ export const VOYAGER1: PlanetData = {
     diameter: "3,7 m (Antenne)",
     moons: "≈ 17 km/s relativ zur Sonne",
   },
+  image: commonsFile("Voyager.jpg"),
   description:
-    "Voyager 1 ist das am weitesten von der Erde entfernte von Menschen gebaute Objekt. Seit 2012 befindet sie sich im interstellaren Raum, außerhalb der Heliosphäre der Sonne. Die Position hier ist ein Näherungswert — die Sonde entfernt sich stetig weiter.",
+    "Voyager 1 ist das am weitesten von der Erde entfernte von Menschen gebaute Objekt. Seit dem 25. August 2012 befindet sie sich im interstellaren Raum, außerhalb der Heliosphäre der Sonne — als erste Sonde überhaupt. An Bord befindet sich die 'Golden Record', eine vergoldete Schallplatte mit Klängen, Musik und Grüßen der Erde für den Fall, dass die Sonde eines Tages von außerirdischer Intelligenz gefunden wird. Ihre drei Radioisotopengeneratoren liefern noch genug Strom, um einige Instrumente bis etwa 2025–2030 zu betreiben; danach wird die Sonde stumm weiterfliegen. Ein Funksignal braucht inzwischen über 23 Stunden für die einfache Strecke zur Erde. Die Position hier ist ein Näherungswert — die Sonde entfernt sich stetig weiter (~3,6 AE pro Jahr).",
 };
 
 /**
