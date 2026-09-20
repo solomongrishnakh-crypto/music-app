@@ -6,6 +6,8 @@ import SiteBackground from "@/components/particles/SiteBackground";
 import Typewriter from "@/components/ui/Typewriter";
 import DetailModal from "@/components/ui/DetailModal";
 import SpaceNewsSection from "@/components/home/SpaceNewsSection";
+import SolarSystem from "@/components/universe/SolarSystem";
+import SolarSystemModal from "@/components/universe/SolarSystemModal";
 import { useInView } from "@/hooks/useInView";
 
 interface UniverseFact {
@@ -252,6 +254,7 @@ function FactThumbnail({ src, alt }: { src: string; alt: string }) {
  */
 export default function UniversumPage() {
   const [selectedFact, setSelectedFact] = useState<number | null>(null);
+  const [showSolarSystem, setShowSolarSystem] = useState(false);
 
   return (
     <main className="relative min-h-screen">
@@ -277,6 +280,26 @@ export default function UniversumPage() {
             der Raumfahrt.
           </p>
         </header>
+
+        {/* Nutzerwunsch 20.09.2026: "erstelle so ein box mit solarsystem
+            oben. wenn ich auf dem box drücke dann soll was ähnliches
+            kommen aber mit vollbildbfenster mit X button" — kleine
+            animierte Vorschau, öffnet per Klick die interaktive
+            Vollbild-Ansicht (SolarSystemModal). */}
+        <button
+          type="button"
+          onClick={() => setShowSolarSystem(true)}
+          className="group relative mb-10 h-64 w-full overflow-hidden border border-border bg-black/40 text-left transition-colors hover:border-accent sm:h-80"
+        >
+          <SolarSystem mode="compact" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent p-4">
+            <p className="label-mono text-xs uppercase text-accent">// Sonnensystem</p>
+            <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-foreground">
+              Live erkunden
+              <span className="transition-transform group-hover:translate-x-1">↗</span>
+            </p>
+          </div>
+        </button>
 
         <div className="mb-10">
           <p className="label-mono text-xs uppercase">// Universum in Zahlen</p>
@@ -324,6 +347,10 @@ export default function UniversumPage() {
             imageCredit="Bild: Wikimedia Commons"
             onClose={() => setSelectedFact(null)}
           />
+        )}
+
+        {showSolarSystem && (
+          <SolarSystemModal onClose={() => setShowSolarSystem(false)} />
         )}
       </div>
     </main>
