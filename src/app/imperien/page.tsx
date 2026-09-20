@@ -81,9 +81,26 @@ function formatYear(year: number | undefined): string {
 // sind sollen nicht gleiche farben haben"). Jetzt wird pro geladenem
 // Kartenstand eine "Graphenfärbung" berechnet: Gebiete, deren Bounding-Box
 // sich überschneidet (= mögliche Nachbarn), bekommen bewusst
-// unterschiedliche Farben aus einer festen Palette von 24 gleichmäßig
-// verteilten Farbtönen (siehe assignDistinctColors weiter unten).
-const HUE_PALETTE = Array.from({ length: 24 }, (_, i) => i * 15);
+// unterschiedliche Farben aus einer festen Palette (siehe
+// assignDistinctColors weiter unten).
+//
+// Nutzerkorrektur 20.09.2026: "mach mehr farben das man viele verschiedene
+// imperien kennt" — 18 Farbtöne x 2 Helligkeitsstufen ergeben 36 klar
+// unterscheidbare Farben statt vorher nur 24, damit auch bei vielen
+// gleichzeitig existierenden Reichen (Cliopatria zeigt oft deutlich mehr
+// Gebiete gleichzeitig als der alte Datensatz) genug wirklich verschiedene
+// Farben zur Verfügung stehen.
+const COLOR_PALETTE = (() => {
+  const hues = Array.from({ length: 18 }, (_, i) => i * 20);
+  const lightnesses = [40, 56];
+  const palette: string[] = [];
+  for (const light of lightnesses) {
+    for (const hue of hues) {
+      palette.push(`hsl(${hue}, 55%, ${light}%)`);
+    }
+  }
+  return palette;
+})();
 
 interface BBox {
   minX: number;
@@ -145,7 +162,7 @@ function assignDistinctColors(features: any[]): Map<string, string> {
       }
     }
     let chosen = 0;
-    for (let c = 0; c < HUE_PALETTE.length; c++) {
+    for (let c = 0; c < COLOR_PALETTE.length; c++) {
       if (!usedByNeighbors.has(c)) {
         chosen = c;
         break;
@@ -158,8 +175,7 @@ function assignDistinctColors(features: any[]): Map<string, string> {
   const map = new Map<string, string>();
   features.forEach((f, i) => {
     const name: string = f.properties?.NAME ?? "";
-    const hue = HUE_PALETTE[colorIdx[i]];
-    map.set(name, `hsl(${hue}, 48%, 46%)`);
+    map.set(name, COLOR_PALETTE[colorIdx[i]]);
   });
   return map;
 }
@@ -331,6 +347,13 @@ export default function ImperienPage() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isDraggingRuler, setIsDraggingRuler] = useState(false);
   const [speedStep, setSpeedStep] = useState(0);
+  // Nutzerwunsch 20.09.2026: "option hinzufügen das man auch manuel das
+  // jahr eingeben kann" — eigenes Eingabefeld neben der Jahresanzeige statt
+  // nur über das Lineal zu ziehen. Eigener lokaler Text-State, damit
+  // Tippen nicht durch jede sliderYear-Änderung überschrieben wird; der
+  // Effekt unten hält das Feld nur synchron, wenn sich sliderYear von
+  // AUSSEN ändert (Lineal, Buttons, Abspielen).
+  const [yearInputText, setYearInputText] = useState("1200");
 
   // Leaflet einmalig per CDN nachladen (CSS + JS)
   useEffect(() => {
@@ -458,26 +481,16 @@ export default function ImperienPage() {
         );
         const sortedGeojson = { ...geojson, features: sortedFeatures };
 
-        // Nutzerkorrektur 20.09.2026: "es fehlt auch imperium namen über
-        // territorium" — JEDES tatsächliche Imperium/Reich (Name enthält
-        // "Empire", "Khanate" usw., siehe isEmpireName) bekommt jetzt immer
-        // eine dauerhafte Beschriftung, unabhängig von seiner Größe. Nur
-        // bei den übrigen, nicht-imperialen Gebieten (Königreiche, Stämme
-        // etc.) bleibt es bei den größten 18, sonst wäre die Karte bei
-        // hunderten Kleinstaaten unlesbar überfüllt.
-        const empireLabelNames = new Set(
-          sortedFeatures
-            .filter((f) => isEmpireName(f.properties?.NAME ?? ""))
-            .map((f) => f.properties?.NAME)
+        // Nutzerkorrektur 20.09.2026 (erst "es fehlt auch imperium namen
+        // über territorium", dann "manche imperien haben kein name auf
+        // territorium" nach dem ersten Versuch mit nur den Top 18) — JEDES
+        // benannte Gebiet bekommt jetzt eine dauerhafte Beschriftung, ohne
+        // Obergrenze. Der Cliopatria-Datensatz zeigt pro Jahr ohnehin
+        // deutlich weniger gleichzeitige Gebiete als moderne Weltkarten,
+        // eine künstliche Kappung war hier eher hinderlich als hilfreich.
+        const permanentLabelNames = new Set(
+          sortedFeatures.map((f) => f.properties?.NAME)
         );
-        const nonEmpireSorted = sortedFeatures.filter(
-          (f) => !empireLabelNames.has(f.properties?.NAME)
-        );
-        const extraLabelCount = Math.min(18, nonEmpireSorted.length);
-        const permanentLabelNames = new Set([
-          ...empireLabelNames,
-          ...nonEmpireSorted.slice(0, extraLabelCount).map((f) => f.properties?.NAME),
-        ]);
 
         // Farben pro Gebiet: Graphenfärbung statt Namens-Hash, damit
         // benachbarte Gebiete nie dieselbe/eine sehr ähnliche Farbe
@@ -611,6 +624,25 @@ export default function ImperienPage() {
 
   function clampYear(y: number): number {
     return Math.min(maxYear, Math.max(minYear, y));
+  }
+
+  // Feld für die manuelle Jahreseingabe synchron halten, wenn sich das Jahr
+  // durch etwas ANDERES als Tippen ändert (Lineal ziehen, Buttons,
+  // Abspielen).
+  useEffect(() => {
+    setYearInputText(String(Math.round(sliderYear)));
+  }, [sliderYear]);
+
+  function submitYearInput() {
+    const parsed = Math.round(Number(yearInputText));
+    if (Number.isFinite(parsed)) {
+      setIsPlaying(false);
+      setSliderYear(clampYear(parsed));
+    } else {
+      // Ungültige Eingabe (z.B. leer oder Text) — auf das aktuelle Jahr
+      // zurücksetzen statt eines Fehlerzustands.
+      setYearInputText(String(Math.round(sliderYear)));
+    }
   }
 
   // Das Lineal aus dem Vorbild-Video: die Mitte steht fest, das Lineal
@@ -946,11 +978,39 @@ export default function ImperienPage() {
         </div>
 
         <div className="mt-6 border border-border bg-surface-elevated p-5 sm:p-6">
-          <div className="mb-3 flex items-center justify-between">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <p className="label-mono text-xs uppercase text-muted">Jahr</p>
-            <p className="font-display text-lg font-bold text-accent sm:text-xl">
-              {formatYear(currentYear)}
-            </p>
+            <div className="flex items-center gap-3">
+              {/* Nutzerwunsch 20.09.2026: "option hinzufügen das man auch
+                  manuel das jahr eingeben kann" — Zahl eintippen und mit
+                  Enter oder dem Los-Button direkt zu diesem Jahr springen. */}
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  submitYearInput();
+                }}
+                className="flex items-center gap-1.5"
+              >
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  value={yearInputText}
+                  onChange={(e) => setYearInputText(e.target.value)}
+                  onBlur={submitYearInput}
+                  aria-label="Jahr eingeben"
+                  className="w-24 border border-border bg-black/30 px-2 py-1 text-xs text-foreground focus:border-accent focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="border border-border px-2.5 py-1 text-[11px] uppercase text-foreground transition-colors hover:border-accent hover:text-accent"
+                >
+                  Los
+                </button>
+              </form>
+              <p className="font-display text-lg font-bold text-accent sm:text-xl">
+                {formatYear(currentYear)}
+              </p>
+            </div>
           </div>
 
           {/* Zeitleiste als ziehbares Lineal, 1:1 nach Video-Vorlage
