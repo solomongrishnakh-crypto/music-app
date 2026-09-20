@@ -74,15 +74,7 @@ function formatYear(year: number | undefined): string {
   return year < 0 ? `${Math.abs(year)} v. Chr.` : `${year} n. Chr.`;
 }
 
-// Jedes Gebiet bekommt eine eigene Farbe statt eines Einheitsbreis. Vorher
-// wurde die Farbe rein per Namens-Hash bestimmt — das führte dazu, dass
-// benachbarte Gebiete zufällig sehr ähnliche oder identische Farbtöne
-// bekommen konnten (Nutzerkorrektur 20.09.2026: "imperien die nebeneinander
-// sind sollen nicht gleiche farben haben"). Jetzt wird pro geladenem
-// Kartenstand eine "Graphenfärbung" berechnet: Gebiete, deren Bounding-Box
-// sich überschneidet (= mögliche Nachbarn), bekommen bewusst
-// unterschiedliche Farben aus einer festen Palette (siehe
-// assignDistinctColors weiter unten).
+// Jedes Gebiet bekommt eine eigene Farbe statt eines Einheitsbreis.
 //
 // Nutzerkorrektur 20.09.2026: "mach mehr farben das man viele verschiedene
 // imperien kennt" — 18 Farbtöne x 2 Helligkeitsstufen ergeben 36 klar
@@ -102,81 +94,40 @@ const COLOR_PALETTE = (() => {
   return palette;
 })();
 
-interface BBox {
-  minX: number;
-  minY: number;
-  maxX: number;
-  maxY: number;
-}
+// Nutzerkorrektur 20.09.2026: "viele imperien ändern ständig nach jahren
+// die farbe. jede imperium eine feste farbe" — die vorherige Graphenfärbung
+// (siehe Git-Historie) hat die Farbe pro Kartenstand NEU berechnet, je
+// nachdem, welche Nachbarn gerade zufällig mitgeladen waren. Dieselbe
+// Cliopatria-Fläche konnte dadurch beim Weiterklicken durch die Jahre die
+// Farbe wechseln, obwohl es dasselbe Reich ist. Jetzt bekommt jeder Name
+// EIN EINZIGES Mal eine Farbe zugewiesen (deterministisch aus dem Namen
+// berechnet + in diesem Cache gemerkt) und behält sie für die gesamte
+// Sitzung, unabhängig vom Jahr oder von Nachbarn.
+const stableColorByName = new Map<string, string>();
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function getBBox(geometry: any): BBox {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function walk(coords: any) {
-    if (typeof coords[0] === "number") {
-      const [x, y] = coords;
-      if (x < minX) minX = x;
-      if (x > maxX) maxX = x;
-      if (y < minY) minY = y;
-      if (y > maxY) maxY = y;
-    } else if (Array.isArray(coords)) {
-      coords.forEach(walk);
-    }
+function hashString(str: string): number {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
   }
-  if (geometry?.coordinates) walk(geometry.coordinates);
-  if (!isFinite(minX)) return { minX: 0, minY: 0, maxX: 0, maxY: 0 };
-  return { minX, minY, maxX, maxY };
+  return hash;
 }
 
-function bboxesOverlap(a: BBox, b: BBox, padDeg: number): boolean {
-  return (
-    a.minX - padDeg <= b.maxX &&
-    b.minX - padDeg <= a.maxX &&
-    a.minY - padDeg <= b.maxY &&
-    b.minY - padDeg <= a.maxY
-  );
+function getStableColor(name: string): string {
+  const existing = stableColorByName.get(name);
+  if (existing) return existing;
+  const color = COLOR_PALETTE[hashString(name) % COLOR_PALETTE.length];
+  stableColorByName.set(name, color);
+  return color;
 }
 
-// Weist jedem Feature (in der übergebenen Reihenfolge, große Gebiete
-// zuerst) einen Farbton zu, der sich von allen bereits eingefärbten
-// "Nachbarn" (sich überschneidende Bounding-Box, +1,5° Puffer für direkt
-// aneinandergrenzende Gebiete) unterscheidet. Ein kleiner geografischer
-// Puffer ersetzt eine echte Polygon-Nachbarschaftsprüfung (die bei
-// hunderten Gebieten pro Jahr zu teuer wäre), reicht aber, um harte
-// Farbkollisionen zwischen direkt nebeneinanderliegenden Reichen
-// zuverlässig zu vermeiden.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function assignDistinctColors(features: any[]): Map<string, string> {
-  const boxes = features.map((f) => getBBox(f.geometry));
-  const colorIdx: number[] = new Array(features.length).fill(0);
-
-  for (let i = 0; i < features.length; i++) {
-    const usedByNeighbors = new Set<number>();
-    for (let j = 0; j < i; j++) {
-      if (bboxesOverlap(boxes[i], boxes[j], 1.5)) {
-        usedByNeighbors.add(colorIdx[j]);
-      }
-    }
-    let chosen = 0;
-    for (let c = 0; c < COLOR_PALETTE.length; c++) {
-      if (!usedByNeighbors.has(c)) {
-        chosen = c;
-        break;
-      }
-      chosen = c;
-    }
-    colorIdx[i] = chosen;
-  }
-
   const map = new Map<string, string>();
-  features.forEach((f, i) => {
+  for (const f of features) {
     const name: string = f.properties?.NAME ?? "";
-    map.set(name, COLOR_PALETTE[colorIdx[i]]);
-  });
+    map.set(name, getStableColor(name));
+  }
   return map;
 }
 
@@ -247,33 +198,41 @@ function smoothGeometry(geometry: any): any {
   return geometry;
 }
 
-// Grobe Flächenabschätzung über die Bounding-Box eines Feature — reicht,
-// um "große Gebiete zuerst zeichnen, kleine sichtbar obendrauf" umzusetzen,
-// ohne eine echte Geo-Flächenbibliothek nachzuladen. Sinn: realistischere
-// Größenwirkung (Nutzerwunsch 18.09.2026, "realistischer mit territoriums
-// und größe") — sonst verdecken große Reiche kleine, eingeschlossene
-// Gebiete komplett.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function bboxArea(geometry: any): number {
-  let minX = Infinity;
-  let minY = Infinity;
-  let maxX = -Infinity;
-  let maxY = -Infinity;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  function walk(coords: any) {
-    if (typeof coords[0] === "number") {
-      const [x, y] = coords;
-      if (x < minX) minX = x;
-      if (x > maxX) maxX = x;
-      if (y < minY) minY = y;
-      if (y > maxY) maxY = y;
-    } else if (Array.isArray(coords)) {
-      coords.forEach(walk);
-    }
+function ringArea(ring: number[][]): number {
+  let area = 0;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    area += ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1];
   }
-  if (geometry?.coordinates) walk(geometry.coordinates);
-  if (!isFinite(minX)) return 0;
-  return Math.max(0, (maxX - minX) * (maxY - minY));
+  return Math.abs(area) / 2;
+}
+
+// Echte Flächenberechnung (Shoelace-Formel, Löcher werden abgezogen) statt
+// der groben Bounding-Box-Fläche oben. Nutzerkorrektur 20.09.2026: "es ist
+// zu dicht" — mit der Bounding-Box-Fläche wurden viele kleine, aber lang
+// gestreckte Gebiete (schmale Grafschaften etc.) stark überschätzt und
+// bekamen dadurch fälschlich eine dauerhafte Beschriftung. Die echte Fläche
+// ist die verlässlichere Grundlage dafür, welche Gebiete "groß" sind.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function polygonArea(geometry: any): number {
+  if (!geometry?.coordinates) return 0;
+  if (geometry.type === "Polygon") {
+    const rings = geometry.coordinates as number[][][];
+    if (!rings.length) return 0;
+    let area = ringArea(rings[0]);
+    for (let i = 1; i < rings.length; i++) area -= ringArea(rings[i]);
+    return Math.max(0, area);
+  }
+  if (geometry.type === "MultiPolygon") {
+    let total = 0;
+    for (const part of geometry.coordinates as number[][][][]) {
+      if (!part.length) continue;
+      let area = ringArea(part[0]);
+      for (let i = 1; i < part.length; i++) area -= ringArea(part[i]);
+      total += Math.max(0, area);
+    }
+    return total;
+  }
+  return 0;
 }
 
 // Nutzerkorrektur 20.09.2026: "die imperiennamen sind nicht in der mitte
@@ -686,30 +645,36 @@ export default function ImperienPage() {
       .filter((f) => (f?.properties?.NAME ?? "").trim().length > 0)
       .map((f) => ({ ...f, geometry: smoothGeometry(f.geometry) }));
     const sortedFeatures = [...namedFeatures].sort(
-      (a, b) => bboxArea(b.geometry) - bboxArea(a.geometry)
+      (a, b) => polygonArea(b.geometry) - polygonArea(a.geometry)
     );
     const sortedGeojson = { ...geojson, features: sortedFeatures };
 
-    // Nutzerkorrektur 20.09.2026: "es ist zu dicht ... kleine imperien
-    // name nicht angezeigt wird bis du mehr reinzoomst" — kleine Gebiete
-    // bekommen nur noch beim Reinzoomen eine dauerhafte Beschriftung.
-    // bboxArea liefert die Fläche in Grad²; umgerechnet auf ungefähre
-    // Bildschirm-Pixel-Fläche beim aktuellen Zoomstand (Web-Mercator:
-    // 256*2^zoom Pixel pro 360°), damit dieselbe reale Größe bei höherem
-    // Zoom irgendwann über die Schwelle wächst und sichtbar wird — ganz
-    // ohne die Karte neu zu laden (siehe "zoomend"-Listener oben).
+    // Nutzerkorrektur 20.09.2026 (x2): "es ist zu dicht ... kleine imperien
+    // name nicht angezeigt wird bis du mehr reinzoomst" — der erste Versuch
+    // (fester Pixel-Flächen-Schwellwert über die Bounding-Box) hat bei
+    // vielen kleinen, aber lang gestreckten Gebieten (schmale Grafschaften
+    // etc.) immer noch viel zu großzügig Beschriftungen erlaubt, weil eine
+    // Bounding-Box deren Fläche stark überschätzt. Jetzt stattdessen: nur
+    // eine feste RANGLISTEN-Anzahl der (nach echter Fläche) größten Gebiete
+    // bekommt beim aktuellen Zoomstand eine dauerhafte Beschriftung — das
+    // Limit wächst mit dem Zoom, sodass beim Reinzoomen nach und nach mehr
+    // (auch kleinere) Namen sichtbar werden, ganz ohne die Karte neu zu
+    // laden (siehe "zoomend"-Listener oben).
     const zoom = mapRef.current.getZoom?.() ?? 2;
-    const pxPerDegree = (256 * Math.pow(2, zoom)) / 360;
-    const MIN_LABEL_PIXEL_AREA = 3000;
+    let labelLimit: number;
+    if (zoom <= 2) labelLimit = 6;
+    else if (zoom === 3) labelLimit = 10;
+    else if (zoom === 4) labelLimit = 18;
+    else if (zoom === 5) labelLimit = 32;
+    else if (zoom === 6) labelLimit = 55;
+    else labelLimit = Infinity;
     const permanentLabelNames = new Set(
-      sortedFeatures
-        .filter((f) => bboxArea(f.geometry) * pxPerDegree * pxPerDegree >= MIN_LABEL_PIXEL_AREA)
-        .map((f) => f.properties?.NAME)
+      sortedFeatures.slice(0, labelLimit).map((f) => f.properties?.NAME)
     );
 
-    // Farben pro Gebiet: Graphenfärbung statt Namens-Hash, damit
-    // benachbarte Gebiete nie dieselbe/eine sehr ähnliche Farbe bekommen
-    // (Nutzerkorrektur 20.09.2026, siehe assignDistinctColors).
+    // Farben pro Gebiet: feste, namensbasierte Farbe statt Graphenfärbung
+    // (Nutzerkorrektur 20.09.2026, siehe getStableColor/assignDistinctColors
+    // oben — Farben dürfen sich nicht mehr je nach Jahr/Nachbarn ändern).
     const colorByName = assignDistinctColors(sortedFeatures);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
