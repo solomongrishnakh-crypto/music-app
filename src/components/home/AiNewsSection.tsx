@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Spinner from "@/components/ui/Spinner";
 
 interface AiNewsArticle {
   id: string;
@@ -164,9 +165,7 @@ export default function AiNewsSection() {
         }`}
       >
         <div className="overflow-hidden">
-          {isLoading && news.length === 0 && (
-            <p className="label-mono text-xs uppercase text-muted">// Lädt…</p>
-          )}
+          {isLoading && news.length === 0 && <Spinner />}
 
           {errorMessage && <p className="text-xs text-muted">{errorMessage}</p>}
 

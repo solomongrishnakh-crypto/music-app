@@ -5,6 +5,7 @@ import type { KeyboardEvent, PointerEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import SiteBackground from "@/components/particles/SiteBackground";
 import TopEmpiresGrid from "@/components/home/TopEmpiresGrid";
+import Spinner from "@/components/ui/Spinner";
 
 const LEAFLET_CSS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
 const LEAFLET_JS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
@@ -1113,7 +1114,7 @@ export default function ImperienPage() {
           <div ref={mapContainerRef} className="absolute inset-0" />
           {(!leafletReady || (isLoadingBorders && !yearRange)) && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/70">
-              <p className="label-mono text-xs uppercase text-muted">// Lädt…</p>
+              <Spinner />
             </div>
           )}
 
@@ -1188,9 +1189,7 @@ export default function ImperienPage() {
                   )}
 
                   <div className="mt-3">
-                    {infoLoading && (
-                      <p className="label-mono text-xs uppercase text-muted">// Lädt…</p>
-                    )}
+                    {infoLoading && <Spinner />}
                     {!infoLoading && info?.found && (
                       <>
                         <p className="text-xs leading-relaxed text-foreground sm:text-sm">

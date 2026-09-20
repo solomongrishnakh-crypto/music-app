@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type ReactNode } from "react";
 import { useInView } from "@/hooks/useInView";
+import Spinner from "@/components/ui/Spinner";
 
 interface SpaceNewsArticle {
   id: number;
@@ -74,129 +75,75 @@ function formatDate(iso: string): string {
 /**
  * Space-News-Sektion — echte Live-News über die Spaceflight News API
  * (aktuelle Artikel von echten Raumfahrt-Nachrichtenseiten, kein
- * statischer/erfundener Inhalt). Zum Auf-/Zuklappen wie AiNewsSection.tsx
- * (Nutzerwunsch 18.09.2026: "space news unten auch aufklappbar") — laedt
- * erst beim Aufklappen und aktualisiert sich dann alle REFRESH_INTERVAL_MS
- * selbst (der Zustand wird komplett durch die neue Antwort ERSETZT, aus
- * dem Feed gefallene Meldungen verschwinden also automatisch), stoppt beim
- * Zuklappen wieder.
+ * statischer/erfundener Inhalt). Kleine, kompakte Kachel-Boxen.
  */
-const REFRESH_INTERVAL_MS = 10 * 60 * 1000; // 10 Minuten — deckt sich mit
-// dem serverseitigen Cache in /api/space-news (revalidate: 600).
-
 export default function SpaceNewsSection() {
-  const [expanded, setExpanded] = useState(false);
   const [news, setNews] = useState<SpaceNewsArticle[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!expanded) return;
-
     let cancelled = false;
-
-    function fetchNews() {
-      setIsLoading(true);
-      fetch("/api/space-news")
-        .then((res) => res.json())
-        .then((data) => {
-          if (cancelled) return;
-          if (data.error) {
-            setErrorMessage(data.error);
-          } else {
-            setNews(data.news ?? []);
-            setErrorMessage(null);
-          }
-        })
-        .catch(() => {
-          if (!cancelled) setErrorMessage("Space News konnten nicht geladen werden.");
-        })
-        .finally(() => {
-          if (!cancelled) setIsLoading(false);
-        });
-    }
-
-    fetchNews();
-    const interval = setInterval(fetchNews, REFRESH_INTERVAL_MS);
-
+    fetch("/api/space-news")
+      .then((res) => res.json())
+      .then((data) => {
+        if (cancelled) return;
+        if (data.error) {
+          setErrorMessage(data.error);
+        } else {
+          setNews(data.news ?? []);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setErrorMessage("Space News konnten nicht geladen werden.");
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
     return () => {
       cancelled = true;
-      clearInterval(interval);
     };
-  }, [expanded]);
+  }, []);
 
-  function toggle() {
-    setExpanded((prev) => !prev);
-  }
+  if (!isLoading && news.length === 0 && !errorMessage) return null;
 
   return (
     <div className="mx-auto mt-20 w-full max-w-5xl sm:mt-28">
-      <div className="mb-10 border-b border-border pb-4">
+      <div className="mb-10 flex items-end justify-between border-b border-border pb-4">
         <p className="label-mono text-xs uppercase">// Space News</p>
+        <p className="label-mono text-[10px] uppercase text-muted">Live</p>
       </div>
 
-      <button
-        onClick={toggle}
-        aria-expanded={expanded}
-        className="flex w-full items-center justify-between border border-border bg-surface-elevated px-6 py-4 text-left transition-colors hover:border-accent sm:px-10 sm:py-6"
-      >
-        <span className="font-display text-sm font-bold uppercase text-accent sm:text-base">
-          Live-Meldungen aus der Raumfahrt
-        </span>
-        <span className="label-mono inline-flex shrink-0 items-center gap-2 text-xs uppercase text-foreground">
-          {expanded ? "Einklappen" : "Alle News anzeigen"}
-          <span aria-hidden className={`transition-transform ${expanded ? "rotate-180" : ""}`}>
-            ▾
-          </span>
-        </span>
-      </button>
+      {isLoading && <Spinner />}
 
-      <div
-        className={`grid transition-all duration-500 ease-in-out ${
-          expanded ? "mt-6 grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
-        }`}
-      >
-        <div className="overflow-hidden">
-          {isLoading && news.length === 0 && (
-            <p className="label-mono text-xs uppercase text-muted">// Lädt…</p>
-          )}
+      {errorMessage && (
+        <p className="text-xs text-muted">{errorMessage}</p>
+      )}
 
-          {errorMessage && (
-            <p className="text-xs text-muted">{errorMessage}</p>
-          )}
-
-          {news.length > 0 && (
-            <div className="grid grid-cols-4 gap-px bg-border sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-9">
-              {news.map((item, i) => (
-                <RevealCard
-                  key={item.id}
-                  className="bg-surface-elevated p-2"
-                  onClick={() => setSelected(i)}
-                >
-                  {() => (
-                    <>
-                      <CardThumbnail src={item.imageUrl} alt={item.title} />
-                      <p className="label-mono text-[7px] uppercase text-muted">
-                        {formatDate(item.publishedAt)}
-                      </p>
-                      <p className="mt-1 line-clamp-3 min-h-[2.6em] text-[9px] font-semibold uppercase leading-snug tracking-wide text-foreground">
-                        {item.title}
-                      </p>
-                    </>
-                  )}
-                </RevealCard>
-              ))}
-            </div>
-          )}
-
-          {!isLoading && news.length === 0 && !errorMessage && (
-            <p className="label-mono text-xs uppercase text-muted">
-              // Aktuell keine News verfügbar
-            </p>
-          )}
+      {!isLoading && news.length > 0 && (
+        <div className="grid grid-cols-4 gap-px bg-border sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-9">
+          {news.map((item, i) => (
+            <RevealCard
+              key={item.id}
+              className="glass-card p-2"
+              onClick={() => setSelected(i)}
+            >
+              {() => (
+                <>
+                  <CardThumbnail src={item.imageUrl} alt={item.title} />
+                  <p className="label-mono text-[7px] uppercase text-muted">
+                    {formatDate(item.publishedAt)}
+                  </p>
+                  <p className="mt-1 line-clamp-3 min-h-[2.6em] text-[9px] font-semibold uppercase leading-snug tracking-wide text-foreground">
+                    {item.title}
+                  </p>
+                </>
+              )}
+            </RevealCard>
+          ))}
         </div>
-      </div>
+      )}
 
       {selected !== null && news[selected] && (
         <NewsDetailModal
