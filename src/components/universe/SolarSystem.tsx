@@ -100,8 +100,17 @@ export default function SolarSystem({
 
     const cx = size.w / 2;
     const cy = size.h / 2;
-    const baseMaxOrbitR = Math.min(size.w, size.h) / 2 - (mode === "compact" ? 4 : 26);
-    const sunR = mode === "compact" ? 6 : 16;
+    // Nutzerwunsch 20.09.2026 ("mach grafik ... höher"): auf schmalen
+    // Hochkant-Handys war die Umlaufbahn bisher ein Kreis, begrenzt von der
+    // kleineren Dimension (Breite) — der ganze zusätzliche Platz oben/unten
+    // blieb leer. Jetzt getrennte x-/y-Radien, die Ellipse nutzt die
+    // tatsächlich verfügbare Höhe.
+    const smallCanvas = size.w < 420;
+    const padX = mode === "compact" ? 4 : smallCanvas ? 16 : 26;
+    const padY = mode === "compact" ? 4 : smallCanvas ? 22 : 26;
+    const baseMaxOrbitRx = size.w / 2 - padX;
+    const baseMaxOrbitRy = size.h / 2 - padY;
+    const sunR = mode === "compact" ? 6 : smallCanvas ? 11 : 16;
 
     const orbitBodies = bodies.filter((b) => b.kind !== "probe");
     const minAu = Math.sqrt(Math.min(...orbitBodies.map((b) => b.distanceAu)));
@@ -111,21 +120,23 @@ export default function SolarSystem({
 
     let lastTime = performance.now();
 
-    function orbitRadius(distanceAu: number, maxOrbitR: number) {
-      const t = (Math.sqrt(distanceAu) - minAu) / (maxAu - minAu);
-      return sunR + 10 + t * (maxOrbitR - sunR - 10);
+    function orbitT(distanceAu: number) {
+      return (Math.sqrt(distanceAu) - minAu) / (maxAu - minAu);
     }
 
     function planetRadius(diameterKm: number, kind: PlanetData["kind"]) {
       if (kind === "dwarf") {
         const t = (Math.sqrt(diameterKm) - minDiam) / (maxDiam - minDiam || 1);
-        const min = mode === "compact" ? 1 : 1.6;
-        const max = mode === "compact" ? 2 : 4.5;
+        const min = mode === "compact" ? 1 : 1.4;
+        const max = mode === "compact" ? 2 : smallCanvas ? 3.2 : 4.5;
         return min + t * (max - min);
       }
       const t = (Math.sqrt(diameterKm) - minDiam) / (maxDiam - minDiam || 1);
-      const min = mode === "compact" ? 1.3 : 3;
-      const max = mode === "compact" ? 4 : 12;
+      const min = mode === "compact" ? 1.3 : smallCanvas ? 2.4 : 3;
+      // Kleinere Höchstgröße auf schmalen Handys, damit Jupiter/Saturn nicht
+      // zu einem unrealistisch großen, mit Nachbarn verschmelzenden Klumpen
+      // werden (Nutzerwunsch: "scheint ... kaum realistisch und groß").
+      const max = mode === "compact" ? 4 : smallCanvas ? 8 : 12;
       return min + t * (max - min);
     }
 
@@ -133,7 +144,8 @@ export default function SolarSystem({
       const dtMs = now - lastTime;
       lastTime = now;
 
-      const maxOrbitR = baseMaxOrbitR * zoomRef.current;
+      const maxOrbitRx = baseMaxOrbitRx * zoomRef.current;
+      const maxOrbitRy = baseMaxOrbitRy * zoomRef.current;
       const tilt = tiltRef.current;
       const rot = rotateRef.current;
 
@@ -183,7 +195,6 @@ export default function SolarSystem({
       // Nutzerwunsch 20.09.2026 ("bei mobile ansicht ist alles dicht"):
       // Auf schmalen Canvas-Breiten kleinere Schrift + Labels, die sich zu
       // nah kämen, werden übersprungen (der Punkt bleibt aber sichtbar).
-      const smallCanvas = size.w < 420;
       const minLabelGap = smallCanvas ? 24 : 15;
       const labelRects: { x: number; y: number }[] = [];
       function drawLabel(text: string, x: number, y: number, color: string, font: string, force = false) {
@@ -202,13 +213,15 @@ export default function SolarSystem({
       bodies.forEach((planet, i) => {
         const isDwarf = planet.kind === "dwarf";
         const isProbe = planet.kind === "probe";
-        const orbitR = orbitRadius(planet.distanceAu, maxOrbitR);
+        const t = orbitT(planet.distanceAu);
+        const orbitRx = sunR + 10 + t * (maxOrbitRx - sunR - 10);
+        const orbitRy = sunR + 10 + t * (maxOrbitRy - sunR - 10);
 
         if (isProbe) {
           // Sonde: keine Umlaufbahn, fester Winkel + gestrichelte Linie nach außen.
           const angle = -0.61 + rot;
-          const x = cx + Math.cos(angle) * orbitR;
-          const y = cy + Math.sin(angle) * orbitR * tilt;
+          const x = cx + Math.cos(angle) * orbitRx;
+          const y = cy + Math.sin(angle) * orbitRy * tilt;
           const pr = 3;
 
           ctx.save();
@@ -254,7 +267,7 @@ export default function SolarSystem({
 
         // Umlaufbahn-Linie
         ctx.beginPath();
-        ctx.ellipse(cx, cy, orbitR, orbitR * tilt, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx, cy, orbitRx, orbitRy * tilt, 0, 0, Math.PI * 2);
         if (isDwarf) {
           ctx.setLineDash([2, 3]);
           ctx.strokeStyle = "rgba(255,255,255,0.08)";
@@ -273,8 +286,8 @@ export default function SolarSystem({
         angleRef.current[i] += angularSpeed * dtMs;
 
         const angle = angleRef.current[i] + rot;
-        const x = cx + Math.cos(angle) * orbitR;
-        const y = cy + Math.sin(angle) * orbitR * tilt;
+        const x = cx + Math.cos(angle) * orbitRx;
+        const y = cy + Math.sin(angle) * orbitRy * tilt;
         const pr = planetRadius(planet.diameterKm, planet.kind);
 
         drawn.push({ planet, x, y, r: pr });
@@ -303,12 +316,13 @@ export default function SolarSystem({
         }
 
         ctx.globalAlpha = isDwarf ? 0.85 : 1;
-        const glow = ctx.createRadialGradient(x, y, 0, x, y, pr * 2.4);
+        const glowMult = smallCanvas ? 1.5 : 2.4;
+        const glow = ctx.createRadialGradient(x, y, 0, x, y, pr * glowMult);
         glow.addColorStop(0, planet.glowColor);
         glow.addColorStop(1, "rgba(0,0,0,0)");
         ctx.fillStyle = glow;
         ctx.beginPath();
-        ctx.arc(x, y, pr * 2.4, 0, Math.PI * 2);
+        ctx.arc(x, y, pr * glowMult, 0, Math.PI * 2);
         ctx.fill();
 
         ctx.fillStyle = planet.color;
