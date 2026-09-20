@@ -93,11 +93,6 @@ export default function FeaturesSection() {
         className="group mt-6 flex flex-col items-start justify-between gap-4 border border-border bg-surface-elevated p-6 transition-colors hover:border-accent sm:flex-row sm:items-center sm:p-10"
       >
         <div className="flex items-center gap-4">
-          {/* Nutzerkorrektur 20.09.2026: "nimm kleine bewegliche uhr für
-              weltgeschichte, es gefällt mir nicht" — ersetzt den vorherigen
-              großen "Zeittunnel"-Loop-Hintergrund durch eine kleine,
-              tatsächlich tickende Uhr neben dem Text. */}
-          <SmallClock />
           <div>
             <p className="font-display text-lg font-bold text-accent sm:text-2xl">
               Weltgeschichte entdecken
@@ -108,6 +103,10 @@ export default function FeaturesSection() {
               Empire farblich hervorgehoben.
             </p>
           </div>
+          {/* Nutzerkorrektur 20.09.2026: "bring die uhr auf rechte seite" —
+              die kleine tickende Uhr steht jetzt rechts vom Text statt
+              links davor. */}
+          <SmallClock />
         </div>
         <p className="label-mono inline-flex shrink-0 items-center gap-2 text-xs uppercase text-foreground transition-colors group-hover:text-accent">
           Karte ansehen ↗
