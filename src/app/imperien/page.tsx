@@ -738,31 +738,34 @@ export default function ImperienPage() {
               sein"), im breiten 16:9-Format statt hochkant und insgesamt
               kompakter/kleiner. */}
           {selected && (
-            <div className="absolute inset-0 z-[500] flex items-center justify-center bg-black/60 p-3">
-              {/* Nutzerkorrektur 19.09.2026: "auf handy kann man kaum
-                  details über imperien sehen" — die feste aspect-video-Höhe
-                  quetschte den Text auf dem Handy auf wenige sichtbare
-                  Zeilen zusammen. Jetzt auf Handy fast bildschirmhoch
-                  (max-h-[85vh]) mit eigenem Scrollbereich, erst ab sm:
-                  wieder im kompakten Breitbild-Format. */}
-              <div className="relative flex max-h-[85vh] w-full max-w-md flex-col overflow-y-auto border border-border bg-background/95 p-4 backdrop-blur-sm sm:aspect-video sm:max-w-lg sm:p-5">
+            // Nutzerkorrektur 19.09.2026: "diese zurück bottun hast du
+            // hinter + versteckt und man kann auch nicht scrollen um alles
+            // zu lesen" — Leaflets eigene Zoom-Buttons (+/-) liegen per
+            // Default über z-index:1000, unser vorheriges z-[500] lag also
+            // DARUNTER und der Schließen-Button war teils verdeckt. Jetzt
+            // deutlich höher (z-[2000]). Das verschachtelte doppelte
+            // overflow-y-auto (außen + innen) hat außerdem verhindert, dass
+            // der Text wirklich scrollt, da der äußere Container ohne feste
+            // Höhe kein flex-1 im Inneren durchsetzen konnte — jetzt ist nur
+            // noch der äußere Rahmen scrollbar, ein einfacher Block.
+            <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-black/60 p-3">
+              <div className="relative max-h-[85vh] w-full max-w-md overflow-y-auto border border-border bg-background/95 p-4 pt-10 backdrop-blur-sm sm:max-w-lg sm:p-5 sm:pt-5">
                 <button
                   type="button"
                   onClick={() => setSelected(null)}
                   aria-label="Info schließen"
                   title="Schließen"
-                  className="absolute right-2 top-2 z-10 border border-border bg-background/90 px-2 py-0.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
+                  className="absolute right-2 top-2 z-10 border border-border bg-background px-2.5 py-1 text-sm text-muted transition-colors hover:border-accent hover:text-accent"
                 >
-                  ×
+                  × Schließen
                 </button>
-                <div className="flex min-h-0 flex-1 flex-col gap-3 pr-6">
                 {info?.thumbnail && (
                   // Querformat statt hochkant (Nutzerkorrektur 18.09.2026:
                   // "bei allen wird bilder länglich gezeigt ich will quer")
                   // — Banner in voller Breite über dem Text statt schmalem
                   // Streifen daneben, object-cover schneidet das (oft
                   // hochformatige) Wikipedia-Bild passend auf Breitbild zu.
-                  <div className="h-36 w-full shrink-0 overflow-hidden border border-border sm:h-32">
+                  <div className="h-36 w-full shrink-0 overflow-hidden border border-border sm:h-40">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={info.thumbnail}
@@ -771,7 +774,7 @@ export default function ImperienPage() {
                     />
                   </div>
                 )}
-                <div className="min-w-0 flex-1 overflow-y-auto">
+                <div className="mt-3">
                   <p className="label-mono text-xs uppercase text-accent">
                     // {selected.isEmpire ? "Großes Imperium" : "Ausgewählt"}
                   </p>
@@ -838,7 +841,6 @@ export default function ImperienPage() {
                       </p>
                     )}
                   </div>
-                </div>
                 </div>
               </div>
             </div>
