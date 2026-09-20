@@ -135,6 +135,25 @@ body {
   animation: cover-glow 3.2s ease-in-out infinite;
 }
 
+/* Statische, blinkende Sterne (TwinkleStars-Komponente) — Punkte bleiben an
+   fester Position, werden nur heller/dunkler statt zu driften. */
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.85);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+}
+
+.animate-twinkle {
+  animation: twinkle ease-in-out infinite;
+  box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.6);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -145,55 +164,4 @@ body {
   }
 }
 
-/* touch 1789754831 */
-/* touch 1789755411 */
-/* touch 1789755497 */
-/* touch 1789755581 */
-/* touch 1789755656 */
-/* touch 1789756171 */
-/* touch 1789757241 */
-/* touch 1789758132 */
-/* touch 1789758405 */
-/* touch 1789758684 */
-/* touch 1789758851 */
-/* touch 1789758970 */
-/* touch 1789759004 */
-/* touch 1789759136 */
-/* touch 1789759427 */
-/* touch 1789759563 */
-/* touch 1789760070 */
-/* touch 1789770508 */
-/* touch 1789771101 */
-/* touch 1789771922 */
-/* touch 1789772144 */
-/* touch 1789772668 */
-/* touch 1789772958 */
-/* touch 1789773126 */
-/* touch 1789773439 */
-/* touch 1789773608 */
-/* touch 1789774747 */
-/* touch 1789774880 */
-/* touch 1789864477 */
-/* touch 1789864712 */
-/* touch 1789865293 */
-/* touch 1789865418 */
-/* touch 1789866137 */
-/* touch 1789866804 */
-/* touch 1789867454 */
-/* touch 1789868857 */
-/* touch 1789869728 */
-/* touch 1789870531 */
-/* touch 1789870690 */
-/* touch 1789870934 */
-/* touch 1789871148 */
-/* cache-bust 1789871544 */
-/* cache-bust 1789871759 */
-/* cache-bust 1789872077 */
-/* cache-bust 1789872891 */
-/* cache-bust 1789873107 */
-/* cache-bust 1789873439 */
-/* cache-bust 1789874196 */
-/* cache-bust 1789874660 */
-/* cache-bust 1789874892 */
-/* cache-bust 1789875104 */
-/* cache-bust 1789875771 */
+/* cache-bust 1789876052 */

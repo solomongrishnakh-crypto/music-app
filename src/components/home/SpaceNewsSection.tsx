@@ -82,6 +82,11 @@ export default function SpaceNewsSection() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
+  // Nutzerwunsch 20.09.2026: "mach // space News aufklappbar" — die
+  // teils recht lange Kachel-Reihe nimmt sonst viel Platz auf der Seite
+  // ein, deshalb standardmäßig eingeklappt und per Klick auf die
+  // Überschrift auf-/zuklappbar.
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -110,38 +115,58 @@ export default function SpaceNewsSection() {
 
   return (
     <div className="mx-auto mt-20 w-full max-w-5xl sm:mt-28">
-      <div className="mb-10 flex items-end justify-between border-b border-border pb-4">
-        <p className="label-mono text-xs uppercase">// Space News</p>
-        <p className="label-mono text-[10px] uppercase text-muted">Live</p>
-      </div>
+      <button
+        type="button"
+        onClick={() => setIsExpanded((v) => !v)}
+        aria-expanded={isExpanded}
+        className="group mb-4 flex w-full items-end justify-between border-b border-border pb-4 text-left"
+      >
+        <span className="label-mono flex items-center gap-2 text-xs uppercase text-foreground transition-colors group-hover:text-accent">
+          <span
+            className={`inline-block transition-transform ${isExpanded ? "rotate-90" : ""}`}
+            aria-hidden
+          >
+            ▶
+          </span>
+          // Space News
+          {!isLoading && news.length > 0 && (
+            <span className="text-muted">({news.length})</span>
+          )}
+        </span>
+        <span className="label-mono text-[10px] uppercase text-muted">Live</span>
+      </button>
 
-      {isLoading && <Spinner />}
+      {isExpanded && (
+        <div className="mt-6">
+          {isLoading && <Spinner />}
 
-      {errorMessage && (
-        <p className="text-xs text-muted">{errorMessage}</p>
-      )}
+          {errorMessage && (
+            <p className="text-xs text-muted">{errorMessage}</p>
+          )}
 
-      {!isLoading && news.length > 0 && (
-        <div className="grid grid-cols-4 gap-px bg-border sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-9">
-          {news.map((item, i) => (
-            <RevealCard
-              key={item.id}
-              className="glass-card p-2"
-              onClick={() => setSelected(i)}
-            >
-              {() => (
-                <>
-                  <CardThumbnail src={item.imageUrl} alt={item.title} />
-                  <p className="label-mono text-[7px] uppercase text-muted">
-                    {formatDate(item.publishedAt)}
-                  </p>
-                  <p className="mt-1 line-clamp-3 min-h-[2.6em] text-[9px] font-semibold uppercase leading-snug tracking-wide text-foreground">
-                    {item.title}
-                  </p>
-                </>
-              )}
-            </RevealCard>
-          ))}
+          {!isLoading && news.length > 0 && (
+            <div className="grid grid-cols-4 gap-px bg-border sm:grid-cols-6 md:grid-cols-7 lg:grid-cols-9">
+              {news.map((item, i) => (
+                <RevealCard
+                  key={item.id}
+                  className="glass-card p-2"
+                  onClick={() => setSelected(i)}
+                >
+                  {() => (
+                    <>
+                      <CardThumbnail src={item.imageUrl} alt={item.title} />
+                      <p className="label-mono text-[7px] uppercase text-muted">
+                        {formatDate(item.publishedAt)}
+                      </p>
+                      <p className="mt-1 line-clamp-3 min-h-[2.6em] text-[9px] font-semibold uppercase leading-snug tracking-wide text-foreground">
+                        {item.title}
+                      </p>
+                    </>
+                  )}
+                </RevealCard>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

@@ -131,6 +131,70 @@ const UNIVERSE_FACTS: UniverseFact[] = [
     ],
     image: commonsFile("Kepler186f-ArtistConcept-20140417.jpg"),
   },
+  // Nutzerwunsch 20.09.2026 ("kannst du hier noch mehr boxen hinzufügen
+  // also mehr infos mit bilder über universum") — sechs weitere Fakten.
+  {
+    label: "Andromeda-Galaxie",
+    value: "≈ 2,5 Mio. Lichtjahre",
+    details: [
+      "Andromeda ist die uns nächstgelegene große Spiralgalaxie und mit bloßem Auge als schwacher, länglicher Fleck am Nachthimmel sichtbar — das am weitesten entfernte Objekt, das Menschen ohne Hilfsmittel erkennen können.",
+      "Sie ist deutlich größer als die Milchstraße und enthält vermutlich rund eine Billion Sterne.",
+      "Andromeda und die Milchstraße bewegen sich aufeinander zu und werden in etwa 4,5 Milliarden Jahren zu einer neuen, größeren Galaxie verschmelzen.",
+    ],
+    image: commonsFile("Andromeda_Galaxy_(with_h-alpha).jpg"),
+  },
+  {
+    label: "Die Sonne",
+    value: "≈ 1,39 Mio. km Durchmesser",
+    details: [
+      "Die Sonne ist mit rund 1,39 Millionen Kilometern Durchmesser etwa 109-mal so breit wie die Erde und macht allein rund 99,86 % der Masse des gesamten Sonnensystems aus.",
+      "An ihrer Oberfläche herrschen etwa 5.500 °C, im Kern durch Kernfusion sogar rund 15 Millionen °C.",
+      "Sie ist mit etwa 4,6 Milliarden Jahren ungefähr in der Mitte ihrer Lebenszeit als sogenannter Hauptreihenstern.",
+    ],
+    image: commonsFile(
+      "The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA's_Solar_Dynamics_Observatory_-_20100819.jpg"
+    ),
+  },
+  {
+    label: "Jupiter",
+    value: "größter Planet",
+    details: [
+      "Jupiter ist mit rund 143.000 Kilometern Durchmesser der mit Abstand größte Planet im Sonnensystem — mehr als 1.300 Erden würden in sein Volumen passen.",
+      "Seine Masse ist mehr als doppelt so groß wie die aller anderen Planeten des Sonnensystems zusammen.",
+      "Der berühmte 'Große Rote Fleck' ist ein gigantischer Sturm, größer als die Erde, der seit mindestens rund 150 Jahren beobachtet wird.",
+    ],
+    image: commonsFile("Jupiter_by_Cassini-Huygens.jpg"),
+  },
+  {
+    label: "Krebsnebel",
+    value: "Supernova von 1054",
+    details: [
+      "Der Krebsnebel ist der Überrest einer Sternexplosion (Supernova), die chinesische und arabische Astronomen im Jahr 1054 n. Chr. beobachteten und aufzeichneten — sie war so hell, dass sie tagsüber sichtbar war.",
+      "In seinem Zentrum rotiert heute ein Pulsar — ein extrem dichter, schnell rotierender Neutronenstern, der sich etwa 30-mal pro Sekunde dreht.",
+      "Supernovae wie diese schleudern schwere Elemente ins All, aus denen später neue Sterne, Planeten und letztlich auch Leben entstehen können.",
+    ],
+    image: commonsFile("Crab_Nebula.jpg"),
+  },
+  {
+    label: "Voyager 1",
+    value: "seit 2012 im interstellaren Raum",
+    details: [
+      "Voyager 1, gestartet 1977, ist das am weitesten von der Erde entfernte von Menschen gebaute Objekt — inzwischen mehr als 24 Milliarden Kilometer entfernt.",
+      "2012 verließ die Sonde als erstes menschengemachtes Objekt die Heliosphäre und trat in den interstellaren Raum ein.",
+      "An Bord trägt sie die 'Golden Record' — eine vergoldete Schallplatte mit Klängen, Musik und Grüßen der Erde, für den unwahrscheinlichen Fall, dass sie eines Tages von einer außerirdischen Zivilisation gefunden wird.",
+    ],
+    image: commonsFile("Pale_Blue_Dot.png"),
+  },
+  {
+    label: "James-Webb-Weltraumteleskop",
+    value: "aktiv seit 2022",
+    details: [
+      "Das James-Webb-Weltraumteleskop (JWST) ist das bisher leistungsfähigste Weltraumteleskop und beobachtet vor allem im Infrarotbereich — dadurch kann es durch Staubwolken hindurchblicken und extrem weit entfernte, junge Galaxien sichtbar machen.",
+      "Es befindet sich rund 1,5 Millionen Kilometer von der Erde entfernt am Lagrange-Punkt L2, ständig von der Sonne abgeschirmt durch einen tennisplatzgroßen Sonnenschutz.",
+      "Seit Beginn seiner wissenschaftlichen Beobachtungen 2022 hat es unter anderem Atmosphären von Exoplaneten untersucht und einige der ältesten bekannten Galaxien entdeckt.",
+    ],
+    image: commonsFile("James_Webb_Space_Telescope_2009_top.jpg"),
+  },
 ];
 
 interface RevealCardProps {

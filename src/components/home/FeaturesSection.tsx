@@ -1,5 +1,6 @@
 import Link from "next/link";
 import UniverseTypewriter from "./UniverseTypewriter";
+import TwinkleStars from "@/components/ui/TwinkleStars";
 
 const FEATURES = [
   {
@@ -61,9 +62,12 @@ export default function FeaturesSection() {
           Space News), statt beides direkt auf der Startseite zu zeigen. */}
       <Link
         href="/universum"
-        className="group mt-16 flex flex-col items-start justify-between gap-4 border border-border bg-surface-elevated p-6 transition-colors hover:border-accent sm:flex-row sm:items-center sm:p-10"
+        className="group relative mt-16 flex flex-col items-start justify-between gap-4 overflow-hidden border border-border bg-surface-elevated p-6 transition-colors hover:border-accent sm:flex-row sm:items-center sm:p-10"
       >
-        <div>
+        {/* Nutzerwunsch 20.09.2026: "füge im box 'universum kennenlernen'
+            statische sterne die blinken dann dunkeler werden" */}
+        <TwinkleStars count={22} />
+        <div className="relative">
           <p className="font-display text-lg font-bold text-accent sm:text-2xl">
             Universum kennenlernen
           </p>
@@ -73,7 +77,7 @@ export default function FeaturesSection() {
             Live-News aus der Raumfahrt.
           </p>
         </div>
-        <p className="label-mono inline-flex shrink-0 items-center gap-2 text-xs uppercase text-foreground transition-colors group-hover:text-accent">
+        <p className="label-mono relative inline-flex shrink-0 items-center gap-2 text-xs uppercase text-foreground transition-colors group-hover:text-accent">
           Entdecken ↗
         </p>
       </Link>
