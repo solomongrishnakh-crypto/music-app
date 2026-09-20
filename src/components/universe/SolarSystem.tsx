@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
-import { PLANETS, type PlanetData } from "@/data/solarSystem";
+import { useEffect, useMemo, useRef, useState, type PointerEvent, type WheelEvent } from "react";
+import { PLANETS, ALL_BODIES, type PlanetData } from "@/data/solarSystem";
 
 interface DrawnPlanet {
   planet: PlanetData;
@@ -19,20 +19,20 @@ interface SolarSystemProps {
   className?: string;
 }
 
-const MIN_AU = Math.sqrt(PLANETS[0].distanceAu);
-const MAX_AU = Math.sqrt(PLANETS[PLANETS.length - 1].distanceAu);
-const MIN_DIAM = Math.sqrt(Math.min(...PLANETS.map((p) => p.diameterKm)));
-const MAX_DIAM = Math.sqrt(Math.max(...PLANETS.map((p) => p.diameterKm)));
-
 /**
  * Zeichnet das Sonnensystem auf einem <canvas> — echte relative Abstände
  * (AE) und Größen (km), aber für die Darstellung auf Wurzel-Skala gestaucht
  * (Nutzerwunsch 20.09.2026: "sehr realistische umlaufbahnen und abstände"
- * — Reihenfolge/Verhältnisse bleiben astronomisch korrekt, sonst wäre bei
- * echtem 1:1-Maßstab Merkur unsichtbar nah an der Sonne und Neptun weit
- * außerhalb des Bildschirms). Umlaufgeschwindigkeiten sind ebenfalls
- * proportional zur echten Umlaufzeit (Kepler), nur zeitlich gerafft, damit
- * man die Bewegung überhaupt sieht statt 165 Jahre auf Neptun zu warten.
+ * — Reihenfolge/Verhältnisse bleiben astronomisch korrekt). Umlaufgeschwin-
+ * digkeiten sind proportional zur echten Umlaufzeit (Kepler), nur zeitlich
+ * gerafft.
+ *
+ * Nutzerwunsch 20.09.2026 (zweite Runde): Zwergplaneten (Pluto, Haumea,
+ * Makemake, Eris, Ceres) und Voyager 1 als feste Sonde ohne Umlaufbahn
+ * ergänzt (nur im "full"-Modus, damit die kompakte Vorschau übersichtlich
+ * bleibt) — sowie Maussteuerung: Ziehen dreht die Ansicht (horizontal) und
+ * neigt sie (vertikal, wie eine Kamera, die sich hebt/senkt), Scrollen/
+ * Pinch zoomt.
  */
 export default function SolarSystem({
   mode = "full",
@@ -43,11 +43,19 @@ export default function SolarSystem({
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawnRef = useRef<DrawnPlanet[]>([]);
-  const angleRef = useRef<number[]>(PLANETS.map((_, i) => (i / PLANETS.length) * Math.PI * 2));
+  const angleRef = useRef<number[]>(ALL_BODIES.map((_, i) => (i / ALL_BODIES.length) * Math.PI * 2));
   const rafRef = useRef<number>(0);
   const [size, setSize] = useState({ w: 300, h: 300 });
 
   const interactive = mode === "full";
+  const bodies = useMemo(() => (mode === "compact" ? PLANETS : ALL_BODIES), [mode]);
+
+  // Kamera-Zustand als Ref statt State: wird pro Frame im rAF-Loop gelesen,
+  // ein Re-Render pro Mausbewegung wäre unnötig teuer.
+  const zoomRef = useRef(1);
+  const rotateRef = useRef(0); // zusätzliche Drehung der Ansicht (Radiant)
+  const tiltRef = useRef(0.94); // vertikale Stauchung: 1 = von oben, 0.25 = fast von der Seite
+  const dragRef = useRef<{ x: number; y: number; dragged: boolean } | null>(null);
 
   // Sehr wenige, sehr dezente Hintergrundsterne (Nutzerwunsch: "sterne im
   // hintergrund soll kaum sehbar sein") — fest generiert, kein Funkeln,
@@ -92,18 +100,30 @@ export default function SolarSystem({
 
     const cx = size.w / 2;
     const cy = size.h / 2;
-    const maxOrbitR = Math.min(size.w, size.h) / 2 - (mode === "compact" ? 4 : 26);
+    const baseMaxOrbitR = Math.min(size.w, size.h) / 2 - (mode === "compact" ? 4 : 26);
     const sunR = mode === "compact" ? 6 : 16;
+
+    const orbitBodies = bodies.filter((b) => b.kind !== "probe");
+    const minAu = Math.sqrt(Math.min(...orbitBodies.map((b) => b.distanceAu)));
+    const maxAu = Math.sqrt(Math.max(...bodies.map((b) => b.distanceAu)));
+    const minDiam = Math.sqrt(Math.min(...orbitBodies.map((b) => b.diameterKm)));
+    const maxDiam = Math.sqrt(Math.max(...orbitBodies.map((b) => b.diameterKm)));
 
     let lastTime = performance.now();
 
-    function orbitRadius(distanceAu: number) {
-      const t = (Math.sqrt(distanceAu) - MIN_AU) / (MAX_AU - MIN_AU);
+    function orbitRadius(distanceAu: number, maxOrbitR: number) {
+      const t = (Math.sqrt(distanceAu) - minAu) / (maxAu - minAu);
       return sunR + 10 + t * (maxOrbitR - sunR - 10);
     }
 
-    function planetRadius(diameterKm: number) {
-      const t = (Math.sqrt(diameterKm) - MIN_DIAM) / (MAX_DIAM - MIN_DIAM);
+    function planetRadius(diameterKm: number, kind: PlanetData["kind"]) {
+      if (kind === "dwarf") {
+        const t = (Math.sqrt(diameterKm) - minDiam) / (maxDiam - minDiam || 1);
+        const min = mode === "compact" ? 1 : 1.6;
+        const max = mode === "compact" ? 2 : 4.5;
+        return min + t * (max - min);
+      }
+      const t = (Math.sqrt(diameterKm) - minDiam) / (maxDiam - minDiam || 1);
       const min = mode === "compact" ? 1.3 : 3;
       const max = mode === "compact" ? 4 : 12;
       return min + t * (max - min);
@@ -112,6 +132,10 @@ export default function SolarSystem({
     function draw(now: number) {
       const dtMs = now - lastTime;
       lastTime = now;
+
+      const maxOrbitR = baseMaxOrbitR * zoomRef.current;
+      const tilt = tiltRef.current;
+      const rot = rotateRef.current;
 
       ctx.clearRect(0, 0, size.w, size.h);
 
@@ -153,28 +177,70 @@ export default function SolarSystem({
 
       const drawn: DrawnPlanet[] = [];
 
-      PLANETS.forEach((planet, i) => {
-        const orbitR = orbitRadius(planet.distanceAu);
+      bodies.forEach((planet, i) => {
+        const isDwarf = planet.kind === "dwarf";
+        const isProbe = planet.kind === "probe";
+        const orbitR = orbitRadius(planet.distanceAu, maxOrbitR);
+
+        if (isProbe) {
+          // Sonde: keine Umlaufbahn, fester Winkel + gestrichelte Linie nach außen.
+          const angle = -0.61 + rot;
+          const x = cx + Math.cos(angle) * orbitR;
+          const y = cy + Math.sin(angle) * orbitR * tilt;
+          const pr = 3;
+
+          ctx.save();
+          ctx.setLineDash([3, 4]);
+          ctx.strokeStyle = "rgba(255,255,255,0.25)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.lineTo(x, y);
+          ctx.stroke();
+          ctx.restore();
+
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(Math.PI / 4);
+          ctx.fillStyle = planet.color;
+          ctx.fillRect(-pr, -pr, pr * 2, pr * 2);
+          ctx.restore();
+
+          if (mode === "full") {
+            ctx.font = "9px var(--font-mono, monospace)";
+            ctx.fillStyle = "rgba(242,242,240,0.65)";
+            ctx.textAlign = "center";
+            ctx.fillText(planet.name, x, y - pr - 6);
+          }
+
+          drawn.push({ planet, x, y, r: pr + 4 });
+          return;
+        }
 
         // Umlaufbahn-Linie
         ctx.beginPath();
-        ctx.arc(cx, cy, orbitR, 0, Math.PI * 2);
-        ctx.strokeStyle = "rgba(255,255,255,0.12)";
+        ctx.ellipse(cx, cy, orbitR, orbitR * tilt, 0, 0, Math.PI * 2);
+        if (isDwarf) {
+          ctx.setLineDash([2, 3]);
+          ctx.strokeStyle = "rgba(255,255,255,0.08)";
+        } else {
+          ctx.setLineDash([]);
+          ctx.strokeStyle = "rgba(255,255,255,0.12)";
+        }
         ctx.lineWidth = 1;
         ctx.stroke();
+        ctx.setLineDash([]);
 
         // Winkelgeschwindigkeit proportional zur echten (Kepler-)Umlaufzeit,
-        // aber zeitlich gerafft: sqrt(periodDays) legt die sichtbare Dauer
-        // fest, damit alle Planeten in überschaubarer Zeit sichtbar
-        // umlaufen, ihre RELATIVE Geschwindigkeit zueinander aber stimmt.
+        // aber zeitlich gerafft.
         const visualPeriodMs = Math.sqrt(planet.periodDays) * 900;
         const angularSpeed = (Math.PI * 2) / visualPeriodMs;
         angleRef.current[i] += angularSpeed * dtMs;
 
-        const angle = angleRef.current[i];
+        const angle = angleRef.current[i] + rot;
         const x = cx + Math.cos(angle) * orbitR;
-        const y = cy + Math.sin(angle) * orbitR * 0.94; // leichte Ellipse statt perfektem Kreis
-        const pr = planetRadius(planet.diameterKm);
+        const y = cy + Math.sin(angle) * orbitR * tilt;
+        const pr = planetRadius(planet.diameterKm, planet.kind);
 
         drawn.push({ planet, x, y, r: pr });
 
@@ -201,6 +267,7 @@ export default function SolarSystem({
           ctx.stroke();
         }
 
+        ctx.globalAlpha = isDwarf ? 0.85 : 1;
         const glow = ctx.createRadialGradient(x, y, 0, x, y, pr * 2.4);
         glow.addColorStop(0, planet.glowColor);
         glow.addColorStop(1, "rgba(0,0,0,0)");
@@ -213,10 +280,15 @@ export default function SolarSystem({
         ctx.beginPath();
         ctx.arc(x, y, pr, 0, Math.PI * 2);
         ctx.fill();
+        ctx.globalAlpha = 1;
 
         if (mode === "full") {
-          ctx.font = "10px var(--font-mono, monospace)";
-          ctx.fillStyle = isSelected ? "#ff5a4d" : "rgba(242,242,240,0.75)";
+          ctx.font = isDwarf ? "9px var(--font-mono, monospace)" : "10px var(--font-mono, monospace)";
+          ctx.fillStyle = isSelected
+            ? "#ff5a4d"
+            : isDwarf
+              ? "rgba(242,242,240,0.5)"
+              : "rgba(242,242,240,0.75)";
           ctx.textAlign = "center";
           ctx.fillText(planet.name, x, y - pr - 6);
         }
@@ -229,14 +301,49 @@ export default function SolarSystem({
     rafRef.current = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(rafRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [size, mode, selectedId, stars]);
+  }, [size, mode, selectedId, stars, bodies, interactive]);
 
-  function handleClick(e: MouseEvent<HTMLCanvasElement>) {
-    if (!interactive || !onSelectPlanet) return;
+  function handlePointerDown(e: PointerEvent<HTMLCanvasElement>) {
+    if (!interactive) return;
+    dragRef.current = { x: e.clientX, y: e.clientY, dragged: false };
+    canvasRef.current?.setPointerCapture(e.pointerId);
+    if (canvasRef.current) canvasRef.current.style.cursor = "grabbing";
+  }
+
+  function handlePointerMove(e: PointerEvent<HTMLCanvasElement>) {
+    if (!interactive || !dragRef.current) return;
+    const dx = e.clientX - dragRef.current.x;
+    const dy = e.clientY - dragRef.current.y;
+    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) dragRef.current.dragged = true;
+    rotateRef.current += dx * 0.006;
+    tiltRef.current = Math.min(1, Math.max(0.22, tiltRef.current - dy * 0.003));
+    dragRef.current.x = e.clientX;
+    dragRef.current.y = e.clientY;
+  }
+
+  function handlePointerUp(e: PointerEvent<HTMLCanvasElement>) {
+    if (!interactive) return;
+    canvasRef.current?.releasePointerCapture(e.pointerId);
+    if (canvasRef.current) canvasRef.current.style.cursor = "grab";
+    // Klick nur werten, wenn nicht gezogen wurde.
+    if (dragRef.current && !dragRef.current.dragged) {
+      selectFromPoint(e.clientX, e.clientY);
+    }
+    dragRef.current = null;
+  }
+
+  function handleWheel(e: WheelEvent<HTMLCanvasElement>) {
+    if (!interactive) return;
+    e.preventDefault();
+    zoomRef.current = Math.min(4.5, Math.max(0.5, zoomRef.current * (1 - e.deltaY * 0.0012)));
+  }
+
+  function selectFromPoint(clientX: number, clientY: number) {
+    if (!onSelectPlanet) return;
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
 
     let closest: DrawnPlanet | null = null;
     let closestDist = Infinity;
@@ -255,8 +362,12 @@ export default function SolarSystem({
     <div ref={containerRef} className={`relative h-full w-full ${className}`}>
       <canvas
         ref={canvasRef}
-        onClick={handleClick}
-        className={interactive ? "cursor-pointer" : ""}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerLeave={handlePointerUp}
+        onWheel={handleWheel}
+        className={interactive ? "cursor-grab touch-none" : ""}
         aria-label="Sonnensystem-Visualisierung"
       />
     </div>

@@ -45,6 +45,9 @@ export default function SolarSystemModal({ onClose }: SolarSystemModalProps) {
           <p className="font-display text-sm font-bold text-foreground sm:text-base">
             Auf einen Planeten tippen für Details
           </p>
+          <p className="mt-0.5 text-[10px] uppercase tracking-wide text-muted sm:text-xs">
+            Ziehen: drehen &amp; neigen · Scrollen: zoomen
+          </p>
         </div>
         <button
           type="button"
@@ -80,19 +83,19 @@ export default function SolarSystemModal({ onClose }: SolarSystemModalProps) {
             </h3>
             <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-[11px] uppercase tracking-wide text-muted sm:grid-cols-4 sm:text-xs">
               <div>
-                <p className="text-muted">Abstand zur Sonne</p>
+                <p className="text-muted">{selected.factLabels?.[0] ?? "Abstand zur Sonne"}</p>
                 <p className="mt-0.5 font-semibold text-foreground">{selected.facts.distance}</p>
               </div>
               <div>
-                <p className="text-muted">Umlaufzeit</p>
+                <p className="text-muted">{selected.factLabels?.[1] ?? "Umlaufzeit"}</p>
                 <p className="mt-0.5 font-semibold text-foreground">{selected.facts.period}</p>
               </div>
               <div>
-                <p className="text-muted">Durchmesser</p>
+                <p className="text-muted">{selected.factLabels?.[2] ?? "Durchmesser"}</p>
                 <p className="mt-0.5 font-semibold text-foreground">{selected.facts.diameter}</p>
               </div>
               <div>
-                <p className="text-muted">Monde</p>
+                <p className="text-muted">{selected.factLabels?.[3] ?? "Monde"}</p>
                 <p className="mt-0.5 font-semibold text-foreground">{selected.facts.moons}</p>
               </div>
             </div>

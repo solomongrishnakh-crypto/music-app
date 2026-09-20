@@ -11,13 +11,17 @@ export interface PlanetData {
   name: string;
   /** Große Halbachse in AE (Astronomische Einheiten) — echter Wert. */
   distanceAu: number;
-  /** Siderische Umlaufzeit in Erdtagen — echter Wert. */
+  /** Siderische Umlaufzeit in Erdtagen — echter Wert (bei der Sonde ungenutzt). */
   periodDays: number;
-  /** Äquatordurchmesser in km — echter Wert. */
+  /** Äquatordurchmesser in km — echter Wert (bei der Sonde nur symbolisch, s. u.). */
   diameterKm: number;
   color: string;
   glowColor: string;
   hasRings?: boolean;
+  /** "planet" (Standard) | "dwarf" (Zwergplanet) | "probe" (Raumsonde, kreist nicht). */
+  kind?: "planet" | "dwarf" | "probe";
+  /** Überschreibt die Standard-Labels im Info-Panel (Reihenfolge: Abstand/Umlauf/Größe/Extra). */
+  factLabels?: [string, string, string, string];
   facts: {
     distance: string;
     period: string;
@@ -166,3 +170,130 @@ export const PLANETS: PlanetData[] = [
       "Neptun ist der äußerste bekannte Planet und hat mit bis zu 2.100 km/h die stärksten gemessenen Winde im Sonnensystem. Seit seiner Entdeckung 1846 hat er noch keine volle Umrundung der Sonne vollendet.",
   },
 ];
+
+/**
+ * Zwergplaneten (Nutzerwunsch 20.09.2026: "adde plotu anderen kleine
+ * zwergplaneten die fast außerhalb sonnensystem sind auch"). Nur im
+ * "full"-Modus sichtbar, damit die kompakte Vorschau übersichtlich bleibt.
+ */
+export const DWARF_PLANETS: PlanetData[] = [
+  {
+    id: "ceres",
+    name: "Ceres",
+    distanceAu: 2.77,
+    periodDays: 1682,
+    diameterKm: 940,
+    color: "#a89f92",
+    glowColor: "rgba(168,159,146,0.4)",
+    kind: "dwarf",
+    facts: {
+      distance: "2,77 AE (≈ 414 Mio. km)",
+      period: "≈ 4,6 Jahre",
+      diameter: "940 km",
+      moons: "0",
+    },
+    description:
+      "Ceres ist der größte Körper im Asteroidengürtel zwischen Mars und Jupiter und der einzige Zwergplanet im inneren Sonnensystem.",
+  },
+  {
+    id: "pluto",
+    name: "Pluto",
+    distanceAu: 39.48,
+    periodDays: 90560,
+    diameterKm: 2377,
+    color: "#c9b29a",
+    glowColor: "rgba(201,178,154,0.4)",
+    kind: "dwarf",
+    facts: {
+      distance: "39,48 AE (≈ 5,9 Mrd. km)",
+      period: "≈ 248 Jahre",
+      diameter: "2.377 km",
+      moons: "5 (u. a. Charon)",
+    },
+    description:
+      "Pluto galt bis 2006 als neunter Planet und wurde dann als Zwergplanet neu eingestuft. Sein größter Mond Charon ist halb so groß wie Pluto selbst.",
+  },
+  {
+    id: "haumea",
+    name: "Haumea",
+    distanceAu: 43.13,
+    periodDays: 103800,
+    diameterKm: 1600,
+    color: "#d8e6ea",
+    glowColor: "rgba(216,230,234,0.4)",
+    kind: "dwarf",
+    facts: {
+      distance: "43,1 AE (≈ 6,5 Mrd. km)",
+      period: "≈ 284 Jahre",
+      diameter: "≈ 1.600 km",
+      moons: "2",
+    },
+    description:
+      "Haumea rotiert so schnell (in nur 4 Stunden), dass sie zu einer stark abgeflachten, eiförmigen Form verzerrt ist — einzigartig unter den bekannten Zwergplaneten.",
+  },
+  {
+    id: "makemake",
+    name: "Makemake",
+    distanceAu: 45.79,
+    periodDays: 111000,
+    diameterKm: 1430,
+    color: "#b56b4a",
+    glowColor: "rgba(181,107,74,0.4)",
+    kind: "dwarf",
+    facts: {
+      distance: "45,8 AE (≈ 6,9 Mrd. km)",
+      period: "≈ 305 Jahre",
+      diameter: "≈ 1.430 km",
+      moons: "1",
+    },
+    description:
+      "Makemake ist nach dem Schöpfergott der Rapa Nui (Osterinsel) benannt und einer der größten bekannten Kuipergürtel-Objekte nach Pluto.",
+  },
+  {
+    id: "eris",
+    name: "Eris",
+    distanceAu: 67.78,
+    periodDays: 203830,
+    diameterKm: 2326,
+    color: "#d9d9d9",
+    glowColor: "rgba(217,217,217,0.4)",
+    kind: "dwarf",
+    facts: {
+      distance: "67,8 AE (≈ 10,1 Mrd. km)",
+      period: "≈ 558 Jahre",
+      diameter: "2.326 km",
+      moons: "1 (Dysnomia)",
+    },
+    description:
+      "Eris ist fast so groß wie Pluto und war 2005 der Auslöser für die Debatte, die zur Neudefinition von 'Planet' und Plutos Herabstufung führte.",
+  },
+];
+
+/**
+ * Voyager 1 — kein Himmelskörper, sondern eine Raumsonde, die das
+ * Sonnensystem verlässt (Nutzerwunsch: "adde mal voyager 1 abstand auch").
+ * Feste Position, kein Orbit. Die Entfernung wächst real ständig weiter
+ * (~3,6 AE/Jahr) — hier ein näherungsweiser Stand für 2026, nicht live
+ * nachverfolgt.
+ */
+export const VOYAGER1: PlanetData = {
+  id: "voyager1",
+  name: "Voyager 1",
+  distanceAu: 167,
+  periodDays: 0,
+  diameterKm: 5,
+  color: "#f2f2f0",
+  glowColor: "rgba(242,242,240,0.5)",
+  kind: "probe",
+  factLabels: ["Entfernung (ca., Stand 2026)", "Gestartet", "Antennendurchmesser", "Geschwindigkeit"],
+  facts: {
+    distance: "≈ 167 AE (≈ 25 Mrd. km)",
+    period: "5. September 1977",
+    diameter: "3,7 m (Antenne)",
+    moons: "≈ 17 km/s relativ zur Sonne",
+  },
+  description:
+    "Voyager 1 ist das am weitesten von der Erde entfernte von Menschen gebaute Objekt. Seit 2012 befindet sie sich im interstellaren Raum, außerhalb der Heliosphäre der Sonne. Die Position hier ist ein Näherungswert — die Sonde entfernt sich stetig weiter.",
+};
+
+export const ALL_BODIES: PlanetData[] = [...PLANETS, ...DWARF_PLANETS, VOYAGER1];
