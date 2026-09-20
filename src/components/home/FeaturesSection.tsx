@@ -1,7 +1,7 @@
 import Link from "next/link";
 import UniverseTypewriter from "./UniverseTypewriter";
 import TwinkleStars from "@/components/ui/TwinkleStars";
-import TimeTunnelBackground from "@/components/ui/TimeTunnelBackground";
+import SmallClock from "@/components/ui/SmallClock";
 
 const FEATURES = [
   {
@@ -90,24 +90,26 @@ export default function FeaturesSection() {
           und umbenannt. */}
       <Link
         href="/imperien"
-        className="group relative mt-6 flex flex-col items-start justify-between gap-4 overflow-hidden border border-border bg-surface-elevated p-6 transition-colors hover:border-accent sm:flex-row sm:items-center sm:p-10"
+        className="group mt-6 flex flex-col items-start justify-between gap-4 border border-border bg-surface-elevated p-6 transition-colors hover:border-accent sm:flex-row sm:items-center sm:p-10"
       >
-        {/* Nutzerwunsch 20.09.2026: "kannst du ähnliche bewegung oder loop
-            erstellen es soll hintergrund von box 'Weltgeschichte entdecken'
-            sein ... futuristisch" — eigener "Zeittunnel"-Loop statt des
-            als Vorlage gezeigten Stock-Videos (siehe TimeTunnelBackground). */}
-        <TimeTunnelBackground />
-        <div className="relative">
-          <p className="font-display text-lg font-bold text-accent sm:text-2xl">
-            Weltgeschichte entdecken
-          </p>
-          <p className="mt-3 max-w-xl text-xs leading-relaxed text-muted sm:text-sm">
-            Historische Weltkarte mit Jahres-Regler — von der Antike bis
-            heute, große Reiche wie Rom, die Mongolen oder das British
-            Empire farblich hervorgehoben.
-          </p>
+        <div className="flex items-center gap-4">
+          {/* Nutzerkorrektur 20.09.2026: "nimm kleine bewegliche uhr für
+              weltgeschichte, es gefällt mir nicht" — ersetzt den vorherigen
+              großen "Zeittunnel"-Loop-Hintergrund durch eine kleine,
+              tatsächlich tickende Uhr neben dem Text. */}
+          <SmallClock />
+          <div>
+            <p className="font-display text-lg font-bold text-accent sm:text-2xl">
+              Weltgeschichte entdecken
+            </p>
+            <p className="mt-3 max-w-xl text-xs leading-relaxed text-muted sm:text-sm">
+              Historische Weltkarte mit Jahres-Regler — von der Antike bis
+              heute, große Reiche wie Rom, die Mongolen oder das British
+              Empire farblich hervorgehoben.
+            </p>
+          </div>
         </div>
-        <p className="label-mono relative inline-flex shrink-0 items-center gap-2 text-xs uppercase text-foreground transition-colors group-hover:text-accent">
+        <p className="label-mono inline-flex shrink-0 items-center gap-2 text-xs uppercase text-foreground transition-colors group-hover:text-accent">
           Karte ansehen ↗
         </p>
       </Link>

@@ -154,31 +154,12 @@ body {
   box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.6);
 }
 
-/* "Zeittunnel"-Loop für die "Weltgeschichte entdecken"-Box
-   (TimeTunnelBackground-Komponente) — Ringe fliegen endlos aus der Mitte
-   auf den Betrachter zu und drehen sich dabei, dazu ein warmes Leuchten
-   in der Mitte wie eine tief stehende Sonne. */
-@keyframes tunnel-ring {
-  0% {
-    transform: translate(-50%, -50%) scale(0.15) rotate(0deg);
-    opacity: 0;
-    border-width: 3px;
-  }
-  15% {
-    opacity: 0.9;
-  }
-  100% {
-    transform: translate(-50%, -50%) scale(2.6) rotate(70deg);
-    opacity: 0;
-    border-width: 1px;
-  }
-}
-
-.animate-tunnel-ring {
-  animation: tunnel-ring linear infinite;
-}
-
-@keyframes tunnel-spin {
+/* Kleine tickende Uhr (SmallClock-Komponente) — Nutzerkorrektur
+   20.09.2026: "nimm kleine bewegliche uhr für weltgeschichte, es gefällt
+   mir nicht" (ersetzt den vorherigen großen "Zeittunnel"-Loop). Die
+   Grundverschiebung (Zeiger-Ursprung an den Mittelpunkt) steckt bewusst
+   direkt im Keyframe, siehe Kommentar in SmallClock.tsx. */
+@keyframes clock-hand-spin {
   from {
     transform: translate(-50%, -100%) rotate(0deg);
   }
@@ -187,28 +168,16 @@ body {
   }
 }
 
-.animate-tunnel-spin {
-  animation: tunnel-spin 3s linear infinite;
+.animate-clock-hour {
+  animation: clock-hand-spin 12s linear infinite;
 }
 
-.animate-tunnel-spin-reverse {
-  animation: tunnel-spin 4s linear infinite reverse;
+.animate-clock-minute {
+  animation: clock-hand-spin 3s linear infinite;
 }
 
-@keyframes tunnel-glow {
-  0%,
-  100% {
-    opacity: 0.5;
-    transform: translate(-50%, -50%) scale(0.9);
-  }
-  50% {
-    opacity: 0.9;
-    transform: translate(-50%, -50%) scale(1.1);
-  }
-}
-
-.animate-tunnel-glow {
-  animation: tunnel-glow 4s ease-in-out infinite;
+.animate-clock-second {
+  animation: clock-hand-spin 1s linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -221,5 +190,4 @@ body {
   }
 }
 
-/* cache-bust 1789876278 */
-/* cache-bust 1789876361 */
+/* cache-bust 1789876583 */
