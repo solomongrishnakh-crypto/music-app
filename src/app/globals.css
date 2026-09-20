@@ -154,6 +154,63 @@ body {
   box-shadow: 0 0 4px 1px rgba(255, 255, 255, 0.6);
 }
 
+/* "Zeittunnel"-Loop für die "Weltgeschichte entdecken"-Box
+   (TimeTunnelBackground-Komponente) — Ringe fliegen endlos aus der Mitte
+   auf den Betrachter zu und drehen sich dabei, dazu ein warmes Leuchten
+   in der Mitte wie eine tief stehende Sonne. */
+@keyframes tunnel-ring {
+  0% {
+    transform: translate(-50%, -50%) scale(0.15) rotate(0deg);
+    opacity: 0;
+    border-width: 3px;
+  }
+  15% {
+    opacity: 0.9;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.6) rotate(70deg);
+    opacity: 0;
+    border-width: 1px;
+  }
+}
+
+.animate-tunnel-ring {
+  animation: tunnel-ring linear infinite;
+}
+
+@keyframes tunnel-spin {
+  from {
+    transform: translate(-50%, -100%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -100%) rotate(360deg);
+  }
+}
+
+.animate-tunnel-spin {
+  animation: tunnel-spin 3s linear infinite;
+}
+
+.animate-tunnel-spin-reverse {
+  animation: tunnel-spin 4s linear infinite reverse;
+}
+
+@keyframes tunnel-glow {
+  0%,
+  100% {
+    opacity: 0.5;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  50% {
+    opacity: 0.9;
+    transform: translate(-50%, -50%) scale(1.1);
+  }
+}
+
+.animate-tunnel-glow {
+  animation: tunnel-glow 4s ease-in-out infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -164,4 +221,4 @@ body {
   }
 }
 
-/* cache-bust 1789876052 */
+/* cache-bust 1789876278 */

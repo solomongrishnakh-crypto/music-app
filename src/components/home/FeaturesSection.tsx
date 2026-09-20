@@ -1,6 +1,7 @@
 import Link from "next/link";
 import UniverseTypewriter from "./UniverseTypewriter";
 import TwinkleStars from "@/components/ui/TwinkleStars";
+import TimeTunnelBackground from "@/components/ui/TimeTunnelBackground";
 
 const FEATURES = [
   {
@@ -89,9 +90,14 @@ export default function FeaturesSection() {
           und umbenannt. */}
       <Link
         href="/imperien"
-        className="group mt-6 flex flex-col items-start justify-between gap-4 border border-border bg-surface-elevated p-6 transition-colors hover:border-accent sm:flex-row sm:items-center sm:p-10"
+        className="group relative mt-6 flex flex-col items-start justify-between gap-4 overflow-hidden border border-border bg-surface-elevated p-6 transition-colors hover:border-accent sm:flex-row sm:items-center sm:p-10"
       >
-        <div>
+        {/* Nutzerwunsch 20.09.2026: "kannst du ähnliche bewegung oder loop
+            erstellen es soll hintergrund von box 'Weltgeschichte entdecken'
+            sein ... futuristisch" — eigener "Zeittunnel"-Loop statt des
+            als Vorlage gezeigten Stock-Videos (siehe TimeTunnelBackground). */}
+        <TimeTunnelBackground />
+        <div className="relative">
           <p className="font-display text-lg font-bold text-accent sm:text-2xl">
             Weltgeschichte entdecken
           </p>
@@ -101,7 +107,7 @@ export default function FeaturesSection() {
             Empire farblich hervorgehoben.
           </p>
         </div>
-        <p className="label-mono inline-flex shrink-0 items-center gap-2 text-xs uppercase text-foreground transition-colors group-hover:text-accent">
+        <p className="label-mono relative inline-flex shrink-0 items-center gap-2 text-xs uppercase text-foreground transition-colors group-hover:text-accent">
           Karte ansehen ↗
         </p>
       </Link>
