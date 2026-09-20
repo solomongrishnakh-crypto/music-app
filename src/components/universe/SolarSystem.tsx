@@ -118,14 +118,34 @@ export default function SolarSystem({
 
     const orbitBodies = bodies.filter((b) => b.kind !== "probe");
     const minAu = Math.sqrt(Math.min(...orbitBodies.map((b) => b.distanceAu)));
-    const maxAu = Math.sqrt(Math.max(...bodies.map((b) => b.distanceAu)));
     const minDiam = Math.sqrt(Math.min(...orbitBodies.map((b) => b.diameterKm)));
     const maxDiam = Math.sqrt(Math.max(...orbitBodies.map((b) => b.diameterKm)));
+
+    // Nutzerwunsch 20.09.2026 ("echte distanz") — eine einzige Wurzel-Skalierung
+    // über den GESAMTEN Bereich (0,39 AE bis 167 AE) komprimiert die Distanz
+    // zwischen den äußeren Zwergplaneten (Kuipergürtel, bis Eris ≈ 68 AE) und
+    // Voyager 1 (≈167 AE, real gut 2,5x weiter draußen als Eris) optisch fast
+    // weg. Deshalb zweistufig: Merkur bis Neptun weiterhin wurzelskaliert
+    // (damit die inneren Planeten nicht winzig nah an der Sonne kleben),
+    // jenseits von Neptun (Zwergplaneten + Voyager 1) LINEAR skaliert — das
+    // bildet die echten relativen Abstände dort unverfälscht ab.
+    const NEPTUNE_AU = 30.05;
+    const INNER_FRACTION = 0.58; // Anteil des Radius für Merkur..Neptun (+Ceres)
+    const innerMaxAuSqrt = Math.sqrt(NEPTUNE_AU);
+    const outerBodyValues = bodies
+      .filter((b) => b.distanceAu > NEPTUNE_AU)
+      .map((b) => b.distanceAu);
+    const outerMaxAu = outerBodyValues.length > 0 ? Math.max(...outerBodyValues) : NEPTUNE_AU;
 
     let lastTime = performance.now();
 
     function orbitT(distanceAu: number) {
-      return (Math.sqrt(distanceAu) - minAu) / (maxAu - minAu);
+      if (distanceAu <= NEPTUNE_AU) {
+        const t = (Math.sqrt(distanceAu) - minAu) / (innerMaxAuSqrt - minAu);
+        return t * INNER_FRACTION;
+      }
+      const t = (distanceAu - NEPTUNE_AU) / (outerMaxAu - NEPTUNE_AU || 1);
+      return INNER_FRACTION + t * (1 - INNER_FRACTION);
     }
 
     function planetRadius(diameterKm: number, kind: PlanetData["kind"]) {
