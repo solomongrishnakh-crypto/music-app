@@ -41,6 +41,16 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [results]);
 
+  // Meldet an den globalen PlayerContext, ob gerade die große Now-Playing-
+  // Ansicht offen ist — dort zeigt die untere Leiste dann keine eigene
+  // Bedienoberfläche mehr, weil dieselben Play/Pause/Seek-Regler jetzt
+  // direkt in NowPlayingHero sitzen (Nutzerwunsch 19.09.2026).
+  useEffect(() => {
+    player.setHeroActive(showHero);
+    return () => player.setHeroActive(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showHero]);
+
   async function handleSearch(q: string) {
     setQuery(q);
     if (!q.trim()) {
@@ -125,6 +135,10 @@ export default function Home() {
             onNext={player.next}
             onPrevious={player.previous}
             hasPrevious={player.hasPrevious}
+            currentTime={player.currentTime}
+            duration={player.duration}
+            onTogglePlay={player.togglePlayback}
+            onSeek={player.seekTo}
           />
         ) : (
           <header className="mb-10 text-center sm:mb-14">

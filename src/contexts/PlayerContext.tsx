@@ -2,8 +2,10 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -42,6 +44,25 @@ interface PlayerContextValue {
   isFavorite: (songId: string) => boolean;
   setQueue: (songs: Song[]) => void;
   setIsPlaying: (playing: boolean) => void;
+  // Nutzerwunsch 19.09.2026: "nimm diese steurung von unten und ersetze es
+  // auf diese markierte linie aber nur für diese fenster" — die Wiedergabe-
+  // Fortschrittsanzeige + Play/Pause/Seek sollen auch im großen Now-Playing-
+  // Bereich (NowPlayingHero.tsx) nutzbar sein, obwohl der eigentliche
+  // YouTube-Player-Code in der global im Root-Layout gemounteten
+  // YoutubePlayer-Komponente lebt. currentTime/duration werden von dort
+  // laufend hierher gemeldet (reportProgress); togglePlayback/seekTo rufen
+  // die dort per registerControls hinterlegten echten Funktionen auf.
+  currentTime: number;
+  duration: number;
+  reportProgress: (currentTime: number, duration: number) => void;
+  togglePlayback: () => void;
+  seekTo: (seconds: number) => void;
+  registerControls: (controls: { toggle: () => void; seek: (seconds: number) => void }) => void;
+  // Ist die große Now-Playing-Ansicht gerade aktiv? Steuert, ob die fixe
+  // untere Player-Leiste ihre volle Bedienoberfläche zeigt oder nicht (sie
+  // bleibt sonst "immer unten" sichtbar, wie vom Nutzer gewünscht).
+  heroActive: boolean;
+  setHeroActive: (active: boolean) => void;
 }
 
 const PlayerContext = createContext<PlayerContextValue | null>(null);
@@ -53,6 +74,32 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [favorites, setFavorites] = useState<Song[]>([]);
   const [shuffleFavorites, setShuffleFavorites] = useState(false);
   const [queue, setQueue] = useState<Song[]>([]);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [heroActive, setHeroActive] = useState(false);
+  const controlsRef = useRef<{ toggle: () => void; seek: (seconds: number) => void } | null>(
+    null
+  );
+
+  const reportProgress = useCallback((time: number, dur: number) => {
+    setCurrentTime(time);
+    setDuration(dur);
+  }, []);
+
+  const registerControls = useCallback(
+    (controls: { toggle: () => void; seek: (seconds: number) => void }) => {
+      controlsRef.current = controls;
+    },
+    []
+  );
+
+  const togglePlayback = useCallback(() => {
+    controlsRef.current?.toggle();
+  }, []);
+
+  const seekTo = useCallback((seconds: number) => {
+    controlsRef.current?.seek(seconds);
+  }, []);
 
   useEffect(() => {
     setRecentlyPlayed(loadRecentlyPlayed());
@@ -136,6 +183,14 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         isFavorite: handleIsFavorite,
         setQueue,
         setIsPlaying,
+        currentTime,
+        duration,
+        reportProgress,
+        togglePlayback,
+        seekTo,
+        registerControls,
+        heroActive,
+        setHeroActive,
       }}
     >
       {children}

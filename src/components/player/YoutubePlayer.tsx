@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Song } from "@/types/music";
+import { usePlayer } from "@/contexts/PlayerContext";
 
 /**
  * YoutubePlayer
@@ -102,6 +103,7 @@ export default function YoutubePlayer({
   onPrevious,
   hasPrevious,
 }: YoutubePlayerProps) {
+  const { reportProgress, registerControls, heroActive } = usePlayer();
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YTPlayerInstance | null>(null);
   const onEndedRef = useRef(onEnded);
@@ -166,10 +168,17 @@ export default function YoutubePlayer({
       const player = playerRef.current;
       if (!player || isSeeking) return;
       const d = player.getDuration();
+      const nextDuration = d && Number.isFinite(d) ? d : duration;
       if (d && Number.isFinite(d)) setDuration(d);
-      setCurrentTime(player.getCurrentTime());
+      const time = player.getCurrentTime();
+      setCurrentTime(time);
+      // An den globalen PlayerContext melden, damit die große Now-Playing-
+      // Ansicht (NowPlayingHero.tsx) dieselbe Fortschrittsanzeige zeigen
+      // kann (Nutzerwunsch 19.09.2026).
+      reportProgress(time, nextDuration);
     }, 500);
     return () => clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isReady, isSeeking]);
 
   function togglePlayback() {
@@ -180,6 +189,19 @@ export default function YoutubePlayer({
       playerRef.current.playVideo();
     }
   }
+
+  // Die Now-Playing-Ansicht ruft Play/Pause und Seek über den PlayerContext
+  // auf (registerControls), da der eigentliche YouTube-Player hier im
+  // global gemounteten YoutubePlayer lebt, nicht in NowPlayingHero.tsx.
+  useEffect(() => {
+    registerControls({
+      toggle: togglePlayback,
+      seek: (seconds: number) => {
+        playerRef.current?.seekTo(seconds, true);
+      },
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isPlaying]);
 
   function handleClose() {
     playerRef.current?.pauseVideo();
@@ -254,19 +276,31 @@ export default function YoutubePlayer({
   const progressPercent = duration > 0 ? (currentTime / duration) * 100 : 0;
 
   return (
-    <div
-      className={`fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/90 backdrop-blur-sm ${
-        song ? "" : "hidden"
-      }`}
-    >
+    <>
+      {/* Winziges, technisch sichtbares YouTube-Fenster (Pflicht laut
+          YouTube-Richtlinien) — IMMER gerendert (auch wenn die untere
+          Leiste in der Now-Playing-Ansicht ausgeblendet ist), damit der
+          Player nie unsichtbar (display:none) wird und der DOM-Knoten, an
+          den die YouTube-API gebunden ist, erhalten bleibt. Nutzerwunsch
+          19.09.2026: "nur für dieses Fenster [Now Playing], ansonsten immer
+          unten" — die volle Leiste unten bleibt für alle anderen Ansichten
+          unverändert. */}
+      <div
+        className={`fixed bottom-1 right-1 z-10 h-6 w-10 overflow-hidden bg-black opacity-90 ${
+          song ? "" : "hidden"
+        }`}
+      >
+        <div ref={containerRef} className="h-full w-full" />
+      </div>
+
+      {!heroActive && (
+      <div
+        className={`fixed inset-x-0 bottom-0 z-20 border-t border-border bg-background/90 backdrop-blur-sm ${
+          song ? "" : "hidden"
+        }`}
+      >
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-1 px-4 py-2 sm:px-8">
         <div className="flex items-center gap-3">
-          {/* Winziges, technisch sichtbares YouTube-Fenster (Pflicht laut
-              YouTube-Richtlinien) — bewusst unauffällig in der Ecke. */}
-          <div className="h-6 w-10 shrink-0 overflow-hidden bg-black opacity-90">
-            <div ref={containerRef} className="h-full w-full" />
-          </div>
-
           <div className="min-w-0 flex-1">
             <p className="truncate text-xs font-medium uppercase text-foreground">
               {song?.title ?? "Kein Song ausgewählt"}
@@ -353,6 +387,8 @@ export default function YoutubePlayer({
           </span>
         </div>
       </div>
-    </div>
+      </div>
+      )}
+    </>
   );
 }
