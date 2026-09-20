@@ -433,140 +433,190 @@ export default function ImperienPage() {
 
   const currentYear = Math.round(sliderYear);
 
-  // Grenzen fuer das aktuell gewaehlte Jahr laden und auf der Karte zeichnen.
-  // Ein kurzer Debounce (150ms) verhindert, dass jede Zwischenposition
-  // beim Ziehen des Lineals sofort eine eigene Anfrage auslöst.
+  // Client-seitiger Cache: einmal geladene/gezeichnete Jahre werden nicht
+  // erneut angefragt, wenn man beim Ziehen des Lineals darüber zurück-
+  // oder wieder vorspult (Nutzerkorrektur 20.09.2026: "wenn ich durch die
+  // zeit swipe wird nichts an karte geändert bis ich stoppe ... fixen so
+  // das alles flüssig wird").
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const bordersCacheRef = useRef<Map<number, any>>(new Map());
+  const lastRenderedYearRef = useRef<number | null>(null);
+  const lastDrawTimeRef = useRef(0);
+  const pendingDrawTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Zeichnet ein bereits geladenes GeoJSON auf die Karte — ausgelagert aus
+  // dem Lade-Effekt, damit sowohl ein frischer Server-Fetch als auch ein
+  // Cache-Treffer denselben Zeichen-Code nutzen.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  function renderBordersGeojson(geojson: any) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const L = (window as any).L;
+    if (!mapRef.current || !L) return;
+    if (geoLayerRef.current) {
+      mapRef.current.removeLayer(geoLayerRef.current);
+    }
+
+    // Jedes benannte Gebiet wird gezeichnet — nicht nur die, deren Name
+    // Wörter wie "Empire"/"Khanate" enthält (Nutzerkorrektur 18.09.2026:
+    // "es soll nicht alles um großen mächte gehen, es soll alle imperiums
+    // da sein"). Gebiete werden nach Bounding-Box-Fläche sortiert
+    // gezeichnet (große zuerst/unten, kleine zuletzt/oben), damit ein
+    // kleines eingeschlossenes Gebiet nicht komplett von einem großen
+    // Nachbarn verdeckt wird. JEDES benannte Gebiet bekommt außerdem eine
+    // dauerhafte Beschriftung (Nutzerkorrektur 20.09.2026: "manche
+    // imperien haben kein name auf territorium").
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const features: any[] = Array.isArray(geojson.features) ? geojson.features : [];
+    const namedFeatures = features
+      .filter((f) => (f?.properties?.NAME ?? "").trim().length > 0)
+      .map((f) => ({ ...f, geometry: smoothGeometry(f.geometry) }));
+    const sortedFeatures = [...namedFeatures].sort(
+      (a, b) => bboxArea(b.geometry) - bboxArea(a.geometry)
+    );
+    const sortedGeojson = { ...geojson, features: sortedFeatures };
+    const permanentLabelNames = new Set(sortedFeatures.map((f) => f.properties?.NAME));
+
+    // Farben pro Gebiet: Graphenfärbung statt Namens-Hash, damit
+    // benachbarte Gebiete nie dieselbe/eine sehr ähnliche Farbe bekommen
+    // (Nutzerkorrektur 20.09.2026, siehe assignDistinctColors).
+    const colorByName = assignDistinctColors(sortedFeatures);
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const layer = L.geoJSON(sortedGeojson, {
+      // Leaflet vereinfacht/rundet Linien beim Zeichnen zusätzlich zur
+      // eigenen Chaikin-Glättung oben — niedrigerer Wert = weniger
+      // Vereinfachung = feinere Grenzen (Nutzerwunsch 20.09.2026: "mach
+      // grafik ... höher . sowohl grenzen").
+      smoothFactor: 1.1,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      style: (feature: any) => {
+        const name: string = feature?.properties?.NAME ?? "";
+        const c = colorByName.get(name) ?? "hsl(0, 0%, 50%)";
+        return {
+          color: c,
+          weight: 1.6,
+          fillColor: c,
+          fillOpacity: 0.42,
+          // Runde statt spitze Ecken an den Grenzlinien — wirkt weniger
+          // "kantig" (Nutzerwunsch 18.09.2026), auch wenn die zugrunde
+          // liegenden Geodaten selbst nicht glatter werden.
+          lineJoin: "round",
+          lineCap: "round",
+        };
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      onEachFeature: (feature: any, lyr: any) => {
+        const name: string = feature?.properties?.NAME ?? "";
+        const subjectTo: string = feature?.properties?.SUBJECTO ?? "";
+        if (!name) return;
+
+        const isMajor = permanentLabelNames.has(name);
+        lyr.bindTooltip(name, {
+          permanent: isMajor,
+          direction: "center",
+          className: "empire-label",
+          opacity: isMajor ? 0.95 : 0.9,
+        });
+
+        lyr.on({
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          mouseover: (e: any) => {
+            e.target.setStyle({ weight: 2.6 });
+            e.target.bringToFront?.();
+          },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          mouseout: (e: any) => {
+            e.target.setStyle({ weight: 1.4 });
+          },
+          click: () => {
+            setSelected({ name, subjectTo, isEmpire: isEmpireName(name) });
+          },
+        });
+      },
+    }).addTo(mapRef.current);
+
+    geoLayerRef.current = layer;
+    setErrorMessage(null);
+  }
+
+  // Grenzen fuer das aktuell gewaehlte Jahr laden und auf der Karte
+  // zeichnen. Vorher ein reiner Debounce ("warte bis 150ms Ruhe ist") —
+  // bei durchgehendem Ziehen des Lineals feuern Pointer-Events aber
+  // schneller als alle 150ms nacheinander, der Timer wurde also bei jeder
+  // Bewegung neu gestartet und NIE wirklich ausgeführt, bis losgelassen
+  // wurde (Nutzerkorrektur 20.09.2026: "wenn ich durch die zeit swipe wird
+  // nichts an karte geändert bis ich stoppe"). Jetzt ein echtes Throttle:
+  // ist seit dem letzten tatsächlichen Zeichnen schon genug Zeit vergangen,
+  // wird SOFORT neu gezeichnet (kein Warten) — dadurch aktualisiert sich
+  // die Karte laufend WÄHREND man zieht, etwa alle 180ms, plus ein
+  // abschließendes Zeichnen für das exakte Jahr beim Loslassen. Bereits
+  // gesehene Jahre kommen aus dem Cache und werden ohne Netzwerk-Anfrage
+  // sofort gezeichnet.
   useEffect(() => {
     if (!leafletReady || !mapRef.current || !yearRange) return;
+    if (lastRenderedYearRef.current === currentYear) return;
 
     let cancelled = false;
-    const timeoutId = setTimeout(() => {
+    const THROTTLE_MS = 180;
+
+    if (pendingDrawTimeoutRef.current) {
+      clearTimeout(pendingDrawTimeoutRef.current);
+      pendingDrawTimeoutRef.current = null;
+    }
+
+    function draw(year: number) {
+      lastRenderedYearRef.current = year;
+      lastDrawTimeRef.current = Date.now();
+      const cached = bordersCacheRef.current.get(year);
+      if (cached) {
+        renderBordersGeojson(cached);
+        return;
+      }
       setIsLoadingBorders(true);
-
-      fetch(`/api/empires/borders?year=${currentYear}`)
+      fetch(`/api/empires/borders?year=${year}`)
         .then((res) => res.json())
-      .then((geojson) => {
-        if (cancelled) return;
-        if (geojson.error) {
-          setErrorMessage(geojson.error);
-          return;
-        }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const L = (window as any).L;
-        if (geoLayerRef.current) {
-          mapRef.current.removeLayer(geoLayerRef.current);
-        }
+        .then((geojson) => {
+          if (cancelled) return;
+          if (geojson.error) {
+            setErrorMessage(geojson.error);
+            return;
+          }
+          bordersCacheRef.current.set(year, geojson);
+          renderBordersGeojson(geojson);
+        })
+        .catch(() => {
+          if (!cancelled) {
+            setErrorMessage("Grenzen für dieses Jahr konnten nicht geladen werden.");
+          }
+        })
+        .finally(() => {
+          if (!cancelled) setIsLoadingBorders(false);
+        });
+    }
 
-        // Jedes benannte Gebiet wird gezeichnet — nicht nur die, deren
-        // Name Wörter wie "Empire"/"Khanate" enthält (Nutzerkorrektur
-        // 18.09.2026: "es soll nicht alles um großen mächte gehen, es soll
-        // alle imperiums da sein" — z.B. europäische Königreiche fehlten,
-        // weil sie schlicht nicht "... Empire" heißen). Nur Features OHNE
-        // Namen (unbekannte/nicht zugeordnete Datensatz-Reste) bleiben
-        // draußen. Gebiete werden nach Bounding-Box-Fläche sortiert
-        // gezeichnet (große zuerst/unten, kleine zuletzt/oben), damit ein
-        // kleines eingeschlossenes Gebiet nicht komplett von einem großen
-        // Nachbarn verdeckt wird — die größten ~18 pro Jahr bekommen dazu
-        // eine dauerhafte Beschriftung direkt auf der Karte (sonst wäre
-        // die Karte bei hunderten Kleinstaaten unlesbar überfüllt); alle
-        // übrigen zeigen ihren Namen beim Hover, sind aber genauso farbig
-        // und klickbar wie die großen.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const features: any[] = Array.isArray(geojson.features) ? geojson.features : [];
-        const namedFeatures = features
-          .filter((f) => (f?.properties?.NAME ?? "").trim().length > 0)
-          .map((f) => ({ ...f, geometry: smoothGeometry(f.geometry) }));
-        const sortedFeatures = [...namedFeatures].sort(
-          (a, b) => bboxArea(b.geometry) - bboxArea(a.geometry)
-        );
-        const sortedGeojson = { ...geojson, features: sortedFeatures };
+    // Bereits gecachte Jahre sofort zeichnen, ohne jede Wartezeit — macht
+    // das Zurück-/Vor-Scrubben über bereits besuchte Jahre spürbar
+    // flüssiger.
+    if (bordersCacheRef.current.has(currentYear)) {
+      draw(currentYear);
+      return () => {
+        cancelled = true;
+      };
+    }
 
-        // Nutzerkorrektur 20.09.2026 (erst "es fehlt auch imperium namen
-        // über territorium", dann "manche imperien haben kein name auf
-        // territorium" nach dem ersten Versuch mit nur den Top 18) — JEDES
-        // benannte Gebiet bekommt jetzt eine dauerhafte Beschriftung, ohne
-        // Obergrenze. Der Cliopatria-Datensatz zeigt pro Jahr ohnehin
-        // deutlich weniger gleichzeitige Gebiete als moderne Weltkarten,
-        // eine künstliche Kappung war hier eher hinderlich als hilfreich.
-        const permanentLabelNames = new Set(
-          sortedFeatures.map((f) => f.properties?.NAME)
-        );
-
-        // Farben pro Gebiet: Graphenfärbung statt Namens-Hash, damit
-        // benachbarte Gebiete nie dieselbe/eine sehr ähnliche Farbe
-        // bekommen (Nutzerkorrektur 20.09.2026, siehe assignDistinctColors).
-        const colorByName = assignDistinctColors(sortedFeatures);
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const layer = L.geoJSON(sortedGeojson, {
-          // Leaflet vereinfacht/rundet Linien beim Zeichnen zusätzlich zur
-          // eigenen Chaikin-Glättung oben — niedrigerer Wert = weniger
-          // Vereinfachung = feinere Grenzen (Nutzerwunsch 20.09.2026: "mach
-          // grafik ... höher . sowohl grenzen").
-          smoothFactor: 1.1,
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          style: (feature: any) => {
-            const name: string = feature?.properties?.NAME ?? "";
-            const c = colorByName.get(name) ?? "hsl(0, 0%, 50%)";
-            return {
-              color: c,
-              weight: 1.6,
-              fillColor: c,
-              fillOpacity: 0.42,
-              // Runde statt spitze Ecken an den Grenzlinien — wirkt weniger
-              // "kantig" (Nutzerwunsch 18.09.2026), auch wenn die
-              // zugrunde liegenden Geodaten selbst nicht glatter werden.
-              lineJoin: "round",
-              lineCap: "round",
-            };
-          },
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          onEachFeature: (feature: any, lyr: any) => {
-            const name: string = feature?.properties?.NAME ?? "";
-            const subjectTo: string = feature?.properties?.SUBJECTO ?? "";
-            if (!name) return;
-
-            const isMajor = permanentLabelNames.has(name);
-            lyr.bindTooltip(name, {
-              permanent: isMajor,
-              direction: "center",
-              className: "empire-label",
-              opacity: isMajor ? 0.95 : 0.9,
-            });
-
-            lyr.on({
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              mouseover: (e: any) => {
-                e.target.setStyle({ weight: 2.6 });
-                e.target.bringToFront?.();
-              },
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              mouseout: (e: any) => {
-                e.target.setStyle({ weight: 1.4 });
-              },
-              click: () => {
-                setSelected({ name, subjectTo, isEmpire: isEmpireName(name) });
-              },
-            });
-          },
-        }).addTo(mapRef.current);
-
-        geoLayerRef.current = layer;
-        setErrorMessage(null);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setErrorMessage("Grenzen für dieses Jahr konnten nicht geladen werden.");
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setIsLoadingBorders(false);
-      });
-    }, 150);
+    const elapsed = Date.now() - lastDrawTimeRef.current;
+    if (elapsed >= THROTTLE_MS) {
+      draw(currentYear);
+    } else {
+      pendingDrawTimeoutRef.current = setTimeout(() => draw(currentYear), THROTTLE_MS - elapsed);
+    }
 
     return () => {
       cancelled = true;
-      clearTimeout(timeoutId);
+      if (pendingDrawTimeoutRef.current) {
+        clearTimeout(pendingDrawTimeoutRef.current);
+        pendingDrawTimeoutRef.current = null;
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leafletReady, yearRange, currentYear]);
