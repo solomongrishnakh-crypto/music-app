@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import SolarSystem from "./SolarSystem";
 import type { PlanetData } from "@/data/solarSystem";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SolarSystemModalProps {
   onClose: () => void;
@@ -18,6 +19,7 @@ interface SolarSystemModalProps {
  * reinpassen müssen.
  */
 export default function SolarSystemModal({ onClose }: SolarSystemModalProps) {
+  const { t } = useLanguage();
   const [selected, setSelected] = useState<PlanetData | null>(null);
   const [imageFailed, setImageFailed] = useState(false);
 
@@ -46,19 +48,19 @@ export default function SolarSystemModal({ onClose }: SolarSystemModalProps) {
     <div className="fixed inset-0 z-[2000] flex flex-col bg-background">
       <div className="flex items-center justify-between border-b border-border px-3 py-2 sm:px-6 sm:py-3">
         <div className="min-w-0">
-          <p className="label-mono text-[10px] uppercase text-accent sm:text-xs">// Sonnensystem</p>
+          <p className="label-mono text-[10px] uppercase text-accent sm:text-xs">{t("solarSystemLabel")}</p>
           <p className="font-display truncate text-xs font-bold text-foreground sm:text-base">
-            Planet tippen für Details
+            {t("solarSystemTapHint")}
           </p>
           <p className="mt-0.5 text-[9px] uppercase tracking-wide text-muted sm:text-xs">
-            Ziehen: drehen &amp; neigen · Scrollen: zoomen
+            {t("solarSystemDragHint")}
           </p>
         </div>
         <button
           type="button"
           onClick={onClose}
-          aria-label="Schließen"
-          title="Schließen"
+          aria-label={t("close")}
+          title={t("close")}
           className="flex h-7 w-7 shrink-0 items-center justify-center border border-border text-muted transition-colors hover:border-accent hover:text-accent sm:h-9 sm:w-9"
         >
           <svg className="h-3.5 w-3.5 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -75,13 +77,20 @@ export default function SolarSystemModal({ onClose }: SolarSystemModalProps) {
             <button
               type="button"
               onClick={() => setSelected(null)}
-              aria-label="Info schließen"
+              aria-label={t("closeInfo")}
               className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center border border-border text-muted transition-colors hover:border-accent hover:text-accent sm:right-3 sm:top-3 sm:h-7 sm:w-7"
             >
               ×
             </button>
             <p className="label-mono text-[10px] uppercase sm:text-xs" style={{ color: selected.color }}>
-              // {selected.kind === "star" ? "Stern" : selected.kind === "dwarf" ? "Zwergplanet" : selected.kind === "probe" ? "Raumsonde" : "Planet"}
+              //{" "}
+              {selected.kind === "star"
+                ? t("kindStar")
+                : selected.kind === "dwarf"
+                  ? t("kindDwarf")
+                  : selected.kind === "probe"
+                    ? t("kindProbe")
+                    : t("kindPlanet")}
             </p>
             <h3 className="font-display mt-0.5 text-base font-bold uppercase tracking-tight text-foreground sm:mt-1 sm:text-2xl">
               {selected.name}
@@ -100,19 +109,19 @@ export default function SolarSystemModal({ onClose }: SolarSystemModalProps) {
             )}
             <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px] uppercase tracking-wide text-muted sm:mt-3 sm:grid-cols-4 sm:gap-x-4 sm:gap-y-2 sm:text-xs">
               <div>
-                <p className="text-muted">{selected.factLabels?.[0] ?? "Abstand zur Sonne"}</p>
+                <p className="text-muted">{selected.factLabels?.[0] ?? t("distanceToSun")}</p>
                 <p className="mt-0.5 font-semibold text-foreground">{selected.facts.distance}</p>
               </div>
               <div>
-                <p className="text-muted">{selected.factLabels?.[1] ?? "Umlaufzeit"}</p>
+                <p className="text-muted">{selected.factLabels?.[1] ?? t("orbitalPeriod")}</p>
                 <p className="mt-0.5 font-semibold text-foreground">{selected.facts.period}</p>
               </div>
               <div>
-                <p className="text-muted">{selected.factLabels?.[2] ?? "Durchmesser"}</p>
+                <p className="text-muted">{selected.factLabels?.[2] ?? t("diameter")}</p>
                 <p className="mt-0.5 font-semibold text-foreground">{selected.facts.diameter}</p>
               </div>
               <div>
-                <p className="text-muted">{selected.factLabels?.[3] ?? "Monde"}</p>
+                <p className="text-muted">{selected.factLabels?.[3] ?? t("moons")}</p>
                 <p className="mt-0.5 font-semibold text-foreground">{selected.facts.moons}</p>
               </div>
             </div>

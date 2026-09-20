@@ -8,6 +8,8 @@ import DetailModal from "@/components/ui/DetailModal";
 import SpaceNewsSection from "@/components/home/SpaceNewsSection";
 import SolarSystem from "@/components/universe/SolarSystem";
 import SolarSystemModal from "@/components/universe/SolarSystemModal";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useInView } from "@/hooks/useInView";
 
 interface UniverseFact {
@@ -255,23 +257,27 @@ function FactThumbnail({ src, alt }: { src: string; alt: string }) {
 export default function UniversumPage() {
   const [selectedFact, setSelectedFact] = useState<number | null>(null);
   const [showSolarSystem, setShowSolarSystem] = useState(false);
+  const { t } = useLanguage();
 
   return (
     <main className="relative min-h-screen">
       <SiteBackground />
 
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-20 pt-10 sm:px-8 sm:pt-14">
-        <Link
-          href="/"
-          className="label-mono mb-8 inline-flex w-fit items-center gap-2 text-xs uppercase text-muted transition-colors hover:text-accent"
-        >
-          ← Zurück
-        </Link>
+        <div className="mb-8 flex items-center justify-between">
+          <Link
+            href="/"
+            className="label-mono inline-flex w-fit items-center gap-2 text-xs uppercase text-muted transition-colors hover:text-accent"
+          >
+            ← {t("back")}
+          </Link>
+          <LanguageSwitcher />
+        </div>
 
         <header className="mb-8 border-b border-border pb-6">
-          <p className="label-mono text-xs uppercase text-muted">// Universum</p>
+          <p className="label-mono text-xs uppercase text-muted">{t("universeLabel")}</p>
           <h1 className="font-display mt-2 text-2xl font-bold uppercase tracking-tight text-foreground sm:text-4xl">
-            Universum kennenlernen
+            {t("universeTitle")}
           </h1>
           <p className="mt-3 max-w-2xl text-xs leading-relaxed text-muted sm:text-sm">
             Zahlen und Fakten zum Kosmos — vom Alter des Universums über
@@ -293,16 +299,16 @@ export default function UniversumPage() {
         >
           <SolarSystem mode="compact" />
           <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent p-4">
-            <p className="label-mono text-xs uppercase text-accent">// Sonnensystem</p>
+            <p className="label-mono text-xs uppercase text-accent">{t("solarSystemLabel")}</p>
             <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-foreground">
-              Live erkunden
+              {t("liveExplore")}
               <span className="transition-transform group-hover:translate-x-1">↗</span>
             </p>
           </div>
         </button>
 
         <div className="mb-10">
-          <p className="label-mono text-xs uppercase">// Universum in Zahlen</p>
+          <p className="label-mono text-xs uppercase">{t("universeInNumbers")}</p>
         </div>
 
         <div className="grid grid-cols-1 gap-px bg-border sm:grid-cols-2 lg:grid-cols-3">
@@ -338,7 +344,7 @@ export default function UniversumPage() {
 
         {selectedFact !== null && (
           <DetailModal
-            eyebrow="// Universum in Zahlen"
+            eyebrow={t("universeInNumbers")}
             title={UNIVERSE_FACTS[selectedFact].label}
             meta={UNIVERSE_FACTS[selectedFact].value}
             paragraphs={UNIVERSE_FACTS[selectedFact].details}

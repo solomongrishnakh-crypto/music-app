@@ -13,8 +13,10 @@ import ContactSection from "@/components/home/ContactSection";
 import AboutSiteSection from "@/components/home/AboutSiteSection";
 import TypedWordmark from "@/components/ui/TypedWordmark";
 import InfoHint from "@/components/ui/InfoHint";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { Song } from "@/types/music";
 import { usePlayer } from "@/contexts/PlayerContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
  * Der eigentliche Wiedergabe-Zustand (aktueller Song, Verlauf, Favoriten,
@@ -25,6 +27,7 @@ import { usePlayer } from "@/contexts/PlayerContext";
  */
 export default function Home() {
   const player = usePlayer();
+  const { t } = useLanguage();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Song[]>([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -110,8 +113,12 @@ export default function Home() {
           (Musik/AI News/Kontakte) wurden entfernt (Nutzerkorrektur
           18.09.2026: "diese centaurian text oben link und diese ganz
           obere leiste entfernen"). */}
+      <div className="fixed right-4 top-4 z-20 sm:right-8 sm:top-8">
+        <LanguageSwitcher />
+      </div>
+
       <div className="pointer-events-none fixed inset-0 z-10 hidden select-none p-6 sm:block sm:p-8">
-        <div className="pointer-events-auto absolute right-6 top-6 max-w-[220px] text-right text-xs leading-relaxed sm:right-8 sm:top-8">
+        <div className="pointer-events-auto absolute right-6 top-16 max-w-[220px] text-right text-xs leading-relaxed sm:right-8 sm:top-20">
           <p className="label-mono mb-1 uppercase">// Info</p>
           <p className="text-muted">
             Musik, KI-News und mehr — alles auf einer Seite. Kein Login,
@@ -152,7 +159,7 @@ export default function Home() {
         )}
 
         <div className="mx-auto w-full max-w-2xl">
-          <SearchBar onSearch={handleSearch} />
+          <SearchBar onSearch={handleSearch} placeholder={t("searchPlaceholder")} />
         </div>
 
         {!showHero && (

@@ -1,16 +1,15 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
   placeholder?: string;
 }
 
-export default function SearchBar({
-  onSearch,
-  placeholder = "Künstler, Songs oder Alben suchen …",
-}: SearchBarProps) {
+export default function SearchBar({ onSearch, placeholder }: SearchBarProps) {
+  const { t } = useLanguage();
   const [value, setValue] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined
@@ -54,9 +53,9 @@ export default function SearchBar({
           inputMode="search"
           value={value}
           onChange={(e) => setValue(e.target.value)}
-          placeholder={placeholder}
+          placeholder={placeholder ?? t("searchPlaceholder")}
           className="w-full bg-transparent text-base text-foreground placeholder:text-muted focus:outline-none sm:text-lg"
-          aria-label="Musiksuche"
+          aria-label={t("searchAriaLabel")}
         />
         {value && (
           <button

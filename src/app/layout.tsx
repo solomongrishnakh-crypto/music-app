@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { JetBrains_Mono, Orbitron } from "next/font/google";
 import "./globals.css";
 import { PlayerProvider } from "@/contexts/PlayerContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import PersistentPlayerBar from "@/components/player/PersistentPlayerBar";
 
 const jetbrainsMono = JetBrains_Mono({
@@ -71,10 +72,12 @@ export default function RootLayout({
             statt beim Verlassen der Startseite abzubrechen (Nutzerwunsch
             18.09.2026: "music soll auch hier gespielt werden nicht
             abbrechen wenn ich die karte oder was anderes ... öffne"). */}
-        <PlayerProvider>
-          {children}
-          <PersistentPlayerBar />
-        </PlayerProvider>
+        <LanguageProvider>
+          <PlayerProvider>
+            {children}
+            <PersistentPlayerBar />
+          </PlayerProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

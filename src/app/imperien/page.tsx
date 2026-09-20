@@ -6,6 +6,8 @@ import { useEffect, useRef, useState } from "react";
 import SiteBackground from "@/components/particles/SiteBackground";
 import TopEmpiresGrid from "@/components/home/TopEmpiresGrid";
 import Spinner from "@/components/ui/Spinner";
+import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { getEmpiresForYear, getEmpiresYearRange, preloadEmpiresData } from "@/lib/history/empiresClient";
 
 const LEAFLET_CSS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
@@ -487,6 +489,7 @@ function geometryLabelPoint(geometry: any): [number, number] | null {
  * ausserdem spart das ein zusaetzliches Build-Dependency).
  */
 export default function ImperienPage() {
+  const { t } = useLanguage();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
@@ -1079,15 +1082,18 @@ export default function ImperienPage() {
       `}</style>
 
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-20 pt-10 sm:px-8 sm:pt-14">
-        <Link
-          href="/"
-          className="label-mono mb-8 inline-flex w-fit items-center gap-2 text-xs uppercase text-muted transition-colors hover:text-accent"
-        >
-          ← Zurück
-        </Link>
+        <div className="mb-8 flex items-center justify-between">
+          <Link
+            href="/"
+            className="label-mono inline-flex w-fit items-center gap-2 text-xs uppercase text-muted transition-colors hover:text-accent"
+          >
+            ← {t("back")}
+          </Link>
+          <LanguageSwitcher />
+        </div>
 
         <header className="mb-8 border-b border-border pb-6">
-          <p className="label-mono text-xs uppercase text-muted">// Große Imperien</p>
+          <p className="label-mono text-xs uppercase text-muted">// {t("navEmpiresLabel")}</p>
           <h1 className="font-display mt-2 text-2xl font-bold uppercase tracking-tight text-foreground sm:text-4xl">
             Die Welt durch die Jahrhunderte
           </h1>
@@ -1155,8 +1161,8 @@ export default function ImperienPage() {
                 <button
                   type="button"
                   onClick={() => setSelected(null)}
-                  aria-label="Info schließen"
-                  title="Schließen"
+                  aria-label={t("closeInfo")}
+                  title={t("close")}
                   className="absolute right-2 top-2 z-10 border border-border bg-background px-2.5 py-1 text-sm text-muted transition-colors hover:border-accent hover:text-accent"
                 >
                   × Schließen
@@ -1274,7 +1280,7 @@ export default function ImperienPage() {
                   value={yearInputText}
                   onChange={(e) => setYearInputText(e.target.value)}
                   onBlur={submitYearInput}
-                  aria-label="Jahr eingeben"
+                  aria-label={t("empiresYearInput")}
                   className="w-24 border border-border bg-black/30 px-2 py-1 text-xs text-foreground focus:border-accent focus:outline-none"
                 />
                 <button
@@ -1303,7 +1309,7 @@ export default function ImperienPage() {
             ref={rulerRef}
             role="slider"
             tabIndex={0}
-            aria-label="Jahr auswählen"
+            aria-label={t("empiresYearSelect")}
             aria-valuemin={minYear}
             aria-valuemax={maxYear}
             aria-valuenow={sliderYear}
@@ -1353,8 +1359,8 @@ export default function ImperienPage() {
                 }}
                 disabled={!yearRange}
                 className="border border-border px-2.5 py-1.5 text-xs text-foreground transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
-                aria-label="Zum Anfang springen"
-                title="Zum Anfang springen"
+                aria-label={t("empiresJumpStart")}
+                title={t("empiresJumpStart")}
               >
                 ⏮
               </button>
@@ -1363,8 +1369,8 @@ export default function ImperienPage() {
                 onClick={() => setIsPlaying((p) => !p)}
                 disabled={!yearRange}
                 className="border border-border px-3 py-1.5 text-xs uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
-                aria-label={isPlaying ? "Pause" : "Abspielen"}
-                title={isPlaying ? "Pause" : "Durch die Jahre abspielen"}
+                aria-label={isPlaying ? t("empiresPause") : t("playerPlay")}
+                title={isPlaying ? t("empiresPause") : t("empiresPlay")}
               >
                 {isPlaying ? "⏸ Pause" : "▶ Abspielen"}
               </button>
@@ -1376,8 +1382,8 @@ export default function ImperienPage() {
                 }}
                 disabled={!yearRange}
                 className="border border-border px-2.5 py-1.5 text-xs text-foreground transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
-                aria-label="Zum Ende springen"
-                title="Zum Ende springen"
+                aria-label={t("empiresJumpEnd")}
+                title={t("empiresJumpEnd")}
               >
                 ⏭
               </button>
@@ -1387,8 +1393,8 @@ export default function ImperienPage() {
               type="button"
               onClick={() => setSpeedStep((s) => (s + 1) % PLAY_SPEEDS.length)}
               className="label-mono flex items-center gap-1.5 border border-border px-2.5 py-1.5 text-[11px] uppercase text-foreground transition-colors hover:border-accent hover:text-accent"
-              aria-label="Abspielgeschwindigkeit ändern"
-              title="Abspielgeschwindigkeit ändern"
+              aria-label={t("empiresSpeed")}
+              title={t("empiresSpeed")}
             >
               ⚙ {PLAY_SPEED_LABELS[speedStep]}
             </button>
