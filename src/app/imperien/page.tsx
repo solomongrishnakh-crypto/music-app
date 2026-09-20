@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { KeyboardEvent, PointerEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import SiteBackground from "@/components/particles/SiteBackground";
+import TopEmpiresGrid from "@/components/home/TopEmpiresGrid";
 
 const LEAFLET_CSS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
 const LEAFLET_JS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
@@ -738,13 +739,19 @@ export default function ImperienPage() {
               kompakter/kleiner. */}
           {selected && (
             <div className="absolute inset-0 z-[500] flex items-center justify-center bg-black/60 p-3">
-              <div className="relative flex aspect-video w-full max-w-md flex-col overflow-y-auto border border-border bg-background/95 p-4 backdrop-blur-sm sm:max-w-lg sm:p-5">
+              {/* Nutzerkorrektur 19.09.2026: "auf handy kann man kaum
+                  details über imperien sehen" — die feste aspect-video-Höhe
+                  quetschte den Text auf dem Handy auf wenige sichtbare
+                  Zeilen zusammen. Jetzt auf Handy fast bildschirmhoch
+                  (max-h-[85vh]) mit eigenem Scrollbereich, erst ab sm:
+                  wieder im kompakten Breitbild-Format. */}
+              <div className="relative flex max-h-[85vh] w-full max-w-md flex-col overflow-y-auto border border-border bg-background/95 p-4 backdrop-blur-sm sm:aspect-video sm:max-w-lg sm:p-5">
                 <button
                   type="button"
                   onClick={() => setSelected(null)}
                   aria-label="Info schließen"
                   title="Schließen"
-                  className="absolute right-2 top-2 border border-border px-2 py-0.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
+                  className="absolute right-2 top-2 z-10 border border-border bg-background/90 px-2 py-0.5 text-xs text-muted transition-colors hover:border-accent hover:text-accent"
                 >
                   ×
                 </button>
@@ -755,7 +762,7 @@ export default function ImperienPage() {
                   // — Banner in voller Breite über dem Text statt schmalem
                   // Streifen daneben, object-cover schneidet das (oft
                   // hochformatige) Wikipedia-Bild passend auf Breitbild zu.
-                  <div className="h-28 w-full shrink-0 overflow-hidden border border-border sm:h-32">
+                  <div className="h-36 w-full shrink-0 overflow-hidden border border-border sm:h-32">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={info.thumbnail}
@@ -964,6 +971,17 @@ export default function ImperienPage() {
           </div>
         </div>
 
+        {/* Nutzerwunsch 19.09.2026: "nimm diese box mit großen imperien
+            füge es in die seite unten wo karte ist" — dieselbe "01-04"-Box
+            wie auf der Startseite, hier unterhalb der Karte/Zeitleiste. */}
+        <div className="mt-16 border-t border-border pt-10">
+          <div className="mb-8">
+            <p className="label-mono text-xs uppercase text-muted">
+              // Größte Imperien der Geschichte
+            </p>
+          </div>
+          <TopEmpiresGrid />
+        </div>
       </div>
     </main>
   );
