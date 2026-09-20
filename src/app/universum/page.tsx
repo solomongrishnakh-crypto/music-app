@@ -15,14 +15,21 @@ interface UniverseFact {
   image: string;
 }
 
-// Direkte, echte Bild-URLs (Wikimedia Commons / Wikipedia-Artikelbilder,
-// über die Wikipedia-API verifiziert — kein KI-generiertes Bild).
+// Bild-URLs über Wikimedia Commons' "Special:FilePath"-Umleitung statt
+// direkter upload.wikimedia.org-Pfade (Nutzerkorrektur 20.09.2026: "es
+// fehlt hier noch bilder") — Special:FilePath/<Dateiname> löst IMMER
+// zuverlässig zur echten Bild-URL auf, ganz ohne den MD5-Hash-Ordner
+// (/a/ab/…) erraten zu müssen, der bei einigen der vorherigen Direkt-Links
+// nicht (mehr) stimmte und die Bilder deshalb stumm nicht luden.
 //
 // Nutzerwunsch 20.09.2026: "Universum in Zahlen" + Space News auf eine
 // eigene Seite auslagern (wie "Weltgeschichte entdecken" für die Imperien-
 // Karte) und dabei mit MEHR Infos übers Universum füllen — die ursprünglich
 // 6 Fakten (aus der alten FactsSection auf der Startseite) sind hier um
 // weitere ergänzt.
+function commonsFile(filename: string): string {
+  return `https://commons.wikimedia.org/wiki/Special:FilePath/${filename}?width=800`;
+}
 const UNIVERSE_FACTS: UniverseFact[] = [
   {
     label: "Alter des Universums",
@@ -32,7 +39,7 @@ const UNIVERSE_FACTS: UniverseFact[] = [
       "Missionen wie WMAP und Planck haben diese Hintergrundstrahlung extrem präzise vermessen und daraus, zusammen mit der Ausdehnungsrate des Universums, das Alter berechnet.",
       "Zum Vergleich: Unser Sonnensystem existiert erst seit etwa 4,6 Milliarden Jahren — das Universum war also schon zwei Drittel seines bisherigen Lebens alt, bevor die Erde entstand.",
     ],
-    image: "https://upload.wikimedia.org/wikipedia/commons/0/04/Cosmic_Microwave_Background_%28CMB%29.jpeg",
+    image: commonsFile("Cosmic_Microwave_Background_(CMB).jpeg"),
   },
   {
     label: "Beobachtbares Universum",
@@ -42,7 +49,7 @@ const UNIVERSE_FACTS: UniverseFact[] = [
       "Das ist größer als '13,8 Milliarden Lichtjahre in jede Richtung', weil sich der Raum selbst seit dem Urknall ausgedehnt hat — weit entfernte Galaxien sind heute viel weiter weg, als es die reine Lichtlaufzeit vermuten lässt.",
       "Das gesamte Universum könnte deutlich größer sein oder sogar unendlich — wir sehen nur den Teil, aus dem uns bisher Licht erreicht hat.",
     ],
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0d/Hubble_ultra_deep_field_high_rez_edit1.jpg/1600px-Hubble_ultra_deep_field_high_rez_edit1.jpg",
+    image: commonsFile("Hubble_ultra_deep_field_high_rez.jpg"),
   },
   {
     label: "Galaxien (geschätzt)",
@@ -52,7 +59,7 @@ const UNIVERSE_FACTS: UniverseFact[] = [
       "Neuere Auswertungen mit dem James-Webb-Weltraumteleskop deuten inzwischen eher wieder auf niedrigere zweistellige Milliardenwerte hin — die genaue Zahl bleibt Gegenstand aktiver Forschung.",
       "Jede dieser Galaxien enthält selbst wieder Hunderte Millionen bis Billionen Sterne — die schiere Größenordnung ist für den Menschen kaum intuitiv greifbar.",
     ],
-    image: "https://upload.wikimedia.org/wikipedia/commons/c/c3/NGC_4414_%28NASA-med%29.jpg",
+    image: commonsFile("NGC_4414_(NASA-med).jpg"),
   },
   {
     label: "Sterne in der Milchstraße",
@@ -62,7 +69,7 @@ const UNIVERSE_FACTS: UniverseFact[] = [
       "Die Sonne befindet sich in einem ihrer Spiralarme, rund 26.000 Lichtjahre vom galaktischen Zentrum entfernt, und umkreist dieses Zentrum einmal in etwa 225–250 Millionen Jahren.",
       "Die Unsicherheit bei der Sternenzahl (100–400 Milliarden) liegt daran, dass viele kleine, lichtschwache Sterne von der Erde aus kaum direkt zu zählen sind.",
     ],
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/43/ESO-VLT-Laser-phot-33a-07.jpg/1600px-ESO-VLT-Laser-phot-33a-07.jpg",
+    image: commonsFile("ESO-VLT-Laser-phot-33a-07.jpg"),
   },
   {
     label: "Lichtgeschwindigkeit",
@@ -72,7 +79,7 @@ const UNIVERSE_FACTS: UniverseFact[] = [
       "Sie ist auch die Grundlage von Einsteins spezieller Relativitätstheorie: Raum und Zeit verhalten sich so, dass die Lichtgeschwindigkeit für alle Beobachter gleich bleibt.",
       "Weil Licht endlich schnell ist, blicken wir beim Blick ins All immer in die Vergangenheit — das Sonnenlicht, das uns gerade erreicht, ist rund 8 Minuten alt.",
     ],
-    image: "https://upload.wikimedia.org/wikipedia/commons/2/2e/Earth_to_Sun_-_en.png",
+    image: commonsFile("Earth_to_Sun_-_en.png"),
   },
   {
     label: "Nächster Stern (Alpha Centauri)",
@@ -82,7 +89,7 @@ const UNIVERSE_FACTS: UniverseFact[] = [
       "Mit heutiger Raumfahrttechnik (chemische Raketen) würde eine Reise dorthin viele Zehntausende Jahre dauern — selbst mit den schnellsten je gebauten Sonden wären es noch Jahrtausende.",
       "Um Proxima Centauri kreist mindestens ein erdgroßer Exoplanet in der sogenannten habitablen Zone, was ihn zu einem viel diskutierten Ziel für zukünftige interstellare Missionskonzepte macht.",
     ],
-    image: "https://upload.wikimedia.org/wikipedia/commons/9/95/New_shot_of_Proxima_Centauri%2C_our_nearest_neighbour.jpg",
+    image: commonsFile("New_shot_of_Proxima_Centauri,_our_nearest_neighbour.jpg"),
   },
   {
     label: "Dunkle Materie",
@@ -92,7 +99,7 @@ const UNIVERSE_FACTS: UniverseFact[] = [
       "Sie macht schätzungsweise rund 27 % des gesamten Energieinhalts des Universums aus — gewöhnliche (sichtbare) Materie dagegen nur etwa 5 %.",
       "Woraus Dunkle Materie tatsächlich besteht, ist bis heute ungeklärt — sie zählt zu den größten offenen Fragen der modernen Physik.",
     ],
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/1/17/Bullet_cluster.jpg/1280px-Bullet_cluster.jpg",
+    image: commonsFile("Bullet_cluster.jpg"),
   },
   {
     label: "Dunkle Energie",
@@ -102,7 +109,7 @@ const UNIVERSE_FACTS: UniverseFact[] = [
       "Entdeckt wurde die beschleunigte Expansion Ende der 1990er durch Beobachtungen weit entfernter Supernovae, wofür 2011 der Physik-Nobelpreis vergeben wurde.",
       "Zusammen mit Dunkler Materie bedeutet das: Nur etwa 5 % des Universums bestehen aus der 'gewöhnlichen' Materie, aus der Sterne, Planeten und wir selbst gemacht sind.",
     ],
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3e/Universe_expansion2.png/1024px-Universe_expansion2.png",
+    image: commonsFile("Universe_expansion-en.svg"),
   },
   {
     label: "Schwarze Löcher",
@@ -112,7 +119,7 @@ const UNIVERSE_FACTS: UniverseFact[] = [
       "Im Zentrum fast jeder großen Galaxie sitzt vermutlich ein supermassereiches Schwarzes Loch; das der Milchstraße (Sagittarius A*) hat etwa 4 Millionen Sonnenmassen.",
       "2019 gelang mit dem Event Horizon Telescope die erste direkte Abbildung eines Schwarzen Lochs (in der Galaxie M87) — ein Meilenstein der Astronomie.",
     ],
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Black_hole_-_Messier_87_crop_max_res.jpg/1280px-Black_hole_-_Messier_87_crop_max_res.jpg",
+    image: commonsFile("Black_hole_-_Messier_87_crop_max_res.jpg"),
   },
   {
     label: "Exoplaneten (bestätigt)",
@@ -122,7 +129,7 @@ const UNIVERSE_FACTS: UniverseFact[] = [
       "Die meisten wurden über die Transitmethode entdeckt — ein Planet zieht vor seinem Stern vorbei und dimmt dessen Licht minimal, was Weltraumteleskope wie Kepler und TESS registrieren.",
       "Ein wichtiges Forschungsziel sind Planeten in der 'habitablen Zone' — mit Bedingungen, unter denen flüssiges Wasser an der Oberfläche möglich wäre.",
     ],
-    image: "https://upload.wikimedia.org/wikipedia/commons/thumb/4/4c/Kepler-186f_artist_concept.jpg/1280px-Kepler-186f_artist_concept.jpg",
+    image: commonsFile("Kepler186f-ArtistConcept-20140417.jpg"),
   },
 ];
 
@@ -145,24 +152,26 @@ function RevealCard({ children, className, onClick }: RevealCardProps) {
   );
 }
 
-// Nutzerwunsch 20.09.2026: "füge auch kleine bilder hinzu das es zu dem
-// titel passt" — kleines Vorschaubild oben in jeder Fakten-Karte (dasselbe
-// Bild, das vorher nur in der Detailansicht auftauchte). Blendet sich
-// unsichtbar aus, falls ein Bild mal nicht lädt, statt kaputt auszusehen
-// (gleiches Muster wie CardThumbnail in SpaceNewsSection).
+// Nutzerkorrektur 20.09.2026: "mach es bitte klein also die boxen klein
+// das bild daneben auch klein (box soll futuristisch sein)" — statt eines
+// großen 16:9-Bilds über der ganzen Kartenbreite jetzt ein kleines
+// quadratisches Vorschaubild SEITLICH neben dem Text, mit einer dünnen
+// Akzent-Ecke (HUD-artiger Rahmen) für den futuristischen Look. Blendet
+// sich unsichtbar aus, falls ein Bild mal nicht lädt.
 function FactThumbnail({ src, alt }: { src: string; alt: string }) {
   const [failed, setFailed] = useState(false);
   if (failed || !src) return null;
   return (
-    <div className="-mx-6 -mt-6 mb-4 aspect-[16/9] overflow-hidden bg-surface-elevated">
+    <div className="relative h-14 w-14 flex-none overflow-hidden border border-border bg-surface-elevated sm:h-16 sm:w-16">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
         alt={alt}
         loading="lazy"
-        className="h-full w-full object-cover opacity-85 transition-opacity group-hover:opacity-100"
+        className="h-full w-full object-cover opacity-80 transition-opacity group-hover:opacity-100"
         onError={() => setFailed(true)}
       />
+      <span className="pointer-events-none absolute inset-0 border border-accent/0 transition-colors group-hover:border-accent/60" />
     </div>
   );
 }
@@ -213,26 +222,25 @@ export default function UniversumPage() {
           {UNIVERSE_FACTS.map((fact, i) => (
             <RevealCard
               key={fact.label}
-              className="glass-card p-6"
+              className="glass-card flex items-center gap-3 p-3"
               onClick={() => setSelectedFact(i)}
             >
               {(inView) => (
                 <>
                   <FactThumbnail src={fact.image} alt={fact.label} />
-                  <p className="font-display min-h-[1.75em] text-lg font-bold text-accent sm:text-xl">
-                    <Typewriter text={fact.value} active={inView} speed={12} />
-                  </p>
-                  <p className="mt-2 min-h-[1.5em] text-xs uppercase tracking-wide text-muted">
-                    <Typewriter
-                      text={fact.label}
-                      active={inView}
-                      speed={10}
-                      delay={fact.value.length * 12 + 150}
-                    />
-                  </p>
-                  <p className="label-mono mt-3 text-[10px] uppercase opacity-0 transition-opacity group-hover:opacity-100">
-                    // mehr erfahren
-                  </p>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-display min-h-[1.3em] text-sm font-bold text-accent sm:text-base">
+                      <Typewriter text={fact.value} active={inView} speed={12} />
+                    </p>
+                    <p className="mt-1 min-h-[1.2em] text-[10px] uppercase leading-snug tracking-wide text-muted">
+                      <Typewriter
+                        text={fact.label}
+                        active={inView}
+                        speed={10}
+                        delay={fact.value.length * 12 + 150}
+                      />
+                    </p>
+                  </div>
                 </>
               )}
             </RevealCard>
