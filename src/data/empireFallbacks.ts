@@ -628,6 +628,218 @@ const FALLBACKS: Record<string, EmpireFallbackEntry> = {
       "Das Königreich Kusch im heutigen Sudan (ca. 1070 v. Chr. – 350 n. Chr.) war eine bedeutende nubische Zivilisation, die zeitweise sogar Ägypten beherrschte (25. Dynastie) und fuer ihre eigenen Pyramiden bei Meroe bekannt ist.",
     language: "Meroitisch",
   },
+
+  // Nutzerwunsch 20.09.2026 ("such alles durch und fixier es") — die
+  // tatsaechlichen Namen im Geodatenset wurden diesmal direkt aus der
+  // Datendatei (public/data/empires-v1.json, Cliopatria/Seshat-Datensatz,
+  // 1583 eindeutige Namen) extrahiert statt geraten. Viele Eintraege oben
+  // hatten einen leicht abweichenden Schluessel (z.B. "Kievan Rus" statt
+  // dem tatsaechlichen "Kievan Rus'" mit Apostroph) und griffen dadurch nie
+  // — hier die zusaetzlichen, GEPRUEFTEN echten Schluessel fuer dieselben
+  // Reiche (Inhalte wiederverwendet, keine neuen Vermutungen).
+  "Buyid Dynasty": {
+    title: "Buyiden (Buwayhiden)",
+    extract:
+      "Die Buyiden waren eine schiitisch-iranische Dynastie, die von 934 bis 1062 grosse Teile des Irak und Irans beherrschte und dabei formal die Oberhoheit des sunnitischen Abbasiden-Kalifen in Bagdad anerkannte, tatsaechlich aber die politische Macht ausuebte.",
+    language: "Persisch, Arabisch",
+  },
+  "Cuman-Kipchak Confederation": {
+    title: "Kumanisch-Kiptschakischer Bund",
+    extract:
+      "Der kumanisch-kiptschakische Stammesbund vereinte turksprachige Nomadengruppen, die vom 11. bis 13. Jahrhundert die eurasische Steppe von Ungarn bis Kasachstan dominierten, bevor sie in das Mongolenreich (Goldene Horde) eingegliedert wurden.",
+    language: "Kumanisch/Kiptschakisch (Turksprache)",
+  },
+  "Grand Principality of Moscow": {
+    title: "Grossfürstentum Moskau",
+    extract:
+      "Das Grossfürstentum Moskau war ein mittelalterliches russisches Fürstentum, das ab dem 14. Jahrhundert an Macht gewann, weite Teile der nordöstlichen Rus vereinte und zum Kern des spaeteren Zarentums Russland wurde.",
+    language: "Altostslawisch / Russisch",
+  },
+  "Han Dynasty": {
+    title: "Han-Dynastie",
+    extract: HAN_EXTRACT,
+    language: "Altchinesisch",
+  },
+  "Indus Valley Civilization": {
+    title: "Indus-Kultur",
+    extract:
+      "Die Indus-Kultur (ca. 3300–1300 v. Chr.) im Flusstal des Indus (heutiges Pakistan/Nordwestindien) war eine der fruehesten Stadtkulturen der Welt, bekannt fuer die fortschrittliche Stadtplanung von Fundorten wie Mohenjo-Daro und Harappa. Ihre Schrift ist bis heute nicht entziffert.",
+    language: "unbekannt (Indus-Schrift nicht entziffert)",
+  },
+  "Golden Horde": {
+    title: "Goldene Horde",
+    extract:
+      "Die Goldene Horde war ein von Batu Khan in den 1240er-Jahren gegruendetes mongolisches Khanat, das ueber zwei Jahrhunderte weite Teile Russlands, der Ukraine und des Kaukasus beherrschte und die russische Geschichte massgeblich praegte (\"mongolisches Joch\").",
+    language: "Kiptschakisch (Turksprache), Mongolisch",
+  },
+  "Kievan Rus'": {
+    title: "Kiewer Rus",
+    extract:
+      "Die Kiewer Rus (9.–13. Jahrhundert) war ein mittelalterliches ostslawisches Reich mit dem Zentrum Kiew und gilt als gemeinsamer Ursprungsstaat Russlands, der Ukraine und Weissrusslands. Sie zerfiel nach den Mongoleneinfaellen im 13. Jahrhundert.",
+    language: "Altostslawisch",
+  },
+  "Kimek-Kipchak confederation": {
+    title: "Kimek-Khaganat",
+    extract:
+      "Das Kimek-Khaganat war ein turkischer Stammesbund, der vom 9. bis 11. Jahrhundert die Steppen West-Sibiriens und Nordkasachstans beherrschte, bevor die von den Kiptschaken/Kumanen dominierte Nachfolgestruktur entstand.",
+    language: "Turksprachen",
+  },
+  "Mamluk Sultanate": {
+    title: "Mamluken-Sultanat",
+    extract:
+      "Das Mamluken-Sultanat wurde von ehemaligen Sklavensoldaten (Mamluken) regiert, hatte seine Hauptstadt in Kairo (1250–1517), besiegte sowohl die Mongolen als auch die Kreuzfahrer und beherrschte Ägypten, die Levante und den Hedschas, bis es von den Osmanen erobert wurde.",
+    language: "Arabisch",
+  },
+  "Mamluk Dynasty": {
+    title: "Mamluken-Sultanat",
+    extract:
+      "Das Mamluken-Sultanat wurde von ehemaligen Sklavensoldaten (Mamluken) regiert, hatte seine Hauptstadt in Kairo (1250–1517), besiegte sowohl die Mongolen als auch die Kreuzfahrer und beherrschte Ägypten, die Levante und den Hedschas, bis es von den Osmanen erobert wurde.",
+    language: "Arabisch",
+  },
+  "Maratha Empire": {
+    title: "Marathen-Konföderation",
+    extract:
+      "Die Marathen-Konföderation, im 17. Jahrhundert von Shivaji gegruendet, war ein Bund Hindu-Herrscher, der bis ins 18. Jahrhundert weite Teile des indischen Subkontinents kontrollierte, bevor er von der Britischen Ostindien-Kompanie besiegt wurde.",
+    language: "Marathi",
+  },
+  "Maurya Empire": {
+    title: "Maurya-Reich",
+    extract:
+      "Das Maurya-Reich (322–185 v. Chr.), gegruendet von Chandragupta Maurya, umfasste unter Ashoka fast den gesamten indischen Subkontinent und ist besonders fuer Ashokas Verbreitung des Buddhismus bekannt.",
+    language: "Sanskrit, Prakrit",
+  },
+  "Mayan City-States": {
+    title: "Maya-Zivilisation",
+    extract:
+      "Die Maya-Zivilisation im heutigen Mexiko und Mittelamerika bestand aus zahlreichen rivalisierenden Stadtstaaten und erreichte ihre kulturelle Bluete in der Klassischen Periode (ca. 250–900 n. Chr.) mit Fortschritten in Astronomie, Mathematik und Schrift.",
+    language: "Maya-Sprachen (u.a. Klassisches Maya)",
+  },
+  "Later Mayan City-States": {
+    title: "Maya-Zivilisation (Spaetklassik/Postklassik)",
+    extract:
+      "In der Spaet- und Postklassik bestanden die Maya-Gebiete aus zahlreichen rivalisierenden Stadtstaaten, die weiterhin Fortschritte in Astronomie, Mathematik und Schrift machten, auch nachdem die grossen Zentren der Klassik (ca. 250–900 n. Chr.) verlassen worden waren.",
+    language: "Maya-Sprachen (u.a. Klassisches Maya)",
+  },
+  "Ming Dynasty": {
+    title: "Ming-Dynastie",
+    extract:
+      "Die Ming-Dynastie (1368–1644) folgte auf die mongolische Yuan-Dynastie und ist bekannt fuer die Verbotene Stadt in Peking sowie die grossen Flottenexpeditionen des Admirals Zheng He.",
+    language: "Mittelchinesisch",
+  },
+  "New Kingdom of Egypt": {
+    title: "Ägypten (Neues Reich)",
+    extract:
+      "Das Neue Reich (ca. 1550–1070 v. Chr.) war die machtvollste Epoche des pharaonischen Ägypten mit Herrschern wie Ramses II. und Tutanchamun, in der sich das Reich bis nach Nubien und in die Levante ausdehnte.",
+    language: "Mittelägyptisch/Neuägyptisch",
+  },
+  "Old Kingdom of Egypt": {
+    title: "Ägypten (Altes Reich)",
+    extract:
+      "Das Alte Reich (ca. 2700–2200 v. Chr.) war die erste Bluetezeit des pharaonischen Ägypten, bekannt vor allem fuer den Bau der grossen Pyramiden von Gizeh.",
+    language: "Altägyptisch",
+  },
+  "Qing Dynasty": {
+    title: "Qing-Dynastie",
+    extract:
+      "Die Qing-Dynastie (1644–1912), gegruendet von den Mandschu, war die letzte Kaiserdynastie Chinas.",
+    language: "Mandschurisch, Chinesisch",
+  },
+  "Safavid Dynasty": {
+    title: "Safawidenreich",
+    extract:
+      "Das Safawidenreich (1501–1736) machte den schiitischen Islam zur Staatsreligion Persiens und war eine bedeutende Rivalin des Osmanischen Reichs.",
+    language: "Persisch, Aserbaidschanisch-Türkisch (Hof)",
+  },
+  "Seleucid Empire": {
+    title: "Seleukidenreich",
+    extract:
+      "Das Seleukidenreich (312–63 v. Chr.) war eines der hellenistischen Nachfolgereiche Alexanders des Grossen, gegruendet von Seleukos I., und erstreckte sich auf seinem Höhepunkt von Anatolien bis Indien, bevor es schrittweise von Rom und den Parthern zurueckgedraengt wurde.",
+    language: "Griechisch (Amtssprache), Aramäisch",
+  },
+  Srivijaya: {
+    title: "Srivijaya-Reich",
+    extract:
+      "Das Srivijaya-Reich (7.–13. Jahrhundert) mit Zentrum auf Sumatra kontrollierte den Seehandel durch die Straße von Malakka und war ein bedeutendes Zentrum des Buddhismus in Suedostasien.",
+    language: "Altmalaiisch",
+  },
+  "Sui Dynasty": {
+    title: "Sui-Dynastie",
+    extract:
+      "Die kurzlebige, aber einflussreiche Sui-Dynastie (581–618 n. Chr.) einte China nach Jahrhunderten der Zersplitterung wieder und liess den Kaiserkanal errichten.",
+    language: "Mittelchinesisch",
+  },
+  "Delhi Sultanate": {
+    title: "Sultanat von Delhi",
+    extract:
+      "Das Sultanat von Delhi bezeichnet eine Reihe muslimischer Dynastien, die von 1206 bis 1526 von Delhi aus grosse Teile des indischen Subkontinents beherrschten, bevor sie vom Mogulreich abgelöst wurden.",
+    language: "Persisch (Hof), Hindavi",
+  },
+  "Tang Dynasty": {
+    title: "Tang-Dynastie",
+    extract:
+      "Die Tang-Dynastie (618–907 n. Chr.) gilt als einer der Höhepunkte der chinesischen Zivilisation; ihre Hauptstadt Chang'an zaehlte zu den groessten Staedten der damaligen Welt.",
+    language: "Mittelchinesisch",
+  },
+  "Zhou Dynasty": {
+    title: "Zhou-Dynastie",
+    extract:
+      "Die Zhou-Dynastie (1046–256 v. Chr.) war die laengste Dynastie der chinesischen Geschichte, in der zentrale Ideen wie das \"Mandat des Himmels\" entstanden, auch wenn die Zentralmacht in ihrer zweiten Haelfte (Fruehlings-und-Herbst- sowie Streitende-Reiche-Periode) stark an rivalisierende Fuerstentuemer verloren ging.",
+    language: "Altchinesisch",
+  },
+  "Neo-Assyrian Empire": {
+    title: "Assyrisches Reich",
+    extract:
+      "Das Assyrische Reich, mit Zentrum am oberen Tigris (heutiger Nordirak), war in seiner neuassyrischen Phase (ca. 900–609 v. Chr.) die dominante Grossmacht des Alten Orients und beherrschte zeitweise auch Ägypten.",
+    language: "Akkadisch (assyrischer Dialekt), Aramäisch (spaeter Verwaltungssprache)",
+  },
+  "Khwarezmid Empire": {
+    title: "Choresm-Reich",
+    extract:
+      "Das Choresm-Reich beherrschte im 12./frueh 13. Jahrhundert Persien und Zentralasien, bevor es 1220–1221 von den Mongolen unter Dschingis Khan vernichtend geschlagen wurde.",
+    language: "Persisch (Verwaltung/Kultur), Turksprachen",
+  },
+  "Khwarezmid Dynasty": {
+    title: "Choresm-Reich",
+    extract:
+      "Das Choresm-Reich beherrschte im 12./frueh 13. Jahrhundert Persien und Zentralasien, bevor es 1220–1221 von den Mongolen unter Dschingis Khan vernichtend geschlagen wurde.",
+    language: "Persisch (Verwaltung/Kultur), Turksprachen",
+  },
+  "Göktürk Khaganate": {
+    title: "Göktürken",
+    extract:
+      "Die Göktürken waren das erste turksprachige Volk, das den Namen \"Türk\" als politische Bezeichnung fuehrte. Ihr Göktürk-Khaganat war vom 6. bis 8. Jahrhundert ein grosses Steppenreich in Zentralasien.",
+    language: "Alttürkisch",
+  },
+  "Eastern Göktürks": {
+    title: "Östliches Göktürken-Khaganat",
+    extract:
+      "Nach der Teilung des Göktürken-Khaganats im 6. Jahrhundert kontrollierte dessen östlicher Teil die mongolische Steppe, bis er im 7. Jahrhundert zeitweise unter die Oberhoheit des Tang-China geriet.",
+    language: "Alttürkisch",
+  },
+  "Western Göktürks": {
+    title: "Westliches Göktürken-Khaganat",
+    extract:
+      "Nach der Teilung des Göktürken-Khaganats im 6. Jahrhundert kontrollierte dessen westlicher Teil die zentralasiatischen Steppen und den Handel entlang der Seidenstrasse, bis er im 7./8. Jahrhundert von Tang-China und den Türgesch aufgesogen wurde.",
+    language: "Alttürkisch",
+  },
+  "Rouran Khaganate": {
+    title: "Rouran-Khaganat",
+    extract:
+      "Das Rouran-Khaganat (auch Ruanruan) war ein Nomadenreich, das vom spaeten 4. bis Mitte des 6. Jahrhunderts die Mongolei und die östliche Steppe beherrschte, bis es von den Göktürken gestuerzt wurde.",
+    language: "unklar, vermutlich mongolisch/para-mongolisch",
+  },
+  "Uyghur Khaganate": {
+    title: "Uigurisches Khaganat",
+    extract:
+      "Die Uiguren, ein Turkvolk, gruendeten das Uigurische Khaganat (744–840 n. Chr.) auf der mongolischen Steppe und siedelten nach dessen Zusammenbruch verstaerkt im Tarimbecken (heutiges Xinjiang).",
+    language: "Alt-Uigurisch (Turksprache)",
+  },
+  "Aztec Triple Alliance": {
+    title: "Aztekenreich (Dreibund)",
+    extract:
+      "Das Aztekenreich entstand 1428 als Dreibund (Tripleallianz) der Stadtstaaten Tenochtitlan, Texcoco und Tlacopan und beherrschte mit Hauptstadt Tenochtitlan (heute Mexiko-Stadt) weite Teile Zentralmexikos, bevor es 1521 von den spanischen Konquistadoren unter Hernán Cortés erobert wurde.",
+    language: "Nahuatl",
+  },
 };
 
 export function getEmpireFallback(name: string): EmpireFallbackEntry | null {

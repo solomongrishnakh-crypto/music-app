@@ -54,12 +54,21 @@ const FETCH_HEADERS = { "User-Agent": "Centaurian/1.0 (privates Hobby-Projekt)" 
 // faelschlich "keine Beschreibung gefunden" zu zeigen.
 async function fetchWithRetry(url: string): Promise<Response | null> {
   try {
-    let res = await fetch(url, { next: { revalidate: 86400 }, headers: FETCH_HEADERS });
+    // Nutzerkorrektur 20.09.2026 ("such alles durch und fixier es" /
+    // wiederholt "es lädt immer noch lang") — Next.js' Data-Cache
+    // speicherte JEDE Antwort inkl. Fehlschlaegen (429/Timeout) fuer volle
+    // 24h ("next: { revalidate: 86400 }"), sodass ein einmaliger
+    // Netzwerk-Hänger ein Reich einen ganzen Tag lang faelschlich auf
+    // "keine Beschreibung gefunden" festnagelte — auch nach Redeploys.
+    // Erfolgreiche Treffer werden weiterhin kurz gecacht (Performance),
+    // aber deutlich kuerzer, damit ein schlechter Treffer sich schnell
+    // selbst heilt; Retry-Versuche umgehen den Cache komplett.
+    let res = await fetch(url, { next: { revalidate: 900 }, headers: FETCH_HEADERS });
     let wait = 500;
     for (let attempt = 0; attempt < 3 && res.status === 429; attempt++) {
       await new Promise((r) => setTimeout(r, wait));
       wait *= 2;
-      res = await fetch(url, { next: { revalidate: 86400 }, headers: FETCH_HEADERS });
+      res = await fetch(url, { cache: "no-store", headers: FETCH_HEADERS });
     }
     return res;
   } catch {
