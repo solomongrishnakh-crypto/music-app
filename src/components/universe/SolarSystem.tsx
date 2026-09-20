@@ -56,6 +56,11 @@ export default function SolarSystem({
   const rotateRef = useRef(0); // zusätzliche Drehung der Ansicht (Radiant)
   const tiltRef = useRef(0.94); // vertikale Stauchung: 1 = von oben, 0.25 = fast von der Seite
   const dragRef = useRef<{ x: number; y: number; dragged: boolean } | null>(null);
+  // Nutzerwunsch 20.09.2026 ("man kann auch nicht zoomen"): Wheel (Desktop)
+  // reicht nicht — auf dem Handy braucht es Pinch-Zoom über zwei Touch-Punkte.
+  const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
+  const pinchStartDistRef = useRef<number | null>(null);
+  const pinchStartZoomRef = useRef(1);
 
   // Sehr wenige, sehr dezente Hintergrundsterne (Nutzerwunsch: "sterne im
   // hintergrund soll kaum sehbar sein") — fest generiert, kein Funkeln,
@@ -100,16 +105,12 @@ export default function SolarSystem({
 
     const cx = size.w / 2;
     const cy = size.h / 2;
-    // Nutzerwunsch 20.09.2026 ("mach grafik ... höher"): auf schmalen
-    // Hochkant-Handys war die Umlaufbahn bisher ein Kreis, begrenzt von der
-    // kleineren Dimension (Breite) — der ganze zusätzliche Platz oben/unten
-    // blieb leer. Jetzt getrennte x-/y-Radien, die Ellipse nutzt die
-    // tatsächlich verfügbare Höhe.
+    // Umlaufbahnen bleiben echte Kreise (nicht oval verzerrt) — begrenzt von
+    // der kleineren Canvas-Dimension. Auf Hochkant-Handys per Pinch/Wheel
+    // zoombar, um trotzdem den verfügbaren Platz zu nutzen.
     const smallCanvas = size.w < 420;
-    const padX = mode === "compact" ? 4 : smallCanvas ? 16 : 26;
-    const padY = mode === "compact" ? 4 : smallCanvas ? 22 : 26;
-    const baseMaxOrbitRx = size.w / 2 - padX;
-    const baseMaxOrbitRy = size.h / 2 - padY;
+    const pad = mode === "compact" ? 4 : smallCanvas ? 18 : 26;
+    const baseMaxOrbitR = Math.min(size.w, size.h) / 2 - pad;
     const sunR = mode === "compact" ? 6 : smallCanvas ? 11 : 16;
 
     const orbitBodies = bodies.filter((b) => b.kind !== "probe");
@@ -144,8 +145,7 @@ export default function SolarSystem({
       const dtMs = now - lastTime;
       lastTime = now;
 
-      const maxOrbitRx = baseMaxOrbitRx * zoomRef.current;
-      const maxOrbitRy = baseMaxOrbitRy * zoomRef.current;
+      const maxOrbitR = baseMaxOrbitR * zoomRef.current;
       const tilt = tiltRef.current;
       const rot = rotateRef.current;
 
@@ -214,14 +214,13 @@ export default function SolarSystem({
         const isDwarf = planet.kind === "dwarf";
         const isProbe = planet.kind === "probe";
         const t = orbitT(planet.distanceAu);
-        const orbitRx = sunR + 10 + t * (maxOrbitRx - sunR - 10);
-        const orbitRy = sunR + 10 + t * (maxOrbitRy - sunR - 10);
+        const orbitR = sunR + 10 + t * (maxOrbitR - sunR - 10);
 
         if (isProbe) {
           // Sonde: keine Umlaufbahn, fester Winkel + gestrichelte Linie nach außen.
           const angle = -0.61 + rot;
-          const x = cx + Math.cos(angle) * orbitRx;
-          const y = cy + Math.sin(angle) * orbitRy * tilt;
+          const x = cx + Math.cos(angle) * orbitR;
+          const y = cy + Math.sin(angle) * orbitR * tilt;
           const pr = 3;
 
           ctx.save();
@@ -267,7 +266,7 @@ export default function SolarSystem({
 
         // Umlaufbahn-Linie
         ctx.beginPath();
-        ctx.ellipse(cx, cy, orbitRx, orbitRy * tilt, 0, 0, Math.PI * 2);
+        ctx.ellipse(cx, cy, orbitR, orbitR * tilt, 0, 0, Math.PI * 2);
         if (isDwarf) {
           ctx.setLineDash([2, 3]);
           ctx.strokeStyle = "rgba(255,255,255,0.08)";
@@ -286,8 +285,8 @@ export default function SolarSystem({
         angleRef.current[i] += angularSpeed * dtMs;
 
         const angle = angleRef.current[i] + rot;
-        const x = cx + Math.cos(angle) * orbitRx;
-        const y = cy + Math.sin(angle) * orbitRy * tilt;
+        const x = cx + Math.cos(angle) * orbitR;
+        const y = cy + Math.sin(angle) * orbitR * tilt;
         const pr = planetRadius(planet.diameterKm, planet.kind);
 
         drawn.push({ planet, x, y, r: pr });
@@ -359,13 +358,36 @@ export default function SolarSystem({
 
   function handlePointerDown(e: PointerEvent<HTMLCanvasElement>) {
     if (!interactive) return;
-    dragRef.current = { x: e.clientX, y: e.clientY, dragged: false };
     canvasRef.current?.setPointerCapture(e.pointerId);
+    pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+    if (pointersRef.current.size >= 2) {
+      // Zweiter Finger kam dazu → ab jetzt Pinch-Zoom statt Dreh-Geste.
+      dragRef.current = null;
+      const pts = Array.from(pointersRef.current.values());
+      pinchStartDistRef.current = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      pinchStartZoomRef.current = zoomRef.current;
+    } else {
+      dragRef.current = { x: e.clientX, y: e.clientY, dragged: false };
+    }
     if (canvasRef.current) canvasRef.current.style.cursor = "grabbing";
   }
 
   function handlePointerMove(e: PointerEvent<HTMLCanvasElement>) {
-    if (!interactive || !dragRef.current) return;
+    if (!interactive) return;
+    if (pointersRef.current.has(e.pointerId)) {
+      pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    }
+
+    if (pointersRef.current.size >= 2 && pinchStartDistRef.current) {
+      const pts = Array.from(pointersRef.current.values());
+      const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+      const ratio = dist / pinchStartDistRef.current;
+      zoomRef.current = Math.min(4.5, Math.max(0.5, pinchStartZoomRef.current * ratio));
+      return;
+    }
+
+    if (!dragRef.current) return;
     const dx = e.clientX - dragRef.current.x;
     const dy = e.clientY - dragRef.current.y;
     if (Math.abs(dx) > 2 || Math.abs(dy) > 2) dragRef.current.dragged = true;
@@ -378,12 +400,25 @@ export default function SolarSystem({
   function handlePointerUp(e: PointerEvent<HTMLCanvasElement>) {
     if (!interactive) return;
     canvasRef.current?.releasePointerCapture(e.pointerId);
-    if (canvasRef.current) canvasRef.current.style.cursor = "grab";
-    // Klick nur werten, wenn nicht gezogen wurde.
-    if (dragRef.current && !dragRef.current.dragged) {
-      selectFromPoint(e.clientX, e.clientY);
+    pointersRef.current.delete(e.pointerId);
+
+    if (pointersRef.current.size < 2) {
+      pinchStartDistRef.current = null;
     }
-    dragRef.current = null;
+
+    if (pointersRef.current.size === 0) {
+      if (canvasRef.current) canvasRef.current.style.cursor = "grab";
+      // Klick nur werten, wenn nicht gezogen/gepincht wurde.
+      if (dragRef.current && !dragRef.current.dragged) {
+        selectFromPoint(e.clientX, e.clientY);
+      }
+      dragRef.current = null;
+    } else if (pointersRef.current.size === 1) {
+      // Nach dem Pinch bleibt ein Finger übrig — Dreh-Geste neu ansetzen,
+      // ohne dass es als Klick zählt.
+      const remaining = Array.from(pointersRef.current.values())[0];
+      dragRef.current = { x: remaining.x, y: remaining.y, dragged: true };
+    }
   }
 
   function handleWheel(e: WheelEvent<HTMLCanvasElement>) {
