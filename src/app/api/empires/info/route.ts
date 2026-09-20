@@ -26,6 +26,25 @@ interface WikiSummary {
   content_urls?: { desktop?: { page?: string } };
 }
 
+// Alle 13 vom Frontend unterstützten Sprachen entsprechen direkt gültigen
+// Wikipedia-Sprachcodes (de.wikipedia.org, hi.wikipedia.org, ...). Nutzerwunsch
+// 20.09.2026: "wenn auf anderen sprache gibt dann mach wenn zb manche sprache
+// nicht existieren dann immer englisch" — Artikel wird zuerst in der aktuell
+// gewählten UI-Sprache gesucht, bei Nichtfund (kein Artikel / kein Extract)
+// automatisch auf Englisch zurückgefallen, und erst danach auf die
+// redaktionelle Fallback-Beschreibung (siehe empireFallbacks.ts).
+const SUPPORTED_WIKI_LANGS = [
+  "de", "en", "hi", "zh", "ko", "ja", "es", "fr", "tr", "ru", "pt", "ar", "el",
+] as const;
+type WikiLang = (typeof SUPPORTED_WIKI_LANGS)[number];
+
+function parseWikiLang(value: string | null): WikiLang {
+  if (value && (SUPPORTED_WIKI_LANGS as readonly string[]).includes(value)) {
+    return value as WikiLang;
+  }
+  return "en";
+}
+
 const FETCH_HEADERS = { "User-Agent": "Centaurian/1.0 (privates Hobby-Projekt)" };
 
 // Wikipedia/Wikidata antworten unter kurzzeitiger Last mit 429 ("zu viele
@@ -49,7 +68,7 @@ async function fetchWithRetry(url: string): Promise<Response | null> {
 }
 
 async function fetchSummary(
-  lang: "de" | "en",
+  lang: WikiLang,
   title: string,
   debugTrace?: string[]
 ): Promise<WikiSummary | null> {
@@ -114,7 +133,7 @@ function titleCandidates(name: string): string[] {
   return Array.from(candidates);
 }
 
-async function searchTitle(lang: "de" | "en", words: string[]): Promise<string | null> {
+async function searchTitle(lang: WikiLang, words: string[]): Promise<string | null> {
   if (words.length === 0) return null;
   try {
     // "intitle:" vor jedem Wort erzwingt, dass ALLE diese Wörter im
@@ -159,7 +178,7 @@ const BAD_INSTANCE_WORDS = [
 ];
 
 async function isPlausibleHistoricalEntity(
-  lang: "de" | "en",
+  lang: WikiLang,
   title: string,
   debugTrace?: string[]
 ): Promise<boolean> {
@@ -174,7 +193,7 @@ async function isPlausibleHistoricalEntity(
 }
 
 async function resolveSummary(
-  lang: "de" | "en",
+  lang: WikiLang,
   name: string,
   debugTrace?: string[]
 ): Promise<WikiSummary | null> {
@@ -227,7 +246,7 @@ async function resolveSummary(
 // "verwendete Sprache") — Nutzerwunsch 18.09.2026: "bei allen imperiums soll
 // ein kleine text neben stehen 'Sprache: ...'". Echte, strukturierte Daten
 // statt Vermutung; bleibt leer, wenn Wikidata dazu nichts hat.
-async function fetchWikidataId(lang: "de" | "en", title: string): Promise<string | null> {
+async function fetchWikidataId(lang: WikiLang, title: string): Promise<string | null> {
   try {
     const url =
       `https://${lang}.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(title)}` +
@@ -279,7 +298,7 @@ async function fetchInstanceOfLabels(qid: string): Promise<string[]> {
 
 async function fetchLanguageLabels(
   qids: string[],
-  lang: "de" | "en"
+  lang: WikiLang
 ): Promise<string | null> {
   if (qids.length === 0) return null;
   try {
@@ -301,7 +320,7 @@ async function fetchLanguageLabels(
   }
 }
 
-async function fetchLanguage(qid: string, lang: "de" | "en"): Promise<string | null> {
+async function fetchLanguage(qid: string, lang: WikiLang): Promise<string | null> {
   try {
     for (const property of ["P37", "P2936"]) {
       const url =
@@ -342,10 +361,15 @@ export async function GET(req: NextRequest) {
   const debug = req.nextUrl.searchParams.get("debug") === "1";
   const trace: string[] = [];
 
-  let data = await resolveSummary("de", name, debug ? trace : undefined);
-  let lang: "de" | "en" = "de";
+  // Nutzerwunsch 20.09.2026: "wenn auf anderen sprache gibt dann mach wenn
+  // zb manche sprache nicht existieren dann immer englisch" — zuerst in der
+  // aktuell gewählten UI-Sprache suchen (?lang=…), sonst direkt Englisch.
+  const uiLang = parseWikiLang(req.nextUrl.searchParams.get("lang"));
 
-  if (!data || !data.extract) {
+  let data = await resolveSummary(uiLang, name, debug ? trace : undefined);
+  let lang: WikiLang = uiLang;
+
+  if ((!data || !data.extract) && uiLang !== "en") {
     const enData = await resolveSummary("en", name, debug ? trace : undefined);
     if (enData && enData.extract) {
       data = enData;

@@ -489,7 +489,7 @@ function geometryLabelPoint(geometry: any): [number, number] | null {
  * ausserdem spart das ein zusaetzliches Build-Dependency).
  */
 export default function ImperienPage() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
@@ -860,7 +860,9 @@ export default function ImperienPage() {
     let cancelled = false;
     setInfoLoading(true);
     setInfo(null);
-    fetch(`/api/empires/info?name=${encodeURIComponent(selected.name)}`)
+    fetch(
+      `/api/empires/info?name=${encodeURIComponent(selected.name)}&lang=${encodeURIComponent(lang)}`
+    )
       .then((res) => res.json())
       .then((data) => {
         if (!cancelled) setInfo(data);
@@ -874,7 +876,7 @@ export default function ImperienPage() {
     return () => {
       cancelled = true;
     };
-  }, [selected]);
+  }, [selected, lang]);
 
   // Automatisches Durchspulen der Zeitleiste (Play-Button unten) — springt
   // jetzt echt Kalenderjahr für Kalenderjahr (seit dem Wechsel auf
