@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getClientIp, isRateLimited } from "@/lib/security/rateLimit";
-import { getEmpireFallback } from "@/data/empireFallbacks";
+import { getEmpireFallback, getEmpireLanguage } from "@/data/empireFallbacks";
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 60;
@@ -492,19 +492,24 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ found: false, ...(debug ? { trace } : {}) });
   }
 
-  let language: string | null = null;
+  // Nutzerkorrektur 20.09.2026 ("keine bekannte sprache bei ... byzantine
+  // und viele andere ... jede imperium soll bekannte sprache angezeigt
+  // werden") — die kuratierte Sprach-Liste (empireFallbacks.ts) wird JETZT
+  // ZUERST geprueft, nicht erst als Rueckfallebene nach einer Wikidata-
+  // Anfrage: fuer sehr viele historische Dynastien/Sultanate hat Wikidata
+  // ohnehin keine strukturierten Sprachdaten, sodass die Anfrage nur Zeit
+  // kostet, bevor doch die kuratierte Angabe verwendet wird. Das macht den
+  // haeufigen Fall (Sprache ist kuratiert bekannt) sowohl schneller als
+  // auch zuverlaessiger.
+  let language: string | null = getEmpireLanguage(name);
   let debugQid: string | null = resolvedQid;
-  if (!debugQid && data.title) {
-    debugQid = await fetchWikidataId(lang, data.title);
-  }
-  if (debugQid) language = await fetchLanguage(debugQid, lang);
   if (!language) {
-    // Nutzerkorrektur 20.09.2026: "von vielen imperien soll die Sprache
-    // bekannt sein zb ghuriden haben persisch gesprochen" — Wikidata fehlt
-    // bei vielen historischen Dynastien die strukturierte Sprachangabe,
-    // obwohl sie gut dokumentiert ist. Fällt auf die kuratierte Liste
-    // zurück (empireFallbacks.ts) — auch wenn die Beschreibung selbst
-    // gerade von Wikipedia kam.
+    if (!debugQid && data.title) {
+      debugQid = await fetchWikidataId(lang, data.title);
+    }
+    if (debugQid) language = await fetchLanguage(debugQid, lang);
+  }
+  if (!language) {
     language = getEmpireFallback(name)?.language ?? null;
   }
 
