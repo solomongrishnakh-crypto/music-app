@@ -145,6 +145,28 @@ function RevealCard({ children, className, onClick }: RevealCardProps) {
   );
 }
 
+// Nutzerwunsch 20.09.2026: "füge auch kleine bilder hinzu das es zu dem
+// titel passt" — kleines Vorschaubild oben in jeder Fakten-Karte (dasselbe
+// Bild, das vorher nur in der Detailansicht auftauchte). Blendet sich
+// unsichtbar aus, falls ein Bild mal nicht lädt, statt kaputt auszusehen
+// (gleiches Muster wie CardThumbnail in SpaceNewsSection).
+function FactThumbnail({ src, alt }: { src: string; alt: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed || !src) return null;
+  return (
+    <div className="-mx-6 -mt-6 mb-4 aspect-[16/9] overflow-hidden bg-surface-elevated">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        className="h-full w-full object-cover opacity-85 transition-opacity group-hover:opacity-100"
+        onError={() => setFailed(true)}
+      />
+    </div>
+  );
+}
+
 /**
  * "Universum kennenlernen" — eigene Seite (Nutzerwunsch 20.09.2026: "kannst
  * ganze space news und universum in zahlen in einer anderen seite tun wie
@@ -196,6 +218,7 @@ export default function UniversumPage() {
             >
               {(inView) => (
                 <>
+                  <FactThumbnail src={fact.image} alt={fact.label} />
                   <p className="font-display min-h-[1.75em] text-lg font-bold text-accent sm:text-xl">
                     <Typewriter text={fact.value} active={inView} speed={12} />
                   </p>
