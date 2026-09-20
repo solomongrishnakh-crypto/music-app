@@ -1,53 +1,64 @@
 import { NextRequest, NextResponse } from "next/server";
+import { loadCliopatriaFeatures } from "@/lib/history/cliopatria";
 
 /**
- * GET /api/empires/borders?filename=world_1900.geojson
+ * GET /api/empires/borders?year=1200
  *
- * Liefert die historischen Weltgrenzen fuer ein bestimmtes Jahr — als
- * Proxy vor dem freien "historical-basemaps"-Datenset (GPL-3.0, siehe
- * /api/empires/index/route.ts), damit der Browser nicht direkt gegen
- * jsDelivr/GitHub spricht (CORS, Attribution serverseitig) und damit der
- * Dateiname serverseitig geprueft werden kann, bevor er in eine URL
- * eingesetzt wird.
+ * Liefert alle Gebiete/Reiche, deren Von-/Bis-Jahr (FromYear/ToYear) das
+ * angefragte Kalenderjahr einschließt — aus dem Cliopatria-Datensatz
+ * (Seshat Global History Databank, CC BY 4.0). Ersetzt seit 20.09.2026 den
+ * bisherigen Parameter "filename" (fixe Kartenstand-Datei alle paar
+ * Jahrzehnte aus dem alten historical-basemaps-Datensatz) komplett — jedes
+ * einzelne Jahr liefert jetzt echte, für genau dieses Jahr gültige Grenzen
+ * (Nutzerkorrektur 20.09.2026: "fast jedes jahr ändert sich die
+ * territoriums", "es fehlt auch imperium namen über territorium").
  *
- * `filename` kommt vom Client, aber NUR Werte, die exakt wie
- * "world_<etwas>.geojson" aussehen, werden akzeptiert (siehe
- * FILENAME_PATTERN) — verhindert, dass ueber diesen Parameter beliebige
- * Pfade/URLs erzwungen werden koennten. Die eigentliche Zuordnung
- * Jahr -> Dateiname kommt immer aus /api/empires/index, nie selbst
- * zusammengebaut.
+ * Die Antwort wird auf das GeoJSON-Property-Schema abgebildet, das die
+ * /imperien-Seite erwartet (NAME, SUBJECTO) — Cliopatria kennt keine
+ * "Kolonialmacht/Teil von"-Angabe wie das alte Datenset, SUBJECTO bleibt
+ * deshalb leer statt erfunden zu werden.
  */
-
-const BASE_URL =
-  "https://cdn.jsdelivr.net/gh/aourednik/historical-basemaps@master/geojson/";
-
-const FILENAME_PATTERN = /^world_[a-z0-9]+\.geojson$/i;
-
 export async function GET(request: NextRequest) {
-  const filename = request.nextUrl.searchParams.get("filename") ?? "";
+  const yearParam = request.nextUrl.searchParams.get("year");
+  const year = yearParam !== null ? Number(yearParam) : NaN;
 
-  if (!FILENAME_PATTERN.test(filename)) {
-    return NextResponse.json({ error: "Ungültiger Dateiname." }, { status: 400 });
+  if (!Number.isFinite(year) || !Number.isInteger(year)) {
+    return NextResponse.json({ error: "Ungültiges Jahr." }, { status: 400 });
   }
 
   try {
-    const res = await fetch(`${BASE_URL}${filename}`, {
-      next: { revalidate: 86400 },
+    const features = await loadCliopatriaFeatures();
+
+    const matching = features.filter((f) => {
+      const from = f.properties?.FromYear;
+      const to = f.properties?.ToYear;
+      return (
+        typeof from === "number" &&
+        typeof to === "number" &&
+        from <= year &&
+        year <= to &&
+        typeof f.properties?.Name === "string" &&
+        f.properties.Name.trim().length > 0
+      );
     });
 
-    if (!res.ok) {
-      return NextResponse.json(
-        { error: `Grenzen-Fehler (Status ${res.status})` },
-        { status: 502 }
-      );
-    }
+    const geojson = {
+      type: "FeatureCollection",
+      features: matching.map((f) => ({
+        type: "Feature",
+        properties: {
+          NAME: f.properties.Name,
+          SUBJECTO: "",
+        },
+        geometry: f.geometry,
+      })),
+    };
 
-    const geojson = await res.json();
     return NextResponse.json(geojson);
   } catch (err) {
-    console.error("Grenzen-Abruf fehlgeschlagen:", err);
+    console.error("Cliopatria-Grenzen fehlgeschlagen:", err);
     return NextResponse.json(
-      { error: "Grenzen konnten nicht geladen werden." },
+      { error: "Grenzen für dieses Jahr konnten nicht geladen werden." },
       { status: 502 }
     );
   }

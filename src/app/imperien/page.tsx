@@ -25,9 +25,9 @@ const TILE_URL =
 const PLAY_SPEEDS = [1600, 900, 450] as const;
 const PLAY_SPEED_LABELS = ["1×", "2×", "4×"] as const;
 
-interface YearEntry {
-  year: number;
-  filename: string;
+interface YearRange {
+  minYear: number;
+  maxYear: number;
 }
 
 interface SelectedFeature {
@@ -287,9 +287,16 @@ function bboxArea(geometry: any): number {
  * Kartendaten, eigene Aufmachung) — aber die gleichen Kernbausteine:
  * Zeitleiste, farbige Gebiete mit Namen, Klick für Details.
  *
- * Datenquelle: historical-basemaps (github.com/aourednik/historical-basemaps,
- * GPL-3.0) — echte, offene Grenzdaten von 123000 v. Chr. bis in die
- * Neuzeit, ueber /api/empires/index + /api/empires/borders geladen.
+ * Datenquelle (seit 20.09.2026): Cliopatria (Seshat Global History
+ * Databank, github.com/Seshat-Global-History-Databank/cliopatria, CC BY
+ * 4.0) — jedes Reich traegt ein echtes Von-/Bis-Jahr statt weniger fixer
+ * Kartenstaende, dadurch aendert sich die Karte fuer wirklich jedes Jahr
+ * (Nutzerkorrektur 20.09.2026: "fast jedes jahr aendert sich die
+ * territoriums"), auch sehr kurzlebige Reiche werden dadurch exakt sichtbar.
+ * Vorher: historical-basemaps (GPL-3.0), nur alle paar Jahrzehnte ein
+ * fester Kartenstand. Geladen ueber /api/empires/index (liefert nur noch
+ * den Jahresbereich) + /api/empires/borders?year=... (liefert die fuer
+ * genau dieses Jahr gueltigen Gebiete), siehe src/lib/history/cliopatria.ts.
  *
  * Leaflet wird bewusst per CDN-<script>/<link> geladen statt per npm
  * (im Entwicklungs-Sandbox-Netz war der npm-Registry-Zugriff blockiert;
@@ -307,16 +314,14 @@ export default function ImperienPage() {
   );
 
   const [leafletReady, setLeafletReady] = useState(false);
-  const [years, setYears] = useState<YearEntry[]>([]);
-  // sliderYear ist die tatsächliche Regler-Position, in echten Kalender-
-  // jahren (nicht nur ein Index in die Snapshot-Liste) — dadurch lässt sich
-  // Jahr für Jahr spulen (Nutzerwunsch 18.09.2026: "man soll jedes 1 jahr
-  // spulen können"), auch dort, wo zwei vorhandene Kartenstände (z.B. 1200
-  // und 1250) weit auseinanderliegen. Die Karte zeigt dabei immer den
-  // nächstgelegenen tatsächlich vorhandenen historischen Kartenstand — mehr
-  // gibt der offene Datensatz nicht her, echte Grenzen für jedes einzelne
-  // Kalenderjahr existieren schlicht nicht.
-  const [sliderYear, setSliderYear] = useState(0);
+  const [yearRange, setYearRange] = useState<YearRange | null>(null);
+  // sliderYear ist jetzt das ECHTE angezeigte Jahr — seit dem Wechsel auf
+  // den Cliopatria-Datensatz (Nutzerkorrektur 20.09.2026: "kannst du diese
+  // jahresraster fixieren ... fast jedes jahr ändert sich die territoriums")
+  // trägt jedes Reich ein echtes Von-/Bis-Jahr statt weniger fixer
+  // Kartenstände alle paar Jahrzehnte — der Server filtert bei jedem Jahr
+  // neu, ein "nächstgelegener Kartenstand" wird nicht mehr gebraucht.
+  const [sliderYear, setSliderYear] = useState(1200);
   const [isLoadingBorders, setIsLoadingBorders] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [selected, setSelected] = useState<SelectedFeature | null>(null);
@@ -381,22 +386,19 @@ export default function ImperienPage() {
     mapRef.current = map;
   }, [leafletReady]);
 
-  // Liste der verfuegbaren Jahre laden
+  // Verfuegbaren Jahresbereich einmalig laden (Cliopatria deckt 3400 v.
+  // Chr. bis 2024 n. Chr. ab, jedes Jahr dazwischen ist gueltig).
   useEffect(() => {
     let cancelled = false;
     fetch("/api/empires/index")
       .then((res) => res.json())
       .then((data) => {
         if (cancelled) return;
-        if (data.error) {
-          setErrorMessage(data.error);
+        if (data.error || typeof data.minYear !== "number" || typeof data.maxYear !== "number") {
+          setErrorMessage(data.error ?? "Zeitleiste konnte nicht geladen werden.");
           return;
         }
-        const list: YearEntry[] = data.years ?? [];
-        setYears(list);
-        const defaultEntry =
-          list.find((y) => y.year === 1200) ?? list[Math.floor(list.length / 2)];
-        if (defaultEntry) setSliderYear(defaultEntry.year);
+        setYearRange({ minYear: data.minYear, maxYear: data.maxYear });
       })
       .catch(() => {
         if (!cancelled) setErrorMessage("Zeitleiste konnte nicht geladen werden.");
@@ -406,32 +408,20 @@ export default function ImperienPage() {
     };
   }, []);
 
-  // Nächstgelegener tatsächlich vorhandener Kartenstand zur aktuellen
-  // Regler-Position (siehe sliderYear oben).
-  const activeEntry = (() => {
-    if (years.length === 0) return undefined;
-    let best = years[0];
-    let bestDiff = Math.abs(best.year - sliderYear);
-    for (const y of years) {
-      const diff = Math.abs(y.year - sliderYear);
-      if (diff < bestDiff) {
-        best = y;
-        bestDiff = diff;
-      }
-    }
-    return best;
-  })();
+  const currentYear = Math.round(sliderYear);
 
-  // Grenzen fuer das aktuell gewaehlte Jahr laden und auf der Karte zeichnen
+  // Grenzen fuer das aktuell gewaehlte Jahr laden und auf der Karte zeichnen.
+  // Ein kurzer Debounce (150ms) verhindert, dass jede Zwischenposition
+  // beim Ziehen des Lineals sofort eine eigene Anfrage auslöst.
   useEffect(() => {
-    if (!leafletReady || !mapRef.current || !activeEntry) return;
-    const entry = activeEntry;
+    if (!leafletReady || !mapRef.current || !yearRange) return;
 
     let cancelled = false;
-    setIsLoadingBorders(true);
+    const timeoutId = setTimeout(() => {
+      setIsLoadingBorders(true);
 
-    fetch(`/api/empires/borders?filename=${encodeURIComponent(entry.filename)}`)
-      .then((res) => res.json())
+      fetch(`/api/empires/borders?year=${currentYear}`)
+        .then((res) => res.json())
       .then((geojson) => {
         if (cancelled) return;
         if (geojson.error) {
@@ -559,12 +549,14 @@ export default function ImperienPage() {
       .finally(() => {
         if (!cancelled) setIsLoadingBorders(false);
       });
+    }, 150);
 
     return () => {
       cancelled = true;
+      clearTimeout(timeoutId);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leafletReady, activeEntry?.filename]);
+  }, [leafletReady, yearRange, currentYear]);
 
   // Ausführliche Info (Wikipedia) nachladen, sobald ein Gebiet angeklickt wurde.
   useEffect(() => {
@@ -592,31 +584,30 @@ export default function ImperienPage() {
   }, [selected]);
 
   // Automatisches Durchspulen der Zeitleiste (Play-Button unten) — springt
-  // von Kartenstand zu Kartenstand (nicht Kalenderjahr für Kalenderjahr,
-  // sonst würde ein Sprung von -3000 zu -2900 hundert Schritte brauchen).
+  // jetzt echt Kalenderjahr für Kalenderjahr (seit dem Wechsel auf
+  // Cliopatria hat jedes Jahr eigene Daten, ein Sprung von Kartenstand zu
+  // Kartenstand ist nicht mehr nötig).
   useEffect(() => {
-    if (!isPlaying || years.length === 0) return;
+    if (!isPlaying || !yearRange) return;
     const id = setInterval(() => {
       setSliderYear((prevYear) => {
-        const idx = years.findIndex((y) => y.year === prevYear);
-        const currentIdx = idx >= 0 ? idx : 0;
-        if (currentIdx >= years.length - 1) {
+        if (prevYear >= yearRange.maxYear) {
           setIsPlaying(false);
           return prevYear;
         }
-        return years[currentIdx + 1].year;
+        return prevYear + 1;
       });
     }, PLAY_SPEEDS[speedStep]);
     return () => clearInterval(id);
-  }, [isPlaying, speedStep, years]);
+  }, [isPlaying, speedStep, yearRange]);
 
-  const currentYear = activeEntry?.year;
-
-  // Regler läuft über den vollen echten Kalenderjahr-Bereich — jedes
-  // einzelne Jahr ist ansteuerbar (Nutzerwunsch 18.09.2026: "jedes 1 jahr
-  // spulen können").
-  const minYear = years[0]?.year ?? 0;
-  const maxYear = years[years.length - 1]?.year ?? 0;
+  // Regler läuft über den vollen echten Kalenderjahr-Bereich der
+  // Cliopatria-Daten (3400 v. Chr. bis 2024 n. Chr.) — jedes einzelne
+  // Jahr ist ansteuerbar UND zeigt echte, für dieses Jahr gültige Grenzen
+  // (Nutzerkorrektur 20.09.2026: "fast jedes jahr ändert sich die
+  // territoriums").
+  const minYear = yearRange?.minYear ?? 0;
+  const maxYear = yearRange?.maxYear ?? 0;
 
   function clampYear(y: number): number {
     return Math.min(maxYear, Math.max(minYear, y));
@@ -628,13 +619,11 @@ export default function ImperienPage() {
   const PX_PER_YEAR = 6;
   const RULER_HALF_YEARS = 160;
 
-  const snapshotYearSet = new Set(years.map((y) => y.year));
   const rulerCenterYear = Math.round(sliderYear);
   const rulerTicks: {
     year: number;
     leftPx: number;
     isMajor: boolean;
-    isSnapshot: boolean;
   }[] = [];
   for (let offset = -RULER_HALF_YEARS; offset <= RULER_HALF_YEARS; offset++) {
     const year = rulerCenterYear + offset;
@@ -643,7 +632,6 @@ export default function ImperienPage() {
       year,
       leftPx: offset * PX_PER_YEAR,
       isMajor: year % 10 === 0,
-      isSnapshot: snapshotYearSet.has(year),
     });
   }
 
@@ -800,14 +788,14 @@ export default function ImperienPage() {
             ein Gebiet klicken für eine ausführliche Beschreibung.
             Datenquelle:{" "}
             <a
-              href="https://github.com/aourednik/historical-basemaps"
+              href="https://github.com/Seshat-Global-History-Databank/cliopatria"
               target="_blank"
               rel="noopener noreferrer"
               className="underline decoration-dotted hover:text-accent"
             >
-              historical-basemaps
+              Cliopatria
             </a>{" "}
-            (GPL-3.0), Kartenkacheln:{" "}
+            (Seshat Global History Databank, CC BY 4.0), Kartenkacheln:{" "}
             <a
               href="https://www.esri.com"
               target="_blank"
@@ -829,7 +817,7 @@ export default function ImperienPage() {
             Seitenverhältnis, damit Grenzen/Beschriftungen mehr Platz haben. */}
         <div className="relative h-[70vh] min-h-[420px] w-full overflow-hidden border border-border bg-surface-elevated sm:h-[80vh]">
           <div ref={mapContainerRef} className="absolute inset-0" />
-          {(!leafletReady || (isLoadingBorders && years.length === 0)) && (
+          {(!leafletReady || (isLoadingBorders && !yearRange)) && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/70">
               <p className="label-mono text-xs uppercase text-muted">// Lädt…</p>
             </div>
@@ -971,9 +959,9 @@ export default function ImperienPage() {
               Zahn + Jahres-Chip darüber), und das Lineal mit den dünnen
               Strichen scrollt beim Ziehen darunter durch — nicht wie ein
               klassischer Schieberegler, bei dem sich der Zeiger bewegt.
-              Jeder einzelne Kalenderjahr-Schritt ist dadurch erreichbar
-              ("jedes 1 jahr spulen können"); Jahre mit echten Kartendaten
-              sind als etwas kräftigere, andersfarbige Striche markiert. */}
+              Jeder einzelne Kalenderjahr-Schritt ist dadurch erreichbar und
+              zeigt echte, für genau dieses Jahr gültige Grenzen
+              (Cliopatria-Datensatz, siehe Kopf der Seite). */}
           <div
             ref={rulerRef}
             role="slider"
@@ -996,18 +984,12 @@ export default function ImperienPage() {
             <div className="pointer-events-none absolute inset-x-0 bottom-3 h-px bg-border/60" />
 
             <div aria-hidden className="pointer-events-none absolute inset-0">
-              {rulerTicks.map(({ year, leftPx, isMajor, isSnapshot }) => (
+              {rulerTicks.map(({ year, leftPx, isMajor }) => (
                 <span
                   key={year}
                   style={{ left: `calc(50% + ${leftPx}px)` }}
                   className={`absolute bottom-3 w-px -translate-x-1/2 rounded-full transition-colors ${
-                    isSnapshot
-                      ? isMajor
-                        ? "h-5 bg-accent"
-                        : "h-3.5 bg-accent/70"
-                      : isMajor
-                        ? "h-4 bg-foreground/50"
-                        : "h-2.5 bg-foreground/25"
+                    isMajor ? "h-5 bg-accent/70" : "h-2.5 bg-foreground/25"
                   }`}
                 />
               ))}
@@ -1032,7 +1014,7 @@ export default function ImperienPage() {
                   setIsPlaying(false);
                   setSliderYear(minYear);
                 }}
-                disabled={years.length === 0}
+                disabled={!yearRange}
                 className="border border-border px-2.5 py-1.5 text-xs text-foreground transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
                 aria-label="Zum Anfang springen"
                 title="Zum Anfang springen"
@@ -1042,7 +1024,7 @@ export default function ImperienPage() {
               <button
                 type="button"
                 onClick={() => setIsPlaying((p) => !p)}
-                disabled={years.length === 0}
+                disabled={!yearRange}
                 className="border border-border px-3 py-1.5 text-xs uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
                 aria-label={isPlaying ? "Pause" : "Abspielen"}
                 title={isPlaying ? "Pause" : "Durch die Jahre abspielen"}
@@ -1055,7 +1037,7 @@ export default function ImperienPage() {
                   setIsPlaying(false);
                   setSliderYear(maxYear);
                 }}
-                disabled={years.length === 0}
+                disabled={!yearRange}
                 className="border border-border px-2.5 py-1.5 text-xs text-foreground transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
                 aria-label="Zum Ende springen"
                 title="Zum Ende springen"
