@@ -276,6 +276,161 @@ function bboxArea(geometry: any): number {
   return Math.max(0, (maxX - minX) * (maxY - minY));
 }
 
+// Nutzerkorrektur 20.09.2026: "die imperiennamen sind nicht in der mitte
+// des terrirorium" — Leaflets Standard-Tooltip-Position (direction:
+// "center") setzt einfach die Mitte der BOUNDING BOX an, nicht die
+// tatsächliche Mitte der Fläche. Bei länglichen, gebogenen oder
+// L-förmigen Reichen (z.B. das Partherreich) landet das dadurch sichtbar
+// neben der eigentlichen Farbfläche. Die Funktionen unten berechnen
+// stattdessen einen "Pole of Inaccessibility" — den Punkt IM Gebiet, der
+// am weitesten von jedem Rand entfernt liegt (dieselbe Technik, die auch
+// Kartendienste wie Mapbox für Beschriftungen nutzen) — über eine grobe,
+// dann verfeinerte Gitter-Suche. Das ist kein exakter Flächenschwerpunkt,
+// reicht aber zuverlässig, um den Namen sichtbar INNERHALB der Fläche zu
+// platzieren statt daneben.
+function pointInRings(pt: [number, number], rings: number[][][]): boolean {
+  let inside = false;
+  for (let r = 0; r < rings.length; r++) {
+    const ring = rings[r];
+    let c = false;
+    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+      const xi = ring[i][0];
+      const yi = ring[i][1];
+      const xj = ring[j][0];
+      const yj = ring[j][1];
+      const intersects =
+        yi > pt[1] !== yj > pt[1] &&
+        pt[0] < ((xj - xi) * (pt[1] - yi)) / (yj - yi || 1e-12) + xi;
+      if (intersects) c = !c;
+    }
+    if (r === 0) inside = c;
+    else if (c) inside = false;
+  }
+  return inside;
+}
+
+function pointToSegmentDist(
+  px: number,
+  py: number,
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number
+): number {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const lenSq = dx * dx + dy * dy;
+  let t = lenSq === 0 ? 0 : ((px - x1) * dx + (py - y1) * dy) / lenSq;
+  t = Math.max(0, Math.min(1, t));
+  const cx = x1 + t * dx;
+  const cy = y1 + t * dy;
+  return Math.hypot(px - cx, py - cy);
+}
+
+function distToRingsBoundary(pt: [number, number], rings: number[][][]): number {
+  let min = Infinity;
+  for (const ring of rings) {
+    for (let i = 0; i < ring.length - 1; i++) {
+      const d = pointToSegmentDist(pt[0], pt[1], ring[i][0], ring[i][1], ring[i + 1][0], ring[i + 1][1]);
+      if (d < min) min = d;
+    }
+  }
+  return min;
+}
+
+function poleOfInaccessibility(rings: number[][][]): [number, number] {
+  const outer = rings[0];
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+  for (const [x, y] of outer) {
+    if (x < minX) minX = x;
+    if (x > maxX) maxX = x;
+    if (y < minY) minY = y;
+    if (y > maxY) maxY = y;
+  }
+
+  const GRID = 12;
+  let best: [number, number] | null = null;
+  let bestDist = -Infinity;
+  for (let gx = 0; gx <= GRID; gx++) {
+    for (let gy = 0; gy <= GRID; gy++) {
+      const x = minX + ((maxX - minX) * gx) / GRID;
+      const y = minY + ((maxY - minY) * gy) / GRID;
+      if (!pointInRings([x, y], rings)) continue;
+      const d = distToRingsBoundary([x, y], rings);
+      if (d > bestDist) {
+        bestDist = d;
+        best = [x, y];
+      }
+    }
+  }
+
+  if (!best) {
+    // Sehr schmale/entartete Ringe, in denen kein Gitterpunkt "innen"
+    // landet — Fallback auf den einfachen Eckpunkt-Durchschnitt.
+    let sx = 0;
+    let sy = 0;
+    for (const [x, y] of outer) {
+      sx += x;
+      sy += y;
+    }
+    return [sx / outer.length, sy / outer.length];
+  }
+
+  // Verfeinerung: feineres Gitter um den bisher besten Punkt.
+  const refineRadius = (maxX - minX + (maxY - minY)) / (GRID * 2) + 1e-9;
+  for (let gx = -4; gx <= 4; gx++) {
+    for (let gy = -4; gy <= 4; gy++) {
+      const x = best[0] + (refineRadius * gx) / 4;
+      const y = best[1] + (refineRadius * gy) / 4;
+      if (!pointInRings([x, y], rings)) continue;
+      const d = distToRingsBoundary([x, y], rings);
+      if (d > bestDist) {
+        bestDist = d;
+        best = [x, y];
+      }
+    }
+  }
+  return best;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function geometryLabelPoint(geometry: any): [number, number] | null {
+  if (!geometry?.coordinates) return null;
+  if (geometry.type === "Polygon") {
+    return poleOfInaccessibility(geometry.coordinates);
+  }
+  if (geometry.type === "MultiPolygon") {
+    // Größten Teil (nach Bounding-Box-Fläche) auswählen, damit die
+    // Beschriftung eines Reichs mit Exklaven im Hauptgebiet landet statt
+    // auf einer kleinen Insel.
+    let bestPart: number[][][] | null = null;
+    let bestSize = -Infinity;
+    for (const part of geometry.coordinates as number[][][][]) {
+      const ring = part[0];
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+      for (const [x, y] of ring) {
+        if (x < minX) minX = x;
+        if (x > maxX) maxX = x;
+        if (y < minY) minY = y;
+        if (y > maxY) maxY = y;
+      }
+      const size = (maxX - minX) * (maxY - minY);
+      if (size > bestSize) {
+        bestSize = size;
+        bestPart = part;
+      }
+    }
+    return bestPart ? poleOfInaccessibility(bestPart) : null;
+  }
+  return null;
+}
+
 /**
  * "Große Imperien" — interaktive Weltkarte mit Jahres-Regler, inspiriert
  * von oldmapsonline.org/en/history/regions (Nutzeranfrage 18.09.2026).
@@ -517,6 +672,16 @@ export default function ImperienPage() {
           className: "empire-label",
           opacity: isMajor ? 0.95 : 0.9,
         });
+
+        // Nutzerkorrektur 20.09.2026: "die imperiennamen sind nicht in der
+        // mitte des terrirorium" — Tooltip-Position explizit auf den
+        // berechneten "Pole of Inaccessibility" setzen statt Leaflets
+        // Standard (Bounding-Box-Mitte, siehe geometryLabelPoint oben).
+        const labelPoint = geometryLabelPoint(feature.geometry);
+        if (labelPoint) {
+          const tooltip = lyr.getTooltip?.();
+          tooltip?.setLatLng?.(L.latLng(labelPoint[1], labelPoint[0]));
+        }
 
         lyr.on({
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
