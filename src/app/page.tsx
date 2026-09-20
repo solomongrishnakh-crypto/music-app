@@ -13,6 +13,7 @@ import AiNewsSection from "@/components/home/AiNewsSection";
 import ContactSection from "@/components/home/ContactSection";
 import AboutSiteSection from "@/components/home/AboutSiteSection";
 import TypedWordmark from "@/components/ui/TypedWordmark";
+import InfoHint from "@/components/ui/InfoHint";
 import { Song } from "@/types/music";
 import { usePlayer } from "@/contexts/PlayerContext";
 
@@ -156,23 +157,23 @@ export default function Home() {
         </div>
 
         {!showHero && (
-          <div className="mx-auto mt-3 max-w-2xl space-y-1 text-center text-[11px] leading-relaxed text-muted">
-            {/* Nutzerwunsch 19.09.2026: Hinweis muss auch auf dem Handy
-                sichtbar sein, nicht nur in der Desktop-Ecken-UI. */}
-            <p>
-              Hinweis: Gemerkte Songs werden lokal in diesem Browser
-              gespeichert — im privaten/Inkognito-Fenster gehen sie beim
-              Schließen verloren.
-            </p>
-            {/* Nutzerwunsch 19.09.2026: "füge info das manche browser
-                hintgrundabspiel blockiert" — manche Browser (v.a. iOS
-                Safari) pausieren die Wiedergabe, sobald man die App
-                verlässt/das Handy sperrt. */}
-            <p>
-              Manche Browser (z.B. Safari auf dem iPhone) pausieren die
-              Wiedergabe im Hintergrund, wenn die Seite verlassen oder das
-              Gerät gesperrt wird.
-            </p>
+          // Nutzerwunsch 20.09.2026: "tu diese kleine text mit hinweis
+          // alles in einem kleinen info logo" — die beiden Hinweistexte
+          // stehen nicht mehr offen auf der Seite, sondern hinter einem
+          // kleinen (i)-Symbol zum Antippen.
+          <div className="mx-auto mt-3 flex justify-center">
+            <InfoHint>
+              <p>
+                Hinweis: Gemerkte Songs werden lokal in diesem Browser
+                gespeichert — im privaten/Inkognito-Fenster gehen sie beim
+                Schließen verloren.
+              </p>
+              <p>
+                Manche Browser (z.B. Safari auf dem iPhone) pausieren die
+                Wiedergabe im Hintergrund, wenn die Seite verlassen oder das
+                Gerät gesperrt wird.
+              </p>
+            </InfoHint>
           </div>
         )}
 
