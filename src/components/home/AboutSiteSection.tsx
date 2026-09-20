@@ -29,6 +29,14 @@ export default function AboutSiteSection() {
             src="/branding/about-video.mp4"
             ariaLabel="Centaurian — visuelle Identität"
           />
+          {/* Nutzerkorrektur 20.09.2026: "da sieht man klingai wasserzeichen
+              bitte versteck es" — das KI-generierte Video trägt unten ein
+              eingebranntes "KlingAI"-Wasserzeichen, das sich aus dem
+              Video selbst nicht entfernen lässt. Ein Verlaufs-"Vignette"
+              am unteren Rand blendet diesen Bereich zur Hintergrundfarbe
+              hin aus, statt ihn mit einer sichtbaren, kantigen Box
+              abzudecken. */}
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-background via-background/70 to-transparent sm:h-20" />
         </div>
         <div className="glass-card flex flex-col justify-center p-6 sm:p-10">
           <p className="label-mono mb-3 text-xs uppercase">// Über die Webseite</p>
