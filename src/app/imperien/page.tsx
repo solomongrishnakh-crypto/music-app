@@ -738,17 +738,18 @@ export default function ImperienPage() {
               sein"), im breiten 16:9-Format statt hochkant und insgesamt
               kompakter/kleiner. */}
           {selected && (
-            // Nutzerkorrektur 19.09.2026: "diese zurück bottun hast du
-            // hinter + versteckt und man kann auch nicht scrollen um alles
-            // zu lesen" — Leaflets eigene Zoom-Buttons (+/-) liegen per
-            // Default über z-index:1000, unser vorheriges z-[500] lag also
-            // DARUNTER und der Schließen-Button war teils verdeckt. Jetzt
-            // deutlich höher (z-[2000]). Das verschachtelte doppelte
-            // overflow-y-auto (außen + innen) hat außerdem verhindert, dass
-            // der Text wirklich scrollt, da der äußere Container ohne feste
-            // Höhe kein flex-1 im Inneren durchsetzen konnte — jetzt ist nur
-            // noch der äußere Rahmen scrollbar, ein einfacher Block.
-            <div className="absolute inset-0 z-[2000] flex items-center justify-center bg-black/60 p-3">
+            // Nutzerkorrektur 20.09.2026: "zurückbutton ist wieder nicht
+            // sichtbar und man kann auch nicht scrollen" — der eigentliche
+            // Grund war, dass dieses Overlay mit "absolute" INNERHALB des
+            // Karten-Containers positioniert wurde, der selbst
+            // "overflow-hidden" und eine feste, auf Handys sehr kleine
+            // Höhe (aspect-[16/10]) hat. Dadurch wurde die Box vom
+            // Kartenrahmen abgeschnitten, egal wie hoch ihr eigenes
+            // max-h/overflow-y-auto war. Jetzt "fixed inset-0" — das legt
+            // die Box über die GESAMTE Bildschirmhöhe, unabhängig vom
+            // Kartenrahmen, Schließen-Button und Scrollen funktionieren
+            // dadurch zuverlässig.
+            <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/60 p-3">
               <div className="relative max-h-[85vh] w-full max-w-md overflow-y-auto border border-border bg-background/95 p-4 pt-10 backdrop-blur-sm sm:max-w-lg sm:p-5 sm:pt-5">
                 <button
                   type="button"
