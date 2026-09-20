@@ -8,7 +8,6 @@ import CompactSongList from "@/components/search/CompactSongList";
 import FavoritesModal from "@/components/search/FavoritesModal";
 import NowPlayingHero from "@/components/player/NowPlayingHero";
 import FeaturesSection from "@/components/home/FeaturesSection";
-import FactsSection from "@/components/home/FactsSection";
 import AiNewsSection from "@/components/home/AiNewsSection";
 import ContactSection from "@/components/home/ContactSection";
 import AboutSiteSection from "@/components/home/AboutSiteSection";
@@ -235,7 +234,6 @@ export default function Home() {
         {!query.trim() && !showHero && (
           <>
             <FeaturesSection />
-            <FactsSection />
             <AiNewsSection />
             <AboutSiteSection />
             <div id="kontakte" className="scroll-mt-24">

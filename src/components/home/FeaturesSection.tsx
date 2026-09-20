@@ -75,6 +75,29 @@ export default function FeaturesSection() {
 
       <UniverseTypewriter />
 
+      {/* Nutzerwunsch 20.09.2026: "kannst ganze space news und universum in
+          zahlen in einer anderen seite tun wie weltgeschichte entdecken?" —
+          Verweis auf die neue eigene Seite /universum (Fakten zum Kosmos +
+          Space News), statt beides direkt auf der Startseite zu zeigen. */}
+      <Link
+        href="/universum"
+        className="group mt-16 flex flex-col items-start justify-between gap-4 border border-border bg-surface-elevated p-6 transition-colors hover:border-accent sm:flex-row sm:items-center sm:p-10"
+      >
+        <div>
+          <p className="font-display text-lg font-bold text-accent sm:text-2xl">
+            Universum kennenlernen
+          </p>
+          <p className="mt-3 max-w-xl text-xs leading-relaxed text-muted sm:text-sm">
+            Zahlen und Fakten zum Kosmos — vom Alter des Universums über
+            Dunkle Materie bis zu Schwarzen Löchern, dazu aktuelle
+            Live-News aus der Raumfahrt.
+          </p>
+        </div>
+        <p className="label-mono inline-flex shrink-0 items-center gap-2 text-xs uppercase text-foreground transition-colors group-hover:text-accent">
+          Entdecken ↗
+        </p>
+      </Link>
+
       {/* Nutzerwunsch 20.09.2026: "bring die box (Die welt Durch die
           jahrhunderte) nach oben unter understand the universe. änder box
           name auf welt geschichte entdecken" — Verweis auf die interaktive
@@ -82,7 +105,7 @@ export default function FeaturesSection() {
           und umbenannt. */}
       <Link
         href="/imperien"
-        className="group mt-16 flex flex-col items-start justify-between gap-4 border border-border bg-surface-elevated p-6 transition-colors hover:border-accent sm:flex-row sm:items-center sm:p-10"
+        className="group mt-6 flex flex-col items-start justify-between gap-4 border border-border bg-surface-elevated p-6 transition-colors hover:border-accent sm:flex-row sm:items-center sm:p-10"
       >
         <div>
           <p className="font-display text-lg font-bold text-accent sm:text-2xl">
