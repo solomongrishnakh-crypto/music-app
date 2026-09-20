@@ -562,6 +562,19 @@ export default function ImperienPage() {
     }).addTo(map);
 
     mapRef.current = map;
+
+    // Nutzerkorrektur 20.09.2026: "es ist zu dicht ... kleine imperien
+    // name nicht angezeigt wird bis du mehr reinzoomst" — beim Reinzoomen
+    // dieselben (bereits geladenen) Grenzen einfach neu zeichnen, damit
+    // die Größenschwelle für dauerhafte Beschriftungen (siehe
+    // renderBordersGeojson) den neuen Zoomstand berücksichtigt. Kein
+    // Netzwerk-Request nötig, das Jahr bleibt ja gleich.
+    map.on("zoomend", () => {
+      const year = lastRenderedYearRef.current;
+      if (year === null) return;
+      const cached = bordersCacheRef.current.get(year);
+      if (cached) renderBordersGeojsonRef.current(cached);
+    });
   }, [leafletReady]);
 
   // Verfuegbaren Jahresbereich einmalig laden (Cliopatria deckt 3400 v.
@@ -598,6 +611,8 @@ export default function ImperienPage() {
   const lastRenderedYearRef = useRef<number | null>(null);
   const lastDrawTimeRef = useRef(0);
   const pendingDrawTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const renderBordersGeojsonRef = useRef<(geojson: any) => void>(() => {});
 
   // Zeichnet ein bereits geladenes GeoJSON auf die Karte — ausgelagert aus
   // dem Lade-Effekt, damit sowohl ein frischer Server-Fetch als auch ein
@@ -629,7 +644,23 @@ export default function ImperienPage() {
       (a, b) => bboxArea(b.geometry) - bboxArea(a.geometry)
     );
     const sortedGeojson = { ...geojson, features: sortedFeatures };
-    const permanentLabelNames = new Set(sortedFeatures.map((f) => f.properties?.NAME));
+
+    // Nutzerkorrektur 20.09.2026: "es ist zu dicht ... kleine imperien
+    // name nicht angezeigt wird bis du mehr reinzoomst" — kleine Gebiete
+    // bekommen nur noch beim Reinzoomen eine dauerhafte Beschriftung.
+    // bboxArea liefert die Fläche in Grad²; umgerechnet auf ungefähre
+    // Bildschirm-Pixel-Fläche beim aktuellen Zoomstand (Web-Mercator:
+    // 256*2^zoom Pixel pro 360°), damit dieselbe reale Größe bei höherem
+    // Zoom irgendwann über die Schwelle wächst und sichtbar wird — ganz
+    // ohne die Karte neu zu laden (siehe "zoomend"-Listener oben).
+    const zoom = mapRef.current.getZoom?.() ?? 2;
+    const pxPerDegree = (256 * Math.pow(2, zoom)) / 360;
+    const MIN_LABEL_PIXEL_AREA = 3000;
+    const permanentLabelNames = new Set(
+      sortedFeatures
+        .filter((f) => bboxArea(f.geometry) * pxPerDegree * pxPerDegree >= MIN_LABEL_PIXEL_AREA)
+        .map((f) => f.properties?.NAME)
+    );
 
     // Farben pro Gebiet: Graphenfärbung statt Namens-Hash, damit
     // benachbarte Gebiete nie dieselbe/eine sehr ähnliche Farbe bekommen
@@ -703,6 +734,7 @@ export default function ImperienPage() {
     geoLayerRef.current = layer;
     setErrorMessage(null);
   }
+  renderBordersGeojsonRef.current = renderBordersGeojson;
 
   // Grenzen fuer das aktuell gewaehlte Jahr laden und auf der Karte
   // zeichnen. Vorher ein reiner Debounce ("warte bis 150ms Ruhe ist") —
