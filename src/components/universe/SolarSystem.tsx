@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type PointerEvent, type WheelEvent } from "react";
-import { PLANETS, ALL_BODIES, type PlanetData } from "@/data/solarSystem";
+import { PLANETS, ALL_BODIES, SUN, type PlanetData } from "@/data/solarSystem";
 
 interface DrawnPlanet {
   planet: PlanetData;
@@ -176,6 +176,9 @@ export default function SolarSystem({
       ctx.fill();
 
       const drawn: DrawnPlanet[] = [];
+      if (interactive) {
+        drawn.push({ planet: SUN, x: cx, y: cy, r: sunR });
+      }
 
       bodies.forEach((planet, i) => {
         const isDwarf = planet.kind === "dwarf";

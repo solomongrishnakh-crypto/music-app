@@ -289,7 +289,7 @@ export default function UniversumPage() {
         <button
           type="button"
           onClick={() => setShowSolarSystem(true)}
-          className="group relative mb-10 h-64 w-full overflow-hidden border border-border bg-black/40 text-left transition-colors hover:border-accent sm:h-80"
+          className="group relative mb-10 h-64 w-full overflow-hidden border border-border bg-background text-left transition-colors hover:border-accent sm:h-80"
         >
           <SolarSystem mode="compact" />
           <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent p-4">

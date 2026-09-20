@@ -18,8 +18,8 @@ export interface PlanetData {
   color: string;
   glowColor: string;
   hasRings?: boolean;
-  /** "planet" (Standard) | "dwarf" (Zwergplanet) | "probe" (Raumsonde, kreist nicht). */
-  kind?: "planet" | "dwarf" | "probe";
+  /** "planet" (Standard) | "dwarf" (Zwergplanet) | "probe" (Raumsonde, kreist nicht) | "star" (die Sonne). */
+  kind?: "planet" | "dwarf" | "probe" | "star";
   /** Überschreibt die Standard-Labels im Info-Panel (Reihenfolge: Abstand/Umlauf/Größe/Extra). */
   factLabels?: [string, string, string, string];
   facts: {
@@ -29,6 +29,12 @@ export interface PlanetData {
     moons: string;
   };
   description: string;
+  /** Echtes Foto (Nutzerwunsch 20.09.2026: "mehr infos mit echten bildern bei planeten und sonne"). */
+  image?: string;
+}
+
+function commonsFile(filename: string): string {
+  return `https://commons.wikimedia.org/wiki/Special:FilePath/${filename}?width=700`;
 }
 
 export const PLANETS: PlanetData[] = [
@@ -48,6 +54,7 @@ export const PLANETS: PlanetData[] = [
     },
     description:
       "Merkur ist der sonnennächste und kleinste Planet. Ohne nennenswerte Atmosphäre schwanken die Temperaturen extrem — bis zu 430 °C tagsüber, bis zu −180 °C nachts.",
+    image: commonsFile("Mercury_in_color_-_Prockter07-edit1.jpg"),
   },
   {
     id: "venus",
@@ -65,6 +72,7 @@ export const PLANETS: PlanetData[] = [
     },
     description:
       "Venus ist durch ihre extrem dichte CO₂-Atmosphäre und den daraus resultierenden Treibhauseffekt der heißeste Planet im Sonnensystem — heißer als Merkur, trotz größerer Sonnenentfernung.",
+    image: commonsFile("Venus-real_color.jpg"),
   },
   {
     id: "earth",
@@ -82,6 +90,7 @@ export const PLANETS: PlanetData[] = [
     },
     description:
       "Unser Heimatplanet — der einzige bekannte Ort im Universum mit bestätigtem Leben. Flüssiges Wasser an der Oberfläche und eine schützende Atmosphäre machen das möglich.",
+    image: commonsFile("The_Blue_Marble_(remastered).jpg"),
   },
   {
     id: "mars",
@@ -99,6 +108,7 @@ export const PLANETS: PlanetData[] = [
     },
     description:
       "Der 'Rote Planet' verdankt seine Farbe eisenoxidhaltigem Staub. Er beherbergt den größten bekannten Vulkan des Sonnensystems, Olympus Mons, und ist Ziel zukünftiger bemannter Missionen.",
+    image: commonsFile("OSIRIS_Mars_true_color.jpg"),
   },
   {
     id: "jupiter",
@@ -116,6 +126,7 @@ export const PLANETS: PlanetData[] = [
     },
     description:
       "Jupiter ist der größte Planet — mehr als doppelt so massereich wie alle anderen Planeten zusammen. Der Große Rote Fleck ist ein Sturm, größer als die Erde, der seit Jahrhunderten wütet.",
+    image: commonsFile("Jupiter_by_Cassini-Huygens.jpg"),
   },
   {
     id: "saturn",
@@ -134,6 +145,7 @@ export const PLANETS: PlanetData[] = [
     },
     description:
       "Saturn ist berühmt für sein ausgedehntes, spektakuläres Ringsystem aus Eis- und Gesteinspartikeln. Mit der geringsten Dichte aller Planeten würde er theoretisch auf Wasser schwimmen.",
+    image: commonsFile("Saturn_during_Equinox.jpg"),
   },
   {
     id: "uranus",
@@ -151,6 +163,7 @@ export const PLANETS: PlanetData[] = [
     },
     description:
       "Uranus rotiert extrem geneigt — praktisch 'auf der Seite liegend' mit ~98° Achsneigung, vermutlich Folge einer gewaltigen Kollision in der Frühzeit des Sonnensystems.",
+    image: commonsFile("Uranus2.jpg"),
   },
   {
     id: "neptune",
@@ -168,6 +181,7 @@ export const PLANETS: PlanetData[] = [
     },
     description:
       "Neptun ist der äußerste bekannte Planet und hat mit bis zu 2.100 km/h die stärksten gemessenen Winde im Sonnensystem. Seit seiner Entdeckung 1846 hat er noch keine volle Umrundung der Sonne vollendet.",
+    image: commonsFile("Neptune_Full.jpg"),
   },
 ];
 
@@ -294,6 +308,34 @@ export const VOYAGER1: PlanetData = {
   },
   description:
     "Voyager 1 ist das am weitesten von der Erde entfernte von Menschen gebaute Objekt. Seit 2012 befindet sie sich im interstellaren Raum, außerhalb der Heliosphäre der Sonne. Die Position hier ist ein Näherungswert — die Sonde entfernt sich stetig weiter.",
+};
+
+/**
+ * Die Sonne selbst — anklickbar für ein Info-Panel mit echtem Foto
+ * (Nutzerwunsch 20.09.2026: "mehr infos mit echten bildern bei planeten
+ * und sonne").
+ */
+export const SUN: PlanetData = {
+  id: "sun",
+  name: "Sonne",
+  distanceAu: 0,
+  periodDays: 0,
+  diameterKm: 1391000,
+  color: "#ffcf6b",
+  glowColor: "rgba(255,196,110,0.6)",
+  kind: "star",
+  factLabels: ["Abstand zur Erde", "Rotationsdauer (Äquator)", "Durchmesser", "Oberflächentemperatur"],
+  facts: {
+    distance: "≈ 149,6 Mio. km (1 AE)",
+    period: "≈ 27 Tage",
+    diameter: "≈ 1,39 Mio. km",
+    moons: "≈ 5.500 °C",
+  },
+  image: commonsFile(
+    "The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA's_Solar_Dynamics_Observatory_-_20100819.jpg"
+  ),
+  description:
+    "Die Sonne enthält rund 99,86 % der gesamten Masse des Sonnensystems. In ihrem Kern wandelt Kernfusion bei etwa 15 Millionen °C Wasserstoff in Helium um — die Energiequelle für alles Leben auf der Erde.",
 };
 
 export const ALL_BODIES: PlanetData[] = [...PLANETS, ...DWARF_PLANETS, VOYAGER1];

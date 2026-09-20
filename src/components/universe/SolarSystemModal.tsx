@@ -76,11 +76,22 @@ export default function SolarSystemModal({ onClose }: SolarSystemModalProps) {
               ×
             </button>
             <p className="label-mono text-xs uppercase" style={{ color: selected.color }}>
-              // Planet
+              // {selected.kind === "star" ? "Stern" : selected.kind === "dwarf" ? "Zwergplanet" : selected.kind === "probe" ? "Raumsonde" : "Planet"}
             </p>
             <h3 className="font-display mt-1 text-xl font-bold uppercase tracking-tight text-foreground sm:text-2xl">
               {selected.name}
             </h3>
+            {selected.image && (
+              <div className="mt-3 overflow-hidden rounded border border-border bg-black/40">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={selected.image}
+                  alt={selected.name}
+                  className="h-32 w-full object-cover sm:h-44"
+                  loading="lazy"
+                />
+              </div>
+            )}
             <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-[11px] uppercase tracking-wide text-muted sm:grid-cols-4 sm:text-xs">
               <div>
                 <p className="text-muted">{selected.factLabels?.[0] ?? "Abstand zur Sonne"}</p>
