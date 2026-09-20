@@ -3,21 +3,26 @@ import UniverseTypewriter from "./UniverseTypewriter";
 import TwinkleStars from "@/components/ui/TwinkleStars";
 import SmallClock from "@/components/ui/SmallClock";
 
+// Nutzerwunsch 20.09.2026: "diese 3 titeln sollen weg oder bearbeitet werden
+// weil meine seite ist nicht nur für music gedacht auch für universum
+// entdecken oder besserkennenlernen" — die drei Karten beschrieben bisher
+// nur den Musik-Suchablauf (Suchen/Hören/Merken). Jetzt spiegeln sie die
+// drei Bereiche der ganzen Seite wider: Musik, Universum, Geschichte.
 const FEATURES = [
   {
     index: "01",
-    title: "Suchen",
-    text: "Zugriff auf den kompletten YouTube-Musikkatalog, direkt über die offizielle Data API — kein Login nötig.",
+    title: "Musik",
+    text: "Song suchen und direkt hier hören — über den offiziellen YouTube-Katalog, kein Login, kein Download.",
   },
   {
     index: "02",
-    title: "Hören",
-    text: "Wiedergabe läuft direkt im Browser über den offiziellen YouTube-Player. Kein Download, kein Stream-Ripping.",
+    title: "Universum",
+    text: "Zahlen, Fakten und ein interaktives Sonnensystem zum Erkunden — vom Urknall bis zu Voyager 1.",
   },
   {
     index: "03",
-    title: "Merken",
-    text: "Dein Verlauf bleibt lokal in deinem Browser gespeichert — beim nächsten Besuch sofort wieder da.",
+    title: "Geschichte",
+    text: "Große Reiche auf einer Zeitleiste von der Antike bis heute, mit Jahres-Regler zum Durchspielen.",
   },
 ];
 
@@ -33,7 +38,7 @@ export default function FeaturesSection() {
           jetzt deutlich weniger Platz ein (kleinere Karten, engere
           Abstände) statt einer großen, hohen Kartenreihe. */}
       <div className="mb-4 flex items-end justify-between border-b border-border pb-3">
-        <p className="label-mono text-xs uppercase">// Wie es funktioniert</p>
+        <p className="label-mono text-xs uppercase">// Was dich erwartet</p>
         <p className="label-mono hidden text-xs uppercase sm:block">
           Centaurian, {new Date().getFullYear()}
         </p>
