@@ -79,8 +79,9 @@ export default function SolarSystem({
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return;
+    const ctx2d = canvas.getContext("2d");
+    if (!ctx2d) return;
+    const ctx = ctx2d;
 
     const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 2) : 1;
     canvas.width = size.w * dpr;
