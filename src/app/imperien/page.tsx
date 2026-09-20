@@ -338,6 +338,36 @@ function distToRingsBoundary(pt: [number, number], rings: number[][][]): number 
   return min;
 }
 
+function signedDistToRings(pt: [number, number], rings: number[][][]): number {
+  const d = distToRingsBoundary(pt, rings);
+  return pointInRings(pt, rings) ? d : -d;
+}
+
+interface PoleCell {
+  x: number;
+  y: number;
+  h: number;
+  d: number;
+  max: number;
+}
+
+function makePoleCell(x: number, y: number, h: number, rings: number[][][]): PoleCell {
+  const d = signedDistToRings([x, y], rings);
+  return { x, y, h, d, max: d + h * Math.SQRT2 };
+}
+
+// Nutzerkorrektur 20.09.2026 (x2): das feste 13x13-Gitter oben hat bei
+// großen, verwinkelten/konkaven Flächen (z.B. ein Reich, das sich nur als
+// schmaler Streifen um ein Meer zieht, wie Rom ums Mittelmeer) die
+// eigentlich "fetteste" Region (z.B. Gallien) verfehlt, weil die
+// Bounding-Box riesig ist, aber nur ein winziger Bruchteil davon
+// tatsächlich innerhalb der Fläche liegt — kaum ein Gitterpunkt trifft
+// also überhaupt hinein. Ersetzt durch den echten "polylabel"-Algorithmus
+// (wie ihn z.B. Mapbox für genau dieses Problem verwendet): eine
+// Prioritäts-Suche, die das Gebiet in Quadrate zerlegt und gezielt die
+// Quadrate mit dem größten möglichen Gewinn weiter verfeinert — dadurch
+// werden auch dünne/konkave/ringförmige Flächen zuverlässig erfasst, statt
+// nur ein festes Gitter stumpf abzutasten.
 function poleOfInaccessibility(rings: number[][][]): [number, number] {
   const outer = rings[0];
   let minX = Infinity;
@@ -351,25 +381,9 @@ function poleOfInaccessibility(rings: number[][][]): [number, number] {
     if (y > maxY) maxY = y;
   }
 
-  const GRID = 12;
-  let best: [number, number] | null = null;
-  let bestDist = -Infinity;
-  for (let gx = 0; gx <= GRID; gx++) {
-    for (let gy = 0; gy <= GRID; gy++) {
-      const x = minX + ((maxX - minX) * gx) / GRID;
-      const y = minY + ((maxY - minY) * gy) / GRID;
-      if (!pointInRings([x, y], rings)) continue;
-      const d = distToRingsBoundary([x, y], rings);
-      if (d > bestDist) {
-        bestDist = d;
-        best = [x, y];
-      }
-    }
-  }
-
-  if (!best) {
-    // Sehr schmale/entartete Ringe, in denen kein Gitterpunkt "innen"
-    // landet — Fallback auf den einfachen Eckpunkt-Durchschnitt.
+  const width = maxX - minX;
+  const height = maxY - minY;
+  if (!(width > 0) || !(height > 0)) {
     let sx = 0;
     let sy = 0;
     for (const [x, y] of outer) {
@@ -379,21 +393,53 @@ function poleOfInaccessibility(rings: number[][][]): [number, number] {
     return [sx / outer.length, sy / outer.length];
   }
 
-  // Verfeinerung: feineres Gitter um den bisher besten Punkt.
-  const refineRadius = (maxX - minX + (maxY - minY)) / (GRID * 2) + 1e-9;
-  for (let gx = -4; gx <= 4; gx++) {
-    for (let gy = -4; gy <= 4; gy++) {
-      const x = best[0] + (refineRadius * gx) / 4;
-      const y = best[1] + (refineRadius * gy) / 4;
-      if (!pointInRings([x, y], rings)) continue;
-      const d = distToRingsBoundary([x, y], rings);
-      if (d > bestDist) {
-        bestDist = d;
-        best = [x, y];
-      }
+  const cellSize = Math.min(width, height);
+  const h0 = cellSize / 2;
+
+  let cellQueue: PoleCell[] = [];
+  for (let x = minX; x < maxX; x += cellSize) {
+    for (let y = minY; y < maxY; y += cellSize) {
+      cellQueue.push(makePoleCell(x + h0, y + h0, h0, rings));
     }
   }
-  return best;
+
+  // Bbox-Mitte als Startkandidat (bei einfachen konvexen Formen oft schon
+  // sehr gut, und ein sicherer Fallback falls die Suche nichts Besseres
+  // findet).
+  let best = makePoleCell(minX + width / 2, minY + height / 2, 0, rings);
+
+  // Präzision grob genug für Beschriftungszwecke (kein exakter
+  // Flächenschwerpunkt nötig) — hält die Anzahl der Verfeinerungsschritte
+  // klein, damit das bei hunderten Features pro Kartenansicht schnell
+  // bleibt.
+  const precision = Math.max(width, height) / 300;
+  const MAX_ITER = 400;
+
+  let iterations = 0;
+  while (cellQueue.length && iterations < MAX_ITER) {
+    iterations++;
+    let bi = 0;
+    for (let i = 1; i < cellQueue.length; i++) {
+      if (cellQueue[i].max > cellQueue[bi].max) bi = i;
+    }
+    const cell = cellQueue[bi];
+    cellQueue[bi] = cellQueue[cellQueue.length - 1];
+    cellQueue.pop();
+
+    if (cell.d > best.d) best = cell;
+
+    // Dieses Quadrat kann den bisher besten Punkt nicht mehr um mehr als
+    // die gewünschte Präzision übertreffen — nicht weiter verfeinern.
+    if (cell.max - best.d <= precision) continue;
+
+    const half = cell.h / 2;
+    cellQueue.push(makePoleCell(cell.x - half, cell.y - half, half, rings));
+    cellQueue.push(makePoleCell(cell.x + half, cell.y - half, half, rings));
+    cellQueue.push(makePoleCell(cell.x - half, cell.y + half, half, rings));
+    cellQueue.push(makePoleCell(cell.x + half, cell.y + half, half, rings));
+  }
+
+  return [best.x, best.y];
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -403,26 +449,25 @@ function geometryLabelPoint(geometry: any): [number, number] | null {
     return poleOfInaccessibility(geometry.coordinates);
   }
   if (geometry.type === "MultiPolygon") {
-    // Größten Teil (nach Bounding-Box-Fläche) auswählen, damit die
-    // Beschriftung eines Reichs mit Exklaven im Hauptgebiet landet statt
-    // auf einer kleinen Insel.
+    // Größten Teil auswählen, damit die Beschriftung eines Reichs mit
+    // Exklaven im Hauptgebiet landet statt auf einer kleinen Insel.
+    // Nutzerkorrektur 20.09.2026: die BOUNDING-BOX-Fläche war hier der
+    // falsche Maßstab — ein schmaler, weit ausladender Küstenstreifen (wie
+    // Roms Randgebiet ums Mittelmeer) hat eine riesige Bounding-Box, aber
+    // kaum tatsächliche Fläche, und wurde so fälschlich vor einem kompakten,
+    // wirklich großen Teilgebiet (z.B. Gallien) ausgewählt. Jetzt die
+    // echte Ringfläche (Shoelace-Formel) verwenden.
     let bestPart: number[][][] | null = null;
-    let bestSize = -Infinity;
+    let bestArea = -Infinity;
     for (const part of geometry.coordinates as number[][][][]) {
       const ring = part[0];
-      let minX = Infinity;
-      let minY = Infinity;
-      let maxX = -Infinity;
-      let maxY = -Infinity;
-      for (const [x, y] of ring) {
-        if (x < minX) minX = x;
-        if (x > maxX) maxX = x;
-        if (y < minY) minY = y;
-        if (y > maxY) maxY = y;
+      let area = 0;
+      for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+        area += ring[j][0] * ring[i][1] - ring[i][0] * ring[j][1];
       }
-      const size = (maxX - minX) * (maxY - minY);
-      if (size > bestSize) {
-        bestSize = size;
+      area = Math.abs(area) / 2;
+      if (area > bestArea) {
+        bestArea = area;
         bestPart = part;
       }
     }
