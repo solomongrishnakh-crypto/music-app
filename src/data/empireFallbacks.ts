@@ -451,6 +451,183 @@ const FALLBACKS: Record<string, EmpireFallbackEntry> = {
       "Das Tuʻi-Tonga-Reich war ein polynesisches Seereich mit Zentrum auf Tonga, das auf seinem Höhepunkt (13.–15. Jahrhundert) Einfluss auf Teile des Pazifiks, darunter Samoa und Fidschi, ausuebte — eines der wenigen vorkolonialen \"Reiche\" im Pazifik.",
     language: "Tongaisch",
   },
+
+  // Nutzerkorrektur 20.09.2026 ("bei vielen imperien sind die sprache
+  // unbekannt bitte fixier es") — weitere sehr bekannte, gut dokumentierte
+  // Reiche ergaenzt, bei denen Wikidata haeufig keine strukturierten
+  // Sprachdaten (P37/P2936/P103) hat. Wie oben: nur real belegte Angaben,
+  // keine Vermutungen. Manche Schluessel hier sind mein bestes Wissen ueber
+  // die Benennung im Geodatenset und koennen im Einzelfall abweichen —
+  // ein nicht treffender Schluessel schadet nichts (wird einfach nicht
+  // verwendet), deshalb lohnt sich die Ergaenzung trotzdem.
+  "Roman Empire": {
+    title: "Römisches Reich",
+    extract:
+      "Das Römische Reich beherrschte auf seinem Höhepunkt (2. Jh. n. Chr.) den gesamten Mittelmeerraum, von Britannien bis Mesopotamien. Es ging aus der Römischen Republik hervor und teilte sich 395 n. Chr. endgueltig in ein West- und ein Ostreich.",
+    language: "Latein (Westen), Griechisch (Osten)",
+  },
+  "Roman Republic": {
+    title: "Römische Republik",
+    extract:
+      "Die Römische Republik (509–27 v. Chr.) war die Regierungsform Roms vor dem Kaisertum, gepraegt von gewaehlten Konsuln und dem Senat. Sie eroberte schrittweise Italien, dann den gesamten westlichen Mittelmeerraum, bevor Bürgerkriege sie in das Römische Kaiserreich uebergehen liessen.",
+    language: "Latein",
+  },
+  "Ottoman Empire": {
+    title: "Osmanisches Reich",
+    extract:
+      "Das Osmanische Reich (ca. 1299–1922) war eines der langlebigsten und groessten Reiche der Geschichte, mit Hauptstadt Konstantinopel (Istanbul) ab 1453. Es erstreckte sich zeitweise ueber Suedosteuropa, Westasien und Nordafrika.",
+    language: "Osmanisch-Türkisch (Amtssprache), Arabisch, Persisch (Kultur)",
+  },
+  "Assyrian Empire": {
+    title: "Assyrisches Reich",
+    extract:
+      "Das Assyrische Reich, mit Zentrum am oberen Tigris (heutiger Nordirak), war in seiner neuassyrischen Phase (ca. 900–609 v. Chr.) die dominante Grossmacht des Alten Orients und beherrschte zeitweise auch Ägypten.",
+    language: "Akkadisch (assyrischer Dialekt), Aramäisch (spaeter Verwaltungssprache)",
+  },
+  Assyria: {
+    title: "Assyrisches Reich",
+    extract:
+      "Das Assyrische Reich, mit Zentrum am oberen Tigris (heutiger Nordirak), war in seiner neuassyrischen Phase (ca. 900–609 v. Chr.) die dominante Grossmacht des Alten Orients und beherrschte zeitweise auch Ägypten.",
+    language: "Akkadisch (assyrischer Dialekt), Aramäisch (spaeter Verwaltungssprache)",
+  },
+  Babylonia: {
+    title: "Babylonien",
+    extract:
+      "Babylonien war ein antikes mesopotamisches Reich mit der Hauptstadt Babylon, das mehrere Bluetezeiten erlebte — darunter unter Hammurabi (18. Jh. v. Chr.) und im Neubabylonischen Reich unter Nebukadnezar II. (6. Jh. v. Chr.), bevor es an die Perser fiel.",
+    language: "Akkadisch (babylonischer Dialekt)",
+  },
+  "Neo-Babylonian Empire": {
+    title: "Neubabylonisches Reich",
+    extract:
+      "Das Neubabylonische Reich (626–539 v. Chr.) unter Herrschern wie Nebukadnezar II. beherrschte Mesopotamien und die Levante und ist unter anderem fuer die (legendaeren) Hängenden Gaerten von Babylon bekannt, bevor es von den Persern erobert wurde.",
+    language: "Akkadisch (babylonischer Dialekt), Aramäisch",
+  },
+  "Old Kingdom Egypt": {
+    title: "Ägypten (Altes Reich)",
+    extract:
+      "Das Alte Reich (ca. 2700–2200 v. Chr.) war die erste Bluetezeit des pharaonischen Ägypten, bekannt vor allem fuer den Bau der grossen Pyramiden von Gizeh.",
+    language: "Altägyptisch",
+  },
+  "New Kingdom Egypt": {
+    title: "Ägypten (Neues Reich)",
+    extract:
+      "Das Neue Reich (ca. 1550–1070 v. Chr.) war die machtvollste Epoche des pharaonischen Ägypten mit Herrschern wie Ramses II. und Tutanchamun, in der sich das Reich bis nach Nubien und in die Levante ausdehnte.",
+    language: "Mittelägyptisch/Neuägyptisch",
+  },
+  "Aztec Empire": {
+    title: "Aztekenreich",
+    extract:
+      "Das Aztekenreich (ca. 1428–1521) mit Hauptstadt Tenochtitlan (heute Mexiko-Stadt) beherrschte weite Teile Zentralmexikos, bevor es 1521 von den spanischen Konquistadoren unter Hernán Cortés erobert wurde.",
+    language: "Nahuatl",
+  },
+  "Maya Civilization": {
+    title: "Maya-Zivilisation",
+    extract:
+      "Die Maya-Zivilisation im heutigen Mexiko und Mittelamerika bestand aus zahlreichen rivalisierenden Stadtstaaten und erreichte ihre kulturelle Bluete in der Klassischen Periode (ca. 250–900 n. Chr.) mit Fortschritten in Astronomie, Mathematik und Schrift.",
+    language: "Maya-Sprachen (u.a. Klassisches Maya)",
+  },
+  "Khmer Empire": {
+    title: "Khmer-Reich",
+    extract:
+      "Das Khmer-Reich (802–1431) mit der beruehmten Tempelstadt Angkor als Zentrum beherrschte weite Teile Suedostasiens und hinterliess mit Angkor Wat eines der groessten religiösen Bauwerke der Welt.",
+    language: "Khmer",
+  },
+  "Srivijaya Empire": {
+    title: "Srivijaya-Reich",
+    extract:
+      "Das Srivijaya-Reich (7.–13. Jahrhundert) mit Zentrum auf Sumatra kontrollierte den Seehandel durch die Straße von Malakka und war ein bedeutendes Zentrum des Buddhismus in Suedostasien.",
+    language: "Altmalaiisch",
+  },
+  "Mali Empire": {
+    title: "Malireich",
+    extract:
+      "Das Malireich (ca. 1235–1600) war eines der reichsten und maechtigsten westafrikanischen Reiche, bekannt fuer seinen Goldreichtum und Herrscher Mansa Musa, dessen legendaere Pilgerreise nach Mekka 1324 ihn zu einer der bekanntesten historischen Figuren Westafrikas machte.",
+    language: "Mandinka",
+  },
+  "Ghana Empire": {
+    title: "Ghanareich (Wagadu)",
+    extract:
+      "Das Ghanareich (ca. 300–1200 n. Chr., auch Wagadu genannt) im heutigen Mali/Mauretanien war ein fruehes westafrikanisches Handelsreich, das vom transsaharischen Gold- und Salzhandel reich wurde.",
+    language: "Soninke",
+  },
+  "Songhai Empire": {
+    title: "Songhaireich",
+    extract:
+      "Das Songhaireich (ca. 1464–1591) war eines der groessten Reiche der westafrikanischen Geschichte mit Zentrum Gao am Niger, bekannt auch fuer das Gelehrtenzentrum Timbuktu, bevor es von marokkanischen Truppen erobert wurde.",
+    language: "Songhai",
+  },
+  "Aksumite Empire": {
+    title: "Aksumitisches Reich",
+    extract:
+      "Das Aksumitische Reich (ca. 100–940 n. Chr.) im heutigen Äthiopien/Eritrea war eine bedeutende Handelsmacht am Roten Meer und eines der ersten Reiche der Welt, das offiziell zum Christentum uebertrat (4. Jahrhundert).",
+    language: "Ge'ez",
+  },
+  "Ethiopian Empire": {
+    title: "Äthiopisches Kaiserreich",
+    extract:
+      "Das Äthiopische Kaiserreich bestand, mit Unterbrechungen, vom Mittelalter bis 1974 und ist bekannt dafuer, als eines der wenigen afrikanischen Staaten seine Unabhaengigkeit waehrend der europaeischen Kolonialzeit bewahrt zu haben.",
+    language: "Amharisch (Hofsprache), Ge'ez (liturgisch)",
+  },
+  "Kingdom of Kongo": {
+    title: "Königreich Kongo",
+    extract:
+      "Das Königreich Kongo (ca. 1390–1914) im heutigen Angola/DR Kongo war eines der maechtigsten zentralafrikanischen Reiche und nahm im 15. Jahrhundert nach Kontakt mit Portugal das Christentum an.",
+    language: "Kikongo",
+  },
+  "Carolingian Empire": {
+    title: "Karolingerreich",
+    extract:
+      "Das Karolingerreich erreichte unter Karl dem Grossen (Krönung zum Kaiser 800) seine groesste Ausdehnung und umfasste weite Teile West- und Mitteleuropas, bevor es 843 unter seinen Enkeln aufgeteilt wurde.",
+    language: "Latein (Schrift-/Kirchensprache), Altfränkisch/Romanische Volkssprachen",
+  },
+  "Holy Roman Empire": {
+    title: "Heiliges Römisches Reich",
+    extract:
+      "Das Heilige Römische Reich (962–1806) war ein lose organisierter Staatenbund vor allem im deutschsprachigen Mitteleuropa, dessen Kaiser sich in der Tradition des antiken Rom sahen. Es wurde 1806 von Napoleon aufgelöst.",
+    language: "Latein (Amtssprache), Deutsch und weitere regionale Sprachen",
+  },
+  "Visigothic Kingdom": {
+    title: "Westgotenreich",
+    extract:
+      "Das Westgotenreich beherrschte vom 5. bis frueh 8. Jahrhundert grosse Teile Spaniens und Suedfrankreichs, bevor es 711 durch die muslimische Eroberung der Iberischen Halbinsel unterging.",
+    language: "Latein (Verwaltung), Gotisch",
+  },
+  "First Bulgarian Empire": {
+    title: "Erstes Bulgarisches Reich",
+    extract:
+      "Das Erste Bulgarische Reich (681–1018) war eine bedeutende Macht auf dem Balkan und nahm 864 das orthodoxe Christentum an, bevor es vom Byzantinischen Reich erobert wurde.",
+    language: "Altbulgarisch (Altkirchenslawisch)",
+  },
+  "Vijayanagara Empire": {
+    title: "Vijayanagara-Reich",
+    extract:
+      "Das Vijayanagara-Reich (1336–1646) im Suedwesten Indiens war das letzte grosse Hindu-Reich Suedindiens und ein bedeutendes Zentrum von Handel, Kunst und Architektur, bevor es 1565 gegen ein Buendnis muslimischer Sultanate unterlag.",
+    language: "Kannada, Telugu, Sanskrit (Kultur)",
+  },
+  "Chola Empire": {
+    title: "Chola-Reich",
+    extract:
+      "Das Chola-Reich in Suedindien erreichte im 11. Jahrhundert seine groesste Ausdehnung, kontrollierte Teile Sri Lankas und Suedostasiens ueber eine starke Flotte und ist fuer seine beruehmten Bronzeskulpturen und Tempelbauten bekannt.",
+    language: "Tamil",
+  },
+  "Rashidun Caliphate": {
+    title: "Rashidun-Kalifat",
+    extract:
+      "Das Rashidun-Kalifat (632–661) war das erste islamische Kalifat nach dem Tod Mohammeds, gefuehrt von den vier \"rechtgeleiteten\" Kalifen, und dehnte den Islam rasant ueber Arabien hinaus nach Persien, die Levante und Ägypten aus.",
+    language: "Arabisch",
+  },
+  "Khwarazmian Empire": {
+    title: "Choresm-Reich",
+    extract:
+      "Das Choresm-Reich beherrschte im 12./frueh 13. Jahrhundert Persien und Zentralasien, bevor es 1220–1221 von den Mongolen unter Dschingis Khan vernichtend geschlagen wurde.",
+    language: "Persisch (Verwaltung/Kultur), Turksprachen",
+  },
+  "Kingdom of Kush": {
+    title: "Königreich Kusch",
+    extract:
+      "Das Königreich Kusch im heutigen Sudan (ca. 1070 v. Chr. – 350 n. Chr.) war eine bedeutende nubische Zivilisation, die zeitweise sogar Ägypten beherrschte (25. Dynastie) und fuer ihre eigenen Pyramiden bei Meroe bekannt ist.",
+    language: "Meroitisch",
+  },
 };
 
 export function getEmpireFallback(name: string): EmpireFallbackEntry | null {

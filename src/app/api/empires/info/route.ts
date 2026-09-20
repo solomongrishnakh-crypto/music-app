@@ -365,9 +365,10 @@ async function fetchLanguage(qid: string, lang: WikiLang): Promise<string | null
     const claimsRes = await fetchWithRetry(claimsUrl);
     if (!claimsRes || !claimsRes.ok) return null;
     const data = await claimsRes.json();
-    // P37 "Amtssprache", P2936 "verwendete Sprache", P103 "Muttersprache"
-    // (bei historischen Dynastien oft die einzige gepflegte Angabe).
-    for (const property of ["P37", "P2936", "P103"]) {
+    // P37 "Amtssprache", P2936 "verwendete Sprache", P103 "Muttersprache",
+    // P1412 "gesprochene/geschriebene Sprache(n)" (bei historischen
+    // Dynastien oft die einzige gepflegte Angabe von allen vieren).
+    for (const property of ["P37", "P2936", "P103", "P1412"]) {
       const claims = data?.claims?.[property];
       if (!Array.isArray(claims) || claims.length === 0) continue;
       const qids = claims
