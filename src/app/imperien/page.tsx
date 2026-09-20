@@ -679,13 +679,18 @@ export default function ImperienPage() {
     // Limit wächst mit dem Zoom, sodass beim Reinzoomen nach und nach mehr
     // (auch kleinere) Namen sichtbar werden, ganz ohne die Karte neu zu
     // laden (siehe "zoomend"-Listener oben).
+    // Nutzerkorrektur 20.09.2026: "ab diese zoomgröße soll andere
+    // imperienname auch sichbar sein ich muss nicht richtig reinzoomen
+    // damit man namen sieht" — die Limits waren zu knapp bemessen, man
+    // musste stark reinzoomen, bis kleinere (aber immer noch gut sichtbare)
+    // Gebiete überhaupt einen Namen bekamen. Deutlich großzügiger.
     const zoom = mapRef.current.getZoom?.() ?? 2;
     let labelLimit: number;
-    if (zoom <= 2) labelLimit = 6;
-    else if (zoom === 3) labelLimit = 10;
-    else if (zoom === 4) labelLimit = 18;
-    else if (zoom === 5) labelLimit = 32;
-    else if (zoom === 6) labelLimit = 55;
+    if (zoom <= 2) labelLimit = 20;
+    else if (zoom === 3) labelLimit = 35;
+    else if (zoom === 4) labelLimit = 60;
+    else if (zoom === 5) labelLimit = 100;
+    else if (zoom === 6) labelLimit = 150;
     else labelLimit = Infinity;
     const permanentLabelNames = new Set(
       sortedFeatures.slice(0, labelLimit).map((f) => f.properties?.NAME)
