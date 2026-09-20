@@ -35,7 +35,11 @@ export default function AboutSiteSection() {
           <p className="text-sm leading-relaxed text-muted sm:text-base">
             Centaurian ist ein privates, nicht-kommerzielles Hobby-Projekt —
             kein offizieller Dienst, ohne Werbe-Tracking-Schnickschnack und
-            ohne aufgeblähtes Interface. Die Suche und Wiedergabe laufen
+            ohne aufgeblähtes Interface. Mehr als nur Musik: Neben Suche und
+            Wiedergabe gehören eine interaktive Weltkarte zum Erkunden der
+            Geschichte und eine Übersicht zum Kennenlernen des Universums
+            dazu — Centaurian als kleiner Ort, um Wissen über die Existenz
+            zu entdecken. Die Musik-Suche und Wiedergabe laufen
             ausschließlich über die offizielle YouTube Data API und den
             offiziellen YouTube-Player; es wird nichts heruntergeladen,
             kopiert oder auf dieser Seite gespeichert. Da nur öffentlich
