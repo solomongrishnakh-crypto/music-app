@@ -9,6 +9,8 @@ interface TypewriterProps {
   delay?: number; // ms Verzögerung vor Start
   className?: string;
   showCursorWhileDone?: boolean;
+  /** Wird einmalig aufgerufen, sobald der Text komplett "eingetippt" ist. */
+  onDone?: () => void;
 }
 
 /**
@@ -23,6 +25,7 @@ export default function Typewriter({
   delay = 0,
   className,
   showCursorWhileDone = false,
+  onDone,
 }: TypewriterProps) {
   const [count, setCount] = useState(0);
 
@@ -34,7 +37,10 @@ export default function Typewriter({
       interval = setInterval(() => {
         i++;
         setCount(i);
-        if (i >= text.length && interval) clearInterval(interval);
+        if (i >= text.length) {
+          if (interval) clearInterval(interval);
+          onDone?.();
+        }
       }, speed);
     }, delay);
     return () => {
