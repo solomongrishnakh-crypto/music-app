@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState, type PointerEvent, type WheelEvent } from "react";
 import { PLANETS, ALL_BODIES, SUN, type PlanetData } from "@/data/solarSystem";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { localize } from "@/lib/i18n";
 
 interface DrawnPlanet {
   planet: PlanetData;
@@ -40,6 +42,7 @@ export default function SolarSystem({
   selectedId,
   className = "",
 }: SolarSystemProps) {
+  const { lang } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawnRef = useRef<DrawnPlanet[]>([]);
@@ -251,7 +254,7 @@ export default function SolarSystem({
 
           if (mode === "full") {
             drawLabel(
-              planet.name,
+              localize(planet.name, lang),
               x,
               y - pr - 6,
               isSelectedProbe ? "#ff5a4d" : "rgba(242,242,240,0.65)",
@@ -343,7 +346,7 @@ export default function SolarSystem({
             : isDwarf
               ? "rgba(242,242,240,0.5)"
               : "rgba(242,242,240,0.75)";
-          drawLabel(planet.name, x, y - pr - 6, color, font, isSelected);
+          drawLabel(localize(planet.name, lang), x, y - pr - 6, color, font, isSelected);
         }
       });
 
@@ -354,7 +357,7 @@ export default function SolarSystem({
     rafRef.current = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(rafRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [size, mode, selectedId, stars, bodies, interactive]);
+  }, [size, mode, selectedId, stars, bodies, interactive, lang]);
 
   function handlePointerDown(e: PointerEvent<HTMLCanvasElement>) {
     if (!interactive) return;

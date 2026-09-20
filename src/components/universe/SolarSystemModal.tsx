@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import SolarSystem from "./SolarSystem";
 import type { PlanetData } from "@/data/solarSystem";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { localize } from "@/lib/i18n";
 
 interface SolarSystemModalProps {
   onClose: () => void;
@@ -19,7 +20,7 @@ interface SolarSystemModalProps {
  * reinpassen müssen.
  */
 export default function SolarSystemModal({ onClose }: SolarSystemModalProps) {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [selected, setSelected] = useState<PlanetData | null>(null);
   const [imageFailed, setImageFailed] = useState(false);
 
@@ -93,14 +94,14 @@ export default function SolarSystemModal({ onClose }: SolarSystemModalProps) {
                     : t("kindPlanet")}
             </p>
             <h3 className="font-display mt-0.5 text-base font-bold uppercase tracking-tight text-foreground sm:mt-1 sm:text-2xl">
-              {selected.name}
+              {localize(selected.name, lang)}
             </h3>
             {selected.image && !imageFailed && (
               <div className="mt-1.5 aspect-[16/9] max-h-32 w-full overflow-hidden rounded border border-border bg-black sm:mt-2 sm:max-h-56">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={selected.image}
-                  alt={selected.name}
+                  alt={localize(selected.name, lang)}
                   className="h-full w-full object-contain"
                   loading="lazy"
                   onError={() => setImageFailed(true)}
@@ -109,24 +110,24 @@ export default function SolarSystemModal({ onClose }: SolarSystemModalProps) {
             )}
             <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 text-[10px] uppercase tracking-wide text-muted sm:mt-3 sm:grid-cols-4 sm:gap-x-4 sm:gap-y-2 sm:text-xs">
               <div>
-                <p className="text-muted">{selected.factLabels?.[0] ?? t("distanceToSun")}</p>
-                <p className="mt-0.5 font-semibold text-foreground">{selected.facts.distance}</p>
+                <p className="text-muted">{selected.factLabels ? localize(selected.factLabels[0], lang) : t("distanceToSun")}</p>
+                <p className="mt-0.5 font-semibold text-foreground">{localize(selected.facts.distance, lang)}</p>
               </div>
               <div>
-                <p className="text-muted">{selected.factLabels?.[1] ?? t("orbitalPeriod")}</p>
-                <p className="mt-0.5 font-semibold text-foreground">{selected.facts.period}</p>
+                <p className="text-muted">{selected.factLabels ? localize(selected.factLabels[1], lang) : t("orbitalPeriod")}</p>
+                <p className="mt-0.5 font-semibold text-foreground">{localize(selected.facts.period, lang)}</p>
               </div>
               <div>
-                <p className="text-muted">{selected.factLabels?.[2] ?? t("diameter")}</p>
-                <p className="mt-0.5 font-semibold text-foreground">{selected.facts.diameter}</p>
+                <p className="text-muted">{selected.factLabels ? localize(selected.factLabels[2], lang) : t("diameter")}</p>
+                <p className="mt-0.5 font-semibold text-foreground">{localize(selected.facts.diameter, lang)}</p>
               </div>
               <div>
-                <p className="text-muted">{selected.factLabels?.[3] ?? t("moons")}</p>
-                <p className="mt-0.5 font-semibold text-foreground">{selected.facts.moons}</p>
+                <p className="text-muted">{selected.factLabels ? localize(selected.factLabels[3], lang) : t("moons")}</p>
+                <p className="mt-0.5 font-semibold text-foreground">{localize(selected.facts.moons, lang)}</p>
               </div>
             </div>
             <p className="mt-2.5 text-[11px] leading-relaxed text-foreground sm:mt-4 sm:text-sm">
-              {selected.description}
+              {localize(selected.description, lang)}
             </p>
           </div>
         )}

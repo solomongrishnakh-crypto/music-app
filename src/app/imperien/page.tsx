@@ -1095,13 +1095,10 @@ export default function ImperienPage() {
         <header className="mb-8 border-b border-border pb-6">
           <p className="label-mono text-xs uppercase text-muted">// {t("navEmpiresLabel")}</p>
           <h1 className="font-display mt-2 text-2xl font-bold uppercase tracking-tight text-foreground sm:text-4xl">
-            Die Welt durch die Jahrhunderte
+            {t("empiresTitle")}
           </h1>
           <p className="mt-3 max-w-2xl text-xs leading-relaxed text-muted sm:text-sm">
-            Historische Grenzen von der Antike bis heute — große Reiche
-            (rot, mit Namen auf der Karte) auf einer echten Zeitleiste. Auf
-            ein Gebiet klicken für eine ausführliche Beschreibung.
-            Datenquelle:{" "}
+            {t("empiresIntroPrefix")}{" "}
             <a
               href="https://github.com/Seshat-Global-History-Databank/cliopatria"
               target="_blank"
@@ -1110,7 +1107,7 @@ export default function ImperienPage() {
             >
               Cliopatria
             </a>{" "}
-            (Seshat Global History Databank, CC BY 4.0), Kartenkacheln:{" "}
+            (Seshat Global History Databank, CC BY 4.0), {t("empiresTiles")}:{" "}
             <a
               href="https://www.esri.com"
               target="_blank"
@@ -1119,7 +1116,7 @@ export default function ImperienPage() {
             >
               Esri
             </a>
-            , Beschreibungen: Wikipedia.
+            , {t("empiresDescriptions")}: Wikipedia.
           </p>
         </header>
 
