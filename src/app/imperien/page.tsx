@@ -359,7 +359,7 @@ function poleOfInaccessibilityWithDist(rings: number[][][]): { point: [number, n
   const cellSize = Math.min(width, height);
   const h0 = cellSize / 2;
 
-  let cellQueue: PoleCell[] = [];
+  const cellQueue: PoleCell[] = [];
   for (let x = minX; x < maxX; x += cellSize) {
     for (let y = minY; y < maxY; y += cellSize) {
       cellQueue.push(makePoleCell(x + h0, y + h0, h0, rings));
