@@ -130,7 +130,14 @@ export default function SolarSystem({
     // jenseits von Neptun (Zwergplaneten + Voyager 1) LINEAR skaliert — das
     // bildet die echten relativen Abstände dort unverfälscht ab.
     const NEPTUNE_AU = 30.05;
-    const INNER_FRACTION = 0.58; // Anteil des Radius für Merkur..Neptun (+Ceres)
+    // Nutzerkorrektur 20.09.2026 ("voyager soll bisschen entfernter sein es
+    // ist nicht korrekt") — bei 0.58 lag Voyager 1 im linear skalierten
+    // Außenbereich nur ~1,44x weiter draußen als Eris (statt real ≈2,46x,
+    // 167 AE vs. ≈68 AE), weil der Neptun..Eris-Anteil des Außenbereichs zu
+    // groß war. Kleinerer Wert gibt dem Außenbereich mehr Radius-Anteil,
+    // wodurch der lineare Abstand zwischen Eris und Voyager 1 sichtbar größer
+    // und näher am echten Verhältnis wird.
+    const INNER_FRACTION = 0.42; // Anteil des Radius für Merkur..Neptun (+Ceres)
     const innerMaxAuSqrt = Math.sqrt(NEPTUNE_AU);
     const outerBodyValues = bodies
       .filter((b) => b.distanceAu > NEPTUNE_AU)
