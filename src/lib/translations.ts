@@ -11,7 +11,31 @@
  * Deutsch+Englisch vollständig, die übrigen Sprachen fallen bis zur
  * weiteren Übersetzung auf Englisch zurück.
  */
-export const TRANSLATIONS = {
+// Bei 13 Sprachen x ~30 Schlüsseln wird die von `as const` erzeugte
+// Literal-Typ-Union beim generischen Indexzugriff (TRANSLATIONS[key]?.[lang]
+// in LanguageContext.tsx) zu komplex und TypeScript kollabiert sie zu
+// `never` ("Property 'de' does not exist on type 'never'", Vercel-Build-
+// Fehler 20.09.2026). Fix: fester Werttyp TranslationEntry statt `as const`-
+// Literalinferenz pro Eintrag — hält die Objekt-Keys weiterhin als Literal-
+// Union (für TranslationKey/Autovervollständigung), aber jeder Eintrag hat
+// denselben, einfachen Werttyp.
+interface TranslationEntry {
+  de: string;
+  en: string;
+  hi: string;
+  zh: string;
+  ko: string;
+  ja: string;
+  es: string;
+  fr: string;
+  tr: string;
+  ru: string;
+  pt: string;
+  ar: string;
+  el: string;
+}
+
+const TRANSLATIONS_SOURCE = {
   // Navbar
   navMusic: {
     de: "Musik", en: "Music", hi: "संगीत", zh: "音乐", ko: "음악", ja: "音楽",
@@ -226,6 +250,8 @@ export const TRANSLATIONS = {
     de: "Sprache", en: "Language", hi: "भाषा", zh: "语言", ko: "언어", ja: "言語",
     es: "Idioma", fr: "Langue", tr: "Dil", ru: "Язык", pt: "Idioma", ar: "اللغة", el: "Γλώσσα",
   },
-} as const;
+} as const satisfies Record<string, TranslationEntry>;
 
-export type TranslationKey = keyof typeof TRANSLATIONS;
+export const TRANSLATIONS: Record<keyof typeof TRANSLATIONS_SOURCE, TranslationEntry> = TRANSLATIONS_SOURCE;
+
+export type TranslationKey = keyof typeof TRANSLATIONS_SOURCE;
