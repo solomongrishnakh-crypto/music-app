@@ -291,6 +291,17 @@ const TRANSLATIONS_SOURCE = {
     de: "// Quelle: redaktionell (kein Wikipedia-Artikel gefunden)", en: "// Source: editorial (no Wikipedia article found)", hi: "// स्रोत: संपादकीय (कोई विकिपीडिया लेख नहीं मिला)", zh: "// 来源：编辑撰写（未找到维基百科文章）", ko: "// 출처: 편집팀 작성 (위키백과 문서 없음)", ja: "// 出典：編集部作成（Wikipedia記事なし）",
     es: "// Fuente: editorial (no se encontró artículo en Wikipedia)", fr: "// Source : rédactionnelle (aucun article Wikipédia trouvé)", tr: "// Kaynak: editoryal (Wikipedia makalesi bulunamadı)", ru: "// Источник: редакционный (статья в Википедии не найдена)", pt: "// Fonte: editorial (nenhum artigo da Wikipédia encontrado)", ar: "// المصدر: تحريري (لم يتم العثور على مقالة ويكيبيديا)", el: "// Πηγή: συντακτική (δεν βρέθηκε άρθρο Wikipedia)",
   },
+  // Nutzerkorrektur 21.09.2026 ("wieso steht da wieder texte auf deutsch
+  // zb ... n chr") — formatYear() haengte bisher IMMER "v. Chr."/"n. Chr."
+  // an, unabhaengig von der UI-Sprache.
+  empiresEraBC: {
+    de: "v. Chr.", en: "BC", hi: "ईसा पूर्व", zh: "公元前", ko: "기원전", ja: "紀元前",
+    es: "a. C.", fr: "av. J.-C.", tr: "MÖ", ru: "до н. э.", pt: "a.C.", ar: "ق.م.", el: "π.Χ.",
+  },
+  empiresEraAD: {
+    de: "n. Chr.", en: "AD", hi: "ईसवी", zh: "公元", ko: "기원후", ja: "紀元後",
+    es: "d. C.", fr: "apr. J.-C.", tr: "MS", ru: "н. э.", pt: "d.C.", ar: "م.", el: "μ.Χ.",
+  },
   empiresNoDescription: {
     de: "Keine ausführliche Beschreibung gefunden — für dieses Gebiet gibt es (noch) keinen passenden Wikipedia-Artikel.",
     en: "No detailed description found — there is (not yet) a matching Wikipedia article for this.",

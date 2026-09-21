@@ -8,6 +8,8 @@ import TopEmpiresGrid from "@/components/home/TopEmpiresGrid";
 import Spinner from "@/components/ui/Spinner";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
+import type { TranslationKey } from "@/lib/translations";
+import { translateLanguageValue } from "@/lib/languageNameTranslations";
 import {
   getAllEmpireNames,
   getEmpiresForYear,
@@ -84,9 +86,14 @@ function isEmpireName(name: string): boolean {
   return EMPIRE_NAME_KEYWORDS.some((kw) => lower.includes(kw));
 }
 
-function formatYear(year: number | undefined): string {
+// Nutzerkorrektur 21.09.2026 ("wieso steht da wieder texte auf deutsch zb
+// ... n chr") — "v. Chr."/"n. Chr." war fest verdrahtet statt uebersetzt.
+// formatYear() braucht jetzt die t()-Funktion der aktuellen UI-Sprache.
+function formatYear(year: number | undefined, t: (key: TranslationKey) => string): string {
   if (year === undefined) return "";
-  return year < 0 ? `${Math.abs(year)} v. Chr.` : `${year} n. Chr.`;
+  return year < 0
+    ? `${Math.abs(year)} ${t("empiresEraBC")}`
+    : `${year} ${t("empiresEraAD")}`;
 }
 
 // Jedes Gebiet bekommt eine eigene Farbe statt eines Einheitsbreis.
@@ -1270,7 +1277,7 @@ export default function ImperienPage() {
                   )}
                   {!selected.viaSearch && (
                     <p className="mt-1 text-xs text-muted">
-                      {t("empiresYearShown")} {formatYear(currentYear)}
+                      {t("empiresYearShown")} {formatYear(currentYear, t)}
                     </p>
                   )}
                   {/* Sprache des Reichs neben den anderen Kurzinfos
@@ -1282,7 +1289,10 @@ export default function ImperienPage() {
                       aufblitzt. */}
                   {!infoLoading && info?.found && (
                     <p className="mt-1 text-xs text-muted">
-                      {t("empiresLanguageLabel")} {info.language ?? t("empiresLanguageUnknown")}
+                      {t("empiresLanguageLabel")}{" "}
+                      {info.language
+                        ? translateLanguageValue(info.language, lang)
+                        : t("empiresLanguageUnknown")}
                     </p>
                   )}
 
@@ -1369,7 +1379,7 @@ export default function ImperienPage() {
                 </button>
               </form>
               <p className="font-display text-lg font-bold text-accent sm:text-xl">
-                {formatYear(currentYear)}
+                {formatYear(currentYear, t)}
               </p>
             </div>
           </div>
@@ -1391,7 +1401,7 @@ export default function ImperienPage() {
             aria-valuemin={minYear}
             aria-valuemax={maxYear}
             aria-valuenow={sliderYear}
-            aria-valuetext={formatYear(sliderYear)}
+            aria-valuetext={formatYear(sliderYear, t)}
             onPointerDown={handleRulerPointerDown}
             onPointerMove={handleRulerPointerMove}
             onPointerUp={handleRulerPointerUp}
@@ -1420,7 +1430,7 @@ export default function ImperienPage() {
                 bewegt sich nie — genau wie im Vorbild-Video. */}
             <div className="pointer-events-none absolute bottom-3 left-1/2 h-7 w-[3px] -translate-x-1/2 rounded-full bg-accent shadow-[0_0_8px_rgba(0,0,0,0.6)]" />
             <div className="pointer-events-none absolute left-1/2 top-1.5 -translate-x-1/2 whitespace-nowrap rounded-sm bg-accent px-2.5 py-1 text-xs font-bold text-background shadow-md">
-              {formatYear(sliderYear)}
+              {formatYear(sliderYear, t)}
             </div>
           </div>
 
@@ -1447,10 +1457,10 @@ export default function ImperienPage() {
                 onClick={() => setIsPlaying((p) => !p)}
                 disabled={!yearRange}
                 className="border border-border px-3 py-1.5 text-xs uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
-                aria-label={isPlaying ? t("empiresPause") : t("playerPlay")}
+                aria-label={isPlaying ? t("empiresPause") : t("empiresPlay")}
                 title={isPlaying ? t("empiresPause") : t("empiresPlay")}
               >
-                {isPlaying ? "⏸ Pause" : "▶ Abspielen"}
+                {isPlaying ? `⏸ ${t("empiresPause")}` : `▶ ${t("empiresPlay")}`}
               </button>
               <button
                 type="button"
