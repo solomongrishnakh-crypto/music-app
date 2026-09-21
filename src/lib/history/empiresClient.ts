@@ -86,6 +86,27 @@ export async function getEmpiresYearRange(): Promise<EmpiresYearRange> {
   return { minYear, maxYear };
 }
 
+// Nutzerwunsch 21.09.2026: "kannst du auch option erstellen das man
+// imperien oder herrscher sucht und infos bekommt" — fuer die Autovorschlag-
+// Liste der Reichs-Suche werden alle eindeutigen Namen gebraucht, nicht nur
+// die eines einzelnen Jahres. Die vollen Eintraege (inkl. Geometrie) sind
+// wegen getEmpiresForYear ohnehin schon im Speicher/Cache — hier wird
+// daraus nur einmalig die Namensliste (ohne Geometrie) abgeleitet.
+let cachedNamesPromise: Promise<string[]> | null = null;
+
+export function getAllEmpireNames(): Promise<string[]> {
+  if (!cachedNamesPromise) {
+    cachedNamesPromise = loadEntries().then((entries) => {
+      const names = new Set<string>();
+      for (const e of entries) {
+        if (typeof e.n === "string" && e.n.trim().length > 0) names.add(e.n.trim());
+      }
+      return Array.from(names).sort((a, b) => a.localeCompare(b));
+    });
+  }
+  return cachedNamesPromise;
+}
+
 export async function getEmpiresForYear(year: number): Promise<EmpireFeatureCollection> {
   const entries = await loadEntries();
   const features: EmpireGeojsonFeature[] = [];

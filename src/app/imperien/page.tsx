@@ -1,14 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import type { KeyboardEvent, PointerEvent } from "react";
+import type { FormEvent, KeyboardEvent, PointerEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import SiteBackground from "@/components/particles/SiteBackground";
 import TopEmpiresGrid from "@/components/home/TopEmpiresGrid";
 import Spinner from "@/components/ui/Spinner";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { getEmpiresForYear, getEmpiresYearRange, preloadEmpiresData } from "@/lib/history/empiresClient";
+import {
+  getAllEmpireNames,
+  getEmpiresForYear,
+  getEmpiresYearRange,
+  preloadEmpiresData,
+} from "@/lib/history/empiresClient";
 
 const LEAFLET_CSS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
 const LEAFLET_JS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
@@ -38,6 +43,12 @@ interface SelectedFeature {
   name: string;
   subjectTo: string;
   isEmpire: boolean;
+  // Nutzerwunsch 21.09.2026 ("option ... das man imperien oder herrscher
+  // sucht") — true wenn die Auswahl ueber das freie Suchfeld kam statt
+  // per Klick auf die Karte. Dann ergibt "Angezeigtes Jahr: <Regler-Jahr>"
+  // keinen Sinn (die Suche ist nicht an das aktuell eingestellte Karten-
+  // jahr gebunden) und wird in der Info-Box ausgeblendet.
+  viaSearch?: boolean;
 }
 
 interface EmpireInfo {
@@ -525,6 +536,37 @@ export default function ImperienPage() {
   const [selected, setSelected] = useState<SelectedFeature | null>(null);
   const [info, setInfo] = useState<EmpireInfo | null>(null);
   const [infoLoading, setInfoLoading] = useState(false);
+
+  // Nutzerwunsch 21.09.2026: "option erstellen das man imperien oder
+  // herrscher sucht und infos bekommt" — freies Textfeld oberhalb der
+  // Karte. empireNames dient nur als <datalist>-Autovorschlag fuer echte
+  // Reichsnamen aus dem Datenset; die Suche selbst funktioniert mit JEDEM
+  // Text (auch Herrschernamen wie "Karl der Große"), weil derselbe
+  // /api/empires/info-Endpunkt genutzt wird wie beim Kartenklick — der
+  // macht ohnehin eine echte Wikipedia-Suche, keine feste Namensliste.
+  const [searchQuery, setSearchQuery] = useState("");
+  const [empireNames, setEmpireNames] = useState<string[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    getAllEmpireNames()
+      .then((names) => {
+        if (!cancelled) setEmpireNames(names);
+      })
+      .catch(() => {
+        /* Autovorschlaege sind nur ein Komfort-Extra, kein Fehler wert */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  function handleSearchSubmit(e: FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    const query = searchQuery.trim();
+    if (!query) return;
+    setSelected({ name: query, subjectTo: "", isEmpire: true, viaSearch: true });
+  }
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [isDraggingRuler, setIsDraggingRuler] = useState(false);
@@ -1120,6 +1162,31 @@ export default function ImperienPage() {
             </a>
             , {t("empiresDescriptions")}: Wikipedia.
           </p>
+
+          <form
+            onSubmit={handleSearchSubmit}
+            className="mt-4 flex max-w-md items-center gap-2"
+          >
+            <input
+              type="text"
+              list="empire-name-suggestions"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={t("empiresSearchPlaceholder")}
+              className="label-mono w-full border border-border bg-surface-elevated px-3 py-2 text-xs text-foreground placeholder:text-muted focus:border-accent focus:outline-none sm:text-sm"
+            />
+            <datalist id="empire-name-suggestions">
+              {empireNames.map((n) => (
+                <option key={n} value={n} />
+              ))}
+            </datalist>
+            <button
+              type="submit"
+              className="label-mono shrink-0 border border-border bg-background px-3 py-2 text-xs uppercase text-muted transition-colors hover:border-accent hover:text-accent sm:text-sm"
+            >
+              {t("empiresSearchButton")}
+            </button>
+          </form>
         </header>
 
         {errorMessage && (
@@ -1193,9 +1260,11 @@ export default function ImperienPage() {
                       Teil von / Kolonialmacht: {selected.subjectTo}
                     </p>
                   )}
-                  <p className="mt-1 text-xs text-muted">
-                    Angezeigtes Jahr: {formatYear(currentYear)}
-                  </p>
+                  {!selected.viaSearch && (
+                    <p className="mt-1 text-xs text-muted">
+                      Angezeigtes Jahr: {formatYear(currentYear)}
+                    </p>
+                  )}
                   {/* Sprache des Reichs neben den anderen Kurzinfos
                       (Nutzerwunsch 18.09.2026: "bei allen imperiums soll
                       ein kleine text neben stehen 'Sprache : latein'") —

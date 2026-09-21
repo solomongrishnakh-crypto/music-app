@@ -236,6 +236,19 @@ const TRANSLATIONS_SOURCE = {
     ar: "الحدود التاريخية من العصور القديمة حتى اليوم — الإمبراطوريات الكبرى (باللون الأحمر، مع أسمائها على الخريطة) على جدول زمني حقيقي. انقر على منطقة للحصول على وصف مفصل. مصدر البيانات:",
     el: "Ιστορικά σύνορα από την αρχαιότητα μέχρι σήμερα — μεγάλες αυτοκρατορίες (κόκκινο, με ονόματα στον χάρτη) σε πραγματική χρονογραμμή. Κάντε κλικ σε μια περιοχή για αναλυτική περιγραφή. Πηγή δεδομένων:",
   },
+  // Nutzerwunsch 21.09.2026: "kannst du auch option erstellen das man
+  // imperien oder herrscher sucht und infos bekommt" — freie Textsuche
+  // oberhalb der Karte (nutzt denselben /api/empires/info-Endpunkt wie ein
+  // Klick auf die Karte, funktioniert daher auch fuer Herrschernamen, die
+  // gar nicht im Geodatenset stehen, z.B. "Karl der Große").
+  empiresSearchPlaceholder: {
+    de: "Reich oder Herrscher suchen …", en: "Search an empire or ruler …", hi: "साम्राज्य या शासक खोजें …", zh: "搜索帝国或统治者……", ko: "제국 또는 통치자 검색…", ja: "帝国または統治者を検索…",
+    es: "Buscar un imperio o gobernante…", fr: "Rechercher un empire ou un souverain…", tr: "Bir imparatorluk veya hükümdar ara…", ru: "Поиск империи или правителя…", pt: "Pesquisar um império ou governante…", ar: "ابحث عن إمبراطورية أو حاكم…", el: "Αναζήτηση αυτοκρατορίας ή ηγεμόνα…",
+  },
+  empiresSearchButton: {
+    de: "Suchen", en: "Search", hi: "खोजें", zh: "搜索", ko: "검색", ja: "検索",
+    es: "Buscar", fr: "Rechercher", tr: "Ara", ru: "Искать", pt: "Pesquisar", ar: "بحث", el: "Αναζήτηση",
+  },
   empiresTiles: {
     de: "Kartenkacheln", en: "Map tiles", hi: "मानचित्र टाइलें", zh: "地图图块", ko: "지도 타일", ja: "地図タイル",
     es: "Teselas del mapa", fr: "Tuiles cartographiques", tr: "Harita kareleri", ru: "Тайлы карты", pt: "Blocos do mapa", ar: "بلاطات الخريطة", el: "Πλακίδια χάρτη",
