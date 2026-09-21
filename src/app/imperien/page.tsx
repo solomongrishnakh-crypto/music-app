@@ -1234,17 +1234,21 @@ export default function ImperienPage() {
                   × Schließen
                 </button>
                 {info?.thumbnail && (
-                  // Querformat statt hochkant (Nutzerkorrektur 18.09.2026:
-                  // "bei allen wird bilder länglich gezeigt ich will quer")
-                  // — Banner in voller Breite über dem Text statt schmalem
-                  // Streifen daneben, object-cover schneidet das (oft
-                  // hochformatige) Wikipedia-Bild passend auf Breitbild zu.
-                  <div className="h-36 w-full shrink-0 overflow-hidden border border-border sm:h-40">
+                  // Querformat-Box bleibt (Nutzerkorrektur 18.09.2026: "bei
+                  // allen wird bilder länglich gezeigt ich will quer"), aber
+                  // "object-cover" schnitt bei hochformatigen Portraits
+                  // (Herrscher-Suche, Nutzerkorrektur 21.09.2026: "man sieht
+                  // nicht mal gesamtes bild") Kopf/Teile des Bildes ab, um
+                  // die Breitbild-Box randlos zu füllen. Jetzt
+                  // "object-contain": das GANZE Bild bleibt sichtbar
+                  // (zentriert, ggf. mit schmalen Balken links/rechts statt
+                  // oben/unten abgeschnitten).
+                  <div className="flex h-36 w-full shrink-0 items-center justify-center overflow-hidden border border-border bg-black/40 sm:h-40">
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={info.thumbnail}
                       alt={selected.name}
-                      className="h-full w-full object-cover"
+                      className="h-full w-full object-contain"
                     />
                   </div>
                 )}
