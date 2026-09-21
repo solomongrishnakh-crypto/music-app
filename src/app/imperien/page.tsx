@@ -1327,14 +1327,18 @@ export default function ImperienPage() {
           )}
         </div>
 
-        <div className="mt-4 flex items-center gap-4 text-[10px] uppercase text-muted">
+        <div className="mt-2 flex items-center gap-4 text-[10px] uppercase text-muted">
           <span className="flex items-center gap-1.5">
             <span className="inline-block h-2.5 w-2.5 border border-accent bg-accent/50" />
             Alle Reiche &amp; Königreiche — jede Farbe eigenständig, große Gebiete mit Namen auf der Karte, kleine bei Hover
           </span>
         </div>
 
-        <div className="mt-6 border border-border bg-surface-elevated p-5 sm:p-6">
+        {/* Nutzerwunsch 21.09.2026: "bring diese regler bisschen nach oben"
+            — Abstand zur Karte verkleinert (mt-6 -> mt-3), damit die
+            Zeitleiste/Abspiel-Regler näher an der Karte sitzen und weniger
+            gescrollt werden muss. */}
+        <div className="mt-3 border border-border bg-surface-elevated p-5 sm:p-6">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
             <p className="label-mono text-xs uppercase text-muted">Jahr</p>
             <div className="flex items-center gap-3">
