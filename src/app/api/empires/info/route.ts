@@ -152,8 +152,8 @@ function titleCandidates(name: string): string[] {
   return Array.from(candidates);
 }
 
-async function searchTitle(lang: WikiLang, words: string[]): Promise<string | null> {
-  if (words.length === 0) return null;
+async function searchTitle(lang: WikiLang, words: string[]): Promise<string[]> {
+  if (words.length === 0) return [];
   try {
     // "intitle:" vor jedem Wort erzwingt, dass ALLE diese Wörter im
     // Artikeltitel vorkommen — eine normale Volltextsuche fand sonst auch
@@ -164,38 +164,50 @@ async function searchTitle(lang: WikiLang, words: string[]): Promise<string | nu
     const query = words.map((w) => `intitle:${w}`).join(" ");
     const url =
       `https://${lang}.wikipedia.org/w/api.php?action=query&list=search` +
-      `&srsearch=${encodeURIComponent(query)}&srlimit=1&format=json&origin=*`;
+      // Nutzerkorrektur 21.09.2026 ("kommt immernoch nichts über kyros") —
+      // srlimit=1 nahm bisher NUR den allerersten Suchtreffer. Bei
+      // mehrdeutigen Namen wie "Kyros" (mehrere Perserkönige, Bischöfe,
+      // Heilige gleichen Namens) ist das haeufig genau die BEGRIFFSKLÄRUNGS-
+      // Seite selbst ("Kyros"), die dann als "disambiguation" verworfen
+      // wird — und weil es nie einen zweiten Versuch gab, blieb es bei
+      // "keine Beschreibung gefunden", obwohl z.B. "Kyros II." (der
+      // bekannteste Namensträger) einen ganz normalen Artikel hat. Jetzt
+      // werden bis zu 5 Treffer geholt und der Reihe nach durchprobiert.
+      `&srsearch=${encodeURIComponent(query)}&srlimit=5&format=json&origin=*`;
     const res = await fetchWithRetry(url);
-    if (!res || !res.ok) return null;
+    if (!res || !res.ok) return [];
     const data = await res.json();
-    const title = data?.query?.search?.[0]?.title;
-    if (typeof title !== "string") return null;
-    const titleLower = title.toLowerCase();
-    const allPresent = words.every((w) => titleLower.includes(w.toLowerCase()));
-    if (!allPresent) return null;
-    // Nutzerkorrektur 20.09.2026 ("ungenaue beschreibung" — "Roman Empire"
-    // landete bei "The Prosopography of the Later Roman Empire", einem
-    // akademischen Nachschlagewerk ÜBER das Römische Reich, nicht dem Reich
-    // selbst — enthielt zufaellig alle gesuchten Wörter im Titel). Zwei
-    // zusaetzliche Filter: (1) Nachschlagewerk-/Meta-Titel explizit
-    // ausschliessen, (2) ein Titel, der mehr als doppelt so viele Wörter hat
-    // wie die Originalsuche, ist so gut wie nie der gesuchte Artikel selbst,
-    // sondern ein Artikel, der das Thema nur ausfuehrlich im Titel erwaehnt.
-    if (isReferenceWorkTitle(title)) return null;
-    // Nutzerkorrektur 21.09.2026 ("es fehlen viele grosse herrscher") —
-    // bei kurzen (oft einwortigen) Herrschernamen ist der echte
-    // Wikipedia-Titel haeufig laenger als die Suchanfrage selbst (z.B.
-    // "Cyrus" -> "Cyrus the Great", "Karl" -> "Karl der Große"). Ein reines
-    // "*2"-Limit haette solche legitimen Treffer bei kurzen Anfragen
-    // faelschlich verworfen — deshalb zusaetzlich ein fixer Puffer von 3
-    // Wörtern, der bei kurzen Anfragen greift, waehrend laengere Anfragen
-    // (wie "Roman Empire") weiterhin gegen Nachschlagewerk-Titel wie "The
-    // Prosopography of the Later Roman Empire" geschuetzt bleiben.
-    const maxTitleWords = Math.max(words.length * 2, words.length + 3);
-    if (title.split(/\s+/).length > maxTitleWords) return null;
-    return title;
+    const results = data?.query?.search;
+    if (!Array.isArray(results)) return [];
+    const titles: string[] = [];
+    for (const r of results) {
+      const title = r?.title;
+      if (typeof title !== "string") continue;
+      const titleLower = title.toLowerCase();
+      const allPresent = words.every((w) => titleLower.includes(w.toLowerCase()));
+      if (!allPresent) continue;
+      // Nutzerkorrektur 20.09.2026 ("ungenaue beschreibung" — "Roman Empire"
+      // landete bei "The Prosopography of the Later Roman Empire", einem
+      // akademischen Nachschlagewerk ÜBER das Römische Reich, nicht dem
+      // Reich selbst). Zwei Filter: (1) Nachschlagewerk-/Meta-Titel
+      // explizit ausschliessen, (2) ein Titel, der deutlich mehr Wörter
+      // hat als die Originalsuche, ist so gut wie nie der gesuchte Artikel
+      // selbst.
+      if (isReferenceWorkTitle(title)) continue;
+      // Nutzerkorrektur 21.09.2026 ("es fehlen viele grosse herrscher") —
+      // bei kurzen (oft einwortigen) Herrschernamen ist der echte
+      // Wikipedia-Titel haeufig laenger als die Suchanfrage selbst (z.B.
+      // "Cyrus" -> "Cyrus the Great", "Karl" -> "Karl der Große"). Ein
+      // reines "*2"-Limit haette solche legitimen Treffer bei kurzen
+      // Anfragen faelschlich verworfen — deshalb zusaetzlich ein fixer
+      // Puffer von 3 Wörtern, der bei kurzen Anfragen greift.
+      const maxTitleWords = Math.max(words.length * 2, words.length + 3);
+      if (title.split(/\s+/).length > maxTitleWords) continue;
+      titles.push(title);
+    }
+    return titles;
   } catch {
-    return null;
+    return [];
   }
 }
 
@@ -272,9 +284,9 @@ async function resolveSummary(
   // Bands/Vereine mit gleichem Namen ab (deswegen ist das ueberhaupt
   // sicher genug fuer Einzelwörter).
   const meaningfulWords = name.split(/\s+/).filter((w) => w.length >= 3);
-  const [directResults, foundTitle] = await Promise.all([
+  const [directResults, foundTitles] = await Promise.all([
     Promise.all(candidates.map((c) => fetchSummary(lang, c, debugTrace))),
-    meaningfulWords.length >= 1 ? searchTitle(lang, meaningfulWords) : Promise.resolve(null),
+    meaningfulWords.length >= 1 ? searchTitle(lang, meaningfulWords) : Promise.resolve<string[]>([]),
   ]);
 
   // 1) Direkte Treffer über mehrere plausible Titel-Varianten. Der erste
@@ -300,8 +312,15 @@ async function resolveSummary(
   //    Artikel zuerst brachte). Lieber "keine Beschreibung gefunden" als
   //    ein falscher Treffer (Nutzerpräferenz: Antworten müssen geprüft/
   //    korrekt sein).
-  debugTrace?.push(`search:${meaningfulWords.join(",")} -> ${foundTitle ?? "null"}`);
-  if (foundTitle) {
+  debugTrace?.push(`search:${meaningfulWords.join(",")} -> [${foundTitles.join(", ")}]`);
+  // Nutzerkorrektur 21.09.2026 ("kommt immernoch nichts über kyros") — bei
+  // mehrdeutigen Namen (mehrere Perserkönige/Bischöfe/Heilige namens
+  // "Kyros") landete der EINZIGE bisher probierte Suchtreffer haeufig
+  // direkt auf der Begriffsklärungsseite selbst und wurde dort verworfen,
+  // ohne dass je ein zweiter Treffer probiert wurde. Jetzt werden alle
+  // (bis zu 5) gefilterten Suchtreffer der Reihe nach durchprobiert, bis
+  // einer eine echte, eindeutige Zusammenfassung liefert.
+  for (const foundTitle of foundTitles) {
     const viaSearch = await fetchSummary(lang, foundTitle, debugTrace);
     if (
       viaSearch &&
