@@ -764,11 +764,32 @@ export default function ImperienPage() {
       style: (feature: any) => {
         const name: string = feature?.properties?.NAME ?? "";
         const c = colorByName.get(name) ?? "hsl(0, 0%, 50%)";
+        // Nutzerkorrektur 21.09.2026 ("wieso ist alles in europa
+        // durcheinander und überlagert") — der eigentliche Grund: im
+        // Cliopatria-Datensatz existieren zur selben Zeit mehrere
+        // Herrschaftsebenen GLEICHZEITIG uebereinander (z.B. 1403 gleich-
+        // zeitig "Kingdom of France", darin verschachtelt "Duchy of
+        // Burgundy", darin die Dynastie "House of Valois-Anjou") — das ist
+        // historisch so korrekt (verschachtelte Lehnsherrschaft), aber
+        // bisher wurden ALLE davon mit derselben satten Deckkraft (0.42)
+        // uebereinandergemalt, was bei dicht verschachtelten Regionen wie
+        // Westeuropa zu vermatschten Mischfarben fuehrte. Schon vorhandene
+        // Logik (permanentLabelNames/labelLimit) waehlt bereits die beim
+        // aktuellen Zoom "wichtigsten" (flächengrößten) Gebiete aus — die
+        // wird jetzt ZUSÄTZLICH genutzt, um auch die FLÄCHENFARBE zu
+        // staffeln: die wichtigsten Gebiete bleiben satt eingefärbt, alle
+        // kleineren/verschachtelten bekommen nur noch eine sehr blasse
+        // Füllung (kaum sichtbare "Kontur"), erst beim Reinzoomen wachsen
+        // sie (wie schon bei den Namen) in die "wichtig"-Kategorie hinein
+        // und werden dann auch farblich vollwertig sichtbar. Wirkt dem
+        // Farbmatsch entgegen, ohne dass Gebiete verschwinden — anklickbar
+        // und per Hover benannt bleiben sie immer alle.
+        const isMajor = permanentLabelNames.has(name);
         return {
           color: c,
-          weight: 1.6,
+          weight: isMajor ? 1.6 : 0.8,
           fillColor: c,
-          fillOpacity: 0.42,
+          fillOpacity: isMajor ? 0.42 : 0.1,
           // Runde statt spitze Ecken an den Grenzlinien — wirkt weniger
           // "kantig" (Nutzerwunsch 18.09.2026), auch wenn die zugrunde
           // liegenden Geodaten selbst nicht glatter werden.
