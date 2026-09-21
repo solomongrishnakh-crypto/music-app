@@ -249,6 +249,63 @@ const TRANSLATIONS_SOURCE = {
     de: "Suchen", en: "Search", hi: "खोजें", zh: "搜索", ko: "검색", ja: "検索",
     es: "Buscar", fr: "Rechercher", tr: "Ara", ru: "Искать", pt: "Pesquisar", ar: "بحث", el: "Αναζήτηση",
   },
+
+  // Nutzerkorrektur 21.09.2026 ("hab sprache auf englisch aber diese
+  // kleine infos da steht auf deutsch") — die Kurzinfos in der Info-Box
+  // (Sprache/Jahr/Quelle-Labels) waren fest auf Deutsch verdrahtet statt
+  // über t() übersetzt zu werden, obwohl die restliche Seite (Titel,
+  // Buttons, Suchfeld) schon in allen 13 Sprachen lief.
+  empiresResultSearch: {
+    de: "Suchergebnis", en: "Search result", hi: "खोज परिणाम", zh: "搜索结果", ko: "검색 결과", ja: "検索結果",
+    es: "Resultado de búsqueda", fr: "Résultat de recherche", tr: "Arama sonucu", ru: "Результат поиска", pt: "Resultado da pesquisa", ar: "نتيجة البحث", el: "Αποτέλεσμα αναζήτησης",
+  },
+  empiresResultGreatEmpire: {
+    de: "Großes Imperium", en: "Great empire", hi: "महान साम्राज्य", zh: "伟大帝国", ko: "위대한 제국", ja: "大帝国",
+    es: "Gran imperio", fr: "Grand empire", tr: "Büyük imparatorluk", ru: "Великая империя", pt: "Grande império", ar: "إمبراطورية عظيمة", el: "Μεγάλη αυτοκρατορία",
+  },
+  empiresResultSelected: {
+    de: "Ausgewählt", en: "Selected", hi: "चयनित", zh: "已选择", ko: "선택됨", ja: "選択済み",
+    es: "Seleccionado", fr: "Sélectionné", tr: "Seçildi", ru: "Выбрано", pt: "Selecionado", ar: "محدد", el: "Επιλεγμένο",
+  },
+  empiresSubjectTo: {
+    de: "Teil von / Kolonialmacht:", en: "Part of / colonial power:", hi: "भाग / औपनिवेशिक शक्ति:", zh: "所属 / 殖民宗主国：", ko: "소속 / 식민 종주국:", ja: "所属／宗主国：",
+    es: "Parte de / potencia colonial:", fr: "Partie de / puissance coloniale :", tr: "Parçası / sömürge gücü:", ru: "Часть / колониальная держава:", pt: "Parte de / potência colonial:", ar: "جزء من / القوة الاستعمارية:", el: "Μέρος / αποικιακή δύναμη:",
+  },
+  empiresYearShown: {
+    de: "Angezeigtes Jahr:", en: "Year shown:", hi: "दिखाया गया वर्ष:", zh: "显示年份：", ko: "표시된 연도:", ja: "表示中の年：",
+    es: "Año mostrado:", fr: "Année affichée :", tr: "Gösterilen yıl:", ru: "Показанный год:", pt: "Ano exibido:", ar: "السنة المعروضة:", el: "Έτος που εμφανίζεται:",
+  },
+  empiresLanguageLabel: {
+    de: "Sprache:", en: "Language:", hi: "भाषा:", zh: "语言：", ko: "언어:", ja: "言語：",
+    es: "Idioma:", fr: "Langue :", tr: "Dil:", ru: "Язык:", pt: "Idioma:", ar: "اللغة:", el: "Γλώσσα:",
+  },
+  empiresLanguageUnknown: {
+    de: "nicht bekannt", en: "not known", hi: "अज्ञात", zh: "未知", ko: "알 수 없음", ja: "不明",
+    es: "desconocido", fr: "inconnue", tr: "bilinmiyor", ru: "неизвестен", pt: "desconhecido", ar: "غير معروفة", el: "άγνωστη",
+  },
+  empiresMoreOnWikipedia: {
+    de: "Mehr auf Wikipedia ↗", en: "More on Wikipedia ↗", hi: "विकिपीडिया पर और देखें ↗", zh: "在维基百科了解更多 ↗", ko: "위키백과에서 더 보기 ↗", ja: "Wikipediaで詳しく見る ↗",
+    es: "Más en Wikipedia ↗", fr: "Plus sur Wikipédia ↗", tr: "Wikipedia'da devamı ↗", ru: "Подробнее в Википедии ↗", pt: "Mais na Wikipédia ↗", ar: "المزيد على ويكيبيديا ↗", el: "Περισσότερα στη Wikipedia ↗",
+  },
+  empiresEditorialSource: {
+    de: "// Quelle: redaktionell (kein Wikipedia-Artikel gefunden)", en: "// Source: editorial (no Wikipedia article found)", hi: "// स्रोत: संपादकीय (कोई विकिपीडिया लेख नहीं मिला)", zh: "// 来源：编辑撰写（未找到维基百科文章）", ko: "// 출처: 편집팀 작성 (위키백과 문서 없음)", ja: "// 出典：編集部作成（Wikipedia記事なし）",
+    es: "// Fuente: editorial (no se encontró artículo en Wikipedia)", fr: "// Source : rédactionnelle (aucun article Wikipédia trouvé)", tr: "// Kaynak: editoryal (Wikipedia makalesi bulunamadı)", ru: "// Источник: редакционный (статья в Википедии не найдена)", pt: "// Fonte: editorial (nenhum artigo da Wikipédia encontrado)", ar: "// المصدر: تحريري (لم يتم العثور على مقالة ويكيبيديا)", el: "// Πηγή: συντακτική (δεν βρέθηκε άρθρο Wikipedia)",
+  },
+  empiresNoDescription: {
+    de: "Keine ausführliche Beschreibung gefunden — für dieses Gebiet gibt es (noch) keinen passenden Wikipedia-Artikel.",
+    en: "No detailed description found — there is (not yet) a matching Wikipedia article for this.",
+    hi: "कोई विस्तृत विवरण नहीं मिला — इसके लिए (अभी तक) कोई उपयुक्त विकिपीडिया लेख नहीं है।",
+    zh: "未找到详细描述——目前还没有对应的维基百科文章。",
+    ko: "자세한 설명을 찾을 수 없습니다 — 아직 해당하는 위키백과 문서가 없습니다.",
+    ja: "詳しい説明が見つかりません — 対応するWikipedia記事は（まだ）ありません。",
+    es: "No se encontró una descripción detallada; (todavía) no existe un artículo de Wikipedia correspondiente.",
+    fr: "Aucune description détaillée trouvée — il n'existe pas (encore) d'article Wikipédia correspondant.",
+    tr: "Ayrıntılı bir açıklama bulunamadı — bunun için (henüz) uygun bir Wikipedia makalesi yok.",
+    ru: "Подробное описание не найдено — подходящей статьи в Википедии (пока) нет.",
+    pt: "Nenhuma descrição detalhada encontrada — (ainda) não existe um artigo correspondente na Wikipédia.",
+    ar: "لم يتم العثور على وصف مفصل — لا توجد (بعد) مقالة ويكيبيديا مطابقة لهذا.",
+    el: "Δεν βρέθηκε λεπτομερής περιγραφή — δεν υπάρχει (ακόμη) αντίστοιχο άρθρο Wikipedia.",
+  },
   empiresTiles: {
     de: "Kartenkacheln", en: "Map tiles", hi: "मानचित्र टाइलें", zh: "地图图块", ko: "지도 타일", ja: "地図タイル",
     es: "Teselas del mapa", fr: "Tuiles cartographiques", tr: "Harita kareleri", ru: "Тайлы карты", pt: "Blocos do mapa", ar: "بلاطات الخريطة", el: "Πλακίδια χάρτη",

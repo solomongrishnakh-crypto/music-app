@@ -1255,22 +1255,22 @@ export default function ImperienPage() {
                 <div className="mt-3">
                   <p className="label-mono text-xs uppercase text-accent">
                     // {selected.viaSearch
-                      ? "Suchergebnis"
+                      ? t("empiresResultSearch")
                       : selected.isEmpire
-                        ? "Großes Imperium"
-                        : "Ausgewählt"}
+                        ? t("empiresResultGreatEmpire")
+                        : t("empiresResultSelected")}
                   </p>
                   <p className="font-display mt-1 text-base font-bold text-foreground sm:text-lg">
                     {info?.title ?? selected.name}
                   </p>
                   {selected.subjectTo && selected.subjectTo !== selected.name && (
                     <p className="mt-1 text-xs text-muted">
-                      Teil von / Kolonialmacht: {selected.subjectTo}
+                      {t("empiresSubjectTo")} {selected.subjectTo}
                     </p>
                   )}
                   {!selected.viaSearch && (
                     <p className="mt-1 text-xs text-muted">
-                      Angezeigtes Jahr: {formatYear(currentYear)}
+                      {t("empiresYearShown")} {formatYear(currentYear)}
                     </p>
                   )}
                   {/* Sprache des Reichs neben den anderen Kurzinfos
@@ -1282,7 +1282,7 @@ export default function ImperienPage() {
                       aufblitzt. */}
                   {!infoLoading && info?.found && (
                     <p className="mt-1 text-xs text-muted">
-                      Sprache: {info.language ?? "nicht bekannt"}
+                      {t("empiresLanguageLabel")} {info.language ?? t("empiresLanguageUnknown")}
                     </p>
                   )}
 
@@ -1300,7 +1300,7 @@ export default function ImperienPage() {
                             rel="noopener noreferrer"
                             className="label-mono mt-3 inline-flex items-center gap-2 text-xs uppercase text-accent hover:underline"
                           >
-                            Mehr auf Wikipedia ↗
+                            {t("empiresMoreOnWikipedia")}
                           </a>
                         )}
                         {/* Kein Wikipedia-Artikel gefunden, aber eine
@@ -1310,16 +1310,14 @@ export default function ImperienPage() {
                             Wikipedia-Quelle auszugeben. */}
                         {!info.pageUrl && info.source === "editorial" && (
                           <p className="label-mono mt-3 text-[10px] uppercase text-muted">
-                            // Quelle: redaktionell (kein Wikipedia-Artikel gefunden)
+                            {t("empiresEditorialSource")}
                           </p>
                         )}
                       </>
                     )}
                     {!infoLoading && info && !info.found && (
                       <p className="text-xs text-muted">
-                        Keine ausführliche Beschreibung gefunden — für dieses
-                        Gebiet gibt es (noch) keinen passenden
-                        Wikipedia-Artikel.
+                        {t("empiresNoDescription")}
                       </p>
                     )}
                   </div>
