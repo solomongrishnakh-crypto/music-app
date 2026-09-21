@@ -1250,7 +1250,11 @@ export default function ImperienPage() {
                 )}
                 <div className="mt-3">
                   <p className="label-mono text-xs uppercase text-accent">
-                    // {selected.isEmpire ? "Großes Imperium" : "Ausgewählt"}
+                    // {selected.viaSearch
+                      ? "Suchergebnis"
+                      : selected.isEmpire
+                        ? "Großes Imperium"
+                        : "Ausgewählt"}
                   </p>
                   <p className="font-display mt-1 text-base font-bold text-foreground sm:text-lg">
                     {info?.title ?? selected.name}

@@ -182,7 +182,17 @@ async function searchTitle(lang: WikiLang, words: string[]): Promise<string | nu
     // wie die Originalsuche, ist so gut wie nie der gesuchte Artikel selbst,
     // sondern ein Artikel, der das Thema nur ausfuehrlich im Titel erwaehnt.
     if (isReferenceWorkTitle(title)) return null;
-    if (title.split(/\s+/).length > words.length * 2) return null;
+    // Nutzerkorrektur 21.09.2026 ("es fehlen viele grosse herrscher") —
+    // bei kurzen (oft einwortigen) Herrschernamen ist der echte
+    // Wikipedia-Titel haeufig laenger als die Suchanfrage selbst (z.B.
+    // "Cyrus" -> "Cyrus the Great", "Karl" -> "Karl der Große"). Ein reines
+    // "*2"-Limit haette solche legitimen Treffer bei kurzen Anfragen
+    // faelschlich verworfen — deshalb zusaetzlich ein fixer Puffer von 3
+    // Wörtern, der bei kurzen Anfragen greift, waehrend laengere Anfragen
+    // (wie "Roman Empire") weiterhin gegen Nachschlagewerk-Titel wie "The
+    // Prosopography of the Later Roman Empire" geschuetzt bleiben.
+    const maxTitleWords = Math.max(words.length * 2, words.length + 3);
+    if (title.split(/\s+/).length > maxTitleWords) return null;
     return title;
   } catch {
     return null;
@@ -248,10 +258,23 @@ async function resolveSummary(
   // aufgegeben wurde. Jetzt parallel abgefeuert: die Gesamtwartezeit ist
   // dann nur noch die langsamste einzelne Anfrage statt die Summe aller.
   const candidates = titleCandidates(name);
-  const meaningfulWords = name.split(/\s+/).filter((w) => w.length >= 4);
+  // Nutzerkorrektur 21.09.2026 ("es fehlen viele grosse herrscher ... es
+  // soll die richtige person angezeigt werden") — seit die Suche auch fuer
+  // freie Personennamen genutzt wird (nicht mehr nur Reichsnamen aus dem
+  // Datenset), war die alte Mindestanforderung von 2 "aussagekraeftigen"
+  // Wörtern fuer die Volltextsuche zu streng: sehr viele bekannte
+  // Herrschernamen sind EIN einzelnes Wort ("Kyros", "Hammurabi",
+  // "Saladin", "Nofretete") und wurden dadurch nie ueber die Suche
+  // gefunden, selbst wenn der direkte Exakt-Titel (z.B. wegen anderer
+  // Schreibweise "Kyros II." statt "Kyros") nicht traf. Jetzt reicht ein
+  // Wort — die bestehende Wikidata-Plausibilitaetspruefung (P31, siehe
+  // isPlausibleHistoricalEntity) faengt weiterhin falsche Treffer wie
+  // Bands/Vereine mit gleichem Namen ab (deswegen ist das ueberhaupt
+  // sicher genug fuer Einzelwörter).
+  const meaningfulWords = name.split(/\s+/).filter((w) => w.length >= 3);
   const [directResults, foundTitle] = await Promise.all([
     Promise.all(candidates.map((c) => fetchSummary(lang, c, debugTrace))),
-    meaningfulWords.length >= 2 ? searchTitle(lang, meaningfulWords) : Promise.resolve(null),
+    meaningfulWords.length >= 1 ? searchTitle(lang, meaningfulWords) : Promise.resolve(null),
   ]);
 
   // 1) Direkte Treffer über mehrere plausible Titel-Varianten. Der erste
