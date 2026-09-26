@@ -90,10 +90,10 @@ export default function NowPlayingHero({
           statt echte frequenzbasierte Animation ist. */}
       <EqualizerVisualizer isPlaying={isPlaying} className="mt-4" />
 
-      <p className="font-display mt-3 truncate text-lg font-semibold uppercase tracking-tight text-foreground sm:text-xl">
+      <p className="font-display mt-3 w-full truncate px-2 text-lg font-semibold uppercase tracking-tight text-foreground sm:text-xl">
         {song.title}
       </p>
-      <p className="mt-1 truncate text-xs text-muted sm:text-sm">{song.artist}</p>
+      <p className="mt-1 w-full truncate px-2 text-xs text-muted sm:text-sm">{song.artist}</p>
 
       {/* Vor/Play-Pause/Zurück-Steuerung (Nutzerwunsch 18.09.2026: "ich
           brauche eine option hier das man nächstes music abspielen kann und
