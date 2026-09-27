@@ -101,6 +101,42 @@ function zCylinder(r: number, z0: number, z1: number, segments = 32, rTop = r): 
   return g;
 }
 
+/**
+ * Genfer Streifenschliff ("Côtes de Genève") als Textur: parallele,
+ * leicht schräge Bänder mit weichem Glanzverlauf — typische Verzierung
+ * der Platinen in Luxusuhren.
+ */
+function createGenevaStripesTexture(): THREE.CanvasTexture {
+  const size = 512;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    ctx.fillStyle = "#16161b";
+    ctx.fillRect(0, 0, size, size);
+    const band = size / 4;
+    for (let b = 0; b < 4; b++) {
+      const x0 = b * band;
+      const g = ctx.createLinearGradient(x0, 0, x0 + band, 0);
+      g.addColorStop(0, "#131318");
+      g.addColorStop(0.45, "#34343d");
+      g.addColorStop(0.55, "#2a2a32");
+      g.addColorStop(1, "#131318");
+      ctx.fillStyle = g;
+      ctx.fillRect(x0, 0, band, size);
+    }
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(0.9, 0.9); // Platten-UVs sind Welteinheiten → ca. 0,28 Einheiten pro Band
+  tex.rotation = 0.35;
+  tex.anisotropy = 4;
+  return tex;
+}
+
 export interface GearSceneOptions {
   /** Wie viel der Box die Maschine maximal füllt (0..1). */
   fill?: number;
@@ -129,23 +165,69 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
   };
 
   // --- Materialien ---
-  const gearMat = track(new THREE.MeshStandardMaterial({ color: 0xd4473b, metalness: 0.75, roughness: 0.32 }));
-  const steelMat = track(new THREE.MeshStandardMaterial({ color: 0xc9ced6, metalness: 1, roughness: 0.25 }));
+  // Luxus-Uhrwerk-Look (Nutzerwunsch "bisschen luxuriöser"): polierte
+  // Goldräder mit Klarlack, gebürsteter Gold-Steg, hochglanzpolierte
+  // Stahlritzel, gebläute Schrauben, Rubin-Lagersteine in Goldfassungen,
+  // dunkle Platte mit Genfer Streifenschliff ("Côtes de Genève").
+  const gearMat = track(
+    new THREE.MeshPhysicalMaterial({
+      color: 0xe2b15b,
+      metalness: 1,
+      roughness: 0.14,
+      clearcoat: 0.6,
+      clearcoatRoughness: 0.08,
+      envMapIntensity: 1.25,
+    })
+  );
+  const gearWebMat = track(
+    new THREE.MeshPhysicalMaterial({ color: 0xcf9e4e, metalness: 1, roughness: 0.32, envMapIntensity: 1.1 })
+  );
+  const steelMat = track(
+    new THREE.MeshPhysicalMaterial({ color: 0xdde2ea, metalness: 1, roughness: 0.08, envMapIntensity: 1.3 })
+  );
+  const blueSteelMat = track(
+    new THREE.MeshPhysicalMaterial({ color: 0x2447b8, metalness: 1, roughness: 0.18, clearcoat: 0.5, envMapIntensity: 1.2 })
+  );
+  const rubyMat = track(
+    new THREE.MeshPhysicalMaterial({
+      color: 0xc0102c,
+      metalness: 0,
+      roughness: 0.04,
+      clearcoat: 1,
+      clearcoatRoughness: 0.02,
+      emissive: 0x3a0008,
+      emissiveIntensity: 0.6,
+      envMapIntensity: 1.5,
+    })
+  );
   const brushedMat = track(new THREE.MeshStandardMaterial({ color: 0xb4b9c0, metalness: 1, roughness: 0.42 }));
-  const brassMat = track(new THREE.MeshStandardMaterial({ color: 0xc9a266, metalness: 1, roughness: 0.35 }));
   const copperMat = track(new THREE.MeshStandardMaterial({ color: 0xc27a4a, metalness: 1, roughness: 0.3 }));
-  const plateMat = track(new THREE.MeshStandardMaterial({ color: 0x141418, metalness: 0.5, roughness: 0.6 }));
+  const stripesTexture = track(createGenevaStripesTexture());
+  const plateMat = track(
+    new THREE.MeshPhysicalMaterial({
+      color: 0xffffff,
+      map: stripesTexture,
+      metalness: 0.85,
+      roughness: 0.3,
+      clearcoat: 0.3,
+      envMapIntensity: 0.9,
+    })
+  );
   const blackPlasticMat = track(new THREE.MeshStandardMaterial({ color: 0x0d0d0f, metalness: 0, roughness: 0.55 }));
   const labelMat = track(new THREE.MeshStandardMaterial({ color: 0x1c1c22, metalness: 0.2, roughness: 0.5 }));
   const redWireMat = track(new THREE.MeshStandardMaterial({ color: 0xc0231a, metalness: 0, roughness: 0.45 }));
   const blackWireMat = track(new THREE.MeshStandardMaterial({ color: 0x151515, metalness: 0, roughness: 0.45 }));
+  // Markierung als roter Rubin: auf Gold deutlich sichtbarer als ein heller Punkt
   const markerMat = track(
-    new THREE.MeshStandardMaterial({
-      color: 0xfff3c4,
-      emissive: 0xfff3c4,
-      emissiveIntensity: 1.2,
-      metalness: 0.1,
-      roughness: 0.4,
+    new THREE.MeshPhysicalMaterial({
+      color: 0xd0102e,
+      metalness: 0,
+      roughness: 0.05,
+      clearcoat: 1,
+      clearcoatRoughness: 0.02,
+      emissive: 0x9a0a1e,
+      emissiveIntensity: 0.9,
+      envMapIntensity: 1.5,
     })
   );
 
@@ -175,8 +257,9 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
 
   const shaftGeo = track(zCylinder(SHAFT_R, PLATE_FRONT, SHAFT_FRONT, 20));
   const nutGeo = track(zCylinder(5 * M, SHAFT_FRONT, SHAFT_FRONT + 0.06, 6));
-  const bushingGeo = track(zCylinder(6 * M, PLATE_FRONT, PLATE_FRONT + 0.04, 28));
-  const markerGeo = track(new THREE.SphereGeometry(2.4 * M, 12, 10));
+  const bushingGeo = track(zCylinder(6.5 * M, PLATE_FRONT, PLATE_FRONT + 0.035, 36));
+  const jewelGeo = track(zCylinder(4.6 * M, PLATE_FRONT + 0.035, PLATE_FRONT + 0.05, 32, 4.2 * M));
+  const markerGeo = track(new THREE.SphereGeometry(3 * M, 16, 12));
 
   // --- Achsen in gerader Reihe, Motor links davon ---
   const centerDist = (GEAR_TEETH + PINION_TEETH) * M;
@@ -201,7 +284,7 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
     gear.position.z = (i % 3) * PLANE_GAP;
     gear.rotation.z = gearOffset;
     gear.add(new THREE.Mesh(rimGeo, gearMat));
-    gear.add(new THREE.Mesh(webGeo, gearMat));
+    gear.add(new THREE.Mesh(webGeo, gearWebMat));
     gear.add(new THREE.Mesh(hubGeo, gearMat));
     // Markierung am Zahnkranz, startet oben (12 Uhr)
     const markerAngle = Math.PI / 2 - gearOffset;
@@ -215,14 +298,18 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
     pinion.position.z = ((i + 1) % 3) * PLANE_GAP;
     axle.add(pinion);
     axle.add(new THREE.Mesh(shaftGeo, steelMat));
-    axle.add(new THREE.Mesh(nutGeo, steelMat));
+    axle.add(new THREE.Mesh(nutGeo, blueSteelMat));
 
     assembly.add(axle);
     axles.push(axle);
 
-    const bushing = new THREE.Mesh(bushingGeo, brassMat);
-    bushing.position.set(pos.x, pos.y, 0);
-    assembly.add(bushing);
+    // Goldfassung (Chaton) mit Rubin-Lagerstein
+    const chaton = new THREE.Mesh(bushingGeo, gearMat);
+    chaton.position.set(pos.x, pos.y, 0);
+    assembly.add(chaton);
+    const jewel = new THREE.Mesh(jewelGeo, rubyMat);
+    jewel.position.set(pos.x, pos.y, 0);
+    assembly.add(jewel);
   });
 
   // --- Elektromotor (Getriebemotor) als Antrieb ---
@@ -268,7 +355,7 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
     [0.22, -0.22],
     [-0.22, -0.22],
   ]) {
-    const head = new THREE.Mesh(screwHeadGeo, steelMat);
+    const head = new THREE.Mesh(screwHeadGeo, blueSteelMat);
     head.position.set(sx, sy, 0);
     motorBody.add(head);
   }
@@ -302,7 +389,7 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
     [0, 0.3],
     [0, -0.3],
   ]) {
-    const s = new THREE.Mesh(standoffGeo, brassMat);
+    const s = new THREE.Mesh(standoffGeo, gearMat);
     s.position.set(sx, sy, 0);
     motorBody.add(s);
   }
