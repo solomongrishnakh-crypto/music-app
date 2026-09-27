@@ -220,23 +220,28 @@ function zCylinder(r: number, z0: number, z1: number, segments = 32, rTop = r): 
  * leicht schräge Bänder mit weichem Glanzverlauf — typische Verzierung
  * der Platinen in Luxusuhren.
  */
-function createGenevaStripesTexture(): THREE.CanvasTexture {
+function createGenevaStripesTexture(
+  edge = "#131318",
+  highlight = "#34343d",
+  mid = "#2a2a32",
+  repeat = 0.9
+): THREE.CanvasTexture {
   const size = 512;
   const canvas = document.createElement("canvas");
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext("2d");
   if (ctx) {
-    ctx.fillStyle = "#16161b";
+    ctx.fillStyle = edge;
     ctx.fillRect(0, 0, size, size);
     const band = size / 4;
     for (let b = 0; b < 4; b++) {
       const x0 = b * band;
       const g = ctx.createLinearGradient(x0, 0, x0 + band, 0);
-      g.addColorStop(0, "#131318");
-      g.addColorStop(0.45, "#34343d");
-      g.addColorStop(0.55, "#2a2a32");
-      g.addColorStop(1, "#131318");
+      g.addColorStop(0, edge);
+      g.addColorStop(0.45, highlight);
+      g.addColorStop(0.55, mid);
+      g.addColorStop(1, edge);
       ctx.fillStyle = g;
       ctx.fillRect(x0, 0, band, size);
     }
@@ -245,7 +250,7 @@ function createGenevaStripesTexture(): THREE.CanvasTexture {
   tex.colorSpace = THREE.SRGBColorSpace;
   tex.wrapS = THREE.RepeatWrapping;
   tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(0.9, 0.9); // Platten-UVs sind Welteinheiten → ca. 0,28 Einheiten pro Band
+  tex.repeat.set(repeat, repeat); // UVs sind Welteinheiten
   tex.rotation = 0.35;
   tex.anisotropy = 4;
   return tex;
@@ -279,7 +284,9 @@ function createPaintStrokeTexture(): THREE.CanvasTexture {
       const ry = (h * 0.3 + rand() * h * 0.08) * (0.55 + 0.45 * taper);
       const rx = 10 + rand() * 8;
       const shade = 195 + Math.floor(rand() * 45);
-      ctx.fillStyle = `rgba(${shade}, ${Math.floor(10 + rand() * 18)}, ${Math.floor(18 + rand() * 18)}, ${0.35 + rand() * 0.3})`;
+      const g = Math.floor(10 + rand() * 18);
+      const bl = Math.floor(18 + rand() * 18);
+      ctx.fillStyle = "rgba(" + shade + ", " + g + ", " + bl + ", " + (0.35 + rand() * 0.3) + ")";
       ctx.beginPath();
       ctx.ellipse(x, y, rx, ry, (rand() - 0.5) * 0.3, 0, Math.PI * 2);
       ctx.fill();
@@ -287,7 +294,7 @@ function createPaintStrokeTexture(): THREE.CanvasTexture {
     // feine Pinselspuren in Strichrichtung
     for (let k = 0; k < 18; k++) {
       const y = h / 2 + (rand() - 0.5) * h * 0.5;
-      ctx.strokeStyle = `rgba(120, 0, 10, ${0.12 + rand() * 0.12})`;
+      ctx.strokeStyle = "rgba(120, 0, 10, " + (0.12 + rand() * 0.12) + ")";
       ctx.lineWidth = 1 + rand() * 1.5;
       ctx.beginPath();
       ctx.moveTo(26 + rand() * 20, y);
@@ -366,15 +373,17 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
   );
   const brushedMat = track(new THREE.MeshStandardMaterial({ color: 0xb4b9c0, metalness: 1, roughness: 0.42 }));
   const copperMat = track(new THREE.MeshStandardMaterial({ color: 0xc27a4a, metalness: 1, roughness: 0.3 }));
-  const stripesTexture = track(createGenevaStripesTexture());
+  // Rhodinierte Brücke mit Genfer Streifenschliff (hell, wie in Luxusuhren)
+  const stripesTexture = track(createGenevaStripesTexture("#8c929b", "#e6e9ee", "#c9ced6", 2.2));
   const plateMat = track(
     new THREE.MeshPhysicalMaterial({
       color: 0xffffff,
       map: stripesTexture,
-      metalness: 0.85,
-      roughness: 0.3,
-      clearcoat: 0.3,
-      envMapIntensity: 0.9,
+      metalness: 1,
+      roughness: 0.22,
+      clearcoat: 0.4,
+      clearcoatRoughness: 0.1,
+      envMapIntensity: 1.2,
     })
   );
   const blackPlasticMat = track(new THREE.MeshStandardMaterial({ color: 0x0d0d0f, metalness: 0, roughness: 0.55 }));
@@ -404,7 +413,7 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
 
   // --- Geteilte Geometrien ---
   const rimShape = new THREE.Shape();
-  const { rootR: gearRootR, tipR: gearTipR } = drawToothOutline(rimShape, GEAR_TEETH);
+  const { rootR: gearRootR } = drawToothOutline(rimShape, GEAR_TEETH);
   const rimInner = gearRootR - 6 * M;
   rimShape.holes.push(circlePath(rimInner));
   const rimGeo = track(extrudeCentered(rimShape, GEAR_FACE, 0.012));
@@ -570,15 +579,16 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
     s.position.set(sx, sy, 0);
     motorBody.add(s);
   }
-  // Kabel (rot/schwarz) von den Anschlüssen nach unten links zur Platte
+  // Kabel (rot/schwarz) von den Anschlüssen nach hinten weg
   const wireGeos = terminalPoints.map((p, idx) => {
     const off = idx === 0 ? 0.04 : -0.04;
     const curve = new THREE.CatmullRomCurve3([
       p,
       new THREE.Vector3(-0.05, p.y * 0.6, p.z + 0.18),
       new THREE.Vector3(-0.35, -0.2 + off, p.z + 0.05),
-      new THREE.Vector3(-0.55, -0.45 + off, 0.5),
-      new THREE.Vector3(-0.6, -0.62 + off, PLATE_FRONT + 0.03),
+      new THREE.Vector3(-0.5, -0.42 + off, 0.45),
+      new THREE.Vector3(-0.52, -0.5 + off, PLATE_FRONT - 0.1),
+      new THREE.Vector3(-0.5, -0.5 + off, PLATE_FRONT - 0.6),
     ]);
     return track(new THREE.TubeGeometry(curve, 40, 0.018, 8, false));
   });
@@ -586,36 +596,66 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
   motorBody.add(new THREE.Mesh(wireGeos[1], blackWireMat));
   assembly.add(motorBody);
 
-  // --- Grundplatte ---
-  const xs = [...positions.map((p) => p.x), motorPos.x];
-  const margin = gearTipR + 0.18;
-  const x0 = Math.min(...xs) - margin;
-  const x1 = Math.max(...xs) + margin;
-  const y0 = -margin;
-  const y1 = margin;
-  const cr = 0.25;
-  const plateShape = new THREE.Shape();
-  plateShape.moveTo(x0 + cr, y0);
-  plateShape.lineTo(x1 - cr, y0);
-  plateShape.quadraticCurveTo(x1, y0, x1, y0 + cr);
-  plateShape.lineTo(x1, y1 - cr);
-  plateShape.quadraticCurveTo(x1, y1, x1 - cr, y1);
-  plateShape.lineTo(x0 + cr, y1);
-  plateShape.quadraticCurveTo(x0, y1, x0, y1 - cr);
-  plateShape.lineTo(x0, y0 + cr);
-  plateShape.quadraticCurveTo(x0, y0, x0 + cr, y0);
-  const plateGeo = track(
-    new THREE.ExtrudeGeometry(plateShape, {
+  // --- Brücke statt Brett (Nutzerwunsch: "ohne dieses Brett oder
+  // luxuriöser, was echt scheint") ---
+  // Schlanke, rhodinierte Brücke wie in einem Skelett-Uhrwerk: trägt nur
+  // die Lagersteine entlang der Achsreihe, polierte Fasen (Anglage) an den
+  // Kanten, gebläute Schrauben in den Lücken. Rundherum ist nichts — der
+  // Seitenhintergrund scheint durch.
+  const BRIDGE_HALF = 0.2;
+  const bridgeX0 = motorPos.x - 0.1;
+  const bridgeX1 = positions[positions.length - 1].x + BRIDGE_HALF + 0.08;
+  const bridgeShape = new THREE.Shape();
+  bridgeShape.moveTo(bridgeX0, -BRIDGE_HALF);
+  bridgeShape.lineTo(bridgeX1 - BRIDGE_HALF, -BRIDGE_HALF);
+  bridgeShape.absarc(bridgeX1 - BRIDGE_HALF, 0, BRIDGE_HALF, -Math.PI / 2, Math.PI / 2, false);
+  bridgeShape.lineTo(bridgeX0, BRIDGE_HALF);
+  bridgeShape.lineTo(bridgeX0, -BRIDGE_HALF);
+  const bridgeGeo = track(
+    new THREE.ExtrudeGeometry(bridgeShape, {
       depth: PLATE_DEPTH,
       bevelEnabled: true,
-      bevelThickness: 0.01,
-      bevelSize: 0.01,
-      bevelSegments: 2,
-      curveSegments: 8,
+      bevelThickness: 0.018,
+      bevelSize: 0.018,
+      bevelSegments: 3,
+      curveSegments: 24,
     })
   );
-  plateGeo.translate(0, 0, PLATE_FRONT - PLATE_DEPTH);
-  assembly.add(new THREE.Mesh(plateGeo, plateMat));
+  bridgeGeo.translate(0, 0, PLATE_FRONT - PLATE_DEPTH - 0.018);
+  assembly.add(new THREE.Mesh(bridgeGeo, plateMat));
+
+  // Runder Motorsockel (hält die Abstandsbolzen des Motors)
+  const MOTOR_BASE_R = 0.42;
+  const baseShape = new THREE.Shape();
+  baseShape.absarc(0, 0, MOTOR_BASE_R, 0, Math.PI * 2, false);
+  const baseGeo = track(
+    new THREE.ExtrudeGeometry(baseShape, {
+      depth: PLATE_DEPTH,
+      bevelEnabled: true,
+      bevelThickness: 0.018,
+      bevelSize: 0.018,
+      bevelSegments: 3,
+      curveSegments: 48,
+    })
+  );
+  baseGeo.translate(motorPos.x, motorPos.y, PLATE_FRONT - PLATE_DEPTH - 0.016);
+  assembly.add(new THREE.Mesh(baseGeo, plateMat));
+
+  // Gebläute Schrauben auf der Brücke, jeweils mittig zwischen zwei Achsen
+  const bridgeScrewGeo = track(zCylinder(0.035, PLATE_FRONT, PLATE_FRONT + 0.018, 20));
+  const slotGeo = track(new THREE.BoxGeometry(0.06, 0.009, 0.006));
+  for (let i = 0; i < positions.length - 1; i++) {
+    const x = (positions[i].x + positions[i + 1].x) / 2;
+    for (const y of [0.12, -0.12]) {
+      const screw = new THREE.Mesh(bridgeScrewGeo, blueSteelMat);
+      screw.position.set(x, y, 0);
+      assembly.add(screw);
+      const slot = new THREE.Mesh(slotGeo, blackPlasticMat);
+      slot.position.set(x, y, PLATE_FRONT + 0.019);
+      slot.rotation.z = (i * 0.9 + y * 7) % Math.PI; // Schlitze unterschiedlich ausgerichtet
+      assembly.add(slot);
+    }
+  }
 
   // Baugruppe zentrieren
   const bounds = new THREE.Box3().setFromObject(assembly);
@@ -805,7 +845,13 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
     controls.update();
   }
 
+  // Zoom per Mausrad erst nach einem Klick in die Box: Sonst hat das
+  // Scrollen der Seite (Mauszeiger fährt dabei über die Box) die Ansicht
+  // verstellt und die Maschine verschoben/abgeschnitten. Verlässt die Maus
+  // die Box, scrollt das Mausrad wieder ganz normal die Seite.
+  let wheelActive = false;
   function handleWheel(event: WheelEvent) {
+    if (!wheelActive) return; // Seite normal scrollen lassen
     event.preventDefault();
     const delta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY;
     const factor = Math.min(Math.max(Math.exp(delta * 0.0015), 0.5), 2);
@@ -819,6 +865,7 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
     return { dist: Math.hypot(a.x - b.x, a.y - b.y), cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2 };
   }
   function handlePointerDown(event: PointerEvent) {
+    wheelActive = true;
     if (event.pointerType !== "touch") return;
     touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY });
     if (touchPoints.size === 2) lastPinchDist = pinchState().dist;
@@ -841,6 +888,16 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
   el.addEventListener("pointermove", handlePointerMove);
   el.addEventListener("pointerup", handlePointerUp);
   el.addEventListener("pointercancel", handlePointerUp);
+  function handlePointerLeave() {
+    wheelActive = false;
+  }
+  // Doppelklick: Ansicht auf die Startposition zurücksetzen
+  function handleDoubleClick() {
+    startDir = viewDirection();
+    refit();
+  }
+  el.addEventListener("pointerleave", handlePointerLeave);
+  el.addEventListener("dblclick", handleDoubleClick);
 
   // --- Animation: ewige Maschine, Stellung aus der absoluten Uhrzeit ---
   // (siehe machineTime.ts) — für alle Besucher gleich, startet nie neu.
@@ -866,6 +923,8 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
     el.removeEventListener("pointermove", handlePointerMove);
     el.removeEventListener("pointerup", handlePointerUp);
     el.removeEventListener("pointercancel", handlePointerUp);
+    el.removeEventListener("pointerleave", handlePointerLeave);
+    el.removeEventListener("dblclick", handleDoubleClick);
     controls.dispose();
     disposables.forEach((d) => d.dispose());
     renderer.dispose();
