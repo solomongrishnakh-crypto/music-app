@@ -5,14 +5,21 @@ import * as THREE from "three";
 
 /**
  * Nutzerwunsch 27.09.2026 (nach dem "Google Gear"-Reel: "kannst auch ein
- * 3d zahnrad bauen?", dann Nutzerkorrektur: "wieso gibt es ein rad? ich
- * dachte es wird hundeter geben?") — das virale Video zeigte eine ganze
- * KETTE ineinandergreifender Zahnräder (eine extreme Untersetzungs-Getriebe-
- * kette), nicht nur ein einzelnes Rad. Diese Version zeigt jetzt fünf
- * echte, ineinandergreifende 3D-Zahnräder in Reihe, deren Größe (und
- * Zähnezahl) von links nach rechts wächst — jedes folgende Rad dreht sich
- * dadurch spürbar langsamer als das vorherige, exakt die Idee aus dem
- * Reel ("bis sich das letzte Rad bewegt, ist das Universum vorbei").
+ * 3d zahnrad bauen?" → "wieso gibt es ein rad? ich dachte es wird hundeter
+ * geben?" → "adde nach mehr räder mach es 3d und räder sollen sich
+ * langsamer bewegen bis richtung der letzte genau wie räder. es bewegt
+ * sich alle schnell aber es soll nicht so sein") — drei Korrekturen in
+ * dieser Version:
+ *   1. Mehr Räder (8 statt 5).
+ *   2. Deutlich mehr sichtbare 3D-Tiefe (dickere Räder, steilerer
+ *      Kamerawinkel) — vorher wirkten sie durch die dünne Extrusion und
+ *      den flachen Blickwinkel fast wie 2D-Scheiben.
+ *   3. WICHTIGSTER FIX: vorher drehten sich alle Räder ähnlich schnell,
+ *      weil die Geschwindigkeit nur über das (moderate) Zähnezahl-
+ *      verhältnis lief. Jetzt gibt es zusätzlich einen expliziten, harten
+ *      Verlangsamungsfaktor pro Stufe (STAGE_SLOWDOWN), genau wie im
+ *      Reel: Rad 1 dreht sich sichtbar schnell, jedes weitere Rad spürbar
+ *      langsamer, das letzte Rad bewegt sich fast gar nicht mehr.
  *
  * Die Zahnradform wird prozedural erzeugt (kein 3D-Modell nötig): ein
  * THREE.Shape mit alternierenden Außen-/Innenradien pro Zahn, dann per
@@ -22,16 +29,17 @@ interface Gear3DProps {
   className?: string;
 }
 
-// Zähnezahl pro Rad, von links (schnell) nach rechts (langsam) — jede
-// Stufe hat spürbar mehr Zähne als die vorherige, daher die sichtbar
-// wachsende Untersetzung. Bewusst moderat gewählt (nicht 8→36 wie in
-// einer früheren Version): die Räder müssen zusammen in eine flache,
-// breite Box passen, ohne dass die Kamera unrealistisch weit wegrücken
-// muss (das führte vorher zu einer leeren/kaputten Darstellung).
-const GEAR_TEETH = [8, 10, 13, 17, 22];
-const MODULE = 0.075; // "Zahngröße" — bestimmt Radius aus Zähnezahl
-const TOOTH_HEIGHT = 0.055;
-const THICKNESS = 0.18;
+// Zähnezahl pro Rad, von links (schnell/klein) nach rechts (langsam/groß).
+const GEAR_TEETH = [8, 10, 13, 17, 22, 29, 38, 50];
+const MODULE = 0.052; // "Zahngröße" — bestimmt Radius aus Zähnezahl
+const TOOTH_HEIGHT = 0.045;
+const THICKNESS = 0.34; // deutlich dicker als vorher (0.18) für echte 3D-Tiefe
+
+// Harter Verlangsamungsfaktor pro Stufe (unabhängig vom Zähnezahl-
+// verhältnis) — sorgt dafür, dass der Unterschied zwischen erstem und
+// letztem Rad klar SICHTBAR ist, statt nur rechnerisch vorhanden zu sein.
+const STAGE_SLOWDOWN = 0.42;
+const BASE_SPEED = 2.2; // rad/s, erstes (kleinstes) Rad
 
 function createGearShape(teeth: number, radius: number, toothHeight: number, holeRadius: number): THREE.Shape {
   const shape = new THREE.Shape();
@@ -59,22 +67,22 @@ function createGearShape(teeth: number, radius: number, toothHeight: number, hol
 
 function makeGearMesh(teeth: number, colorHex: number): { mesh: THREE.Mesh; radius: number } {
   const radius = teeth * MODULE;
-  const shape = createGearShape(teeth, radius, TOOTH_HEIGHT, Math.max(0.08, radius * 0.28));
+  const shape = createGearShape(teeth, radius, TOOTH_HEIGHT, Math.max(0.06, radius * 0.26));
   const geometry = new THREE.ExtrudeGeometry(shape, {
     depth: THICKNESS,
     bevelEnabled: true,
-    bevelThickness: 0.025,
-    bevelSize: 0.02,
+    bevelThickness: 0.03,
+    bevelSize: 0.022,
     bevelSegments: 2,
     curveSegments: 2,
   });
   geometry.center();
   const material = new THREE.MeshStandardMaterial({
     color: colorHex,
-    metalness: 0.65,
-    roughness: 0.35,
+    metalness: 0.7,
+    roughness: 0.3,
     emissive: 0x2a0e0a,
-    emissiveIntensity: 0.3,
+    emissiveIntensity: 0.28,
   });
   return { mesh: new THREE.Mesh(geometry, material), radius };
 }
@@ -87,7 +95,7 @@ export default function Gear3D({ className }: Gear3DProps) {
     if (!mount) return;
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 30);
+    const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 40);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -108,7 +116,7 @@ export default function Gear3D({ className }: Gear3DProps) {
     // Farbverlauf von hellem Akzent (schnelles, kleines Rad) zu dunklerem
     // Rot (langsames, großes Rad) — macht die Reihenfolge/Größe auf den
     // ersten Blick lesbar.
-    const colors = [0xffb3a8, 0xff8a7a, 0xff5a4d, 0xd63f34, 0xa8281f];
+    const colors = [0xffc9c0, 0xffb3a8, 0xff8a7a, 0xff5a4d, 0xe8483c, 0xd63f34, 0xb8302a, 0x8f221d];
 
     const gears: { mesh: THREE.Mesh; radius: number; teeth: number }[] = [];
     let cursorX = 0;
@@ -124,25 +132,25 @@ export default function Gear3D({ className }: Gear3DProps) {
       gears.push({ mesh, radius, teeth });
     });
 
-    // Gesamtbreite der Kette zentrieren und Kamera so platzieren, dass
-    // alle Räder ins Bild passen.
+    // Gesamtbreite der Kette zentrieren.
     const totalWidth = gears[gears.length - 1].mesh.position.x + gears[gears.length - 1].radius;
     group.position.x = -totalWidth / 2;
-    group.rotation.x = 0.3;
+    // Steilerer Kippwinkel als vorher (0.3 → 0.55): zeigt spürbar mehr von
+    // der Dicke/Seite der Räder statt einer fast frontalen, flachen
+    // Ansicht — dadurch wirkt es klar dreidimensional statt wie Scheiben.
+    group.rotation.x = 0.55;
 
     // Kamera so weit zurücksetzen, dass die gesamte Kette (Breite
-    // totalWidth) horizontal ins Bild passt — Standardformel für "Objekt
-    // von bekannter Breite in FOV einpassen", statt der vorherigen
-    // fehleranfälligen Variante (die bei clientHeight=0 durch Null teilen
-    // konnte → NaN-Kameraposition → komplett leere Darstellung).
+    // totalWidth) horizontal ins Bild passt — robuste Fit-Formel mit
+    // Absicherung gegen ungültige (NaN/Infinity) Zwischenwerte.
     function fitCamera() {
       if (!mount) return;
       const aspect = mount.clientWidth / Math.max(mount.clientHeight, 1);
       const vFovRad = (camera.fov * Math.PI) / 180;
       const halfWidthNeeded = totalWidth / 2 + 0.5;
       const rawDist = halfWidthNeeded / (Math.tan(vFovRad / 2) * Math.max(aspect, 0.5));
-      const dist = Number.isFinite(rawDist) ? Math.max(rawDist * 1.1, totalWidth * 0.6) : totalWidth * 1.2;
-      camera.position.set(0, 0.4, dist);
+      const dist = Number.isFinite(rawDist) ? Math.max(rawDist * 1.15, totalWidth * 0.65) : totalWidth * 1.3;
+      camera.position.set(0, 0.55, dist);
       camera.lookAt(0, 0, 0);
     }
 
@@ -155,20 +163,21 @@ export default function Gear3D({ className }: Gear3DProps) {
     fitCamera();
     window.addEventListener("resize", handleResize);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.4);
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.5);
     keyLight.position.set(2, 3, 4);
     scene.add(keyLight);
-    const rimLight = new THREE.DirectionalLight(0xff5a4d, 0.5);
+    const rimLight = new THREE.DirectionalLight(0xff5a4d, 0.55);
     rimLight.position.set(-2, -1, -3);
     scene.add(rimLight);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.4));
+    scene.add(new THREE.AmbientLight(0xffffff, 0.38));
 
-    // Jedes Rad dreht sich (grob) proportional zur Zähnezahl des ersten
-    // Rads geteilt durch die eigene — genau wie bei echten ineinander-
-    // greifenden Zahnrädern (ω ∝ 1/Zähnezahl), plus alternierende
-    // Richtung, weil benachbarte Zahnräder sich immer gegenläufig drehen.
-    const baseSpeed = 0.9;
-    const speeds = GEAR_TEETH.map((teeth, i) => (baseSpeed * GEAR_TEETH[0]) / teeth * (i % 2 === 0 ? 1 : -1));
+    // WICHTIGSTER FIX dieser Runde: harter Verlangsamungsfaktor pro Stufe
+    // statt nur des (zu milden) Zähnezahlverhältnisses — Rad 1 dreht sich
+    // klar sichtbar, jedes weitere Rad spürbar langsamer, das letzte Rad
+    // bewegt sich fast gar nicht mehr (Periode > 1 Minute).
+    const speeds = GEAR_TEETH.map(
+      (_, i) => BASE_SPEED * Math.pow(STAGE_SLOWDOWN, i) * (i % 2 === 0 ? 1 : -1)
+    );
 
     let animationId = 0;
     let elapsed = 0;
