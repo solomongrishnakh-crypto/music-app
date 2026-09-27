@@ -100,7 +100,34 @@ function makeGearMesh(teeth: number, colorHex: number): { mesh: THREE.Mesh; radi
     emissive: 0x2a0e0a,
     emissiveIntensity: 0.28,
   });
-  return { mesh: new THREE.Mesh(geometry, material), radius };
+  const mesh = new THREE.Mesh(geometry, material);
+
+  // Nutzerwunsch 27.09.2026: "kannst du eine markierung in räder hinzufügen
+  // so man checkt das rad hat sich bisschen bewegt" — ein heller Strich von
+  // der Mitte zum Rand plus ein Punkt an der Spitze, fest mit dem Rad
+  // verbunden (rotiert mit). So sieht man auch bei sehr langsamen Rädern
+  // sofort, ob/wie weit sich die Markierung gegenüber vorhin gedreht hat —
+  // ein reines Kreis-Muster ohne Markierung sieht sonst bei jeder Drehung
+  // identisch aus.
+  const markerMaterial = new THREE.MeshStandardMaterial({
+    color: 0xfff3c4,
+    emissive: 0xfff3c4,
+    emissiveIntensity: 0.9,
+    metalness: 0.1,
+    roughness: 0.4,
+  });
+  const barLength = radius * 0.82;
+  const bar = new THREE.Mesh(
+    new THREE.BoxGeometry(barLength, Math.max(radius * 0.09, 0.02), 0.025),
+    markerMaterial
+  );
+  bar.position.set(barLength / 2 - radius * 0.08, 0, THICKNESS / 2 + 0.015);
+  mesh.add(bar);
+  const tip = new THREE.Mesh(new THREE.SphereGeometry(Math.max(radius * 0.13, 0.03), 10, 8), markerMaterial);
+  tip.position.set(radius * 0.78, 0, THICKNESS / 2 + 0.02);
+  mesh.add(tip);
+
+  return { mesh, radius };
 }
 
 export default function Gear3D({ className }: Gear3DProps) {
@@ -232,8 +259,18 @@ export default function Gear3D({ className }: Gear3DProps) {
     }
     animate();
 
-    const geometries = gears.map((g) => g.mesh.geometry);
-    const materials = gears.map((g) => g.mesh.material as THREE.Material);
+    // Auch die Marker (Strich + Punkt) sind Kind-Objekte jedes Rads und
+    // müssen beim Aufräumen mit entsorgt werden, nicht nur das Hauptmesh.
+    const geometries: THREE.BufferGeometry[] = [];
+    const materials: THREE.Material[] = [];
+    gears.forEach((g) => {
+      g.mesh.traverse((obj) => {
+        if (obj instanceof THREE.Mesh) {
+          geometries.push(obj.geometry);
+          materials.push(obj.material as THREE.Material);
+        }
+      });
+    });
 
     return () => {
       cancelAnimationFrame(animationId);
