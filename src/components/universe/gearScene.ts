@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+import { AXLE_COUNT, machineAngles, preciseNow } from "./machineTime";
 
 /**
  * Reine three.js-Logik der Zahnrad-Maschine (ohne React), damit sie auch
@@ -21,10 +22,8 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
  * (= Alter des Universums im Ticker). Zeitbasis: echte Uhr.
  */
 
-const AXLE_COUNT = 23;
 const PINION_TEETH = 10;
 const GEAR_TEETH = 60;
-const RATIO = GEAR_TEETH / PINION_TEETH; // 6:1 pro Stufe
 
 const M = 0.02; // Teilkreisradius pro Zahn
 const ADDENDUM = 2 * M;
@@ -41,10 +40,6 @@ const PLATE_FRONT = -(PINION_FACE / 2) - 0.07;
 const PLATE_DEPTH = 0.08;
 const SHAFT_FRONT = 2 * PLANE_GAP + GEAR_FACE / 2 + 0.05;
 
-const PERIOD_LAST_YEARS = 13_797_000_000;
-const SECONDS_PER_YEAR = 31_557_600; // 365,25 * 86400
-const PERIOD_LAST_SECONDS = PERIOD_LAST_YEARS * SECONDS_PER_YEAR;
-export const PERIOD_FIRST_SECONDS = PERIOD_LAST_SECONDS / Math.pow(RATIO, AXLE_COUNT - 1); // ≈ 3,31 s
 
 function drawToothOutline(shape: THREE.Shape, teeth: number) {
   const pitchR = teeth * M;
@@ -567,18 +562,15 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
   el.addEventListener("pointerup", handlePointerUp);
   el.addEventListener("pointercancel", handlePointerUp);
 
-  // --- Animation ---
-  const omegaFirst = (Math.PI * 2) / PERIOD_FIRST_SECONDS;
-  const omegas = axles.map((_, i) => omegaFirst * Math.pow(-1 / RATIO, i));
-  const omegaMotor = -omegaFirst * RATIO; // Motorritzel treibt Rad 1 an
-  const startMs = performance.now();
+  // --- Animation: ewige Maschine, Stellung aus der absoluten Uhrzeit ---
+  // (siehe machineTime.ts) — für alle Besucher gleich, startet nie neu.
   let animationId = 0;
   function animate() {
-    const t = (performance.now() - startMs) / 1000;
+    const { axles: axleAngles, motor } = machineAngles(preciseNow());
     axles.forEach((axle, i) => {
-      axle.rotation.z = omegas[i] * t;
+      axle.rotation.z = axleAngles[i];
     });
-    motorRotor.rotation.z = omegaMotor * t;
+    motorRotor.rotation.z = motor;
     controls.update();
     renderer.render(scene, camera);
     animationId = requestAnimationFrame(animate);
