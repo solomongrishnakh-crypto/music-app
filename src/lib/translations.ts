@@ -128,6 +128,54 @@ const TRANSLATIONS_SOURCE = {
     el: "Αριθμοί και στοιχεία για το σύμπαν — από την ηλικία του σύμπαντος μέχρι τη σκοτεινή ύλη και τις μαύρες τρύπες. Κάντε κλικ σε μια κάρτα για πιο αναλυτική εξήγηση. Επιπλέον, ζωντανά νέα από το διάστημα.",
   },
 
+  // Alters-Ticker (Nutzerwunsch 27.09.2026: "kannst ein timer hier oben
+  // hinzufüge. quasi wie und des universum. sekunden,stundenjahre monate
+  // alles am weiter ticken") — live weiterlaufender Schätzwert des
+  // Universums-Alters direkt über den Fakten-Karten.
+  universeAgeTickerLabel: {
+    de: "// Alter des Universums · live", en: "// Age of the Universe · live", hi: "// ब्रह्मांड की आयु · लाइव", zh: "// 宇宙的年龄 · 实时", ko: "// 우주의 나이 · 실시간", ja: "// 宇宙の年齢・ライブ",
+    es: "// Edad del Universo · en vivo", fr: "// Âge de l'Univers · en direct", tr: "// Evrenin Yaşı · canlı", ru: "// Возраст Вселенной · в реальном времени", pt: "// Idade do Universo · ao vivo", ar: "// عمر الكون · مباشر", el: "// Ηλικία του Σύμπαντος · ζωντανά",
+  },
+  ageYears: {
+    de: "Jahre", en: "Years", hi: "वर्ष", zh: "年", ko: "년", ja: "年",
+    es: "Años", fr: "Années", tr: "Yıl", ru: "Лет", pt: "Anos", ar: "سنوات", el: "Έτη",
+  },
+  ageMonths: {
+    de: "Monate", en: "Months", hi: "महीने", zh: "月", ko: "개월", ja: "ヶ月",
+    es: "Meses", fr: "Mois", tr: "Ay", ru: "Месяцев", pt: "Meses", ar: "أشهر", el: "Μήνες",
+  },
+  ageDays: {
+    de: "Tage", en: "Days", hi: "दिन", zh: "天", ko: "일", ja: "日",
+    es: "Días", fr: "Jours", tr: "Gün", ru: "Дней", pt: "Dias", ar: "أيام", el: "Ημέρες",
+  },
+  ageHours: {
+    de: "Stunden", en: "Hours", hi: "घंटे", zh: "小时", ko: "시간", ja: "時間",
+    es: "Horas", fr: "Heures", tr: "Saat", ru: "Часов", pt: "Horas", ar: "ساعات", el: "Ώρες",
+  },
+  ageMinutes: {
+    de: "Minuten", en: "Minutes", hi: "मिनट", zh: "分钟", ko: "분", ja: "分",
+    es: "Minutos", fr: "Minutes", tr: "Dakika", ru: "Минут", pt: "Minutos", ar: "دقائق", el: "Λεπτά",
+  },
+  ageSeconds: {
+    de: "Sekunden", en: "Seconds", hi: "सेकंड", zh: "秒", ko: "초", ja: "秒",
+    es: "Segundos", fr: "Secondes", tr: "Saniye", ru: "Секунд", pt: "Segundos", ar: "ثوانٍ", el: "Δευτερόλεπτα",
+  },
+  universeAgeTickerFootnote: {
+    de: "Basierend auf ≈ 13,797 Mrd. Jahren (Planck-Messung); Monate/Tage sind Kalender-Näherungswerte, keine exakte kosmologische Größe.",
+    en: "Based on ≈ 13.797 billion years (Planck measurement); months/days are calendar approximations, not an exact cosmological quantity.",
+    hi: "≈ 13.797 अरब वर्ष (प्लैंक माप) पर आधारित; महीने/दिन कैलेंडर-अनुमान हैं, कोई सटीक ब्रह्मांडीय मान नहीं।",
+    zh: "基于约137.97亿年(普朗克测量值);月/天为日历近似值,并非精确的宇宙学数值。",
+    ko: "약 137억 9,700만 년(플랑크 측정치)을 기준으로 함. 월/일은 달력상의 근사치이며 정확한 우주론적 수치가 아님.",
+    ja: "約137億9700万年(プランクの測定値)に基づく。月・日はカレンダー上の近似値であり、正確な宇宙論的数値ではない。",
+    es: "Basado en ≈ 13.797 millones de años (medición de Planck); los meses/días son aproximaciones de calendario, no una cifra cosmológica exacta.",
+    fr: "Basé sur ≈ 13,797 milliards d'années (mesure Planck) ; les mois/jours sont des approximations calendaires, pas une valeur cosmologique exacte.",
+    tr: "≈ 13,797 milyar yıla (Planck ölçümü) dayanır; ay/gün takvim yaklaşık değerleridir, kesin bir kozmolojik değer değildir.",
+    ru: "На основе ≈ 13,797 млрд лет (измерение «Планка»); месяцы/дни — календарные приближения, а не точная космологическая величина.",
+    pt: "Baseado em ≈ 13,797 bilhões de anos (medição do Planck); meses/dias são aproximações de calendário, não um valor cosmológico exato.",
+    ar: "استنادًا إلى ≈ 13.797 مليار سنة (قياس بلانك)؛ الأشهر/الأيام تقريبات تقويمية وليست قيمة كونية دقيقة.",
+    el: "Βασισμένο σε ≈ 13,797 δισ. έτη (μέτρηση Planck)· οι μήνες/ημέρες είναι ημερολογιακές προσεγγίσεις, όχι ακριβές κοσμολογικό μέγεθος.",
+  },
+
   // Sonnensystem-Modal
   solarSystemTapHint: {
     de: "Planet tippen für Details", en: "Tap a planet for details", hi: "विवरण के लिए ग्रह पर टैप करें", zh: "点击行星查看详情", ko: "행성을 탭하면 자세히 보기", ja: "惑星をタップして詳細を表示",

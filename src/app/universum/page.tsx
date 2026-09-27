@@ -7,6 +7,7 @@ import Typewriter from "@/components/ui/Typewriter";
 import DetailModal from "@/components/ui/DetailModal";
 import SpaceNewsSection from "@/components/home/SpaceNewsSection";
 import SolarSystem from "@/components/universe/SolarSystem";
+import UniverseAgeTicker from "@/components/universe/UniverseAgeTicker";
 import SolarSystemModal from "@/components/universe/SolarSystemModal";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -1405,6 +1406,8 @@ export default function UniversumPage() {
             {t("universeIntro")}
           </p>
         </header>
+
+        <UniverseAgeTicker />
 
         {/* Nutzerwunsch 20.09.2026: "erstelle so ein box mit solarsystem
             oben. wenn ich auf dem box drücke dann soll was ähnliches
