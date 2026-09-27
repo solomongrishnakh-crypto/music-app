@@ -18,7 +18,10 @@ import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment
  *     Ritzel, Zahnphasen so ausgerichtet, dass Zahn in Lücke läuft, und die
  *     Drehzahlen folgen exakt dem Zähneverhältnis (Abrollbedingung).
  *   - Räder liegen auf drei Ebenen (zyklisch), damit sich nur die
- *     jeweiligen Partner berühren; Zickzack-Anordnung hält es kompakt.
+ *     jeweiligen Partner berühren. Alle Achsen in EINER geraden Reihe
+ *     (wie die Googol-/"Google Gear"-Maschine) – vorher Zickzack, das wirkte
+ *     laut Nutzer "alles durcheinander". Kamera schaut schräg entlang der
+ *     Reihe, sodass sie nach hinten wegläuft (kompakt durch Perspektive).
  *   - Details: Zahnkranz, dünnerer Steg mit 6 Aussparungen, Nabe,
  *     Stahlwelle mit Sechskantmutter, Messing-Lager, Grundplatte,
  *     Metall-Spiegelungen per Umgebungs-Map.
@@ -47,7 +50,6 @@ const PRESSURE_ANGLE = (20 * Math.PI) / 180;
 const GEAR_FACE = 0.22; // Breite großes Rad
 const PINION_FACE = 0.26; // Breite Ritzel
 const PLANE_GAP = 0.34; // Abstand der drei Ebenen
-const ZIGZAG = (50 * Math.PI) / 180;
 
 const SHAFT_R = 3.2 * M;
 const HUB_R = 10 * M;
@@ -186,12 +188,12 @@ export default function Gear3D({ className }: Gear3DProps) {
     bushingGeo.rotateX(Math.PI / 2);
     const markerGeo = new THREE.SphereGeometry(2.4 * M, 12, 10);
 
-    // --- Achsen-Positionen (Zickzack) & Zahnphasen ---
+    // --- Achsen-Positionen (gerade Reihe) & Zahnphasen ---
     const centerDist = (GEAR_TEETH + PINION_TEETH) * M;
     const thetas: number[] = [];
     const positions: THREE.Vector2[] = [new THREE.Vector2(0, 0)];
     for (let i = 0; i < AXLE_COUNT - 1; i++) {
-      const theta = i % 2 === 0 ? ZIGZAG : -ZIGZAG;
+      const theta = 0;
       thetas.push(theta);
       const p = positions[i];
       positions.push(new THREE.Vector2(p.x + Math.cos(theta) * centerDist, p.y + Math.sin(theta) * centerDist));
@@ -303,15 +305,37 @@ export default function Gear3D({ className }: Gear3DProps) {
     scene.add(new THREE.AmbientLight(0xffffff, 0.2));
 
     // --- Kamera: ganze Maschine mit Rand in die Box einpassen ---
-    function fittedDistance(): number {
-      if (!mount) return 30;
-      const aspect = mount.clientWidth / Math.max(mount.clientHeight, 1);
-      const vFov = (camera.fov * Math.PI) / 180;
-      const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
-      const dW = size.x / 2 / Math.tan(hFov / 2);
-      const dH = size.y / 2 / Math.tan(vFov / 2);
-      const d = Math.max(dW, dH) * 1.28 + size.z / 2;
-      return Number.isFinite(d) && d > 0 ? d : 30;
+    // Abstand per Projektion suchen: alle 8 Ecken der Baugruppe müssen aus
+    // der aktuellen Blickrichtung mit Rand ins Bild passen (funktioniert
+    // auch beim schrägen Blick entlang der Reihe mit Perspektive).
+    const halfSize = size.clone().multiplyScalar(0.5);
+    const corners: THREE.Vector3[] = [];
+    for (const sx of [-1, 1]) for (const sy of [-1, 1]) for (const sz of [-1, 1]) {
+      corners.push(new THREE.Vector3(sx * halfSize.x, sy * halfSize.y, sz * halfSize.z));
+    }
+    const FIT = 0.84; // Anteil der Box, den die Maschine maximal füllt
+    function fitsAt(dir: THREE.Vector3, dist: number): boolean {
+      camera.position.copy(dir).multiplyScalar(dist);
+      camera.lookAt(0, 0, 0);
+      camera.updateMatrixWorld();
+      const v = new THREE.Vector3();
+      return corners.every((c) => {
+        v.copy(c).applyMatrix4(camera.matrixWorldInverse);
+        if (v.z > -camera.near) return false; // hinter der Kamera
+        v.applyMatrix4(camera.projectionMatrix);
+        return Math.abs(v.x) <= FIT && Math.abs(v.y) <= FIT;
+      });
+    }
+    function fittedDistance(dir: THREE.Vector3): number {
+      let lo = 0.1;
+      let hi = 400;
+      if (!fitsAt(dir, hi)) return hi;
+      for (let k = 0; k < 40; k++) {
+        const mid = (lo + hi) / 2;
+        if (fitsAt(dir, mid)) hi = mid;
+        else lo = mid;
+      }
+      return hi;
     }
 
     function resize() {
@@ -331,19 +355,21 @@ export default function Gear3D({ className }: Gear3DProps) {
     controls.minPolarAngle = 0.35;
     controls.maxPolarAngle = Math.PI - 0.35;
 
-    function applyDistance(dist: number) {
+    function refit() {
       const dir = camera.position.clone().sub(controls.target);
       if (dir.lengthSq() === 0) dir.set(0, 0, 1);
       dir.normalize();
+      const dist = fittedDistance(dir);
       camera.position.copy(controls.target).addScaledVector(dir, dist);
       controls.minDistance = dist * 0.25;
       controls.maxDistance = dist * 2.2;
       controls.update();
     }
 
-    // Startblick leicht von oben und seitlich (Profil)
-    camera.position.setFromSphericalCoords(1, 1.22, 0.28);
-    applyDistance(fittedDistance());
+    // Startblick: schräg von vorne-links und leicht von oben, entlang der
+    // Reihe – das schnelle erste Rad vorne, die Reihe läuft nach hinten weg.
+    camera.position.setFromSphericalCoords(1, 1.15, -0.75);
+    refit();
 
     // Nur bei echter Breitenänderung neu einpassen (mobile Adressleiste
     // löst sonst beim Scrollen ständig Resize aus und setzt den Zoom zurück)
@@ -352,7 +378,7 @@ export default function Gear3D({ className }: Gear3DProps) {
       resize();
       if (!mount || mount.clientWidth === lastWidth) return;
       lastWidth = mount.clientWidth;
-      applyDistance(fittedDistance());
+      refit();
     }
     window.addEventListener("resize", handleResize);
 
