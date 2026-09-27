@@ -2,45 +2,58 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 
 /**
- * Nutzerwunsch 27.09.2026, letzte Korrekturrunde: "mach es von profil,
- * bisschen grösser, und rechne mal die zahlen bei einzelnen rad so das
- * der letzte milliarden jahre braucht um zu drehen. vlt kannst du mehr
- * räder hinzufügen alles kompakt und zeitlich gerechnet"
+ * Nutzerwunsch 27.09.2026, weitere Korrekturrunde: "hä nur das erste rad
+ * bewegt sich. alle anderen sind still und es ist auch nicht 3d man kann
+ * kamera nicht bewegen. adde mal mehr räder und mach hintergrund
+ * verschwomener"
  *
- * Drei Änderungen gegenüber der vorherigen Version:
- *   1. ECHTE Berechnung statt Pi-mal-Daumen-Faktor: Rad 1 dreht sich exakt
- *      alle PERIOD_FIRST_SECONDS Sekunden einmal um die eigene Achse; der
- *      Verlangsamungsfaktor pro Stufe wird so berechnet, dass das LETZTE
- *      Rad rechnerisch genau PERIOD_LAST_YEARS Jahre für eine Umdrehung
- *      braucht (STAGE_RATIO = (PERIOD_LAST/PERIOD_FIRST)^(1/(Anzahl-1))).
- *      PERIOD_LAST_YEARS = 13,797 Mrd. Jahre — bewusst identisch mit dem
- *      Universums-Alter im UniverseAgeTicker daneben, als Anspielung auf
- *      das Reel ("bis sich dieses Rad bewegt, ist das Universum vorbei").
- *   2. Mehr Räder (9 statt 8), aber moderateres Größenwachstum pro Stufe,
- *      damit die Kette trotzdem kompakt bleibt.
- *   3. "Von profil": steilerer Kamerawinkel + leichter Gier-Winkel (Yaw),
- *      sodass die Kette perspektivisch nach hinten verjüngt und die
- *      Dicke/Tiefe der Räder klar sichtbar ist (statt einer fast
- *      frontalen Scheiben-Ansicht wie zuvor) — ähnlich der Reel-Perspektive.
+ * Drei Korrekturen gegenüber der Vorversion:
+ *
+ *   1. NUR-RAD-1-BEWEGT-SICH-BUG: Die vorherige Version nutzte EINEN
+ *      konstanten Verlangsamungsfaktor (~140x) pro Stufe, gleichmäßig auf
+ *      alle Übergänge verteilt. Rechnerisch war das korrekt (Rad 9 kam auf
+ *      exakt 13,797 Mrd. Jahre), aber schon Rad 2 hatte dadurch eine
+ *      Umlaufzeit von ~7 Minuten — in den paar Sekunden, die man auf die
+ *      Seite schaut, ist das komplett unsichtbar, es *wirkt* also, als
+ *      stünde alles außer Rad 1 still. Fix: zweistufige Berechnung.
+ *      Die ersten EARLY_STAGES Übergänge nutzen einen viel kleineren,
+ *      "sichtbaren" Faktor (jedes Rad ca. 3,2x langsamer als das davor —
+ *      man sieht mehrere Räder gleichzeitig, klar unterschiedlich schnell,
+ *      rotieren). Der Rest der Kette holt den fehlenden Faktor exakt
+ *      rechnerisch auf, sodass das LETZTE Rad weiterhin genau
+ *      PERIOD_LAST_YEARS (13,797 Mrd. Jahre — identisch zum Alter des
+ *      Universums im Ticker daneben) für eine Umdrehung braucht. Beide
+ *      Formeln schließen an der Nahtstelle exakt bündig an (keine Sprünge).
+ *   2. "Nicht 3D, Kamera nicht bewegbar": echte OrbitControls (three.js) —
+ *      man kann jetzt per Ziehen die Kamera um die Zahnradkette drehen und
+ *      per Scrollen/Pinch zoomen, dadurch wird die reale 3D-Tiefe der
+ *      Räder (Bevel + Extrusion) sichtbar. Wenn niemand interagiert, dreht
+ *      die Kamera sich von selbst langsam weiter (autoRotate) — passend
+ *      zum Grundgedanken "Partikel/Szene bewegen sich ständig".
+ *   3. Mehr Räder (12 statt 9), moderates Größenwachstum bleibt kompakt.
+ *
+ * "Hintergrund verschwommener" wurde in universum/page.tsx gelöst (mehr
+ * backdrop-blur auf der Box), nicht hier in der Komponente.
  */
 interface Gear3DProps {
   className?: string;
 }
 
-// Zähnezahl pro Rad, von links (schnell/klein) nach rechts (langsam/groß)
-// — moderates Wachstum (~x1.25 pro Stufe) für eine kompakte Kette.
-const GEAR_TEETH = [8, 9, 11, 13, 16, 20, 25, 31, 39];
-const MODULE = 0.046; // "Zahngröße" — bestimmt Radius aus Zähnezahl
-const TOOTH_HEIGHT = 0.04;
-const THICKNESS = 0.4; // Dicke der Extrusion — bestimmt die sichtbare 3D-Tiefe
+// Zähnezahl pro Rad, von links (schnell/klein) nach rechts (langsam/groß).
+const GEAR_TEETH = [8, 9, 10, 12, 14, 17, 20, 24, 29, 35, 42, 50];
+const MODULE = 0.04;
+const TOOTH_HEIGHT = 0.036;
+const THICKNESS = 0.42; // Dicke der Extrusion — sichtbare 3D-Tiefe
 
-// Echte Berechnung der Drehzahlen (siehe Kommentar oben): Rad 1 dreht sich
-// alle 3 Sekunden einmal, Rad 9 (letztes) rechnerisch alle 13,797 Mrd.
-// Jahre einmal — exakt derselbe Zahlenwert wie im UniverseAgeTicker.
-const PERIOD_FIRST_SECONDS = 3;
-const PERIOD_LAST_YEARS = 13_797_000_000;
+// --- Zweistufige, exakt berechnete Drehzahlen (siehe Kommentar oben) ---
+const PERIOD_FIRST_SECONDS = 2; // Rad 1: eine Umdrehung alle 2 Sekunden
+const EARLY_STAGES = 5; // Anzahl "schneller" Übergänge mit sichtbarem Tempo
+const EARLY_STAGE_RATIO = 3.2; // jedes Rad in dieser Phase ~3,2x langsamer
+
+const PERIOD_LAST_YEARS = 13_797_000_000; // = Alter des Universums (Ticker)
 const SECONDS_PER_YEAR = 31_557_600; // 365,25 * 86400 (exakt)
 const PERIOD_LAST_SECONDS = PERIOD_LAST_YEARS * SECONDS_PER_YEAR;
 
@@ -70,12 +83,12 @@ function createGearShape(teeth: number, radius: number, toothHeight: number, hol
 
 function makeGearMesh(teeth: number, colorHex: number): { mesh: THREE.Mesh; radius: number } {
   const radius = teeth * MODULE;
-  const shape = createGearShape(teeth, radius, TOOTH_HEIGHT, Math.max(0.05, radius * 0.26));
+  const shape = createGearShape(teeth, radius, TOOTH_HEIGHT, Math.max(0.045, radius * 0.26));
   const geometry = new THREE.ExtrudeGeometry(shape, {
     depth: THICKNESS,
     bevelEnabled: true,
     bevelThickness: 0.03,
-    bevelSize: 0.022,
+    bevelSize: 0.02,
     bevelSegments: 2,
     curveSegments: 2,
   });
@@ -119,7 +132,8 @@ export default function Gear3D({ className }: Gear3DProps) {
     // Farbverlauf von hellem Akzent (schnelles, kleines Rad) zu dunklerem
     // Rot (langsames, großes Rad).
     const colors = [
-      0xffd4cc, 0xffc0b5, 0xffa89a, 0xff8a7a, 0xff6a58, 0xe8483c, 0xd63f34, 0xb8302a, 0x8f221d,
+      0xffd9d1, 0xffc9c0, 0xffb3a8, 0xff9d8f, 0xff8474, 0xff6a58, 0xf05646, 0xe8483c, 0xd63f34,
+      0xc03730, 0xa42a24, 0x8f221d,
     ];
 
     const gears: { mesh: THREE.Mesh; radius: number; teeth: number }[] = [];
@@ -138,30 +152,63 @@ export default function Gear3D({ className }: Gear3DProps) {
 
     const totalWidth = gears[gears.length - 1].mesh.position.x + gears[gears.length - 1].radius;
     group.position.x = -totalWidth / 2;
-    // "Von profil": steiler Kippwinkel + leichter Gier-Winkel, damit man
-    // die Dicke der Räder und die perspektivische Verjüngung der Reihe
-    // sieht statt einer fast frontalen Scheiben-Ansicht.
-    group.rotation.x = 0.78;
-    group.rotation.y = 0.22;
 
-    function fitCamera() {
-      if (!mount) return;
+    // Zweistufige, exakt berechnete Umlaufzeiten (siehe Kommentar oben):
+    // Übergänge 0..EARLY_STAGES sichtbar-langsam (Faktor 3,2), danach holt
+    // ein exakt errechneter zweiter Faktor den Rest auf, sodass das letzte
+    // Rad genau PERIOD_LAST_SECONDS (13,797 Mrd. Jahre) erreicht.
+    const stageCountTotal = GEAR_TEETH.length - 1;
+    const lateStages = stageCountTotal - EARLY_STAGES;
+    const periodAtEarlyEnd = PERIOD_FIRST_SECONDS * Math.pow(EARLY_STAGE_RATIO, EARLY_STAGES);
+    const lateStageRatio = Math.pow(PERIOD_LAST_SECONDS / periodAtEarlyEnd, 1 / lateStages);
+
+    const periods = GEAR_TEETH.map((_, i) => {
+      if (i <= EARLY_STAGES) {
+        return PERIOD_FIRST_SECONDS * Math.pow(EARLY_STAGE_RATIO, i);
+      }
+      const lateIndex = i - EARLY_STAGES;
+      return periodAtEarlyEnd * Math.pow(lateStageRatio, lateIndex);
+    });
+    const speeds = periods.map((p, i) => ((2 * Math.PI) / p) * (i % 2 === 0 ? 1 : -1));
+
+    // Kamera + OrbitControls: echtes Drehen (Ziehen) und Zoomen (Scroll /
+    // Pinch), damit die 3D-Tiefe der Räder sichtbar/erfahrbar wird.
+    function fittedDistance(): number {
+      if (!mount) return totalWidth * 1.3;
       const aspect = mount.clientWidth / Math.max(mount.clientHeight, 1);
       const vFovRad = (camera.fov * Math.PI) / 180;
       const halfWidthNeeded = totalWidth / 2 + 0.6;
       const rawDist = halfWidthNeeded / (Math.tan(vFovRad / 2) * Math.max(aspect, 0.5));
-      const dist = Number.isFinite(rawDist) ? Math.max(rawDist * 1.2, totalWidth * 0.7) : totalWidth * 1.4;
-      camera.position.set(totalWidth * 0.08, 0.7, dist);
-      camera.lookAt(0, 0, 0);
+      return Number.isFinite(rawDist) ? Math.max(rawDist * 1.25, totalWidth * 0.75) : totalWidth * 1.4;
     }
+
+    const initialDist = fittedDistance();
+    // Startposition: erhöht und leicht seitlich versetzt ("Profil"-artiger
+    // Blick), von dort aus kann frei weitergedreht werden.
+    const startSpherical = new THREE.Spherical(initialDist, 1.15, 0.55);
+    camera.position.setFromSpherical(startSpherical);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 0, 0);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.enablePan = false;
+    controls.minDistance = initialDist * 0.35;
+    controls.maxDistance = initialDist * 2.4;
+    controls.minPolarAngle = 0.35;
+    controls.maxPolarAngle = Math.PI - 0.35;
+    controls.autoRotate = true;
+    controls.autoRotateSpeed = 0.7;
+    controls.update();
 
     function handleResize() {
       resize();
-      fitCamera();
+      const dist = fittedDistance();
+      controls.minDistance = dist * 0.35;
+      controls.maxDistance = dist * 2.4;
     }
 
     resize();
-    fitCamera();
     window.addEventListener("resize", handleResize);
 
     const keyLight = new THREE.DirectionalLight(0xffffff, 1.5);
@@ -172,17 +219,6 @@ export default function Gear3D({ className }: Gear3DProps) {
     scene.add(rimLight);
     scene.add(new THREE.AmbientLight(0xffffff, 0.38));
 
-    // Echte Berechnung (siehe Kommentar oben am Datei-Anfang): Stufenfaktor
-    // so bestimmt, dass Rad 1 alle PERIOD_FIRST_SECONDS Sekunden und das
-    // letzte Rad rechnerisch alle PERIOD_LAST_SECONDS (13,797 Mrd. Jahre)
-    // eine Umdrehung macht.
-    const stageCount = GEAR_TEETH.length - 1;
-    const stageRatio = Math.pow(PERIOD_LAST_SECONDS / PERIOD_FIRST_SECONDS, 1 / stageCount);
-    const baseSpeed = (2 * Math.PI) / PERIOD_FIRST_SECONDS; // rad/s, Rad 1
-    const speeds = GEAR_TEETH.map(
-      (_, i) => (baseSpeed / Math.pow(stageRatio, i)) * (i % 2 === 0 ? 1 : -1)
-    );
-
     let animationId = 0;
     let elapsed = 0;
     function animate() {
@@ -190,6 +226,7 @@ export default function Gear3D({ className }: Gear3DProps) {
       gears.forEach((g, i) => {
         g.mesh.rotation.z = elapsed * speeds[i];
       });
+      controls.update();
       renderer.render(scene, camera);
       animationId = requestAnimationFrame(animate);
     }
@@ -201,6 +238,7 @@ export default function Gear3D({ className }: Gear3DProps) {
     return () => {
       cancelAnimationFrame(animationId);
       window.removeEventListener("resize", handleResize);
+      controls.dispose();
       geometries.forEach((g) => g.dispose());
       materials.forEach((m) => m.dispose());
       renderer.dispose();
