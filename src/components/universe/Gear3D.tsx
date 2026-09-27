@@ -30,9 +30,10 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
  *   2. "Nicht 3D, Kamera nicht bewegbar": echte OrbitControls (three.js) —
  *      man kann jetzt per Ziehen die Kamera um die Zahnradkette drehen und
  *      per Scrollen/Pinch zoomen, dadurch wird die reale 3D-Tiefe der
- *      Räder (Bevel + Extrusion) sichtbar. Wenn niemand interagiert, dreht
- *      die Kamera sich von selbst langsam weiter (autoRotate) — passend
- *      zum Grundgedanken "Partikel/Szene bewegen sich ständig".
+ *      Räder (Bevel + Extrusion) sichtbar. Nutzerwunsch danach ("die
+ *      räder drehen sich wie 3d ohne das ich es steuere mach es
+ *      statisch"): keine automatische Kamera-Rotation mehr — die Kamera
+ *      steht still, bis der Nutzer selbst zieht/zoomt.
  *   3. Mehr Räder (12 statt 9), moderates Größenwachstum bleibt kompakt.
  *
  * "Hintergrund verschwommener" wurde in universum/page.tsx gelöst (mehr
@@ -102,13 +103,11 @@ function makeGearMesh(teeth: number, colorHex: number): { mesh: THREE.Mesh; radi
   });
   const mesh = new THREE.Mesh(geometry, material);
 
-  // Nutzerwunsch 27.09.2026: "kannst du eine markierung in räder hinzufügen
-  // so man checkt das rad hat sich bisschen bewegt" — ein heller Strich von
-  // der Mitte zum Rand plus ein Punkt an der Spitze, fest mit dem Rad
-  // verbunden (rotiert mit). So sieht man auch bei sehr langsamen Rädern
-  // sofort, ob/wie weit sich die Markierung gegenüber vorhin gedreht hat —
-  // ein reines Kreis-Muster ohne Markierung sieht sonst bei jeder Drehung
-  // identisch aus.
+  // Nutzerwunsch 27.09.2026: "markierung soll nur am rand des rades (oben)
+  // sein" — der vorherige Strich ging quer über das ganze Rad und wirkte
+  // wie ein Fremdkörper. Jetzt: nur ein kleiner heller Punkt direkt am
+  // Zahnkranz-Rand, oben (12-Uhr-Position), fest mit dem Rad verbunden
+  // (rotiert mit) — reicht als Referenzpunkt, um eine Drehung zu erkennen.
   const markerMaterial = new THREE.MeshStandardMaterial({
     color: 0xfff3c4,
     emissive: 0xfff3c4,
@@ -116,16 +115,9 @@ function makeGearMesh(teeth: number, colorHex: number): { mesh: THREE.Mesh; radi
     metalness: 0.1,
     roughness: 0.4,
   });
-  const barLength = radius * 0.82;
-  const bar = new THREE.Mesh(
-    new THREE.BoxGeometry(barLength, Math.max(radius * 0.09, 0.02), 0.025),
-    markerMaterial
-  );
-  bar.position.set(barLength / 2 - radius * 0.08, 0, THICKNESS / 2 + 0.015);
-  mesh.add(bar);
-  const tip = new THREE.Mesh(new THREE.SphereGeometry(Math.max(radius * 0.13, 0.03), 10, 8), markerMaterial);
-  tip.position.set(radius * 0.78, 0, THICKNESS / 2 + 0.02);
-  mesh.add(tip);
+  const marker = new THREE.Mesh(new THREE.SphereGeometry(Math.max(radius * 0.16, 0.035), 10, 8), markerMaterial);
+  marker.position.set(0, radius + TOOTH_HEIGHT * 0.4, THICKNESS / 2 + 0.02);
+  mesh.add(marker);
 
   return { mesh, radius };
 }
@@ -224,8 +216,7 @@ export default function Gear3D({ className }: Gear3DProps) {
     controls.maxDistance = initialDist * 2.4;
     controls.minPolarAngle = 0.35;
     controls.maxPolarAngle = Math.PI - 0.35;
-    controls.autoRotate = true;
-    controls.autoRotateSpeed = 0.7;
+    controls.autoRotate = false;
     controls.update();
 
     function handleResize() {
