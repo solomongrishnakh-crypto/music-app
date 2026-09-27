@@ -24,11 +24,14 @@ interface Gear3DProps {
 
 // Zähnezahl pro Rad, von links (schnell) nach rechts (langsam) — jede
 // Stufe hat spürbar mehr Zähne als die vorherige, daher die sichtbar
-// wachsende Untersetzung.
-const GEAR_TEETH = [8, 11, 16, 24, 36];
-const MODULE = 0.145; // "Zahngröße" — bestimmt Radius aus Zähnezahl
-const TOOTH_HEIGHT = 0.11;
-const THICKNESS = 0.32;
+// wachsende Untersetzung. Bewusst moderat gewählt (nicht 8→36 wie in
+// einer früheren Version): die Räder müssen zusammen in eine flache,
+// breite Box passen, ohne dass die Kamera unrealistisch weit wegrücken
+// muss (das führte vorher zu einer leeren/kaputten Darstellung).
+const GEAR_TEETH = [8, 10, 13, 17, 22];
+const MODULE = 0.075; // "Zahngröße" — bestimmt Radius aus Zähnezahl
+const TOOTH_HEIGHT = 0.055;
+const THICKNESS = 0.18;
 
 function createGearShape(teeth: number, radius: number, toothHeight: number, holeRadius: number): THREE.Shape {
   const shape = new THREE.Shape();
@@ -127,19 +130,30 @@ export default function Gear3D({ className }: Gear3DProps) {
     group.position.x = -totalWidth / 2;
     group.rotation.x = 0.3;
 
+    // Kamera so weit zurücksetzen, dass die gesamte Kette (Breite
+    // totalWidth) horizontal ins Bild passt — Standardformel für "Objekt
+    // von bekannter Breite in FOV einpassen", statt der vorherigen
+    // fehleranfälligen Variante (die bei clientHeight=0 durch Null teilen
+    // konnte → NaN-Kameraposition → komplett leere Darstellung).
     function fitCamera() {
-      const span = totalWidth + 0.6;
-      const dist = span / (2 * Math.tan((camera.fov * Math.PI) / 360) * (mount!.clientWidth / mount!.clientHeight <= 1 ? mount!.clientWidth / mount!.clientHeight : 1));
-      camera.position.set(0, 0.5, Math.max(dist, span * 0.9));
+      if (!mount) return;
+      const aspect = mount.clientWidth / Math.max(mount.clientHeight, 1);
+      const vFovRad = (camera.fov * Math.PI) / 180;
+      const halfWidthNeeded = totalWidth / 2 + 0.5;
+      const rawDist = halfWidthNeeded / (Math.tan(vFovRad / 2) * Math.max(aspect, 0.5));
+      const dist = Number.isFinite(rawDist) ? Math.max(rawDist * 1.1, totalWidth * 0.6) : totalWidth * 1.2;
+      camera.position.set(0, 0.4, dist);
       camera.lookAt(0, 0, 0);
+    }
+
+    function handleResize() {
+      resize();
+      fitCamera();
     }
 
     resize();
     fitCamera();
-    window.addEventListener("resize", () => {
-      resize();
-      fitCamera();
-    });
+    window.addEventListener("resize", handleResize);
 
     const keyLight = new THREE.DirectionalLight(0xffffff, 1.4);
     keyLight.position.set(2, 3, 4);
@@ -173,7 +187,7 @@ export default function Gear3D({ className }: Gear3DProps) {
 
     return () => {
       cancelAnimationFrame(animationId);
-      window.removeEventListener("resize", resize);
+      window.removeEventListener("resize", handleResize);
       geometries.forEach((g) => g.dispose());
       materials.forEach((m) => m.dispose());
       renderer.dispose();
