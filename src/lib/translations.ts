@@ -176,6 +176,26 @@ const TRANSLATIONS_SOURCE = {
     el: "Βασισμένο σε ≈ 13,797 δισ. έτη (μέτρηση Planck)· οι μήνες/ημέρες είναι ημερολογιακές προσεγγίσεις, όχι ακριβές κοσμολογικό μέγεθος.",
   },
 
+  gearLabel: {
+    de: "// Zur Veranschaulichung", en: "// For scale", hi: "// पैमाने के लिए", zh: "// 直观比例", ko: "// 규모 비교", ja: "// スケールの目安",
+    es: "// A modo de escala", fr: "// Pour l'échelle", tr: "// Ölçek için", ru: "// Для масштаба", pt: "// Para escala", ar: "// للتوضيح", el: "// Για κλίμακα",
+  },
+  gearCaption: {
+    de: "Bekannt aus einem viralen Reel: eine extreme Getriebe-Untersetzungskette, bei der das letzte Zahnrad rechnerisch länger als das Alter des Universums für eine Umdrehung bräuchte. Dieses 3D-Zahnrad ist eine spielerische Anspielung darauf, keine echte Untersetzung.",
+    en: "Known from a viral reel: an extreme gear-reduction chain where the final gear would theoretically need longer than the age of the universe for one rotation. This 3D gear is a playful nod to that idea, not a real reduction.",
+    hi: "एक वायरल रील से प्रसिद्ध: एक अत्यधिक गियर-रिडक्शन चेन, जिसमें अंतिम गियर को एक चक्कर पूरा करने में सैद्धांतिक रूप से ब्रह्मांड की आयु से भी अधिक समय लगेगा। यह 3D गियर उस विचार पर एक चंचल संकेत है, कोई वास्तविक रिडक्शन नहीं।",
+    zh: "源自一个爆红短视频:一条极端的减速齿轮链,理论上最后一个齿轮转一圈所需的时间比宇宙的年龄还长。这个3D齿轮只是对这个想法的趣味致意,并非真实的减速装置。",
+    ko: "한 바이럴 릴에서 유명해진 이야기: 극단적인 감속 기어 체인에서는 마지막 기어가 한 바퀴 도는 데 이론적으로 우주의 나이보다 더 오랜 시간이 걸린다. 이 3D 기어는 그 아이디어에 대한 재치 있는 오마주일 뿐, 실제 감속 장치는 아니다.",
+    ja: "あるバイラル動画で有名になった話:極端な減速歯車列では、最後の歯車が一回転するのに理論上宇宙の年齢よりも長い時間がかかるという。この3D歯車はそのアイデアへの遊び心ある目配せであり、実際の減速機構ではない。",
+    es: "Conocido por un reel viral: una cadena extrema de reducción de engranajes en la que la última rueda tardaría, en teoría, más que la edad del universo en dar una vuelta. Este engranaje 3D es un guiño lúdico a esa idea, no una reducción real.",
+    fr: "Connu grâce à un reel viral : une chaîne de réduction d'engrenages extrême où le dernier engrenage mettrait, en théorie, plus de temps que l'âge de l'univers pour faire un tour. Cet engrenage 3D est un clin d'œil ludique à cette idée, pas une véritable réduction.",
+    tr: "Viral bir video ile tanınır: son dişlinin bir tur atması için teorik olarak evrenin yaşından daha uzun süre gerektiği aşırı bir dişli redüksiyon zinciri. Bu 3D dişli, gerçek bir redüksiyon değil, o fikre eğlenceli bir gönderme.",
+    ru: "Известно по вирусному ролику: экстремальная цепочка редукторных передач, где последней шестерне теоретически потребовалось бы больше времени, чем возраст Вселенной, на один оборот. Эта 3D-шестерня — игривая отсылка к этой идее, а не настоящий редуктор.",
+    pt: "Conhecido de um reel viral: uma cadeia extrema de redução de engrenagens em que a última engrenagem levaria, em teoria, mais tempo que a idade do universo para dar uma volta. Esta engrenagem 3D é uma referência lúdica a essa ideia, não uma redução real.",
+    ar: "معروف من مقطع فيديو منتشر بشدة: سلسلة تروس تخفيض متطرفة يحتاج فيها الترس الأخير نظريًا إلى وقت أطول من عمر الكون لإتمام دورة واحدة. هذا الترس ثلاثي الأبعاد إشارة مرحة لتلك الفكرة، وليس تخفيضًا حقيقيًا.",
+    el: "Γνωστό από ένα viral βίντεο: μια ακραία αλυσίδα μείωσης γραναζιών όπου το τελευταίο γρανάζι θα χρειαζόταν θεωρητικά περισσότερο χρόνο από την ηλικία του σύμπαντος για μία περιστροφή. Αυτό το 3D γρανάζι είναι ένα παιχνιδιάρικο βλεφάρισμα σε αυτή την ιδέα, όχι μια πραγματική μείωση.",
+  },
+
   // Sonnensystem-Modal
   solarSystemTapHint: {
     de: "Planet tippen für Details", en: "Tap a planet for details", hi: "विवरण के लिए ग्रह पर टैप करें", zh: "点击行星查看详情", ko: "행성을 탭하면 자세히 보기", ja: "惑星をタップして詳細を表示",

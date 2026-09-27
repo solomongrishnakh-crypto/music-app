@@ -8,6 +8,7 @@ import DetailModal from "@/components/ui/DetailModal";
 import SpaceNewsSection from "@/components/home/SpaceNewsSection";
 import SolarSystem from "@/components/universe/SolarSystem";
 import UniverseAgeTicker from "@/components/universe/UniverseAgeTicker";
+import Gear3D from "@/components/universe/Gear3D";
 import SolarSystemModal from "@/components/universe/SolarSystemModal";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -1407,7 +1408,24 @@ export default function UniversumPage() {
           </p>
         </header>
 
-        <UniverseAgeTicker />
+        <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center">
+          <div className="flex-1">
+            <UniverseAgeTicker />
+          </div>
+          {/* Nutzerwunsch 27.09.2026 (nach "Google Gear"-Reel): "kannst
+              auch ein 3d zahnrad bauen?" — echtes Three.js-Zahnrad als
+              spielerische Anspielung auf die virale "bis sich dieses Rad
+              bewegt, ist das Universum vorbei"-Getriebekette. */}
+          <div className="flex shrink-0 flex-col items-center border border-border/60 bg-black/20 p-3 sm:w-44">
+            <Gear3D className="h-28 w-28 sm:h-32 sm:w-32" />
+            <p className="label-mono mt-1 text-center text-[9px] uppercase tracking-wide text-muted">
+              {t("gearLabel")}
+            </p>
+            <p className="mt-1 text-center text-[9px] leading-relaxed text-muted">
+              {t("gearCaption")}
+            </p>
+          </div>
+        </div>
 
         {/* Nutzerwunsch 20.09.2026: "erstelle so ein box mit solarsystem
             oben. wenn ich auf dem box drücke dann soll was ähnliches
