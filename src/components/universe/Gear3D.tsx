@@ -3,123 +3,115 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
 /**
- * Nutzerwunsch 27.09.2026, weitere Korrekturrunde: "hä nur das erste rad
- * bewegt sich. alle anderen sind still und es ist auch nicht 3d man kann
- * kamera nicht bewegen. adde mal mehr räder und mach hintergrund
- * verschwomener"
+ * Realistisches Stufengetriebe ("Google Gear"-Reel), Nutzerwunsch
+ * 27.09.2026: "mach räder im vergleich zum box kompakter. adde mehr
+ * räderdetails mach realistischer".
  *
- * Drei Korrekturen gegenüber der Vorversion:
+ * Aufbau wie eine echte Untersetzungsmaschine:
+ *   - Jede Achse trägt ein großes Rad (60 Zähne) und ein kleines Ritzel
+ *     (10 Zähne) auf derselben Welle. Das Ritzel von Achse i treibt das
+ *     große Rad von Achse i+1 an → exakt 6:1 Untersetzung pro Stufe.
+ *   - Die Zähne greifen wirklich ineinander: gleiche Zahngröße bei Rad und
+ *     Ritzel, Zahnphasen so ausgerichtet, dass Zahn in Lücke läuft, und die
+ *     Drehzahlen folgen exakt dem Zähneverhältnis (Abrollbedingung).
+ *   - Räder liegen auf drei Ebenen (zyklisch), damit sich nur die
+ *     jeweiligen Partner berühren; Zickzack-Anordnung hält es kompakt.
+ *   - Details: Zahnkranz, dünnerer Steg mit 6 Aussparungen, Nabe,
+ *     Stahlwelle mit Sechskantmutter, Messing-Lager, Grundplatte,
+ *     Metall-Spiegelungen per Umgebungs-Map.
  *
- *   1. NUR-RAD-1-BEWEGT-SICH-BUG: Die vorherige Version nutzte EINEN
- *      konstanten Verlangsamungsfaktor (~140x) pro Stufe, gleichmäßig auf
- *      alle Übergänge verteilt. Rechnerisch war das korrekt (Rad 9 kam auf
- *      exakt 13,797 Mrd. Jahre), aber schon Rad 2 hatte dadurch eine
- *      Umlaufzeit von ~7 Minuten — in den paar Sekunden, die man auf die
- *      Seite schaut, ist das komplett unsichtbar, es *wirkt* also, als
- *      stünde alles außer Rad 1 still. Fix: zweistufige Berechnung.
- *      Die ersten EARLY_STAGES Übergänge nutzen einen viel kleineren,
- *      "sichtbaren" Faktor (jedes Rad ca. 3,2x langsamer als das davor —
- *      man sieht mehrere Räder gleichzeitig, klar unterschiedlich schnell,
- *      rotieren). Der Rest der Kette holt den fehlenden Faktor exakt
- *      rechnerisch auf, sodass das LETZTE Rad weiterhin genau
- *      PERIOD_LAST_YEARS (13,797 Mrd. Jahre — identisch zum Alter des
- *      Universums im Ticker daneben) für eine Umdrehung braucht. Beide
- *      Formeln schließen an der Nahtstelle exakt bündig an (keine Sprünge).
- *   2. "Nicht 3D, Kamera nicht bewegbar": echte OrbitControls (three.js) —
- *      man kann jetzt per Ziehen die Kamera um die Zahnradkette drehen und
- *      per Scrollen/Pinch zoomen, dadurch wird die reale 3D-Tiefe der
- *      Räder (Bevel + Extrusion) sichtbar. Nutzerwunsch danach ("die
- *      räder drehen sich wie 3d ohne das ich es steuere mach es
- *      statisch"): keine automatische Kamera-Rotation mehr — die Kamera
- *      steht still, bis der Nutzer selbst zieht/zoomt.
- *   3. Mehr Räder (12 statt 9), moderates Größenwachstum bleibt kompakt.
- *
- * "Hintergrund verschwommener" wurde in universum/page.tsx gelöst (mehr
- * backdrop-blur auf der Box), nicht hier in der Komponente.
+ * Zeitlich gerechnet: Bei 6:1 pro Stufe und 23 Achsen ist das letzte Rad
+ * 6^22 ≈ 1,3 × 10^17-mal langsamer als das erste. Die Drehzeit des ersten
+ * Rads wird daraus so berechnet, dass das letzte exakt 13,797 Mrd. Jahre
+ * (= Alter des Universums im Ticker) pro Umdrehung braucht → erstes Rad
+ * ≈ 3,3 s. Zeitbasis ist die echte Uhr (performance.now), nicht die
+ * Bildrate. Kamera steht still, bis der Nutzer zieht/zoomt.
  */
 interface Gear3DProps {
   className?: string;
 }
 
-// Zähnezahl pro Rad, von links (schnell/klein) nach rechts (langsam/groß).
-const GEAR_TEETH = [8, 9, 10, 12, 14, 17, 20, 24, 29, 35, 42, 50];
-const MODULE = 0.04;
-const TOOTH_HEIGHT = 0.036;
-const THICKNESS = 0.42; // Dicke der Extrusion — sichtbare 3D-Tiefe
+const AXLE_COUNT = 23;
+const PINION_TEETH = 10;
+const GEAR_TEETH = 60;
+const RATIO = GEAR_TEETH / PINION_TEETH; // 6:1 pro Stufe
 
-// --- Zweistufige, exakt berechnete Drehzahlen (siehe Kommentar oben) ---
-const PERIOD_FIRST_SECONDS = 2; // Rad 1: eine Umdrehung alle 2 Sekunden
-const EARLY_STAGES = 5; // Anzahl "schneller" Übergänge mit sichtbarem Tempo
-const EARLY_STAGE_RATIO = 3.2; // jedes Rad in dieser Phase ~3,2x langsamer
+const M = 0.02; // Teilkreisradius pro Zahn
+const ADDENDUM = 2 * M; // Zahnkopfhöhe
+const DEDENDUM = 2.5 * M; // Zahnfußtiefe
+const PRESSURE_ANGLE = (20 * Math.PI) / 180;
+
+const GEAR_FACE = 0.22; // Breite großes Rad
+const PINION_FACE = 0.26; // Breite Ritzel
+const PLANE_GAP = 0.34; // Abstand der drei Ebenen
+const ZIGZAG = (50 * Math.PI) / 180;
+
+const SHAFT_R = 3.2 * M;
+const HUB_R = 10 * M;
+const PLATE_FRONT = -(PINION_FACE / 2) - 0.07;
+const PLATE_DEPTH = 0.08;
+const SHAFT_FRONT = 2 * PLANE_GAP + GEAR_FACE / 2 + 0.05;
 
 const PERIOD_LAST_YEARS = 13_797_000_000; // = Alter des Universums (Ticker)
 const SECONDS_PER_YEAR = 31_557_600; // 365,25 * 86400 (exakt)
 const PERIOD_LAST_SECONDS = PERIOD_LAST_YEARS * SECONDS_PER_YEAR;
+const PERIOD_FIRST_SECONDS = PERIOD_LAST_SECONDS / Math.pow(RATIO, AXLE_COUNT - 1); // ≈ 3,31 s
 
-function createGearShape(teeth: number, radius: number, toothHeight: number, holeRadius: number): THREE.Shape {
-  const shape = new THREE.Shape();
+/** Zahnkranz-Kontur (trapezförmige Zähne mit 20°-Flanken) in `shape` zeichnen. */
+function drawToothOutline(shape: THREE.Shape, teeth: number) {
+  const pitchR = teeth * M;
+  const tipR = pitchR + ADDENDUM;
+  const rootR = pitchR - DEDENDUM;
   const step = (Math.PI * 2) / teeth;
-  for (let i = 0; i < teeth; i++) {
-    const a0 = i * step;
-    const a1 = a0 + step * 0.28;
-    const a2 = a0 + step * 0.5;
-    const a3 = a0 + step * 0.78;
-    const outer = radius + toothHeight;
-    if (i === 0) {
-      shape.moveTo(Math.cos(a0) * radius, Math.sin(a0) * radius);
-    }
-    shape.lineTo(Math.cos(a0) * outer, Math.sin(a0) * outer);
-    shape.lineTo(Math.cos(a1) * outer, Math.sin(a1) * outer);
-    shape.lineTo(Math.cos(a2) * radius, Math.sin(a2) * radius);
-    shape.lineTo(Math.cos(a3) * radius, Math.sin(a3) * radius);
+  const halfPitchW = pitchR * (Math.PI / teeth) * 0.47; // etwas Flankenspiel
+  const halfTipW = Math.max(halfPitchW - ADDENDUM * Math.tan(PRESSURE_ANGLE), halfPitchW * 0.3);
+  const halfRootW = halfPitchW + DEDENDUM * Math.tan(PRESSURE_ANGLE) * 0.2;
+  const aPitch = halfPitchW / pitchR;
+  const aTip = halfTipW / tipR;
+  const aRoot = Math.min(halfRootW / rootR, step * 0.48);
+
+  for (let k = 0; k < teeth; k++) {
+    const c = k * step;
+    const pts: [number, number][] = [
+      [rootR, c - aRoot],
+      [pitchR, c - aPitch],
+      [tipR, c - aTip],
+      [tipR, c + aTip],
+      [pitchR, c + aPitch],
+      [rootR, c + aRoot],
+      [rootR, c + step / 2],
+    ];
+    pts.forEach(([r, a], j) => {
+      const x = Math.cos(a) * r;
+      const y = Math.sin(a) * r;
+      if (k === 0 && j === 0) shape.moveTo(x, y);
+      else shape.lineTo(x, y);
+    });
   }
   shape.closePath();
-  const hole = new THREE.Path();
-  hole.absarc(0, 0, holeRadius, 0, Math.PI * 2, true);
-  shape.holes.push(hole);
-  return shape;
+  return { pitchR, tipR, rootR };
 }
 
-function makeGearMesh(teeth: number, colorHex: number): { mesh: THREE.Mesh; radius: number } {
-  const radius = teeth * MODULE;
-  const shape = createGearShape(teeth, radius, TOOTH_HEIGHT, Math.max(0.045, radius * 0.26));
-  const geometry = new THREE.ExtrudeGeometry(shape, {
-    depth: THICKNESS,
+function circlePath(r: number, cx = 0, cy = 0): THREE.Path {
+  const p = new THREE.Path();
+  p.absarc(cx, cy, r, 0, Math.PI * 2, true);
+  return p;
+}
+
+function extrudeCentered(shape: THREE.Shape, depth: number, bevel: number): THREE.ExtrudeGeometry {
+  const geo = new THREE.ExtrudeGeometry(shape, {
+    depth,
     bevelEnabled: true,
-    bevelThickness: 0.03,
-    bevelSize: 0.02,
+    bevelThickness: bevel,
+    bevelSize: bevel * 0.7,
     bevelSegments: 2,
-    curveSegments: 2,
+    curveSegments: 40,
   });
-  geometry.center();
-  const material = new THREE.MeshStandardMaterial({
-    color: colorHex,
-    metalness: 0.7,
-    roughness: 0.3,
-    emissive: 0x2a0e0a,
-    emissiveIntensity: 0.28,
-  });
-  const mesh = new THREE.Mesh(geometry, material);
-
-  // Nutzerwunsch 27.09.2026: "markierung soll nur am rand des rades (oben)
-  // sein" — der vorherige Strich ging quer über das ganze Rad und wirkte
-  // wie ein Fremdkörper. Jetzt: nur ein kleiner heller Punkt direkt am
-  // Zahnkranz-Rand, oben (12-Uhr-Position), fest mit dem Rad verbunden
-  // (rotiert mit) — reicht als Referenzpunkt, um eine Drehung zu erkennen.
-  const markerMaterial = new THREE.MeshStandardMaterial({
-    color: 0xfff3c4,
-    emissive: 0xfff3c4,
-    emissiveIntensity: 0.9,
-    metalness: 0.1,
-    roughness: 0.4,
-  });
-  const marker = new THREE.Mesh(new THREE.SphereGeometry(Math.max(radius * 0.16, 0.035), 10, 8), markerMaterial);
-  marker.position.set(0, radius + TOOTH_HEIGHT * 0.4, THICKNESS / 2 + 0.02);
-  mesh.add(marker);
-
-  return { mesh, radius };
+  geo.translate(0, 0, -depth / 2);
+  return geo;
 }
 
 export default function Gear3D({ className }: Gear3DProps) {
@@ -130,119 +122,250 @@ export default function Gear3D({ className }: Gear3DProps) {
     if (!mount) return;
 
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(46, 1, 0.1, 50);
+    const camera = new THREE.PerspectiveCamera(40, 1, 0.05, 200);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.0;
     mount.appendChild(renderer.domElement);
+
+    // Umgebungs-Map für realistische Metall-Spiegelungen (Hintergrund bleibt transparent)
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const envTexture = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environment = envTexture;
+
+    // --- Materialien ---
+    const gearMat = new THREE.MeshStandardMaterial({ color: 0xd4473b, metalness: 0.75, roughness: 0.32 });
+    const steelMat = new THREE.MeshStandardMaterial({ color: 0xc9ced6, metalness: 1, roughness: 0.25 });
+    const brassMat = new THREE.MeshStandardMaterial({ color: 0xc9a266, metalness: 1, roughness: 0.35 });
+    const plateMat = new THREE.MeshStandardMaterial({ color: 0x141418, metalness: 0.5, roughness: 0.6 });
+    const markerMat = new THREE.MeshStandardMaterial({
+      color: 0xfff3c4,
+      emissive: 0xfff3c4,
+      emissiveIntensity: 1.2,
+      metalness: 0.1,
+      roughness: 0.4,
+    });
+
+    // --- Geteilte Geometrien (einmal bauen, für alle Achsen wiederverwenden) ---
+    // Großes Rad: Zahnkranz (volle Breite) + dünner Steg mit 6 Aussparungen + Nabe
+    const rimShape = new THREE.Shape();
+    const { rootR: gearRootR, tipR: gearTipR } = drawToothOutline(rimShape, GEAR_TEETH);
+    const rimInner = gearRootR - 6 * M;
+    rimShape.holes.push(circlePath(rimInner));
+    const rimGeo = extrudeCentered(rimShape, GEAR_FACE, 0.012);
+
+    const webShape = new THREE.Shape();
+    webShape.absarc(0, 0, rimInner + 2 * M, 0, Math.PI * 2, false);
+    webShape.holes.push(circlePath(HUB_R * 0.9));
+    const holeRingR = (HUB_R + rimInner) / 2;
+    const holeR = ((rimInner - HUB_R) / 2) * 0.62;
+    for (let h = 0; h < 6; h++) {
+      const a = (h / 6) * Math.PI * 2 + Math.PI / 6;
+      webShape.holes.push(circlePath(holeR, Math.cos(a) * holeRingR, Math.sin(a) * holeRingR));
+    }
+    const webGeo = extrudeCentered(webShape, GEAR_FACE * 0.4, 0.008);
+
+    const hubGeo = new THREE.CylinderGeometry(HUB_R, HUB_R, GEAR_FACE + 0.07, 40);
+    hubGeo.rotateX(Math.PI / 2);
+
+    // Ritzel (massiv, mit Bohrung)
+    const pinionShape = new THREE.Shape();
+    drawToothOutline(pinionShape, PINION_TEETH);
+    pinionShape.holes.push(circlePath(SHAFT_R));
+    const pinionGeo = extrudeCentered(pinionShape, PINION_FACE, 0.01);
+
+    // Welle, Mutter, Lager, Markierung
+    const shaftLen = SHAFT_FRONT - PLATE_FRONT;
+    const shaftGeo = new THREE.CylinderGeometry(SHAFT_R, SHAFT_R, shaftLen, 20);
+    shaftGeo.rotateX(Math.PI / 2);
+    const nutGeo = new THREE.CylinderGeometry(5 * M, 5 * M, 0.06, 6);
+    nutGeo.rotateX(Math.PI / 2);
+    const bushingGeo = new THREE.CylinderGeometry(6 * M, 6 * M, 0.04, 28);
+    bushingGeo.rotateX(Math.PI / 2);
+    const markerGeo = new THREE.SphereGeometry(2.4 * M, 12, 10);
+
+    // --- Achsen-Positionen (Zickzack) & Zahnphasen ---
+    const centerDist = (GEAR_TEETH + PINION_TEETH) * M;
+    const thetas: number[] = [];
+    const positions: THREE.Vector2[] = [new THREE.Vector2(0, 0)];
+    for (let i = 0; i < AXLE_COUNT - 1; i++) {
+      const theta = i % 2 === 0 ? ZIGZAG : -ZIGZAG;
+      thetas.push(theta);
+      const p = positions[i];
+      positions.push(new THREE.Vector2(p.x + Math.cos(theta) * centerDist, p.y + Math.sin(theta) * centerDist));
+    }
+
+    // Ritzel i: Zahn zeigt Richtung Achse i+1; Rad i+1: Lücke zeigt zurück.
+    const gearStep = (Math.PI * 2) / GEAR_TEETH;
+    const gearOffsets = new Array<number>(AXLE_COUNT).fill(0);
+    const pinionOffsets = new Array<number>(AXLE_COUNT).fill(0);
+    for (let i = 0; i < AXLE_COUNT - 1; i++) {
+      pinionOffsets[i] = thetas[i];
+      gearOffsets[i + 1] = thetas[i] + Math.PI - gearStep / 2;
+    }
+
+    // --- Aufbau ---
+    const assembly = new THREE.Group();
+    scene.add(assembly);
+    const axles: THREE.Group[] = [];
+
+    positions.forEach((pos, i) => {
+      const axle = new THREE.Group();
+      axle.position.set(pos.x, pos.y, 0);
+
+      // Drei Ebenen zyklisch: Rad i auf Ebene i%3, Ritzel i auf (i+1)%3
+      const gearZ = (i % 3) * PLANE_GAP;
+      const pinionZ = ((i + 1) % 3) * PLANE_GAP;
+
+      const gear = new THREE.Group();
+      gear.position.z = gearZ;
+      gear.rotation.z = gearOffsets[i];
+      gear.add(new THREE.Mesh(rimGeo, gearMat));
+      gear.add(new THREE.Mesh(webGeo, gearMat));
+      gear.add(new THREE.Mesh(hubGeo, gearMat));
+
+      // Markierung: kleiner Punkt am Zahnkranz, startet oben (12 Uhr)
+      const markerAngle = Math.PI / 2 - gearOffsets[i];
+      const markerR = (rimInner + gearRootR) / 2;
+      const marker = new THREE.Mesh(markerGeo, markerMat);
+      marker.position.set(Math.cos(markerAngle) * markerR, Math.sin(markerAngle) * markerR, GEAR_FACE / 2 + 0.02);
+      gear.add(marker);
+      axle.add(gear);
+
+      const pinion = new THREE.Mesh(pinionGeo, steelMat);
+      pinion.position.z = pinionZ;
+      pinion.rotation.z = pinionOffsets[i];
+      axle.add(pinion);
+
+      const shaft = new THREE.Mesh(shaftGeo, steelMat);
+      shaft.position.z = (SHAFT_FRONT + PLATE_FRONT) / 2;
+      axle.add(shaft);
+
+      const nut = new THREE.Mesh(nutGeo, steelMat);
+      nut.position.z = SHAFT_FRONT + 0.03;
+      axle.add(nut);
+
+      assembly.add(axle);
+      axles.push(axle);
+
+      // Lager auf der Grundplatte (steht still)
+      const bushing = new THREE.Mesh(bushingGeo, brassMat);
+      bushing.position.set(pos.x, pos.y, PLATE_FRONT + 0.02);
+      assembly.add(bushing);
+    });
+
+    // Grundplatte (abgerundetes Rechteck hinter allen Rädern)
+    const xs = positions.map((p) => p.x);
+    const ys = positions.map((p) => p.y);
+    const margin = gearTipR + 0.18;
+    const x0 = Math.min(...xs) - margin;
+    const x1 = Math.max(...xs) + margin;
+    const y0 = Math.min(...ys) - margin;
+    const y1 = Math.max(...ys) + margin;
+    const cr = 0.25;
+    const plateShape = new THREE.Shape();
+    plateShape.moveTo(x0 + cr, y0);
+    plateShape.lineTo(x1 - cr, y0);
+    plateShape.quadraticCurveTo(x1, y0, x1, y0 + cr);
+    plateShape.lineTo(x1, y1 - cr);
+    plateShape.quadraticCurveTo(x1, y1, x1 - cr, y1);
+    plateShape.lineTo(x0 + cr, y1);
+    plateShape.quadraticCurveTo(x0, y1, x0, y1 - cr);
+    plateShape.lineTo(x0, y0 + cr);
+    plateShape.quadraticCurveTo(x0, y0, x0 + cr, y0);
+    const plateGeo = new THREE.ExtrudeGeometry(plateShape, {
+      depth: PLATE_DEPTH,
+      bevelEnabled: true,
+      bevelThickness: 0.01,
+      bevelSize: 0.01,
+      bevelSegments: 2,
+      curveSegments: 8,
+    });
+    plateGeo.translate(0, 0, PLATE_FRONT - PLATE_DEPTH);
+    const plate = new THREE.Mesh(plateGeo, plateMat);
+    assembly.add(plate);
+
+    // Gesamte Baugruppe um den Ursprung zentrieren
+    const bounds = new THREE.Box3().setFromObject(assembly);
+    const center = bounds.getCenter(new THREE.Vector3());
+    const size = bounds.getSize(new THREE.Vector3());
+    assembly.position.sub(center);
+
+    // --- Licht (zusätzlich zur Umgebungs-Map) ---
+    const keyLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    keyLight.position.set(3, 5, 6);
+    scene.add(keyLight);
+    const rimLight = new THREE.DirectionalLight(0xff5a4d, 0.5);
+    rimLight.position.set(-4, -2, -3);
+    scene.add(rimLight);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.2));
+
+    // --- Kamera: ganze Maschine mit Rand in die Box einpassen ---
+    function fittedDistance(): number {
+      if (!mount) return 30;
+      const aspect = mount.clientWidth / Math.max(mount.clientHeight, 1);
+      const vFov = (camera.fov * Math.PI) / 180;
+      const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
+      const dW = size.x / 2 / Math.tan(hFov / 2);
+      const dH = size.y / 2 / Math.tan(vFov / 2);
+      const d = Math.max(dW, dH) * 1.28 + size.z / 2;
+      return Number.isFinite(d) && d > 0 ? d : 30;
+    }
 
     function resize() {
       if (!mount) return;
-      const w = mount.clientWidth;
-      const h = mount.clientHeight;
-      renderer.setSize(w, h);
-      camera.aspect = w / h;
+      renderer.setSize(mount.clientWidth, mount.clientHeight);
+      camera.aspect = mount.clientWidth / Math.max(mount.clientHeight, 1);
       camera.updateProjectionMatrix();
     }
-
-    const group = new THREE.Group();
-    scene.add(group);
-
-    // Farbverlauf von hellem Akzent (schnelles, kleines Rad) zu dunklerem
-    // Rot (langsames, großes Rad).
-    const colors = [
-      0xffd9d1, 0xffc9c0, 0xffb3a8, 0xff9d8f, 0xff8474, 0xff6a58, 0xf05646, 0xe8483c, 0xd63f34,
-      0xc03730, 0xa42a24, 0x8f221d,
-    ];
-
-    const gears: { mesh: THREE.Mesh; radius: number; teeth: number }[] = [];
-    let cursorX = 0;
-    GEAR_TEETH.forEach((teeth, i) => {
-      const { mesh, radius } = makeGearMesh(teeth, colors[i] ?? colors[colors.length - 1]);
-      if (i === 0) {
-        cursorX = 0;
-      } else {
-        cursorX += gears[i - 1].radius + radius;
-      }
-      mesh.position.x = cursorX;
-      group.add(mesh);
-      gears.push({ mesh, radius, teeth });
-    });
-
-    const totalWidth = gears[gears.length - 1].mesh.position.x + gears[gears.length - 1].radius;
-    group.position.x = -totalWidth / 2;
-
-    // Zweistufige, exakt berechnete Umlaufzeiten (siehe Kommentar oben):
-    // Übergänge 0..EARLY_STAGES sichtbar-langsam (Faktor 3,2), danach holt
-    // ein exakt errechneter zweiter Faktor den Rest auf, sodass das letzte
-    // Rad genau PERIOD_LAST_SECONDS (13,797 Mrd. Jahre) erreicht.
-    const stageCountTotal = GEAR_TEETH.length - 1;
-    const lateStages = stageCountTotal - EARLY_STAGES;
-    const periodAtEarlyEnd = PERIOD_FIRST_SECONDS * Math.pow(EARLY_STAGE_RATIO, EARLY_STAGES);
-    const lateStageRatio = Math.pow(PERIOD_LAST_SECONDS / periodAtEarlyEnd, 1 / lateStages);
-
-    const periods = GEAR_TEETH.map((_, i) => {
-      if (i <= EARLY_STAGES) {
-        return PERIOD_FIRST_SECONDS * Math.pow(EARLY_STAGE_RATIO, i);
-      }
-      const lateIndex = i - EARLY_STAGES;
-      return periodAtEarlyEnd * Math.pow(lateStageRatio, lateIndex);
-    });
-    const speeds = periods.map((p, i) => ((2 * Math.PI) / p) * (i % 2 === 0 ? 1 : -1));
-
-    // Kamera + OrbitControls: echtes Drehen (Ziehen) und Zoomen (Scroll /
-    // Pinch), damit die 3D-Tiefe der Räder sichtbar/erfahrbar wird.
-    function fittedDistance(): number {
-      if (!mount) return totalWidth * 1.3;
-      const aspect = mount.clientWidth / Math.max(mount.clientHeight, 1);
-      const vFovRad = (camera.fov * Math.PI) / 180;
-      const halfWidthNeeded = totalWidth / 2 + 0.6;
-      const rawDist = halfWidthNeeded / (Math.tan(vFovRad / 2) * Math.max(aspect, 0.5));
-      return Number.isFinite(rawDist) ? Math.max(rawDist * 1.25, totalWidth * 0.75) : totalWidth * 1.4;
-    }
-
-    const initialDist = fittedDistance();
-    // Startposition: erhöht und leicht seitlich versetzt ("Profil"-artiger
-    // Blick), von dort aus kann frei weitergedreht werden.
-    const startSpherical = new THREE.Spherical(initialDist, 1.15, 0.55);
-    camera.position.setFromSpherical(startSpherical);
+    resize();
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.target.set(0, 0, 0);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
     controls.enablePan = false;
-    controls.minDistance = initialDist * 0.35;
-    controls.maxDistance = initialDist * 2.4;
+    controls.autoRotate = false;
     controls.minPolarAngle = 0.35;
     controls.maxPolarAngle = Math.PI - 0.35;
-    controls.autoRotate = false;
-    controls.update();
 
-    function handleResize() {
-      resize();
-      const dist = fittedDistance();
-      controls.minDistance = dist * 0.35;
-      controls.maxDistance = dist * 2.4;
+    function applyDistance(dist: number) {
+      const dir = camera.position.clone().sub(controls.target);
+      if (dir.lengthSq() === 0) dir.set(0, 0, 1);
+      dir.normalize();
+      camera.position.copy(controls.target).addScaledVector(dir, dist);
+      controls.minDistance = dist * 0.25;
+      controls.maxDistance = dist * 2.2;
+      controls.update();
     }
 
-    resize();
+    // Startblick leicht von oben und seitlich (Profil)
+    camera.position.setFromSphericalCoords(1, 1.22, 0.28);
+    applyDistance(fittedDistance());
+
+    // Nur bei echter Breitenänderung neu einpassen (mobile Adressleiste
+    // löst sonst beim Scrollen ständig Resize aus und setzt den Zoom zurück)
+    let lastWidth = mount.clientWidth;
+    function handleResize() {
+      resize();
+      if (!mount || mount.clientWidth === lastWidth) return;
+      lastWidth = mount.clientWidth;
+      applyDistance(fittedDistance());
+    }
     window.addEventListener("resize", handleResize);
 
-    const keyLight = new THREE.DirectionalLight(0xffffff, 1.5);
-    keyLight.position.set(2, 3, 4);
-    scene.add(keyLight);
-    const rimLight = new THREE.DirectionalLight(0xff5a4d, 0.55);
-    rimLight.position.set(-2, -1, -3);
-    scene.add(rimLight);
-    scene.add(new THREE.AmbientLight(0xffffff, 0.38));
+    // --- Animation: exakte Winkelgeschwindigkeiten nach Zähneverhältnis ---
+    const omegaFirst = (Math.PI * 2) / PERIOD_FIRST_SECONDS;
+    const omegas = axles.map((_, i) => omegaFirst * Math.pow(-1 / RATIO, i));
+    const startMs = performance.now();
 
     let animationId = 0;
-    let elapsed = 0;
     function animate() {
-      elapsed += 0.016;
-      gears.forEach((g, i) => {
-        g.mesh.rotation.z = elapsed * speeds[i];
+      const t = (performance.now() - startMs) / 1000;
+      axles.forEach((axle, i) => {
+        axle.rotation.z = omegas[i] * t;
       });
       controls.update();
       renderer.render(scene, camera);
@@ -250,25 +373,16 @@ export default function Gear3D({ className }: Gear3DProps) {
     }
     animate();
 
-    // Auch die Marker (Strich + Punkt) sind Kind-Objekte jedes Rads und
-    // müssen beim Aufräumen mit entsorgt werden, nicht nur das Hauptmesh.
-    const geometries: THREE.BufferGeometry[] = [];
-    const materials: THREE.Material[] = [];
-    gears.forEach((g) => {
-      g.mesh.traverse((obj) => {
-        if (obj instanceof THREE.Mesh) {
-          geometries.push(obj.geometry);
-          materials.push(obj.material as THREE.Material);
-        }
-      });
-    });
-
     return () => {
       cancelAnimationFrame(animationId);
       window.removeEventListener("resize", handleResize);
       controls.dispose();
-      geometries.forEach((g) => g.dispose());
-      materials.forEach((m) => m.dispose());
+      [rimGeo, webGeo, hubGeo, pinionGeo, shaftGeo, nutGeo, bushingGeo, markerGeo, plateGeo].forEach((g) =>
+        g.dispose()
+      );
+      [gearMat, steelMat, brassMat, plateMat, markerMat].forEach((m) => m.dispose());
+      envTexture.dispose();
+      pmrem.dispose();
       renderer.dispose();
       if (mount.contains(renderer.domElement)) {
         mount.removeChild(renderer.domElement);
