@@ -283,10 +283,12 @@ function createPaintStrokeTexture(): THREE.CanvasTexture {
       const taper = Math.min(1, t * 5, (1 - t) * 4); // Anfang/Ende dünner
       const ry = (h * 0.3 + rand() * h * 0.08) * (0.55 + 0.45 * taper);
       const rx = 10 + rand() * 8;
-      const shade = 195 + Math.floor(rand() * 45);
-      const g = Math.floor(10 + rand() * 18);
-      const bl = Math.floor(18 + rand() * 18);
-      ctx.fillStyle = "rgba(" + shade + ", " + g + ", " + bl + ", " + (0.35 + rand() * 0.3) + ")";
+      // Kräftiges, deckendes Hellrot (Nutzervorgabe: Farbe wie selbst
+      // eingezeichnet, ca. #ff3333) — nur leichte Schwankungen im Farbton
+      const shade = 245 + Math.floor(rand() * 10);
+      const g = Math.floor(42 + rand() * 14);
+      const bl = Math.floor(42 + rand() * 14);
+      ctx.fillStyle = "rgba(" + shade + ", " + g + ", " + bl + ", " + (0.85 + rand() * 0.15) + ")";
       ctx.beginPath();
       ctx.ellipse(x, y, rx, ry, (rand() - 0.5) * 0.3, 0, Math.PI * 2);
       ctx.fill();
@@ -294,7 +296,7 @@ function createPaintStrokeTexture(): THREE.CanvasTexture {
     // feine Pinselspuren in Strichrichtung
     for (let k = 0; k < 18; k++) {
       const y = h / 2 + (rand() - 0.5) * h * 0.5;
-      ctx.strokeStyle = "rgba(120, 0, 10, " + (0.12 + rand() * 0.12) + ")";
+      ctx.strokeStyle = "rgba(200, 20, 20, " + (0.05 + rand() * 0.05) + ")";
       ctx.lineWidth = 1 + rand() * 1.5;
       ctx.beginPath();
       ctx.moveTo(26 + rand() * 20, y);
@@ -402,8 +404,11 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
       alphaTest: 0.05,
       metalness: 0,
       roughness: 0.55,
-      emissive: 0x7a000c,
-      emissiveIntensity: 0.5,
+      emissive: 0xff2a2a,
+      emissiveIntensity: 0.25,
+      // Ohne Film-Tonwertkorrektur: sonst bleicht ACES das kräftige Rot zu
+      // Lachsrosa aus. So kommt die Lackfarbe wie vorgegeben an.
+      toneMapped: false,
       side: THREE.DoubleSide,
       polygonOffset: true,
       polygonOffsetFactor: -4,
