@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
+import { createBlackHole } from "./blackHole";
 
 /**
  * ThreeBackground
@@ -198,78 +199,12 @@ export default function ThreeBackground() {
     const dust = new THREE.Points(dustGeometry, dustMaterial);
     scene.add(dust);
 
-    // --- Kleine Spiralgalaxie im Zentrum ---------------------------------
-    // Echte 3D-Geometrie (keine Bild-/GIF-Textur): Partikel entlang
-    // logarithmischer Spiralarme verteilt, heller/weißer Kern, der nach
-    // außen zur Akzentfarbe hin ausblasst. Dreht sich langsam um sich
-    // selbst — passt genau in die freie Mitte der äußeren Partikelwolke.
-    const GALAXY_PARTICLE_COUNT = 1400;
-    const GALAXY_RADIUS = 2.6;
-    const GALAXY_ARMS = 3;
-    const GALAXY_SPIN = 2.6;
-
-    const galaxyPositions = new Float32Array(GALAXY_PARTICLE_COUNT * 3);
-    const galaxyColors = new Float32Array(GALAXY_PARTICLE_COUNT * 3);
-
-    const galaxyCore = new THREE.Color("#fff2ee");
-    const galaxyMid = new THREE.Color("#ff5a4d");
-    const galaxyOuter = new THREE.Color("#5c221d");
-
-    for (let i = 0; i < GALAXY_PARTICLE_COUNT; i++) {
-      const r = Math.pow(Math.random(), 1.5) * GALAXY_RADIUS;
-      const armIndex = i % GALAXY_ARMS;
-      const armAngleOffset = (armIndex / GALAXY_ARMS) * Math.PI * 2;
-      const spinAngle = r * GALAXY_SPIN;
-
-      // Zufällige Streuung um den Spiralarm herum (nimmt mit Radius leicht zu)
-      const spread = 0.28 * (r / GALAXY_RADIUS) + 0.03;
-      const randomX = (Math.random() - 0.5) * spread;
-      const randomY = (Math.random() - 0.5) * spread * 0.4;
-      const randomZ = (Math.random() - 0.5) * spread;
-
-      const angle = armAngleOffset + spinAngle;
-      const x = Math.cos(angle) * r + randomX;
-      const y = randomY;
-      const z = Math.sin(angle) * r + randomZ;
-
-      galaxyPositions[i * 3] = x;
-      galaxyPositions[i * 3 + 1] = y;
-      galaxyPositions[i * 3 + 2] = z;
-
-      const t = r / GALAXY_RADIUS;
-      const mixed =
-        t < 0.5
-          ? galaxyCore.clone().lerp(galaxyMid, t * 2)
-          : galaxyMid.clone().lerp(galaxyOuter, (t - 0.5) * 2);
-      galaxyColors[i * 3] = mixed.r;
-      galaxyColors[i * 3 + 1] = mixed.g;
-      galaxyColors[i * 3 + 2] = mixed.b;
-    }
-
-    const galaxyGeometry = new THREE.BufferGeometry();
-    galaxyGeometry.setAttribute(
-      "position",
-      new THREE.BufferAttribute(galaxyPositions, 3)
-    );
-    galaxyGeometry.setAttribute(
-      "color",
-      new THREE.BufferAttribute(galaxyColors, 3)
-    );
-
-    const galaxyMaterial = new THREE.PointsMaterial({
-      size: 0.05,
-      map: circleTexture,
-      vertexColors: true,
-      transparent: true,
-      opacity: 0.95,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-      sizeAttenuation: true,
-    });
-
-    const galaxy = new THREE.Points(galaxyGeometry, galaxyMaterial);
-    galaxy.rotation.x = 0.35; // leichte Neigung für 3D-Perspektive
-    scene.add(galaxy);
+    // --- Schwarzes Loch im Zentrum (Interstellar/Gargantua-Stil) ---------
+    // Ersetzt die frühere Spiralgalaxie. Echte Lichtstrahl-Krümmung im
+    // Shader (siehe blackHole.ts): Schatten, Photonenring, Akkretions-
+    // scheibe und der über/unter dem Loch gebogene Scheibenbogen.
+    const blackHole = createBlackHole(7);
+    scene.add(blackHole.mesh);
 
     // --- Verbindungslinien zwischen nahen Partikeln (einmalig berechnet) ---
     // Zusätzlich wird für jeden Punkt gemerkt, mit welchen Nachbarn er
@@ -462,7 +397,6 @@ export default function ThreeBackground() {
       lines.rotation.y = elapsed * 0.05 * spinBoost;
 
       // Kleine Spiralgalaxie: sehr langsame, gleichmäßige Eigendrehung
-      galaxy.rotation.y = elapsed * 0.05;
 
       // Kamera-Parallaxe: sanft zur Zielposition interpolieren + leichtes
       // autonomes Driften, damit auch ohne Mausbewegung Leben in der Szene ist
@@ -483,7 +417,11 @@ export default function ThreeBackground() {
       points.scale.setScalar(compress);
       lines.scale.setScalar(compress);
       dust.scale.setScalar(compress);
-      galaxy.scale.setScalar(1 - currentScrollProgress * 0.4);
+      // Am schmalen Handy-Bildschirm etwas kleiner, damit die Scheibe nicht
+      // links/rechts abgeschnitten wird
+      const fitScale = Math.min(1, camera.aspect * 1.4);
+      blackHole.mesh.scale.setScalar(fitScale * (1 - currentScrollProgress * 0.4));
+      blackHole.update(elapsed * 6, camera);
 
       renderer.render(scene, camera);
       animationId = requestAnimationFrame(animate);
@@ -500,8 +438,7 @@ export default function ThreeBackground() {
       circleTexture.dispose();
       lineGeometry.dispose();
       lineMaterial.dispose();
-      galaxyGeometry.dispose();
-      galaxyMaterial.dispose();
+      blackHole.dispose();
       dustGeometry.dispose();
       dustMaterial.dispose();
       renderer.dispose();
