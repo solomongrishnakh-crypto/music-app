@@ -1419,7 +1419,7 @@ export default function UniversumPage() {
             Zeilenbreite statt schmaler Seiten-Box, damit alle Räder der
             Reihe sichtbar Platz haben. */}
         <div className="mb-10 flex flex-col items-center overflow-hidden border border-border/60 bg-black/35 p-3 backdrop-blur-xl">
-          <Gear3D className="h-40 w-full sm:h-56" />
+          <Gear3D className="h-64 w-full sm:h-80" />
           <p className="label-mono mt-2 text-center text-[9px] uppercase tracking-wide text-muted">
             {t("gearLabel")}
           </p>
