@@ -448,11 +448,15 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
-  // Nutzerwunsch: "man kann nur die mitte zoomen" → Zoom zielt dorthin,
-  // wo Maus/Finger ist, und die Ansicht lässt sich verschieben
-  // (Rechtsklick-Ziehen bzw. mit zwei Fingern), um z. B. den Motor oder
-  // das letzte Rad aus der Nähe anzuschauen.
-  controls.zoomToCursor = true;
+  // Zoom übernimmt eine eigene Funktion (siehe zoomAt unten): Der
+  // Standard-Zoom von OrbitControls verkleinert nur den Abstand zum
+  // Drehpunkt und stoppt am Mindestabstand — weit hinten liegende Stellen
+  // und Ecken waren so nicht erreichbar. Verschieben: Rechtsklick-Ziehen
+  // bzw. zwei Finger.
+  controls.enableZoom = false;
+  controls.touches.TWO = THREE.TOUCH.PAN;
+  controls.minDistance = 0;
+  controls.maxDistance = Infinity;
   controls.enablePan = true;
   controls.screenSpacePanning = true;
   controls.autoRotate = false;
@@ -470,13 +474,13 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
     return new THREE.Vector3().setFromSphericalCoords(1, polar, azimuth);
   }
   let startDir = viewDirection();
+  let maxZoomOutDistance = 100;
   function refit() {
     const { dist, target } = fit(startDir);
     controls.target.copy(target);
     camera.position.copy(target).addScaledVector(startDir, dist);
     camera.lookAt(target);
-    controls.minDistance = dist * 0.05;
-    controls.maxDistance = dist * 2.2;
+    maxZoomOutDistance = dist * 2.5;
     controls.update();
   }
   refit();
@@ -490,6 +494,78 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
     refit();
   }
   window.addEventListener("resize", handleResize);
+
+  // --- Zoom auf beliebigen Punkt (Mausrad / Zwei-Finger-Pinch) ---
+  // Nutzerwunsch: "man kann nicht in die Ecken zoomen oder überall wo man
+  // es will". Der Punkt unter Maus/Fingern wird per Raycast auf der
+  // Maschine bestimmt (sonst auf der Ebene durch den Drehpunkt). Kamera und
+  // Drehpunkt werden dann gemeinsam auf diesen Punkt zu skaliert — der
+  // Punkt bleibt dabei exakt unter dem Zeiger, und man kann beliebig nah an
+  // jede Stelle heran (Motor, einzelne Zähne, letztes Rad).
+  const raycaster = new THREE.Raycaster();
+  const ndc = new THREE.Vector2();
+  const viewPlane = new THREE.Plane();
+  const planeHit = new THREE.Vector3();
+  const MIN_ZOOM_DIST = 0.12;
+
+  function zoomAt(clientX: number, clientY: number, factor: number) {
+    const rect = renderer.domElement.getBoundingClientRect();
+    ndc.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+    raycaster.setFromCamera(ndc, camera);
+    const hits = raycaster.intersectObject(assembly, true);
+    let point: THREE.Vector3 | null = hits.length > 0 ? hits[0].point.clone() : null;
+    if (!point) {
+      const viewDir = camera.getWorldDirection(new THREE.Vector3());
+      viewPlane.setFromNormalAndCoplanarPoint(viewDir, controls.target);
+      point = raycaster.ray.intersectPlane(viewPlane, planeHit) ? planeHit.clone() : null;
+    }
+    if (!point) return;
+    const toCam = camera.position.clone().sub(point);
+    const newDist = toCam.length() * factor;
+    if (factor < 1 && newDist < MIN_ZOOM_DIST) return;
+    const newCam = point.clone().addScaledVector(toCam, factor);
+    if (factor > 1 && newCam.length() > maxZoomOutDistance) return;
+    camera.position.copy(newCam);
+    controls.target.sub(point).multiplyScalar(factor).add(point);
+    controls.update();
+  }
+
+  function handleWheel(event: WheelEvent) {
+    event.preventDefault();
+    const delta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY;
+    const factor = Math.min(Math.max(Math.exp(delta * 0.0015), 0.5), 2);
+    zoomAt(event.clientX, event.clientY, factor);
+  }
+
+  const touchPoints = new Map<number, { x: number; y: number }>();
+  let lastPinchDist = 0;
+  function pinchState() {
+    const [a, b] = [...touchPoints.values()];
+    return { dist: Math.hypot(a.x - b.x, a.y - b.y), cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2 };
+  }
+  function handlePointerDown(event: PointerEvent) {
+    if (event.pointerType !== "touch") return;
+    touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (touchPoints.size === 2) lastPinchDist = pinchState().dist;
+  }
+  function handlePointerMove(event: PointerEvent) {
+    if (!touchPoints.has(event.pointerId)) return;
+    touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    if (touchPoints.size !== 2) return;
+    const { dist, cx, cy } = pinchState();
+    if (lastPinchDist > 0 && dist > 0) zoomAt(cx, cy, lastPinchDist / dist);
+    lastPinchDist = dist;
+  }
+  function handlePointerUp(event: PointerEvent) {
+    touchPoints.delete(event.pointerId);
+    lastPinchDist = touchPoints.size === 2 ? pinchState().dist : 0;
+  }
+  const el = renderer.domElement;
+  el.addEventListener("wheel", handleWheel, { passive: false });
+  el.addEventListener("pointerdown", handlePointerDown);
+  el.addEventListener("pointermove", handlePointerMove);
+  el.addEventListener("pointerup", handlePointerUp);
+  el.addEventListener("pointercancel", handlePointerUp);
 
   // --- Animation ---
   const omegaFirst = (Math.PI * 2) / PERIOD_FIRST_SECONDS;
@@ -512,6 +588,11 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
   return () => {
     cancelAnimationFrame(animationId);
     window.removeEventListener("resize", handleResize);
+    el.removeEventListener("wheel", handleWheel);
+    el.removeEventListener("pointerdown", handlePointerDown);
+    el.removeEventListener("pointermove", handlePointerMove);
+    el.removeEventListener("pointerup", handlePointerUp);
+    el.removeEventListener("pointercancel", handlePointerUp);
     controls.dispose();
     disposables.forEach((d) => d.dispose());
     renderer.dispose();
