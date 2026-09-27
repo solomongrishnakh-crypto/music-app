@@ -84,22 +84,32 @@ function AgeUnit({
   label,
   digits,
   grouped,
+  wide,
 }: {
   value: number;
   label: string;
   digits: number;
   grouped?: boolean;
+  wide?: boolean;
 }) {
   const formatted = grouped
     ? value.toLocaleString("en-US")
     : value.toLocaleString("en-US", { minimumIntegerDigits: digits, useGrouping: false });
   return (
-    <div className="relative flex min-w-0 flex-1 flex-col items-center overflow-hidden border border-accent/25 bg-gradient-to-b from-surface-elevated/70 to-black/40 px-2 py-2.5 backdrop-blur-sm sm:px-3 sm:py-3.5">
+    <div
+      className={`relative flex min-w-0 flex-col items-center overflow-hidden border border-accent/25 bg-gradient-to-b from-surface-elevated/70 to-black/40 px-1.5 py-1.5 backdrop-blur-sm sm:px-2 sm:py-2 ${
+        wide ? "flex-[2.4]" : "flex-1"
+      }`}
+    >
       <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
-      <span className="font-display tabular-nums text-base font-bold leading-none text-accent drop-shadow-[0_0_8px_rgba(255,90,77,0.45)] sm:text-2xl">
+      <span
+        className={`font-display tabular-nums font-bold leading-none text-accent drop-shadow-[0_0_8px_rgba(255,90,77,0.45)] ${
+          wide ? "text-[11px] sm:text-lg" : "text-sm sm:text-xl"
+        }`}
+      >
         {formatted}
       </span>
-      <span className="label-mono mt-1.5 truncate text-[8px] uppercase tracking-widest text-muted sm:text-[10px]">
+      <span className="label-mono mt-1 truncate text-[7px] uppercase tracking-widest text-muted sm:text-[9px]">
         {label}
       </span>
     </div>
@@ -125,12 +135,12 @@ export default function UniverseAgeTicker() {
   if (!breakdown) {
     // Platzhalter mit fester Höhe, damit beim ersten Render (vor dem
     // useEffect) kein Layout-Sprung entsteht.
-    return <div className="mb-10 h-[104px] sm:h-[124px]" />;
+    return <div className="mb-10 h-[78px] sm:h-[92px]" />;
   }
 
   return (
-    <div className="relative mb-10 border border-border/60 bg-black/20 p-3 sm:p-4">
-      <div className="mb-3 flex items-center gap-2">
+    <div className="relative mb-10 border border-border/60 bg-black/20 p-2.5 sm:p-3">
+      <div className="mb-2 flex items-center gap-2">
         <span
           className={`h-1.5 w-1.5 rounded-full bg-accent transition-opacity duration-300 ${
             pulse ? "opacity-100" : "opacity-40"
@@ -140,8 +150,8 @@ export default function UniverseAgeTicker() {
         />
         <p className="label-mono text-xs uppercase">{t("universeAgeTickerLabel")}</p>
       </div>
-      <div className="flex gap-1 sm:gap-2">
-        <AgeUnit value={breakdown.years} label={t("ageYears")} digits={10} grouped />
+      <div className="flex gap-1 sm:gap-1.5">
+        <AgeUnit value={breakdown.years} label={t("ageYears")} digits={10} grouped wide />
         <AgeUnit value={breakdown.months} label={t("ageMonths")} digits={2} />
         <AgeUnit value={breakdown.days} label={t("ageDays")} digits={2} />
         <AgeUnit value={breakdown.hours} label={t("ageHours")} digits={2} />
