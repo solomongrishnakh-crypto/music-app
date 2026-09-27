@@ -1,39 +1,49 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
  * Nutzerwunsch 27.09.2026 ("kannst ein timer hier oben hinzufüge. quasi wie
- * und des universum. sekunden,stundenjahre monate alles am weiter ticken")
- * — ein live weiterlaufender Zähler für das Alter des Universums direkt
- * über den "Universum in Zahlen"-Karten auf /universum, analog zu ähnlichen
- * "seit Ereignis X vergangene Zeit"-Countern.
+ * und des universum. sekunden,stundenjahre monate alles am weiter ticken";
+ * danach: "mach es moderner und wieso bewegt sich timer nicht es soll
+ * quasi wie universumuhr laufen") — ein live weiterlaufender Zähler für das
+ * Alter des Universums direkt über den "Universum in Zahlen"-Karten.
  *
- * Ausgangswert: 13,797 Milliarden Jahre (Planck-2018-Messung, Mittelwert der
- * in UNIVERSE_FACTS zitierten ≈13,8 Mrd. Jahre). Da die tatsächliche
- * Messunsicherheit (± 20 Mio. Jahre) um Größenordnungen über dem liegt, was
- * eine Sekunde Echtzeit ausmacht, ist das reine "Weiterticken" natürlich
- * eine Spielerei/Visualisierung, keine neue Präzisionsmessung — das steht
- * auch als Fußnote dabei (kein falscher Anspruch auf Exaktheit).
+ * BUG-FIX (wichtig, sonst tickt nichts): Das Alter in Sekunden liegt bei
+ * ≈ 4,35 × 10^17 — weit über Number.MAX_SAFE_INTEGER (≈ 9 × 10^15).
+ * JavaScript-Zahlen (IEEE-754 double) haben bei dieser Größenordnung nur
+ * noch eine Auflösung von ~64 Sekunden — eine einzelne Sekunde draufzu-
+ * addieren hatte schlicht KEINEN sichtbaren Effekt, der Zähler wirkte
+ * eingefroren. Fix: die gesamte Berechnung läuft jetzt in BigInt
+ * (beliebig genaue Ganzzahl-Arithmetik) statt in normalen Numbers — damit
+ * ist jede einzelne Sekunde exakt darstellbar, ganz unabhängig von der
+ * Gesamtgröße der Zahl.
  *
- * Die Umrechnung von Sekunden in Jahre/Monate/Tage/Stunden/Minuten/Sekunden
- * verwendet Kalender-Näherungswerte (365,25 Tage/Jahr, davon 1/12 pro
- * Monat) statt echter Kalendermonate mit unterschiedlicher Länge — bei
- * einer Zahl dieser Größenordnung (Milliarden Jahre) ist das die einzig
- * sinnvolle Definition von "Monat".
+ * Ausgangswert: 13,797 Milliarden Jahre (Planck-2018-Messung, Mittelwert
+ * der ≈13,8 Mrd. Jahre aus UNIVERSE_FACTS). Die Umrechnung von Sekunden in
+ * Jahre/Monate/Tage/Stunden/Minuten/Sekunden verwendet Kalender-Näherungs-
+ * werte (365,25 Tage/Jahr, 1/12 davon pro Monat — beides zufällig exakte
+ * Ganzzahlen in Sekunden: 365,25 * 86400 = 31.557.600). Das reine
+ * "Weiterticken" ist eine Visualisierung, keine neue Präzisionsmessung
+ * (die echte Messunsicherheit liegt bei ± 20 Mio. Jahren) — daher die
+ * Fußnote unter der Anzeige.
  */
 
-const AGE_AT_EPOCH_SECONDS = 13_797_000_000 * 365.25 * 86400;
-// Fixer Referenzzeitpunkt, ab dem obiger Wert gilt — ideally der Moment,
-// in dem der Code geschrieben wurde; alles danach kommt on top drauf.
-const EPOCH_MS = Date.UTC(2026, 8, 27, 0, 0, 0);
+// BigInt(...) statt "123n"-Literalen: die Literal-Schreibweise verlangt
+// TypeScript-Compile-Target ES2020+, dieses Projekt zielt (noch) auf
+// ES2017 — die Funktionsschreibweise ist davon unabhängig und erzeugt
+// exakt denselben BigInt-Wert.
+const SECONDS_PER_YEAR = BigInt(31_557_600); // 365,25 * 86400 (exakt, keine Rundung)
+const SECONDS_PER_MONTH = SECONDS_PER_YEAR / BigInt(12); // 2.629.800 (exakt)
+const SECONDS_PER_DAY = BigInt(86_400);
+const SECONDS_PER_HOUR = BigInt(3_600);
+const SECONDS_PER_MINUTE = BigInt(60);
 
-const SECONDS_PER_MINUTE = 60;
-const SECONDS_PER_HOUR = 3600;
-const SECONDS_PER_DAY = 86400;
-const SECONDS_PER_MONTH = (365.25 / 12) * 86400;
-const SECONDS_PER_YEAR = 365.25 * 86400;
+const AGE_AT_EPOCH_SECONDS = BigInt(13_797_000_000) * SECONDS_PER_YEAR;
+// Fixer Referenzzeitpunkt, ab dem obiger Wert gilt — alles danach kommt
+// als (kleine, präzise darstellbare) Sekundenzahl on top drauf.
+const EPOCH_MS = Date.UTC(2026, 8, 27, 0, 0, 0);
 
 interface AgeBreakdown {
   years: number;
@@ -45,31 +55,51 @@ interface AgeBreakdown {
 }
 
 function computeBreakdown(): AgeBreakdown {
-  const elapsedSinceEpoch = (Date.now() - EPOCH_MS) / 1000;
-  let remaining = AGE_AT_EPOCH_SECONDS + elapsedSinceEpoch;
+  const elapsedSeconds = BigInt(Math.max(0, Math.floor((Date.now() - EPOCH_MS) / 1000)));
+  let remaining = AGE_AT_EPOCH_SECONDS + elapsedSeconds;
 
-  const years = Math.floor(remaining / SECONDS_PER_YEAR);
-  remaining -= years * SECONDS_PER_YEAR;
-  const months = Math.floor(remaining / SECONDS_PER_MONTH);
-  remaining -= months * SECONDS_PER_MONTH;
-  const days = Math.floor(remaining / SECONDS_PER_DAY);
-  remaining -= days * SECONDS_PER_DAY;
-  const hours = Math.floor(remaining / SECONDS_PER_HOUR);
-  remaining -= hours * SECONDS_PER_HOUR;
-  const minutes = Math.floor(remaining / SECONDS_PER_MINUTE);
-  remaining -= minutes * SECONDS_PER_MINUTE;
-  const seconds = Math.floor(remaining);
+  const years = remaining / SECONDS_PER_YEAR;
+  remaining %= SECONDS_PER_YEAR;
+  const months = remaining / SECONDS_PER_MONTH;
+  remaining %= SECONDS_PER_MONTH;
+  const days = remaining / SECONDS_PER_DAY;
+  remaining %= SECONDS_PER_DAY;
+  const hours = remaining / SECONDS_PER_HOUR;
+  remaining %= SECONDS_PER_HOUR;
+  const minutes = remaining / SECONDS_PER_MINUTE;
+  remaining %= SECONDS_PER_MINUTE;
 
-  return { years, months, days, hours, minutes, seconds };
+  return {
+    years: Number(years),
+    months: Number(months),
+    days: Number(days),
+    hours: Number(hours),
+    minutes: Number(minutes),
+    seconds: Number(remaining),
+  };
 }
 
-function AgeUnit({ value, label, digits }: { value: number; label: string; digits: number }) {
+function AgeUnit({
+  value,
+  label,
+  digits,
+  grouped,
+}: {
+  value: number;
+  label: string;
+  digits: number;
+  grouped?: boolean;
+}) {
+  const formatted = grouped
+    ? value.toLocaleString("en-US")
+    : value.toLocaleString("en-US", { minimumIntegerDigits: digits, useGrouping: false });
   return (
-    <div className="flex min-w-0 flex-1 flex-col items-center border border-border bg-surface-elevated/40 px-2 py-2 sm:px-3 sm:py-3">
-      <span className="font-display tabular-nums text-sm font-bold text-accent sm:text-lg">
-        {value.toLocaleString("en-US", { minimumIntegerDigits: digits, useGrouping: false })}
+    <div className="relative flex min-w-0 flex-1 flex-col items-center overflow-hidden border border-accent/25 bg-gradient-to-b from-surface-elevated/70 to-black/40 px-2 py-2.5 backdrop-blur-sm sm:px-3 sm:py-3.5">
+      <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
+      <span className="font-display tabular-nums text-base font-bold leading-none text-accent drop-shadow-[0_0_8px_rgba(255,90,77,0.45)] sm:text-2xl">
+        {formatted}
       </span>
-      <span className="label-mono mt-1 truncate text-[9px] uppercase tracking-wide text-muted sm:text-[10px]">
+      <span className="label-mono mt-1.5 truncate text-[8px] uppercase tracking-widest text-muted sm:text-[10px]">
         {label}
       </span>
     </div>
@@ -79,32 +109,39 @@ function AgeUnit({ value, label, digits }: { value: number; label: string; digit
 export default function UniverseAgeTicker() {
   const { t } = useLanguage();
   const [breakdown, setBreakdown] = useState<AgeBreakdown | null>(null);
-  const frameRef = useRef<number | null>(null);
+  const [pulse, setPulse] = useState(false);
 
   useEffect(() => {
-    // Erst nach dem Mount berechnen (vermeidet Server/Client-Zeit-Mismatch-
-    // Warnungen bei Next.js SSR) und danach im Sekundentakt aktualisieren.
+    // Erst nach dem Mount berechnen (vermeidet Server/Client-Zeit-Mismatch
+    // bei SSR) und danach exakt im Sekundentakt aktualisieren.
     setBreakdown(computeBreakdown());
     const interval = setInterval(() => {
       setBreakdown(computeBreakdown());
+      setPulse((p) => !p);
     }, 1000);
-    return () => {
-      clearInterval(interval);
-      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
-    };
+    return () => clearInterval(interval);
   }, []);
 
   if (!breakdown) {
     // Platzhalter mit fester Höhe, damit beim ersten Render (vor dem
     // useEffect) kein Layout-Sprung entsteht.
-    return <div className="mb-10 h-[92px] sm:h-[104px]" />;
+    return <div className="mb-10 h-[104px] sm:h-[124px]" />;
   }
 
   return (
-    <div className="mb-10">
-      <p className="label-mono mb-3 text-xs uppercase">{t("universeAgeTickerLabel")}</p>
+    <div className="relative mb-10 border border-border/60 bg-black/20 p-3 sm:p-4">
+      <div className="mb-3 flex items-center gap-2">
+        <span
+          className={`h-1.5 w-1.5 rounded-full bg-accent transition-opacity duration-300 ${
+            pulse ? "opacity-100" : "opacity-40"
+          }`}
+          style={{ boxShadow: "0 0 6px 1px rgba(255,90,77,0.7)" }}
+          aria-hidden
+        />
+        <p className="label-mono text-xs uppercase">{t("universeAgeTickerLabel")}</p>
+      </div>
       <div className="flex gap-1 sm:gap-2">
-        <AgeUnit value={breakdown.years} label={t("ageYears")} digits={10} />
+        <AgeUnit value={breakdown.years} label={t("ageYears")} digits={10} grouped />
         <AgeUnit value={breakdown.months} label={t("ageMonths")} digits={2} />
         <AgeUnit value={breakdown.days} label={t("ageDays")} digits={2} />
         <AgeUnit value={breakdown.hours} label={t("ageHours")} digits={2} />
