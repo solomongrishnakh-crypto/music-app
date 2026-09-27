@@ -98,13 +98,13 @@ function AgeUnit({
   return (
     <div
       className={`relative flex min-w-0 flex-col items-center overflow-hidden border border-accent/25 bg-gradient-to-b from-surface-elevated/70 to-black/40 px-1.5 py-1.5 backdrop-blur-sm sm:px-2 sm:py-2 ${
-        wide ? "flex-[2.4]" : "flex-1"
+        wide ? "basis-full sm:basis-auto sm:flex-[2.4]" : "flex-1"
       }`}
     >
       <span className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-accent/60 to-transparent" />
       <span
         className={`font-display tabular-nums font-bold leading-none text-accent drop-shadow-[0_0_8px_rgba(255,90,77,0.45)] ${
-          wide ? "text-[11px] sm:text-lg" : "text-sm sm:text-xl"
+          wide ? "text-lg sm:text-lg" : "text-sm sm:text-xl"
         }`}
       >
         {formatted}
@@ -135,7 +135,7 @@ export default function UniverseAgeTicker() {
   if (!breakdown) {
     // Platzhalter mit fester Höhe, damit beim ersten Render (vor dem
     // useEffect) kein Layout-Sprung entsteht.
-    return <div className="mb-10 h-[78px] sm:h-[92px]" />;
+    return <div className="mb-10 h-[128px] sm:h-[92px]" />;
   }
 
   return (
@@ -150,7 +150,9 @@ export default function UniverseAgeTicker() {
         />
         <p className="label-mono text-xs uppercase">{t("universeAgeTickerLabel")}</p>
       </div>
-      <div className="flex gap-1 sm:gap-1.5">
+      {/* Handy: Jahre in eigener Zeile (sonst wird die 11-stellige Zahl
+          abgeschnitten), darunter die übrigen fünf Felder; ab sm alles in einer Zeile */}
+      <div className="flex flex-wrap gap-1 sm:flex-nowrap sm:gap-1.5">
         <AgeUnit value={breakdown.years} label={t("ageYears")} digits={10} grouped wide />
         <AgeUnit value={breakdown.months} label={t("ageMonths")} digits={2} />
         <AgeUnit value={breakdown.days} label={t("ageDays")} digits={2} />

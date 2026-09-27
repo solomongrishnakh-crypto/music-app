@@ -115,12 +115,24 @@ function createEdgePaintGeometry(teeth: number, toothCount: number, zHalf: numbe
 }
 
 /**
- * Lack auf der Vorderseite der Zähne im selben Winkelbereich wie
- * createEdgePaintGeometry — so läuft der Strich wie ein echter
- * Lackstift-Wisch über die Kante auf die Stirnseite. UV: u radial
- * (innen 0 → Zahnspitze 1), v entlang des Winkels.
+ * Dreieckige Lackmarkierung (Nutzervorgabe per Skizze): breite Seite auf den
+ * Zähnen, Spitze zeigt zur Radmitte. Weil der Radkranz höher liegt als die
+ * innere Scheibe, besteht der Lack aus drei Teilen, die wie echter Lack über
+ * die Stufe laufen:
+ *   - rim:  auf dem Kranz (inkl. Vorderseite der Zähne), Höhe Kranzfläche
+ *   - wall: an der Innenkante des Kranzes hinunter
+ *   - web:  Spitze auf der inneren Scheibe, Höhe Scheibenfläche
+ * UV: u radial (Spitze 0 → Zahnspitze 1), v quer über die jeweilige
+ * Dreiecksbreite — so bekommen alle Kanten die unregelmäßigen Lackränder.
  */
-function createFacePaintGeometry(teeth: number, toothCount: number, depthInto: number): THREE.BufferGeometry {
+function createTrianglePaint(
+  teeth: number,
+  toothCount: number,
+  rApex: number,
+  rimInner: number,
+  rimZ: number,
+  webZ: number
+): { rim: THREE.BufferGeometry; wall: THREE.BufferGeometry; web: THREE.BufferGeometry } {
   const first = -Math.floor(toothCount / 2);
   const outer: THREE.Vector2[] = [];
   for (let k = first; k < first + toothCount; k++) {
@@ -131,28 +143,149 @@ function createFacePaintGeometry(teeth: number, toothCount: number, depthInto: n
       outer.push(new THREE.Vector2(Math.cos(a) * r, Math.sin(a) * r));
     }
   }
-  const aStart = Math.atan2(outer[0].y, outer[0].x);
-  const aEnd = Math.atan2(outer[outer.length - 1].y, outer[outer.length - 1].x);
   const rootR = teeth * M - DEDENDUM;
   const tipR = teeth * M + ADDENDUM;
-  const rInner = rootR - depthInto;
-  const shape = new THREE.Shape();
-  shape.moveTo(Math.cos(aStart) * rInner, Math.sin(aStart) * rInner);
-  outer.forEach((p) => shape.lineTo(p.x, p.y));
-  shape.lineTo(Math.cos(aEnd) * rInner, Math.sin(aEnd) * rInner);
-  shape.absarc(0, 0, rInner, aEnd, aStart, true);
-  const geo = new THREE.ShapeGeometry(shape, 24);
-  const pos = geo.attributes.position as THREE.BufferAttribute;
-  const uv = geo.attributes.uv as THREE.BufferAttribute;
-  for (let i = 0; i < pos.count; i++) {
-    const x = pos.getX(i);
-    const y = pos.getY(i);
-    const r = Math.hypot(x, y);
-    const a = Math.atan2(y, x);
-    uv.setXY(i, (r - rInner) / (tipR - rInner), (a - aStart) / (aEnd - aStart));
+  const aBase = Math.abs(Math.atan2(outer[0].y, outer[0].x)); // halbe Winkelbreite an der Basis
+  const apex = new THREE.Vector2(rApex, 0);
+  const baseL = outer[0].clone();
+  const baseR = outer[outer.length - 1].clone();
+
+  // Punkt auf der Dreiecksseite (Basis → Spitze) mit Abstand r zur Radmitte
+  function sideAt(base: THREE.Vector2, r: number): THREE.Vector2 {
+    let lo = 0;
+    let hi = 1;
+    for (let it = 0; it < 40; it++) {
+      const mid = (lo + hi) / 2;
+      const p = base.clone().lerp(apex, mid);
+      if (p.length() > r) lo = mid;
+      else hi = mid;
+    }
+    return base.clone().lerp(apex, (lo + hi) / 2);
   }
-  uv.needsUpdate = true;
-  return geo;
+  // halbe Winkelbreite des Dreiecks bei Radius r
+  function halfAngleAt(r: number): number {
+    if (r >= rootR) return aBase;
+    const p = sideAt(baseR, Math.max(r, rApex + 1e-6));
+    return Math.max(Math.abs(Math.atan2(p.y, p.x)), 1e-6);
+  }
+  function applyUv(geo: THREE.BufferGeometry) {
+    const pos = geo.attributes.position as THREE.BufferAttribute;
+    const uvs: number[] = [];
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i);
+      const y = pos.getY(i);
+      const r = Math.hypot(x, y);
+      const a = Math.atan2(y, x);
+      const hw = halfAngleAt(r);
+      uvs.push((r - rApex) / (tipR - rApex), Math.min(Math.max(0.5 + a / (2 * hw), 0), 1));
+    }
+    geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  }
+
+  // Teil 1: Kranz + Zähne
+  const inL = sideAt(baseL, rimInner);
+  const inR = sideAt(baseR, rimInner);
+  const rimShape = new THREE.Shape();
+  rimShape.moveTo(outer[0].x, outer[0].y);
+  outer.forEach((p) => rimShape.lineTo(p.x, p.y));
+  rimShape.lineTo(inR.x, inR.y);
+  rimShape.lineTo(inL.x, inL.y);
+  rimShape.lineTo(outer[0].x, outer[0].y);
+  const rim = new THREE.ShapeGeometry(rimShape, 8);
+  applyUv(rim);
+  rim.translate(0, 0, rimZ);
+
+  // Teil 3: Spitze auf der Scheibe (beginnt knapp innerhalb der Kranz-Fase)
+  const rWeb = rimInner - 0.012 * 0.7;
+  const wL = sideAt(baseL, rWeb);
+  const wR = sideAt(baseR, rWeb);
+  const webShape = new THREE.Shape();
+  webShape.moveTo(wL.x, wL.y);
+  webShape.lineTo(wR.x, wR.y);
+  webShape.lineTo(apex.x, apex.y);
+  webShape.lineTo(wL.x, wL.y);
+  const web = new THREE.ShapeGeometry(webShape, 4);
+  applyUv(web);
+  web.translate(0, 0, webZ);
+
+  // Teil 2: Streifen an der Innenkante des Kranzes (Stufe hinunter)
+  const rWall = rimInner - 0.012 * 0.7 - 0.0015;
+  const aL = Math.atan2(wL.y, wL.x);
+  const aR = Math.atan2(wR.y, wR.x);
+  const segs = 6;
+  const positions: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+  const uWall = (rimInner - rApex) / (tipR - rApex);
+  for (let k = 0; k <= segs; k++) {
+    const a = aL + ((aR - aL) * k) / segs;
+    const x = Math.cos(a) * rWall;
+    const y = Math.sin(a) * rWall;
+    positions.push(x, y, webZ, x, y, rimZ);
+    uvs.push(uWall, k / segs, uWall, k / segs);
+    if (k < segs) {
+      const i0 = k * 2;
+      indices.push(i0, i0 + 2, i0 + 1, i0 + 1, i0 + 2, i0 + 3);
+    }
+  }
+  const wall = new THREE.BufferGeometry();
+  wall.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  wall.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  wall.setIndex(indices);
+  wall.computeVertexNormals();
+
+  return { rim, wall, web };
+}
+
+/**
+ * Deckende Lackfläche mit unregelmäßigem Rand (für die Dreiecksmarkierung):
+ * innen vollflächig rot, am Rand unregelmäßige Tupfer — wie mit Pinsel
+ * aufgetragen. Deterministisch, damit es bei allen Besuchern gleich aussieht.
+ */
+function createPaintFillTexture(): THREE.CanvasTexture {
+  const size = 256;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    let seed = 11;
+    const rand = () => {
+      seed = (seed * 16807) % 2147483647;
+      return seed / 2147483647;
+    };
+    ctx.clearRect(0, 0, size, size);
+    const inset = size * 0.07;
+    ctx.fillStyle = "rgb(250, 48, 48)";
+    ctx.fillRect(inset, inset, size - 2 * inset, size - 2 * inset);
+    // unregelmäßiger Rand: Tupfer entlang aller vier Kanten
+    for (let k = 0; k < 220; k++) {
+      const t = rand() * size;
+      const side = k % 4;
+      const d = inset * (0.2 + rand() * 1.1);
+      const x = side === 0 ? t : side === 1 ? t : side === 2 ? d : size - d;
+      const y = side === 0 ? d : side === 1 ? size - d : t;
+      const g = Math.floor(40 + rand() * 16);
+      ctx.fillStyle = "rgba(" + (245 + Math.floor(rand() * 10)) + ", " + g + ", " + g + ", " + (0.8 + rand() * 0.2) + ")";
+      ctx.beginPath();
+      ctx.arc(x, y, inset * (0.35 + rand() * 0.6), 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // leichte Pinselspuren
+    for (let k = 0; k < 14; k++) {
+      const y = inset + rand() * (size - 2 * inset);
+      ctx.strokeStyle = "rgba(200, 20, 20, " + (0.05 + rand() * 0.05) + ")";
+      ctx.lineWidth = 1 + rand() * 1.5;
+      ctx.beginPath();
+      ctx.moveTo(inset, y);
+      ctx.lineTo(size - inset, y + (rand() - 0.5) * 8);
+      ctx.stroke();
+    }
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
 }
 
 function drawToothOutline(shape: THREE.Shape, teeth: number) {
@@ -256,66 +389,23 @@ function createGenevaStripesTexture(
   return tex;
 }
 
-/**
- * Pinselstrich in rotem Lack (Alpha-Textur): mehrere leicht versetzte,
- * halbtransparente Tupfer ergeben unregelmäßige Ränder und leicht
- * ungleichmäßige Deckkraft — wirkt wie von Hand aufgemalt.
- */
-function createPaintStrokeTexture(): THREE.CanvasTexture {
-  const w = 256;
-  const h = 128;
-  const canvas = document.createElement("canvas");
-  canvas.width = w;
-  canvas.height = h;
-  const ctx = canvas.getContext("2d");
-  if (ctx) {
-    // Deterministischer Zufall, damit der Strich bei allen Besuchern gleich aussieht
-    let seed = 7;
-    const rand = () => {
-      seed = (seed * 16807) % 2147483647;
-      return seed / 2147483647;
-    };
-    ctx.clearRect(0, 0, w, h);
-    for (let k = 0; k < 140; k++) {
-      const t = k / 139;
-      const x = 18 + t * (w - 36) + (rand() - 0.5) * 6;
-      const y = h / 2 + Math.sin(t * 3.2) * 4 + (rand() - 0.5) * 8;
-      const taper = Math.min(1, t * 5, (1 - t) * 4); // Anfang/Ende dünner
-      const ry = (h * 0.3 + rand() * h * 0.08) * (0.55 + 0.45 * taper);
-      const rx = 10 + rand() * 8;
-      // Kräftiges, deckendes Hellrot (Nutzervorgabe: Farbe wie selbst
-      // eingezeichnet, ca. #ff3333) — nur leichte Schwankungen im Farbton
-      const shade = 245 + Math.floor(rand() * 10);
-      const g = Math.floor(42 + rand() * 14);
-      const bl = Math.floor(42 + rand() * 14);
-      ctx.fillStyle = "rgba(" + shade + ", " + g + ", " + bl + ", " + (0.85 + rand() * 0.15) + ")";
-      ctx.beginPath();
-      ctx.ellipse(x, y, rx, ry, (rand() - 0.5) * 0.3, 0, Math.PI * 2);
-      ctx.fill();
-    }
-    // feine Pinselspuren in Strichrichtung
-    for (let k = 0; k < 18; k++) {
-      const y = h / 2 + (rand() - 0.5) * h * 0.5;
-      ctx.strokeStyle = "rgba(200, 20, 20, " + (0.05 + rand() * 0.05) + ")";
-      ctx.lineWidth = 1 + rand() * 1.5;
-      ctx.beginPath();
-      ctx.moveTo(26 + rand() * 20, y);
-      ctx.lineTo(w - 26 - rand() * 20, y + (rand() - 0.5) * 6);
-      ctx.stroke();
-    }
-  }
-  const tex = new THREE.CanvasTexture(canvas);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  tex.anisotropy = 4;
-  return tex;
-}
-
 export interface GearSceneOptions {
   /** Wie viel der Box die Maschine maximal füllt (0..1). */
   fill?: number;
+  /** Wird aufgerufen, wenn ein Rad angesteuert wird (Index 0 … 22) bzw. null = Übersicht. */
+  onFocusChange?: (index: number | null) => void;
 }
 
-export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {}): () => void {
+/** Steuerung der Szene von außen (Rad-für-Rad-Navigation). */
+export interface GearSceneController {
+  dispose: () => void;
+  next: () => void;
+  prev: () => void;
+  goTo: (index: number) => void;
+  overview: () => void;
+}
+
+export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {}): GearSceneController {
   const fill = opts.fill ?? 0.95;
 
   const scene = new THREE.Scene();
@@ -395,7 +485,7 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
   // Markierung wie von Hand mit rotem Lackstift auf das Metall gemalt:
   // matter Lack (kein Metallglanz) mit unregelmäßigen Pinselrändern als
   // flacher Aufkleber direkt auf dem Radkranz.
-  const paintTexture = track(createPaintStrokeTexture());
+  const paintTexture = track(createPaintFillTexture());
   const markerMat = track(
     new THREE.MeshStandardMaterial({
       color: 0xffffff,
@@ -449,9 +539,22 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
   // Lackschicht, die exakt der Zahnform folgt — über Spitzen, Flanken und
   // Lücken von 5 Zähnen, quer über die ganze Radbreite — und läuft wie ein
   // echter Lackstift-Wisch über die Kante auf die Vorderseite der Zähne.
-  const PAINT_TEETH = 5;
+  // Dreiecksmarkierung (Nutzerskizze): Basis über 3 Zähne, Spitze zur
+  // Radmitte. Die Spitze endet vor den Aussparungen des Stegs (nachgerechnet:
+  // Abstand zum nächsten Loch > Lochradius), damit kein Lack über Löchern hängt.
+  const PAINT_TEETH = 3;
   const markerGeo = track(createEdgePaintGeometry(GEAR_TEETH, PAINT_TEETH, GEAR_FACE / 2 - 0.004, 0.012 * 0.7 + 0.0025));
-  const markerFaceGeo = track(createFacePaintGeometry(GEAR_TEETH, PAINT_TEETH, 3.5 * M));
+  const trianglePaint = createTrianglePaint(
+    GEAR_TEETH,
+    PAINT_TEETH,
+    39 * M, // Spitze bei r = 0,78
+    rimInner,
+    GEAR_FACE / 2 + 0.012 + 0.0015, // Kranzfläche (inkl. Fase)
+    (GEAR_FACE * 0.4) / 2 + 0.008 + 0.0015 // Scheibenfläche (inkl. Fase)
+  );
+  track(trianglePaint.rim);
+  track(trianglePaint.wall);
+  track(trianglePaint.web);
 
   // --- Achsen in gerader Reihe, Motor links davon ---
   const centerDist = (GEAR_TEETH + PINION_TEETH) * M;
@@ -480,9 +583,9 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
     gear.add(new THREE.Mesh(hubGeo, gearMat));
     // Lackstrich über die Zahnkante (liegt auf Zahn 0 und seinen Nachbarn)
     gear.add(new THREE.Mesh(markerGeo, markerMat));
-    const facePaint = new THREE.Mesh(markerFaceGeo, markerMat);
-    facePaint.position.z = GEAR_FACE / 2 + 0.012 + 0.0015; // auf der Stirnfläche (inkl. Fase)
-    gear.add(facePaint);
+    gear.add(new THREE.Mesh(trianglePaint.rim, markerMat));
+    gear.add(new THREE.Mesh(trianglePaint.wall, markerMat));
+    gear.add(new THREE.Mesh(trianglePaint.web, markerMat));
     axle.add(gear);
 
     const pinion = new THREE.Mesh(pinionGeo, steelMat);
@@ -766,6 +869,10 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
   // bzw. zwei Finger.
   controls.enableZoom = false;
   controls.touches.TWO = THREE.TOUCH.PAN;
+  // Touch-Gesten übernimmt die Szene selbst (siehe unten): 1 Finger wischen
+  // = nächstes/vorheriges Rad, 2 Finger = drehen + zoomen. Senkrechtes
+  // Wischen scrollt weiterhin die Seite.
+  renderer.domElement.style.touchAction = "pan-y";
   controls.minDistance = 0;
   controls.maxDistance = Infinity;
   controls.enablePan = true;
@@ -796,6 +903,78 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
   }
   refit();
 
+  // --- Rad-für-Rad-Navigation (Nutzerwunsch: "das ich swipen kann für
+  // letztes Rad") ---
+  // Die Kamera fliegt weich vor das gewählte Rad; wischen / ◀ ▶ springt
+  // zum nächsten bzw. vorherigen. Von der Übersicht aus führt "zurück"
+  // direkt zum letzten Rad.
+  let focusIndex: number | null = null;
+  const flight = {
+    active: false,
+    t0: 0,
+    duration: 750,
+    fromPos: new THREE.Vector3(),
+    fromTarget: new THREE.Vector3(),
+    toPos: new THREE.Vector3(),
+    toTarget: new THREE.Vector3(),
+  };
+  function flyTo(pos: THREE.Vector3, target: THREE.Vector3) {
+    flight.fromPos.copy(camera.position);
+    flight.fromTarget.copy(controls.target);
+    flight.toPos.copy(pos);
+    flight.toTarget.copy(target);
+    flight.t0 = performance.now();
+    flight.active = true;
+  }
+  function stepFlight() {
+    if (!flight.active) return;
+    const t = Math.min((performance.now() - flight.t0) / flight.duration, 1);
+    const e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2; // easeInOutCubic
+    camera.position.lerpVectors(flight.fromPos, flight.toPos, e);
+    controls.target.lerpVectors(flight.fromTarget, flight.toTarget, e);
+    camera.lookAt(controls.target);
+    if (t >= 1) flight.active = false;
+  }
+  function gearCloseUp(i: number): { pos: THREE.Vector3; target: THREE.Vector3 } {
+    const target = new THREE.Vector3();
+    axles[i].getWorldPosition(target);
+    target.z += (i % 3) * PLANE_GAP; // Ebene, auf der das große Rad sitzt
+    const dir = new THREE.Vector3().setFromSphericalCoords(1, 1.2, -0.45);
+    const vHalf = (camera.fov * Math.PI) / 360;
+    const hHalf = Math.atan(Math.tan(vHalf) * camera.aspect);
+    const radius = 1.5; // Rad (Ø ≈ 2,5) plus etwas Rand
+    const dist = radius / Math.tan(Math.min(vHalf, hHalf));
+    return { pos: target.clone().addScaledVector(dir, dist), target };
+  }
+  function goTo(i: number) {
+    focusIndex = Math.min(Math.max(i, 0), AXLE_COUNT - 1);
+    const { pos, target } = gearCloseUp(focusIndex);
+    flyTo(pos, target);
+    opts.onFocusChange?.(focusIndex);
+  }
+  function overview() {
+    focusIndex = null;
+    // fit() verstellt beim Suchen die Kamera → Stand merken und zurücksetzen
+    const savedPos = camera.position.clone();
+    const savedQuat = camera.quaternion.clone();
+    startDir = viewDirection();
+    const { dist, target } = fit(startDir);
+    camera.position.copy(savedPos);
+    camera.quaternion.copy(savedQuat);
+    maxZoomOutDistance = dist * 2.5;
+    flyTo(target.clone().addScaledVector(startDir, dist), target);
+    opts.onFocusChange?.(null);
+  }
+  function next() {
+    if (focusIndex === null) goTo(0);
+    else if (focusIndex < AXLE_COUNT - 1) goTo(focusIndex + 1);
+  }
+  function prev() {
+    if (focusIndex === null) goTo(AXLE_COUNT - 1);
+    else if (focusIndex > 0) goTo(focusIndex - 1);
+    else overview();
+  }
+
   // Neu einpassen, sobald sich die Box-Größe ändert. Nur kleine
   // Höhenänderungen (mobile Adressleiste) lösen kein Neu-Einpassen aus,
   // damit der Zoom beim Scrollen nicht zurückspringt.
@@ -809,7 +988,14 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
     lastH = h;
     resize();
     startDir = viewDirection();
-    refit();
+    if (focusIndex !== null) {
+      const { pos, target } = gearCloseUp(focusIndex);
+      camera.position.copy(pos);
+      controls.target.copy(target);
+      camera.lookAt(target);
+    } else {
+      refit();
+    }
   }
   const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(handleResize) : null;
   resizeObserver?.observe(mount);
@@ -858,22 +1044,54 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
   function handleWheel(event: WheelEvent) {
     if (!wheelActive) return; // Seite normal scrollen lassen
     event.preventDefault();
+    flight.active = false;
     const delta = event.deltaMode === 1 ? event.deltaY * 16 : event.deltaY;
     const factor = Math.min(Math.max(Math.exp(delta * 0.0015), 0.5), 2);
     zoomAt(event.clientX, event.clientY, factor);
   }
 
+  const el = renderer.domElement;
   const touchPoints = new Map<number, { x: number; y: number }>();
   let lastPinchDist = 0;
   function pinchState() {
     const [a, b] = [...touchPoints.values()];
     return { dist: Math.hypot(a.x - b.x, a.y - b.y), cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2 };
   }
+  // Wischen (1 Finger, waagrecht, schnell) → nächstes / vorheriges Rad
+  let swipe: { x: number; y: number; t: number } | null = null;
+  let lastMid: { x: number; y: number } | null = null;
+  const spherical = new THREE.Spherical();
+  const offset = new THREE.Vector3();
+  function rotateView(dx: number, dy: number) {
+    offset.copy(camera.position).sub(controls.target);
+    spherical.setFromVector3(offset);
+    const h = Math.max(el.clientHeight, 1);
+    spherical.theta -= (2 * Math.PI * dx) / h;
+    spherical.phi = Math.min(Math.max(spherical.phi - (2 * Math.PI * dy) / h, 0.35), Math.PI - 0.35);
+    offset.setFromSpherical(spherical);
+    camera.position.copy(controls.target).add(offset);
+    camera.lookAt(controls.target);
+  }
+  // Maus/Stift: OrbitControls wie bisher; Touch: eigene Gesten. Muss vor
+  // dem Handler von OrbitControls laufen → Capture-Phase.
+  function handlePointerDownCapture(event: PointerEvent) {
+    controls.enabled = event.pointerType !== "touch";
+    flight.active = false; // Nutzer übernimmt → Kameraflug abbrechen
+  }
   function handlePointerDown(event: PointerEvent) {
     wheelActive = true;
     if (event.pointerType !== "touch") return;
     touchPoints.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    if (touchPoints.size === 2) lastPinchDist = pinchState().dist;
+    if (touchPoints.size === 1) {
+      swipe = { x: event.clientX, y: event.clientY, t: performance.now() };
+    } else {
+      swipe = null; // zweiter Finger → kein Wischen, sondern Drehen/Zoomen
+    }
+    if (touchPoints.size === 2) {
+      const st = pinchState();
+      lastPinchDist = st.dist;
+      lastMid = { x: st.cx, y: st.cy };
+    }
   }
   function handlePointerMove(event: PointerEvent) {
     if (!touchPoints.has(event.pointerId)) return;
@@ -881,25 +1099,45 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
     if (touchPoints.size !== 2) return;
     const { dist, cx, cy } = pinchState();
     if (lastPinchDist > 0 && dist > 0) zoomAt(cx, cy, lastPinchDist / dist);
+    if (lastMid) rotateView(cx - lastMid.x, cy - lastMid.y);
     lastPinchDist = dist;
+    lastMid = { x: cx, y: cy };
   }
   function handlePointerUp(event: PointerEvent) {
+    if (swipe && event.pointerType === "touch" && touchPoints.size === 1) {
+      const dx = event.clientX - swipe.x;
+      const dy = event.clientY - swipe.y;
+      const dt = performance.now() - swipe.t;
+      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy) * 1.3 && dt < 700) {
+        if (dx < 0) next();
+        else prev();
+      }
+    }
+    swipe = null;
     touchPoints.delete(event.pointerId);
-    lastPinchDist = touchPoints.size === 2 ? pinchState().dist : 0;
+    const st = touchPoints.size === 2 ? pinchState() : null;
+    lastPinchDist = st ? st.dist : 0;
+    lastMid = st ? { x: st.cx, y: st.cy } : null;
   }
-  const el = renderer.domElement;
+  function handlePointerCancel(event: PointerEvent) {
+    // z. B. Browser übernimmt senkrechtes Scrollen → kein Wischen auswerten
+    swipe = null;
+    touchPoints.delete(event.pointerId);
+    lastPinchDist = 0;
+    lastMid = null;
+  }
   el.addEventListener("wheel", handleWheel, { passive: false });
+  el.addEventListener("pointerdown", handlePointerDownCapture, { capture: true });
   el.addEventListener("pointerdown", handlePointerDown);
   el.addEventListener("pointermove", handlePointerMove);
   el.addEventListener("pointerup", handlePointerUp);
-  el.addEventListener("pointercancel", handlePointerUp);
+  el.addEventListener("pointercancel", handlePointerCancel);
   function handlePointerLeave() {
     wheelActive = false;
   }
-  // Doppelklick: Ansicht auf die Startposition zurücksetzen
+  // Doppelklick / Doppeltippen: zurück zur Übersicht
   function handleDoubleClick() {
-    startDir = viewDirection();
-    refit();
+    overview();
   }
   el.addEventListener("pointerleave", handlePointerLeave);
   el.addEventListener("dblclick", handleDoubleClick);
@@ -913,26 +1151,30 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
       axle.rotation.z = axleAngles[i];
     });
     motorRotor.rotation.z = motor;
+    stepFlight();
     controls.update();
     renderer.render(scene, camera);
     animationId = requestAnimationFrame(animate);
   }
   animate();
 
-  return () => {
+  function dispose() {
     cancelAnimationFrame(animationId);
     window.removeEventListener("resize", handleResize);
     resizeObserver?.disconnect();
     el.removeEventListener("wheel", handleWheel);
     el.removeEventListener("pointerdown", handlePointerDown);
     el.removeEventListener("pointermove", handlePointerMove);
+    el.removeEventListener("pointerdown", handlePointerDownCapture, { capture: true });
     el.removeEventListener("pointerup", handlePointerUp);
-    el.removeEventListener("pointercancel", handlePointerUp);
+    el.removeEventListener("pointercancel", handlePointerCancel);
     el.removeEventListener("pointerleave", handlePointerLeave);
     el.removeEventListener("dblclick", handleDoubleClick);
     controls.dispose();
     disposables.forEach((d) => d.dispose());
     renderer.dispose();
     if (renderer.domElement.parentNode === mount) mount.removeChild(renderer.domElement);
-  };
+  }
+
+  return { dispose, next, prev, goTo, overview };
 }

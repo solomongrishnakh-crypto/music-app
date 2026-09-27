@@ -77,3 +77,36 @@ export function preciseNow(): number {
   }
   return Date.now();
 }
+
+/** Umdrehungszeit von Rad i (0-basiert) in Sekunden. */
+export function gearPeriodSeconds(i: number): number {
+  return PERIOD_LAST_MS_NUM / 1000 / Number(TURN_FACTORS[i]);
+}
+
+/**
+ * Nachkommastellen für die Stellungsanzeige von Rad i: so viele, dass sich
+ * die letzte Stelle etwa jede Sekunde ändert — so sieht man auch beim
+ * letzten Rad (≈ 8 × 10⁻¹⁶ Grad pro Sekunde), dass es sich bewegt.
+ */
+export function angleDecimals(i: number): number {
+  const degPerSecond = 360 / gearPeriodSeconds(i);
+  return Math.min(Math.max(Math.ceil(-Math.log10(degPerSecond)), 2), 16);
+}
+
+/**
+ * Aktuelle Stellung von Rad i in Grad (0 … 360) als exakter Text mit
+ * `decimals` Nachkommastellen — mit BigInt gerechnet, weil normale
+ * Zahlen bei 16 Nachkommastellen nur noch Rundungsrauschen zeigen würden.
+ */
+export function gearAngleText(i: number, nowMs: number, decimals: number, decimalSeparator = "."): string {
+  const whole = Math.floor(nowMs);
+  const ageMs = AGE_AT_EPOCH_MS + BigInt(whole - EPOCH_MS);
+  const rem = (ageMs * TURN_FACTORS[i]) % PERIOD_LAST_MS;
+  let scale = BigInt(1);
+  for (let k = 0; k < decimals; k++) scale *= BigInt(10);
+  const scaled = (rem * BigInt(360) * scale) / PERIOD_LAST_MS;
+  const digits = scaled.toString().padStart(decimals + 1, "0");
+  const intPart = digits.slice(0, digits.length - decimals);
+  const fracPart = digits.slice(digits.length - decimals);
+  return decimals > 0 ? intPart + decimalSeparator + fracPart : intPart;
+}

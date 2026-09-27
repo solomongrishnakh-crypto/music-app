@@ -1419,13 +1419,12 @@ export default function UniversumPage() {
             Zeilenbreite statt schmaler Seiten-Box, damit alle Räder der
             Reihe sichtbar Platz haben. */}
         <div className="mb-10 flex flex-col items-center overflow-hidden border border-border/60 bg-black/35 p-3 backdrop-blur-xl">
-          <Gear3D className="h-64 w-full sm:h-80" />
-          <p className="label-mono mt-2 text-center text-[9px] uppercase tracking-wide text-muted">
+          {/* Titel über der Maschine, kurze Beschreibung klein und kompakt darunter */}
+          <h2 className="font-display mb-2 text-center text-sm font-semibold uppercase tracking-[0.18em] text-foreground sm:text-base">
             {t("gearLabel")}
-          </p>
-          <p className="mt-1 max-w-xl text-center text-[9px] leading-relaxed text-muted">
-            {t("gearCaption")}
-          </p>
+          </h2>
+          <Gear3D className="h-[19rem] w-full sm:h-[23rem]" />
+          <p className="mt-2 max-w-md text-center text-[10px] leading-snug text-muted">{t("gearCaption")}</p>
         </div>
 
         {/* Nutzerwunsch 20.09.2026: "erstelle so ein box mit solarsystem
