@@ -41,6 +41,120 @@ const PLATE_DEPTH = 0.08;
 const SHAFT_FRONT = 2 * PLANE_GAP + GEAR_FACE / 2 + 0.05;
 
 
+/** Punkte (Radius, Winkel) der Zahnkontur für Zahn k, gegen den Uhrzeigersinn. */
+function toothProfile(teeth: number, k: number): [number, number][] {
+  const pitchR = teeth * M;
+  const tipR = pitchR + ADDENDUM;
+  const rootR = pitchR - DEDENDUM;
+  const step = (Math.PI * 2) / teeth;
+  const halfPitchW = pitchR * (Math.PI / teeth) * 0.47;
+  const halfTipW = Math.max(halfPitchW - ADDENDUM * Math.tan(PRESSURE_ANGLE), halfPitchW * 0.3);
+  const halfRootW = halfPitchW + DEDENDUM * Math.tan(PRESSURE_ANGLE) * 0.2;
+  const aPitch = halfPitchW / pitchR;
+  const aTip = halfTipW / tipR;
+  const aRoot = Math.min(halfRootW / rootR, step * 0.48);
+  const c = k * step;
+  return [
+    [rootR, c - aRoot],
+    [pitchR, c - aPitch],
+    [tipR, c - aTip],
+    [tipR, c + aTip],
+    [pitchR, c + aPitch],
+    [rootR, c + aRoot],
+    [rootR, c + step / 2],
+  ];
+}
+
+/**
+ * Dünne Lackschicht auf der Außenkante eines Zahnrads: folgt der Zahnkontur
+ * über `toothCount` Zähne (um Zahn 0 zentriert), um `offset` nach außen
+ * versetzt, von z = −zHalf bis +zHalf. UV: u entlang der Radachse (Strich-
+ * richtung der Textur), v entlang der Kontur (Strichbreite).
+ */
+function createEdgePaintGeometry(teeth: number, toothCount: number, zHalf: number, offset: number): THREE.BufferGeometry {
+  const first = -Math.floor(toothCount / 2);
+  const raw: THREE.Vector2[] = [];
+  for (let k = first; k < first + toothCount; k++) {
+    const pts = toothProfile(teeth, k);
+    const last = k === first + toothCount - 1 ? 6 : 7; // am Ende nicht in die nächste Lücke laufen
+    for (let j = 0; j < last; j++) {
+      const [r, a] = pts[j];
+      raw.push(new THREE.Vector2(Math.cos(a) * r, Math.sin(a) * r));
+    }
+  }
+  // Segmente unterteilen, damit der Lack sauber der Form folgt
+  const pts: THREE.Vector2[] = [];
+  for (let i = 0; i < raw.length - 1; i++) {
+    for (let s = 0; s < 4; s++) pts.push(raw[i].clone().lerp(raw[i + 1], s / 4));
+  }
+  pts.push(raw[raw.length - 1].clone());
+  // Außen-Normalen (Kontur läuft gegen den Uhrzeigersinn → Normale = (dy, −dx))
+  const positions: number[] = [];
+  const uvs: number[] = [];
+  const indices: number[] = [];
+  for (let i = 0; i < pts.length; i++) {
+    const prev = pts[Math.max(i - 1, 0)];
+    const next = pts[Math.min(i + 1, pts.length - 1)];
+    const t = next.clone().sub(prev).normalize();
+    const n = new THREE.Vector2(t.y, -t.x);
+    const p = pts[i].clone().addScaledVector(n, offset);
+    const v = i / (pts.length - 1);
+    positions.push(p.x, p.y, -zHalf, p.x, p.y, zHalf);
+    uvs.push(0, v, 1, v);
+    if (i < pts.length - 1) {
+      const a = i * 2;
+      indices.push(a, a + 2, a + 1, a + 1, a + 2, a + 3);
+    }
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute("position", new THREE.Float32BufferAttribute(positions, 3));
+  geo.setAttribute("uv", new THREE.Float32BufferAttribute(uvs, 2));
+  geo.setIndex(indices);
+  geo.computeVertexNormals();
+  return geo;
+}
+
+/**
+ * Lack auf der Vorderseite der Zähne im selben Winkelbereich wie
+ * createEdgePaintGeometry — so läuft der Strich wie ein echter
+ * Lackstift-Wisch über die Kante auf die Stirnseite. UV: u radial
+ * (innen 0 → Zahnspitze 1), v entlang des Winkels.
+ */
+function createFacePaintGeometry(teeth: number, toothCount: number, depthInto: number): THREE.BufferGeometry {
+  const first = -Math.floor(toothCount / 2);
+  const outer: THREE.Vector2[] = [];
+  for (let k = first; k < first + toothCount; k++) {
+    const pts = toothProfile(teeth, k);
+    const last = k === first + toothCount - 1 ? 6 : 7;
+    for (let j = 0; j < last; j++) {
+      const [r, a] = pts[j];
+      outer.push(new THREE.Vector2(Math.cos(a) * r, Math.sin(a) * r));
+    }
+  }
+  const aStart = Math.atan2(outer[0].y, outer[0].x);
+  const aEnd = Math.atan2(outer[outer.length - 1].y, outer[outer.length - 1].x);
+  const rootR = teeth * M - DEDENDUM;
+  const tipR = teeth * M + ADDENDUM;
+  const rInner = rootR - depthInto;
+  const shape = new THREE.Shape();
+  shape.moveTo(Math.cos(aStart) * rInner, Math.sin(aStart) * rInner);
+  outer.forEach((p) => shape.lineTo(p.x, p.y));
+  shape.lineTo(Math.cos(aEnd) * rInner, Math.sin(aEnd) * rInner);
+  shape.absarc(0, 0, rInner, aEnd, aStart, true);
+  const geo = new THREE.ShapeGeometry(shape, 24);
+  const pos = geo.attributes.position as THREE.BufferAttribute;
+  const uv = geo.attributes.uv as THREE.BufferAttribute;
+  for (let i = 0; i < pos.count; i++) {
+    const x = pos.getX(i);
+    const y = pos.getY(i);
+    const r = Math.hypot(x, y);
+    const a = Math.atan2(y, x);
+    uv.setXY(i, (r - rInner) / (tipR - rInner), (a - aStart) / (aEnd - aStart));
+  }
+  uv.needsUpdate = true;
+  return geo;
+}
+
 function drawToothOutline(shape: THREE.Shape, teeth: number) {
   const pitchR = teeth * M;
   const tipR = pitchR + ADDENDUM;
@@ -281,6 +395,7 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
       roughness: 0.55,
       emissive: 0x7a000c,
       emissiveIntensity: 0.5,
+      side: THREE.DoubleSide,
       polygonOffset: true,
       polygonOffsetFactor: -4,
       polygonOffsetUnits: -4,
@@ -315,23 +430,14 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
   const nutGeo = track(zCylinder(5 * M, SHAFT_FRONT, SHAFT_FRONT + 0.06, 6));
   const bushingGeo = track(zCylinder(6.5 * M, PLATE_FRONT, PLATE_FRONT + 0.035, 36));
   const jewelGeo = track(zCylinder(4.6 * M, PLATE_FRONT + 0.035, PLATE_FRONT + 0.05, 32, 4.2 * M));
-  // Lackstrich entlang des Radkranzes: ein Streifen, der der Rundung des
-  // Kranzes folgt (gebogen statt flach), Breite innerhalb des Kranzrings
-  // (6 M), damit der Lack nirgends über Lücken "schwebt".
-  const markerR = (rimInner + gearRootR) / 2;
-  const markerGeo = track(new THREE.PlaneGeometry(26 * M, 5.2 * M, 32, 1));
-  {
-    const posAttr = markerGeo.attributes.position as THREE.BufferAttribute;
-    for (let v = 0; v < posAttr.count; v++) {
-      const along = posAttr.getX(v); // entlang des Strichs
-      const across = posAttr.getY(v); // quer (radial)
-      const theta = Math.PI / 2 - along / markerR; // um 12 Uhr zentriert
-      const r = markerR + across;
-      posAttr.setXYZ(v, Math.cos(theta) * r, Math.sin(theta) * r, 0);
-    }
-    posAttr.needsUpdate = true;
-    markerGeo.computeVertexNormals();
-  }
+  // Lackstrich über die Zahnkante (wie die gemalten Striche an der
+  // Googol-Maschine von Daniel de Bruin, nur in Rot): eine hauchdünne
+  // Lackschicht, die exakt der Zahnform folgt — über Spitzen, Flanken und
+  // Lücken von 5 Zähnen, quer über die ganze Radbreite — und läuft wie ein
+  // echter Lackstift-Wisch über die Kante auf die Vorderseite der Zähne.
+  const PAINT_TEETH = 5;
+  const markerGeo = track(createEdgePaintGeometry(GEAR_TEETH, PAINT_TEETH, GEAR_FACE / 2 - 0.004, 0.012 * 0.7 + 0.0025));
+  const markerFaceGeo = track(createFacePaintGeometry(GEAR_TEETH, PAINT_TEETH, 3.5 * M));
 
   // --- Achsen in gerader Reihe, Motor links davon ---
   const centerDist = (GEAR_TEETH + PINION_TEETH) * M;
@@ -358,13 +464,11 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
     gear.add(new THREE.Mesh(rimGeo, gearMat));
     gear.add(new THREE.Mesh(webGeo, gearWebMat));
     gear.add(new THREE.Mesh(hubGeo, gearMat));
-    // Markierung am Zahnkranz, startet oben (12 Uhr)
-    // Strich-Geometrie ist schon um die Radmitte gebogen und steht bei
-    // 12 Uhr; hier nur den Zahnphasen-Versatz des Rads ausgleichen.
-    const marker = new THREE.Mesh(markerGeo, markerMat);
-    marker.position.z = GEAR_FACE / 2 + 0.0135;
-    marker.rotation.z = -gearOffset;
-    gear.add(marker);
+    // Lackstrich über die Zahnkante (liegt auf Zahn 0 und seinen Nachbarn)
+    gear.add(new THREE.Mesh(markerGeo, markerMat));
+    const facePaint = new THREE.Mesh(markerFaceGeo, markerMat);
+    facePaint.position.z = GEAR_FACE / 2 + 0.012 + 0.0015; // auf der Stirnfläche (inkl. Fase)
+    gear.add(facePaint);
     axle.add(gear);
 
     const pinion = new THREE.Mesh(pinionGeo, steelMat);
