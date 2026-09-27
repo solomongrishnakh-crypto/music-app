@@ -1408,23 +1408,24 @@ export default function UniversumPage() {
           </p>
         </header>
 
-        <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center">
-          <div className="flex-1">
-            <UniverseAgeTicker />
-          </div>
-          {/* Nutzerwunsch 27.09.2026 (nach "Google Gear"-Reel): "kannst
-              auch ein 3d zahnrad bauen?" — echtes Three.js-Zahnrad als
-              spielerische Anspielung auf die virale "bis sich dieses Rad
-              bewegt, ist das Universum vorbei"-Getriebekette. */}
-          <div className="flex shrink-0 flex-col items-center border border-border/60 bg-black/20 p-3 sm:w-44">
-            <Gear3D className="h-28 w-28 sm:h-32 sm:w-32" />
-            <p className="label-mono mt-1 text-center text-[9px] uppercase tracking-wide text-muted">
-              {t("gearLabel")}
-            </p>
-            <p className="mt-1 text-center text-[9px] leading-relaxed text-muted">
-              {t("gearCaption")}
-            </p>
-          </div>
+        <UniverseAgeTicker />
+
+        {/* Nutzerwunsch 27.09.2026 (nach "Google Gear"-Reel: "kannst auch
+            ein 3d zahnrad bauen?", dann Korrektur: "wieso gibt es ein rad?
+            ich dachte es wird hundeter geben?") — eine ganze Kette echter,
+            ineinandergreifender Three.js-Zahnräder (nicht nur eins), als
+            spielerische Anspielung auf die virale "bis sich das letzte Rad
+            bewegt, ist das Universum vorbei"-Untersetzungskette. Volle
+            Zeilenbreite statt schmaler Seiten-Box, damit alle Räder der
+            Reihe sichtbar Platz haben. */}
+        <div className="mb-10 flex flex-col items-center border border-border/60 bg-black/20 p-3">
+          <Gear3D className="h-32 w-full sm:h-40" />
+          <p className="label-mono mt-2 text-center text-[9px] uppercase tracking-wide text-muted">
+            {t("gearLabel")}
+          </p>
+          <p className="mt-1 max-w-xl text-center text-[9px] leading-relaxed text-muted">
+            {t("gearCaption")}
+          </p>
         </div>
 
         {/* Nutzerwunsch 20.09.2026: "erstelle so ein box mit solarsystem
