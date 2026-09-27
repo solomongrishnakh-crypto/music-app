@@ -421,7 +421,8 @@ export default function ThreeBackground() {
       // links/rechts abgeschnitten wird
       const fitScale = Math.min(1, camera.aspect * 1.4);
       blackHole.mesh.scale.setScalar(fitScale * (1 - currentScrollProgress * 0.4));
-      blackHole.update(elapsed * 6, camera);
+      // echte Zeit statt Bildzähler → gleich schnell auf 60-Hz- und 144-Hz-Monitoren
+      blackHole.update((performance.now() / 1000) * 2.2, camera);
 
       renderer.render(scene, camera);
       animationId = requestAnimationFrame(animate);

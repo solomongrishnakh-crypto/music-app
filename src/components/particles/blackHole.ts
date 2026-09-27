@@ -64,22 +64,38 @@ const fragmentShader = /* glsl */ `
     return v;
   }
 
+  // Scheibenstruktur an Radius r und (mitgedrehtem) Winkel a:
+  // x = großflächige Gas-Wolken, y = feine, entlang der Umlaufbahn
+  // gestreckte Filamente. Über cos/sin nahtlos (keine Kante bei ±π).
+  vec2 diskTex(float r, float a, float seed) {
+    vec2 q = vec2(cos(a), sin(a));
+    float clumps = fbm(q * 3.2 + vec2(r * 1.1 + seed, -r * 0.5));
+    float fil = fbm(vec2(r * 8.0 + seed, 0.0) + q * 4.5);
+    return vec2(clumps, fil);
+  }
+
   // Farbe + Deckkraft der Scheibe an einem Treffpunkt
   vec4 diskSample(vec3 hit, vec3 rayDir) {
     float r = length(hit.xz);
     if (r < R_IN || r > R_OUT) return vec4(0.0);
     float t = (r - R_IN) / (R_OUT - R_IN);
 
-    // Kepler-Rotation: innen schneller als außen
+    // Kepler-Rotation: innen schneller als außen (deutlich sichtbar).
+    // Damit sich die Struktur durch die ungleiche Drehung nicht über die
+    // Zeit zu feinen Ringen "aufwickelt", laufen zwei Muster-Schichten mit
+    // versetzter Zeit und werden weich überblendet (Flow-Map-Technik).
     float ang = atan(hit.z, hit.x);
-    float rot = uTime * 1.6 / pow(r, 1.5);
-    float a2 = ang + rot;
-    // nahtlose Struktur entlang der Umlaufbahn (über cos/sin, keine Kante bei ±π):
-    // feine, leicht unruhige Ringe + großflächige Helligkeitswolken
-    vec2 q = vec2(cos(a2), sin(a2));
-    float n = fbm(q * 2.0 + vec2(r * 0.8, r * 0.3));
-    float fine = fbm(vec2(r * 6.5, 0.0) + q * 1.3);
-    float streaks = 0.72 + 0.28 * fine;
+    float omega = 2.0 / pow(r, 1.5); // innen ~1 Umdrehung / 8 s
+    const float PERIOD = 16.0;
+    float ph0 = fract(uTime / PERIOD);
+    float ph1 = fract(uTime / PERIOD + 0.5);
+    float w0 = 1.0 - abs(2.0 * ph0 - 1.0);
+    float w1 = 1.0 - w0;
+    vec2 layer0 = diskTex(r, ang + omega * ph0 * PERIOD, 0.0);
+    vec2 layer1 = diskTex(r, ang + omega * ph1 * PERIOD, 17.3);
+    vec2 tex = layer0 * w0 + layer1 * w1;
+    float n = tex.x;
+    float streaks = 0.55 + 0.45 * tex.y;
 
     // Temperaturverlauf: innen hell-rosé, dann Akzentrot (#ff5a4d), außen tiefrot
     vec3 hot = vec3(1.0, 0.8, 0.7);
@@ -87,7 +103,7 @@ const fragmentShader = /* glsl */ `
     vec3 cool = vec3(0.55, 0.06, 0.05);
     vec3 col = mix(hot, warm, smoothstep(0.0, 0.35, t));
     col = mix(col, cool, smoothstep(0.35, 1.0, t));
-    float intensity = (3.0 * pow(1.0 - t, 1.8) + 0.2) * (0.7 + 0.5 * n) * streaks;
+    float intensity = (3.2 * pow(1.0 - t, 1.8) + 0.2) * (0.55 + 0.8 * n) * streaks;
 
     // Doppler-Aufhellung der auf uns zukommenden Seite (mild)
     vec3 orbitDir = normalize(vec3(-sin(ang), 0.0, cos(ang)));
@@ -96,7 +112,7 @@ const fragmentShader = /* glsl */ `
     intensity *= pow(g, 2.2);
 
     float edge = smoothstep(R_IN, R_IN + 0.5, r) * (1.0 - smoothstep(R_OUT - 3.5, R_OUT, r));
-    float alpha = clamp(edge * (0.6 + 0.5 * n) * (1.1 - 0.5 * t), 0.0, 1.0);
+    float alpha = clamp(edge * (0.45 + 0.75 * n) * (1.1 - 0.5 * t), 0.0, 1.0);
     return vec4(col * intensity, alpha);
   }
 
@@ -149,6 +165,10 @@ const fragmentShader = /* glsl */ `
     // (nur für Strahlen, die knapp am Loch vorbeigehen — der Schatten selbst bleibt schwarz)
     float glow = captured ? 0.0 : exp(-max(minR - 1.5, 0.0) * 3.0) * 0.9;
     color += (1.0 - alpha) * vec3(1.0, 0.58, 0.48) * glow;
+    // schwacher roter Lichthof um das ganze Loch (wie Streulicht der Scheibe)
+    float halo = captured ? 0.0 : exp(-max(minR - 2.0, 0.0) * 0.45) * 0.12;
+    color += (1.0 - alpha) * vec3(1.0, 0.3, 0.22) * halo;
+    glow += halo;
     float outAlpha = alpha + (1.0 - alpha) * clamp(glow, 0.0, 1.0);
     if (captured) outAlpha = 1.0; // Schatten: deckend schwarz
 
