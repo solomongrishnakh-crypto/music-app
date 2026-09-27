@@ -137,6 +137,56 @@ function createGenevaStripesTexture(): THREE.CanvasTexture {
   return tex;
 }
 
+/**
+ * Pinselstrich in rotem Lack (Alpha-Textur): mehrere leicht versetzte,
+ * halbtransparente Tupfer ergeben unregelmäßige Ränder und leicht
+ * ungleichmäßige Deckkraft — wirkt wie von Hand aufgemalt.
+ */
+function createPaintStrokeTexture(): THREE.CanvasTexture {
+  const w = 256;
+  const h = 128;
+  const canvas = document.createElement("canvas");
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext("2d");
+  if (ctx) {
+    // Deterministischer Zufall, damit der Strich bei allen Besuchern gleich aussieht
+    let seed = 7;
+    const rand = () => {
+      seed = (seed * 16807) % 2147483647;
+      return seed / 2147483647;
+    };
+    ctx.clearRect(0, 0, w, h);
+    for (let k = 0; k < 140; k++) {
+      const t = k / 139;
+      const x = 18 + t * (w - 36) + (rand() - 0.5) * 6;
+      const y = h / 2 + Math.sin(t * 3.2) * 4 + (rand() - 0.5) * 8;
+      const taper = Math.min(1, t * 5, (1 - t) * 4); // Anfang/Ende dünner
+      const ry = (h * 0.3 + rand() * h * 0.08) * (0.55 + 0.45 * taper);
+      const rx = 10 + rand() * 8;
+      const shade = 195 + Math.floor(rand() * 45);
+      ctx.fillStyle = `rgba(${shade}, ${Math.floor(10 + rand() * 18)}, ${Math.floor(18 + rand() * 18)}, ${0.35 + rand() * 0.3})`;
+      ctx.beginPath();
+      ctx.ellipse(x, y, rx, ry, (rand() - 0.5) * 0.3, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    // feine Pinselspuren in Strichrichtung
+    for (let k = 0; k < 18; k++) {
+      const y = h / 2 + (rand() - 0.5) * h * 0.5;
+      ctx.strokeStyle = `rgba(120, 0, 10, ${0.12 + rand() * 0.12})`;
+      ctx.lineWidth = 1 + rand() * 1.5;
+      ctx.beginPath();
+      ctx.moveTo(26 + rand() * 20, y);
+      ctx.lineTo(w - 26 - rand() * 20, y + (rand() - 0.5) * 6);
+      ctx.stroke();
+    }
+  }
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
 export interface GearSceneOptions {
   /** Wie viel der Box die Maschine maximal füllt (0..1). */
   fill?: number;
@@ -217,17 +267,23 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
   const labelMat = track(new THREE.MeshStandardMaterial({ color: 0x1c1c22, metalness: 0.2, roughness: 0.5 }));
   const redWireMat = track(new THREE.MeshStandardMaterial({ color: 0xc0231a, metalness: 0, roughness: 0.45 }));
   const blackWireMat = track(new THREE.MeshStandardMaterial({ color: 0x151515, metalness: 0, roughness: 0.45 }));
-  // Markierung als roter Rubin: auf Gold deutlich sichtbarer als ein heller Punkt
+  // Markierung wie von Hand mit rotem Lackstift auf das Metall gemalt:
+  // matter Lack (kein Metallglanz) mit unregelmäßigen Pinselrändern als
+  // flacher Aufkleber direkt auf dem Radkranz.
+  const paintTexture = track(createPaintStrokeTexture());
   const markerMat = track(
-    new THREE.MeshPhysicalMaterial({
-      color: 0xd0102e,
+    new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      map: paintTexture,
+      transparent: true,
+      alphaTest: 0.05,
       metalness: 0,
-      roughness: 0.05,
-      clearcoat: 1,
-      clearcoatRoughness: 0.02,
-      emissive: 0x9a0a1e,
-      emissiveIntensity: 0.9,
-      envMapIntensity: 1.5,
+      roughness: 0.55,
+      emissive: 0x7a000c,
+      emissiveIntensity: 0.5,
+      polygonOffset: true,
+      polygonOffsetFactor: -4,
+      polygonOffsetUnits: -4,
     })
   );
 
@@ -259,7 +315,23 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
   const nutGeo = track(zCylinder(5 * M, SHAFT_FRONT, SHAFT_FRONT + 0.06, 6));
   const bushingGeo = track(zCylinder(6.5 * M, PLATE_FRONT, PLATE_FRONT + 0.035, 36));
   const jewelGeo = track(zCylinder(4.6 * M, PLATE_FRONT + 0.035, PLATE_FRONT + 0.05, 32, 4.2 * M));
-  const markerGeo = track(new THREE.SphereGeometry(3 * M, 16, 12));
+  // Lackstrich entlang des Radkranzes: ein Streifen, der der Rundung des
+  // Kranzes folgt (gebogen statt flach), Breite innerhalb des Kranzrings
+  // (6 M), damit der Lack nirgends über Lücken "schwebt".
+  const markerR = (rimInner + gearRootR) / 2;
+  const markerGeo = track(new THREE.PlaneGeometry(26 * M, 5.2 * M, 32, 1));
+  {
+    const posAttr = markerGeo.attributes.position as THREE.BufferAttribute;
+    for (let v = 0; v < posAttr.count; v++) {
+      const along = posAttr.getX(v); // entlang des Strichs
+      const across = posAttr.getY(v); // quer (radial)
+      const theta = Math.PI / 2 - along / markerR; // um 12 Uhr zentriert
+      const r = markerR + across;
+      posAttr.setXYZ(v, Math.cos(theta) * r, Math.sin(theta) * r, 0);
+    }
+    posAttr.needsUpdate = true;
+    markerGeo.computeVertexNormals();
+  }
 
   // --- Achsen in gerader Reihe, Motor links davon ---
   const centerDist = (GEAR_TEETH + PINION_TEETH) * M;
@@ -287,10 +359,11 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
     gear.add(new THREE.Mesh(webGeo, gearWebMat));
     gear.add(new THREE.Mesh(hubGeo, gearMat));
     // Markierung am Zahnkranz, startet oben (12 Uhr)
-    const markerAngle = Math.PI / 2 - gearOffset;
-    const markerR = (rimInner + gearRootR) / 2;
+    // Strich-Geometrie ist schon um die Radmitte gebogen und steht bei
+    // 12 Uhr; hier nur den Zahnphasen-Versatz des Rads ausgleichen.
     const marker = new THREE.Mesh(markerGeo, markerMat);
-    marker.position.set(Math.cos(markerAngle) * markerR, Math.sin(markerAngle) * markerR, GEAR_FACE / 2 + 0.02);
+    marker.position.z = GEAR_FACE / 2 + 0.0135;
+    marker.rotation.z = -gearOffset;
     gear.add(marker);
     axle.add(gear);
 
@@ -518,10 +591,17 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
     return { dist: hi, target: evaluate(dir, hi).target };
   }
 
+  // Canvas füllt immer exakt die Box (CSS), die Pixelgröße folgt per
+  // ResizeObserver. Vorher wurde nur beim Fenster-Resize nachgemessen —
+  // hatte die Box beim ersten Rendern noch eine andere Größe (Layout noch
+  // nicht fertig), saß die Maschine verschoben und abgeschnitten in der Box.
+  renderer.domElement.style.display = "block";
+  renderer.domElement.style.width = "100%";
+  renderer.domElement.style.height = "100%";
   function resize() {
     const w = Math.max(mount.clientWidth, 1);
     const h = Math.max(mount.clientHeight, 1);
-    renderer.setSize(w, h);
+    renderer.setSize(w, h, false);
     camera.aspect = w / h;
     camera.updateProjectionMatrix();
   }
@@ -567,14 +647,23 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
   }
   refit();
 
-  let lastWidth = mount.clientWidth;
+  // Neu einpassen, sobald sich die Box-Größe ändert. Nur kleine
+  // Höhenänderungen (mobile Adressleiste) lösen kein Neu-Einpassen aus,
+  // damit der Zoom beim Scrollen nicht zurückspringt.
+  let lastW = mount.clientWidth;
+  let lastH = mount.clientHeight;
   function handleResize() {
+    const w = mount.clientWidth;
+    const h = mount.clientHeight;
+    if (w === lastW && Math.abs(h - lastH) < 40) return;
+    lastW = w;
+    lastH = h;
     resize();
-    if (mount.clientWidth === lastWidth) return;
-    lastWidth = mount.clientWidth;
     startDir = viewDirection();
     refit();
   }
+  const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(handleResize) : null;
+  resizeObserver?.observe(mount);
   window.addEventListener("resize", handleResize);
 
   // --- Zoom auf beliebigen Punkt (Mausrad / Zwei-Finger-Pinch) ---
@@ -667,6 +756,7 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
   return () => {
     cancelAnimationFrame(animationId);
     window.removeEventListener("resize", handleResize);
+    resizeObserver?.disconnect();
     el.removeEventListener("wheel", handleWheel);
     el.removeEventListener("pointerdown", handlePointerDown);
     el.removeEventListener("pointermove", handlePointerMove);
