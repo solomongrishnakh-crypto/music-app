@@ -448,7 +448,13 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping = true;
   controls.dampingFactor = 0.08;
-  controls.enablePan = false;
+  // Nutzerwunsch: "man kann nur die mitte zoomen" → Zoom zielt dorthin,
+  // wo Maus/Finger ist, und die Ansicht lässt sich verschieben
+  // (Rechtsklick-Ziehen bzw. mit zwei Fingern), um z. B. den Motor oder
+  // das letzte Rad aus der Nähe anzuschauen.
+  controls.zoomToCursor = true;
+  controls.enablePan = true;
+  controls.screenSpacePanning = true;
   controls.autoRotate = false;
   controls.minPolarAngle = 0.35;
   controls.maxPolarAngle = Math.PI - 0.35;
@@ -469,7 +475,7 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
     controls.target.copy(target);
     camera.position.copy(target).addScaledVector(startDir, dist);
     camera.lookAt(target);
-    controls.minDistance = dist * 0.2;
+    controls.minDistance = dist * 0.05;
     controls.maxDistance = dist * 2.2;
     controls.update();
   }
