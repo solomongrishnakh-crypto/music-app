@@ -40,12 +40,13 @@ export const metadata: Metadata = {
     title: "CENTAURIAN — Musik, Universum & Geschichte",
     description:
       "Songs suchen und direkt hören, das Universum entdecken und die Geschichte großer Imperien erleben — kostenlos, ohne Anmeldung.",
-    images: [{ url: "/branding/about-portrait.jpg", width: 941, height: 1672, alt: "Centaurian" }],
+    images: [{ url: "/branding/og-image.jpg", width: 1200, height: 630, alt: "Centaurian Logo" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "CENTAURIAN — Musik, Universum & Geschichte",
     description: "Songs suchen und direkt hören, das Universum entdecken und die Geschichte großer Imperien erleben.",
+    images: ["/branding/og-image.jpg"],
   },
   robots: { index: true, follow: true },
   // Besitznachweis für die Google Search Console (HTML-Tag-Methode)
@@ -81,6 +82,7 @@ export default function RootLayout({
                 "@type": "Organization",
                 name: "Centaurian",
                 url: "https://centaurian.vercel.app",
+                logo: "https://centaurian.vercel.app/branding/logo.jpg",
                 sameAs: ["https://t.me/Perseus641", "https://x.com/capone_835"],
               },
             }),
