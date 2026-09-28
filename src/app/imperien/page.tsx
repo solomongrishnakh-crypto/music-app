@@ -1370,7 +1370,13 @@ export default function ImperienPage() {
             Zeitleiste/Abspiel-Regler näher an der Karte sitzen und weniger
             gescrollt werden muss. */}
         <div className="mt-3 border border-border bg-surface-elevated p-5 sm:p-6">
-          <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          {/* Fix 28.09.2026 (Bildschirmvideo vom Nutzer): Beim Abspielen
+              sprang die Box auf dem Handy ständig hoch und runter — die
+              Jahreszahl ist je nach Ziffern unterschiedlich breit, dadurch
+              rutschte "Jahr" mal in dieselbe Zeile, mal darüber. Jetzt steht
+              "Jahr" am Handy immer oben, und die Jahreszahl hat eine feste
+              Mindestbreite → nichts verschiebt sich mehr. */}
+          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
             <p className="label-mono text-xs uppercase text-muted">Jahr</p>
             <div className="flex items-center gap-3">
               {/* Nutzerwunsch 20.09.2026: "option hinzufügen das man auch
@@ -1390,7 +1396,7 @@ export default function ImperienPage() {
                   onChange={(e) => setYearInputText(e.target.value)}
                   onBlur={submitYearInput}
                   aria-label={t("empiresYearInput")}
-                  className="w-24 border border-border bg-black/30 px-2 py-1 text-xs text-foreground focus:border-accent focus:outline-none"
+                  className="w-20 border border-border bg-black/30 px-2 py-1 text-xs text-foreground focus:border-accent focus:outline-none sm:w-24"
                 />
                 <button
                   type="submit"
@@ -1399,7 +1405,7 @@ export default function ImperienPage() {
                   Los
                 </button>
               </form>
-              <p className="font-display text-lg font-bold text-accent sm:text-xl">
+              <p className="min-w-[9rem] whitespace-nowrap text-right font-display text-base font-bold tabular-nums text-accent sm:min-w-[11rem] sm:text-xl">
                 {formatYear(currentYear, t)}
               </p>
             </div>
