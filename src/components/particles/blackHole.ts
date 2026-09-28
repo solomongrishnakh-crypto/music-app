@@ -20,6 +20,7 @@ import * as THREE from "three";
  *
  * Wird als Billboard-Fläche in die bestehende 3D-Szene gesetzt; der Rest
  * der Szene (Partikel, Linien, Sternenstaub) bleibt unverändert.
+ * Die Scheibe ist innen undurchsichtig (dichtes Gas), nur der Außenrand franst aus.
  */
 
 const vertexShader = /* glsl */ `
