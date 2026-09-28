@@ -66,6 +66,26 @@ export default function RootLayout({
   return (
     <html lang="de" className={`dark ${jetbrainsMono.variable} ${orbitron.variable}`}>
       <body className="antialiased min-h-screen bg-background font-mono text-foreground selection:bg-accent/40 selection:text-white">
+        {/* Strukturierte Daten für Suchmaschinen/KI: Name der Seite und
+            offizielle Kontakt-Profile (Telegram, X) */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              name: "Centaurian",
+              url: "https://centaurian.vercel.app",
+              description: "Songs suchen und direkt hören, das Universum entdecken und die Geschichte großer Imperien erleben.",
+              publisher: {
+                "@type": "Organization",
+                name: "Centaurian",
+                url: "https://centaurian.vercel.app",
+                sameAs: ["https://t.me/Perseus641", "https://x.com/capone_835"],
+              },
+            }),
+          }}
+        />
         {/* Unsichtbarer SVG-Filter für den "Glas"-Verzerrungseffekt der
             Info-Boxen (glass-card in globals.css) — verzerrt/streckt, was
             im Hintergrund (Partikel/Linien/Galaxie) durchscheint, wie bei

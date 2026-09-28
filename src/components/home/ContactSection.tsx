@@ -5,6 +5,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const CONTACTS = [
   {
     label: "Telegram",
+    handle: "@Perseus641",
     href: "https://t.me/Perseus641",
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -14,6 +15,7 @@ const CONTACTS = [
   },
   {
     label: "X",
+    handle: "@capone_835",
     href: "https://x.com/capone_835",
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -24,8 +26,10 @@ const CONTACTS = [
 ];
 
 /**
- * Abschließender Kontakt-Bereich ganz unten auf der Seite — Logos statt
- * Text, die in einem neuen Tab zu Telegram bzw. X führen.
+ * Abschließender Kontakt-Bereich ganz unten auf der Seite — Logo plus
+ * sichtbarer Name/Handle, öffnet Telegram bzw. X in einem neuen Tab.
+ * 28.09.2026: vorher nur Logos ohne Text → Suchmaschinen und KI-Suchen
+ * fanden keine Kontaktdaten. Jetzt steht der Handle als echter Text da.
  */
 export default function ContactSection() {
   const { t } = useLanguage();
@@ -34,17 +38,20 @@ export default function ContactSection() {
       <div className="mb-6 border-b border-border pb-4">
         <p className="label-mono text-xs uppercase">{t("contactsLabel")}</p>
       </div>
-      <div className="flex items-center gap-6">
+      <div className="flex flex-wrap items-center gap-3 sm:gap-4">
         {CONTACTS.map((contact) => (
           <a
             key={contact.label}
             href={contact.href}
             target="_blank"
-            rel="noopener noreferrer"
-            aria-label={contact.label}
-            className="flex h-10 w-10 items-center justify-center border border-border text-muted transition-colors hover:border-accent hover:text-accent"
+            rel="noopener noreferrer me"
+            title={contact.label + " " + contact.handle}
+            className="flex h-10 items-center gap-3 border border-border px-3 text-muted transition-colors hover:border-accent hover:text-accent"
           >
-            <span className="h-4 w-4">{contact.icon}</span>
+            <span className="h-4 w-4 shrink-0">{contact.icon}</span>
+            <span className="text-xs">
+              {contact.label} <span className="text-foreground/80">{contact.handle}</span>
+            </span>
           </a>
         ))}
       </div>
