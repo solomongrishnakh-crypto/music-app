@@ -19,9 +19,37 @@ const orbitron = Orbitron({
   weight: ["500", "700", "900"],
 });
 
+// Suchmaschinen-Angaben (Nutzerwunsch 28.09.2026: Seite soll bei der
+// Suche auftauchen). metadataBase macht alle Links/Bilder absolut; der
+// Titel-Template hängt auf Unterseiten " | CENTAURIAN" an.
 export const metadata: Metadata = {
-  title: "CENTAURIAN",
-  description: "Song suchen, direkt im Browser hören.",
+  metadataBase: new URL("https://centaurian.vercel.app"),
+  title: {
+    default: "CENTAURIAN — Musik, Universum & Geschichte",
+    template: "%s | CENTAURIAN",
+  },
+  description:
+    "Centaurian: Songs suchen und direkt im Browser hören, das Universum interaktiv entdecken und die Geschichte großer Imperien erleben — kostenlos, ohne Anmeldung.",
+  applicationName: "Centaurian",
+  keywords: ["Centaurian", "Musik", "Songs hören", "Universum", "Sonnensystem", "Imperien", "Geschichte", "Schwarzes Loch"],
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "Centaurian",
+    title: "CENTAURIAN — Musik, Universum & Geschichte",
+    description:
+      "Songs suchen und direkt hören, das Universum entdecken und die Geschichte großer Imperien erleben — kostenlos, ohne Anmeldung.",
+    images: [{ url: "/branding/about-portrait.jpg", width: 941, height: 1672, alt: "Centaurian" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CENTAURIAN — Musik, Universum & Geschichte",
+    description: "Songs suchen und direkt hören, das Universum entdecken und die Geschichte großer Imperien erleben.",
+  },
+  robots: { index: true, follow: true },
+  // Besitznachweis für die Google Search Console (HTML-Tag-Methode)
+  verification: { google: "qrhceuDz1zuZMNrlVjkiybQo6epyEYiL-2UkmQJI5AY" },
 };
 
 export const viewport: Viewport = {
