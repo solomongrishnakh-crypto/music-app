@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { createBlackHole } from "./blackHole";
+import { createCellNetwork } from "./cellNetwork";
 
 /**
  * ThreeBackground
@@ -51,12 +52,14 @@ export default function ThreeBackground() {
     // Nutzerwunsch 19.09.2026: "bisschen mehr partikel über linien . und
     // bisschen schneller bewegen" — mehr Partikel (mehr Verkehr auf den
     // Verbindungslinien) und höheres Lauftempo (railSpeed unten).
-    const PARTICLE_COUNT = 1000;
+    // Nutzerwunsch 29.09.2026: Zellen-Netz kompakter/futuristischer —
+    // 2000 Netzknoten (viele kleine Zellen), darauf laufen 700 Energieströme.
+    const NODE_COUNT = 2000;
+    const MOVER_COUNT = 700;
     const CLOUD_RADIUS = 13;
-    const positions = new Float32Array(PARTICLE_COUNT * 3);
-    const basePositions = new Float32Array(PARTICLE_COUNT * 3);
-    const colors = new Float32Array(PARTICLE_COUNT * 3);
-    const phases = new Float32Array(PARTICLE_COUNT);
+    const positions = new Float32Array(MOVER_COUNT * 3);
+    const basePositions = new Float32Array(NODE_COUNT * 3);
+    const colors = new Float32Array(MOVER_COUNT * 3);
 
     const colorRed = new THREE.Color("#ff5a4d");
     const colorWhite = new THREE.Color("#fff2ee");
@@ -66,7 +69,7 @@ export default function ThreeBackground() {
     // verdeckt wird.
     const CENTER_CLEARANCE = 3.4;
 
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
+    for (let i = 0; i < NODE_COUNT; i++) {
       // Gleichverteilter Punkt innerhalb einer Kugelschale (symmetrisch in
       // alle Richtungen, mit freier Mitte), leicht abgeflacht in Z für mehr
       // Bildschirmfüllung.
@@ -79,15 +82,13 @@ export default function ThreeBackground() {
       const y = radius * Math.sin(phi) * Math.sin(theta) * 0.72;
       const z = radius * Math.cos(phi) * 0.85 - 1;
 
-      positions[i * 3] = x;
-      positions[i * 3 + 1] = y;
-      positions[i * 3 + 2] = z;
       basePositions[i * 3] = x;
       basePositions[i * 3 + 1] = y;
       basePositions[i * 3 + 2] = z;
-      phases[i] = Math.random() * Math.PI * 2;
-
-      const mixed = colorRed.clone().lerp(colorWhite, Math.random() * 0.6);
+    }
+    // Energieströme: heller Kopf (fast weiß, leicht rötlich)
+    for (let i = 0; i < MOVER_COUNT; i++) {
+      const mixed = colorRed.clone().lerp(colorWhite, 0.7 + Math.random() * 0.3);
       colors[i * 3] = mixed.r;
       colors[i * 3 + 1] = mixed.g;
       colors[i * 3 + 2] = mixed.b;
@@ -123,7 +124,8 @@ export default function ThreeBackground() {
     const circleTexture = createCircleTexture();
 
     const material = new THREE.PointsMaterial({
-      size: 0.12,
+      // kleiner, kompakter Funke an der Spitze jedes Energiestroms
+      size: 0.028,
       map: circleTexture,
       vertexColors: true,
       transparent: true,
@@ -206,50 +208,25 @@ export default function ThreeBackground() {
     const blackHole = createBlackHole(7);
     scene.add(blackHole.mesh);
 
-    // --- Verbindungslinien zwischen nahen Partikeln (einmalig berechnet) ---
-    // Zusätzlich wird für jeden Punkt gemerkt, mit welchen Nachbarn er
-    // verbunden ist (adjacency) — die Partikel bewegen sich danach entlang
-    // genau dieser Linien hin und her, statt frei im Raum zu schweben.
-    const lineVertices: number[] = [];
-    const adjacency: number[][] = Array.from({ length: PARTICLE_COUNT }, () => []);
-    const MAX_LINK_DIST = 2.6;
-    const MAX_LINKS_PER_POINT = 5;
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      let links = 0;
-      for (let j = i + 1; j < PARTICLE_COUNT && links < MAX_LINKS_PER_POINT; j++) {
-        const dx = basePositions[i * 3] - basePositions[j * 3];
-        const dy = basePositions[i * 3 + 1] - basePositions[j * 3 + 1];
-        const dz = basePositions[i * 3 + 2] - basePositions[j * 3 + 2];
-        const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
-        if (dist < MAX_LINK_DIST) {
-          lineVertices.push(
-            basePositions[i * 3], basePositions[i * 3 + 1], basePositions[i * 3 + 2],
-            basePositions[j * 3], basePositions[j * 3 + 1], basePositions[j * 3 + 2]
-          );
-          adjacency[i].push(j);
-          adjacency[j].push(i);
-          links++;
-        }
-      }
-    }
+    // --- Zellen-Netz (siehe cellNetwork.ts) -----------------------------
+    // Viele kleine, geschlossene Zellen ohne Sackgassen; feine Leitungen.
+    const network = createCellNetwork(basePositions, NODE_COUNT);
+    const adjacency = network.adjacency;
+    const lines = network.lines;
+    scene.add(lines);
 
-    // Freie Wanderung über das Liniennetz: statt einer festen Schiene
-    // (immer zwischen denselben zwei Punkten hin und her) "läuft" jedes
-    // Partikel von Knoten zu Knoten entlang der vorhandenen Linien — sobald
-    // es einen Nachbarn erreicht, wird zufällig der nächste Nachbar dieses
-    // Knotens als neues Ziel gewählt. So bewegen sich Partikel im Lauf der
-    // Zeit frei über verschiedene Linien, statt ewig auf derselben zu pendeln.
-    const railFrom = new Int32Array(PARTICLE_COUNT);
-    const railTo = new Int32Array(PARTICLE_COUNT);
-    const railT = new Float32Array(PARTICLE_COUNT);
-    const railSpeed = new Float32Array(PARTICLE_COUNT);
+    // --- Energieströme: laufen endlos auf zufälligen Wegen durchs Netz ----
+    // Gleichmäßiges Tempo (kein Abbremsen an Knoten); an jedem Knoten wird
+    // zufällig eine neue Leitung gewählt, möglichst nicht direkt zurück.
+    const railFrom = new Int32Array(MOVER_COUNT);
+    const railTo = new Int32Array(MOVER_COUNT);
+    const railT = new Float32Array(MOVER_COUNT);
+    const railSpeed = new Float32Array(MOVER_COUNT);
 
     function pickNextNeighbor(node: number, avoid: number): number {
       const neighbors = adjacency[node];
       if (neighbors.length === 0) return node;
       if (neighbors.length === 1) return neighbors[0];
-      // Möglichst nicht sofort zum selben Knoten zurück, damit die Bewegung
-      // tatsächlich weiterwandert statt nur zwei Knoten zu pendeln.
       for (let attempt = 0; attempt < 4; attempt++) {
         const candidate = neighbors[Math.floor(Math.random() * neighbors.length)];
         if (candidate !== avoid) return candidate;
@@ -257,30 +234,59 @@ export default function ThreeBackground() {
       return neighbors[Math.floor(Math.random() * neighbors.length)];
     }
 
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      const neighbors = adjacency[i];
-      railFrom[i] = i;
-      railTo[i] =
-        neighbors.length > 0
-          ? neighbors[Math.floor(Math.random() * neighbors.length)]
-          : i;
-      railT[i] = Math.random(); // zufälliger Startfortschritt, damit nicht alle synchron laufen
-      railSpeed[i] = 0.07 + Math.random() * 0.09;
+    const linkedNodes: number[] = [];
+    for (let i = 0; i < NODE_COUNT; i++) if (adjacency[i].length > 0) linkedNodes.push(i);
+    for (let i = 0; i < MOVER_COUNT; i++) {
+      const start = linkedNodes[Math.floor(Math.random() * linkedNodes.length)];
+      railFrom[i] = start;
+      railTo[i] = adjacency[start][Math.floor(Math.random() * adjacency[start].length)];
+      railT[i] = Math.random();
+      railSpeed[i] = 0.17 + Math.random() * 0.2; // Welteinheiten pro Sekunde
+      for (let c = 0; c < 3; c++) {
+        positions[i * 3 + c] =
+          basePositions[railFrom[i] * 3 + c] +
+          (basePositions[railTo[i] * 3 + c] - basePositions[railFrom[i] * 3 + c]) * railT[i];
+      }
     }
 
-    const lineGeometry = new THREE.BufferGeometry();
-    lineGeometry.setAttribute(
-      "position",
-      new THREE.BufferAttribute(new Float32Array(lineVertices), 3)
-    );
-    const lineMaterial = new THREE.LineBasicMaterial({
-      color: 0xff8a75,
+    // Leuchtspur hinter jedem Strom: die letzten Positionen als kurze Linie,
+    // vorne fast weiß, hinten rot verglühend (Nutzerwunsch: "wie Strom oder
+    // helle Energie", Länge gekürzt, Kopf kompakt).
+    const TRAIL_POINTS = 8;
+    const TRAIL_STEP = 0.035;
+    const trailHist = new Float32Array(MOVER_COUNT * TRAIL_POINTS * 3);
+    for (let i = 0; i < MOVER_COUNT; i++) {
+      for (let k = 0; k < TRAIL_POINTS; k++) {
+        trailHist.set(positions.subarray(i * 3, i * 3 + 3), (i * TRAIL_POINTS + k) * 3);
+      }
+    }
+    const trailPos = new Float32Array(MOVER_COUNT * TRAIL_POINTS * 6);
+    const trailCol = new Float32Array(MOVER_COUNT * TRAIL_POINTS * 6);
+    // Farbverlauf ist für alle Spuren gleich → einmal vorberechnen
+    const HOT = [1.0, 0.93, 0.86];
+    const EMBER = [1.0, 0.32, 0.24];
+    for (let i = 0; i < MOVER_COUNT; i++) {
+      for (let k = 0; k < TRAIL_POINTS; k++) {
+        const o = (i * TRAIL_POINTS + k) * 6;
+        const f0 = Math.pow(1 - k / TRAIL_POINTS, 1.6);
+        const f1 = Math.pow(1 - (k + 1) / TRAIL_POINTS, 1.6);
+        for (let c = 0; c < 3; c++) {
+          trailCol[o + c] = (EMBER[c] + (HOT[c] - EMBER[c]) * f0 * f0) * f0;
+          trailCol[o + 3 + c] = (EMBER[c] + (HOT[c] - EMBER[c]) * f1 * f1) * f1;
+        }
+      }
+    }
+    const trailGeometry = new THREE.BufferGeometry();
+    trailGeometry.setAttribute("position", new THREE.BufferAttribute(trailPos, 3));
+    trailGeometry.setAttribute("color", new THREE.BufferAttribute(trailCol, 3));
+    const trailMaterial = new THREE.LineBasicMaterial({
+      vertexColors: true,
       transparent: true,
-      opacity: 0.22,
       blending: THREE.AdditiveBlending,
+      depthWrite: false,
     });
-    const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
-    scene.add(lines);
+    const trails = new THREE.LineSegments(trailGeometry, trailMaterial);
+    scene.add(trails);
 
     // --- Interaktion / Animation ---------------------------------------
     let targetRotX = 0;
@@ -324,46 +330,63 @@ export default function ThreeBackground() {
     window.addEventListener("resize", handleResize);
 
     let animationId: number;
+    let lastFrame = performance.now();
     let elapsed = 0;
 
     function animate() {
       elapsed += 0.006;
 
-      // Partikel wandern frei über das Liniennetz: von Knoten zu Knoten,
-      // nicht ewig auf derselben festen Linie hin und her.
+      // Energieströme: gleichmäßig weiter auf zufälligem Weg, nie Pause
+      const now = performance.now();
+      const dt = Math.min(0.05, (now - lastFrame) / 1000);
+      lastFrame = now;
       const posAttr = geometry.attributes.position as THREE.BufferAttribute;
-      for (let i = 0; i < PARTICLE_COUNT; i++) {
-        const from = railFrom[i];
-        const to = railTo[i];
-        if (from === to) {
-          posAttr.array[i * 3] = basePositions[from * 3];
-          posAttr.array[i * 3 + 1] = basePositions[from * 3 + 1];
-          posAttr.array[i * 3 + 2] = basePositions[from * 3 + 2];
-          continue;
-        }
-
-        railT[i] += railSpeed[i] * 0.01;
-        if (railT[i] >= 1) {
-          railT[i] = 0;
+      const P = posAttr.array as Float32Array;
+      for (let i = 0; i < MOVER_COUNT; i++) {
+        let from = railFrom[i];
+        let to = railTo[i];
+        const dx = basePositions[to * 3] - basePositions[from * 3];
+        const dy = basePositions[to * 3 + 1] - basePositions[from * 3 + 1];
+        const dz = basePositions[to * 3 + 2] - basePositions[from * 3 + 2];
+        const len = Math.max(0.05, Math.sqrt(dx * dx + dy * dy + dz * dz));
+        railT[i] += (railSpeed[i] * dt) / len;
+        while (railT[i] >= 1) {
+          railT[i] -= 1;
           railFrom[i] = to;
           railTo[i] = pickNextNeighbor(to, from);
+          from = railFrom[i];
+          to = railTo[i];
+        }
+        const t = railT[i];
+        for (let c = 0; c < 3; c++) {
+          P[i * 3 + c] = basePositions[from * 3 + c] + (basePositions[to * 3 + c] - basePositions[from * 3 + c]) * t;
         }
 
-        // Sanfte Beschleunigung/Abbremsung an den Enden (ease-in-out) statt
-        // linearer Bewegung — wirkt organischer.
-        const t = railT[i];
-        const eased = t * t * (3 - 2 * t);
-
-        posAttr.array[i * 3] =
-          basePositions[from * 3] + (basePositions[to * 3] - basePositions[from * 3]) * eased;
-        posAttr.array[i * 3 + 1] =
-          basePositions[from * 3 + 1] +
-          (basePositions[to * 3 + 1] - basePositions[from * 3 + 1]) * eased;
-        posAttr.array[i * 3 + 2] =
-          basePositions[from * 3 + 2] +
-          (basePositions[to * 3 + 2] - basePositions[from * 3 + 2]) * eased;
+        // Spur: neuen Punkt merken, sobald der Strom ein Stück weiter ist
+        const h = i * TRAIL_POINTS * 3;
+        const mx = P[i * 3] - trailHist[h];
+        const my = P[i * 3 + 1] - trailHist[h + 1];
+        const mz = P[i * 3 + 2] - trailHist[h + 2];
+        if (mx * mx + my * my + mz * mz >= TRAIL_STEP * TRAIL_STEP) {
+          trailHist.copyWithin(h + 3, h, h + (TRAIL_POINTS - 1) * 3);
+          trailHist[h] = P[i * 3];
+          trailHist[h + 1] = P[i * 3 + 1];
+          trailHist[h + 2] = P[i * 3 + 2];
+        }
+        for (let k = 0; k < TRAIL_POINTS; k++) {
+          const o = (i * TRAIL_POINTS + k) * 6;
+          const a0 = k === 0 ? i * 3 : h + (k - 1) * 3;
+          const src0 = k === 0 ? P : trailHist;
+          trailPos[o] = src0[a0];
+          trailPos[o + 1] = src0[a0 + 1];
+          trailPos[o + 2] = src0[a0 + 2];
+          trailPos[o + 3] = trailHist[h + k * 3];
+          trailPos[o + 4] = trailHist[h + k * 3 + 1];
+          trailPos[o + 5] = trailHist[h + k * 3 + 2];
+        }
       }
       posAttr.needsUpdate = true;
+      (trailGeometry.attributes.position as THREE.BufferAttribute).needsUpdate = true;
 
       // Staubfeld: leichtes, unregelmäßiges Driften um die Ausgangsposition
       // (kein Netz, keine Rail-Bewegung) plus kurzes, helles "Aufleuchten"
@@ -395,6 +418,7 @@ export default function ThreeBackground() {
       const spinBoost = 1 + currentScrollProgress * 2.5;
       points.rotation.y = elapsed * 0.05 * spinBoost;
       lines.rotation.y = elapsed * 0.05 * spinBoost;
+      trails.rotation.y = points.rotation.y;
 
       // Kleine Spiralgalaxie: sehr langsame, gleichmäßige Eigendrehung
 
@@ -416,6 +440,7 @@ export default function ThreeBackground() {
       const compress = 1 - currentScrollProgress * 0.78;
       points.scale.setScalar(compress);
       lines.scale.setScalar(compress);
+      trails.scale.setScalar(compress);
       dust.scale.setScalar(compress);
       // Am schmalen Handy-Bildschirm etwas kleiner, damit die Scheibe nicht
       // links/rechts abgeschnitten wird
@@ -437,8 +462,9 @@ export default function ThreeBackground() {
       geometry.dispose();
       material.dispose();
       circleTexture.dispose();
-      lineGeometry.dispose();
-      lineMaterial.dispose();
+      network.dispose();
+      trailGeometry.dispose();
+      trailMaterial.dispose();
       blackHole.dispose();
       dustGeometry.dispose();
       dustMaterial.dispose();
