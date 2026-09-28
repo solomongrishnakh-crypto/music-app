@@ -112,7 +112,10 @@ const fragmentShader = /* glsl */ `
     intensity *= pow(g, 2.2);
 
     float edge = smoothstep(R_IN, R_IN + 0.5, r) * (1.0 - smoothstep(R_OUT - 3.5, R_OUT, r));
-    float alpha = clamp(edge * (0.45 + 0.75 * n) * (1.1 - 0.5 * t), 0.0, 1.0);
+    // Dichtes Gas ist undurchsichtig: innen voll deckend, erst der äußere
+    // Rand wird dünner und franst wolkig aus
+    float thin = smoothstep(0.55, 1.0, t);
+    float alpha = clamp(edge * mix(1.0, 0.35 + 0.65 * n, thin), 0.0, 1.0);
     return vec4(col * intensity, alpha);
   }
 
