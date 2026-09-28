@@ -241,7 +241,7 @@ export default function ThreeBackground() {
       railFrom[i] = start;
       railTo[i] = adjacency[start][Math.floor(Math.random() * adjacency[start].length)];
       railT[i] = Math.random();
-      railSpeed[i] = 0.17 + Math.random() * 0.2; // Welteinheiten pro Sekunde
+      railSpeed[i] = 0.21 + Math.random() * 0.25; // Welteinheiten pro Sekunde
       for (let c = 0; c < 3; c++) {
         positions[i * 3 + c] =
           basePositions[railFrom[i] * 3 + c] +
