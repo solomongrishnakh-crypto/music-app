@@ -38,8 +38,10 @@ uniform vec3 uBase;
 varying float vDepth;
 void main() {
   // feine, gleichmäßige Leitungen; weit hinten dunkler (Kamera bei z = 9)
-  float depthFade = clamp(1.3 - vDepth / 16.0, 0.2, 1.0);
-  gl_FragColor = vec4(uBase * 0.17 * depthFade, 1.0);
+  // Helligkeit 0.17 → 0.4 (Nutzerwunsch 29.09.2026: "Zellen fast unsichtbar",
+  // v. a. auf dem Handy mit dünnen 1-px-Linien bei hoher Pixeldichte)
+  float depthFade = clamp(1.4 - vDepth / 16.0, 0.35, 1.0);
+  gl_FragColor = vec4(uBase * 0.4 * depthFade, 1.0);
 }
 `;
 
