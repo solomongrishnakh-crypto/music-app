@@ -93,7 +93,12 @@ export default function SolarSystem({
   const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
   const pinchStartDistRef = useRef<number | null>(null);
   const pinchStartZoomRef = useRef(1);
-  const zoomLimitsRef = useRef<[number, number]>([0.5, 4.5]);
+  // Nutzerwunsch 29.09.2026 ("man sollte mehr zoomen können"): deutlich
+  // höhere Grenzen + Zoom auf den Punkt unter Maus/Fingern statt immer auf
+  // die Sonne (panRef = Verschiebung der Sonne gegenüber der Bildmitte).
+  const zoomLimitsRef = useRef<[number, number]>([0.5, 60]);
+  const panRef = useRef({ x: 0, y: 0 });
+  const pinchCenterRef = useRef<{ x: number; y: number } | null>(null);
 
   // Sehr wenige, sehr dezente Hintergrundsterne (Nutzerwunsch: "sterne im
   // hintergrund soll kaum sehbar sein") — fest generiert, kein Funkeln,
@@ -127,7 +132,8 @@ export default function SolarSystem({
   // Mars überhaupt getrennt zu sehen).
   useEffect(() => {
     zoomRef.current = 1;
-    zoomLimitsRef.current = scaleMode === "real" ? [0.15, 400] : [0.5, 4.5];
+    panRef.current = { x: 0, y: 0 };
+    zoomLimitsRef.current = scaleMode === "real" ? [0.15, 3000] : [0.5, 60];
   }, [scaleMode]);
 
   useEffect(() => {
@@ -144,8 +150,6 @@ export default function SolarSystem({
     canvas.style.height = `${size.h}px`;
     ctx.scale(dpr, dpr);
 
-    const cx = size.w / 2;
-    const cy = size.h / 2;
     const smallCanvas = size.w < 420;
     const pad = mode === "compact" ? 4 : smallCanvas ? 18 : 26;
     const baseMaxOrbitR = Math.min(size.w, size.h) / 2 - pad;
@@ -166,7 +170,11 @@ export default function SolarSystem({
       } else {
         t = INNER_FRACTION + ((rAu - NEPTUNE_AU) / (OUTER_MAX_AU - NEPTUNE_AU)) * (1 - INNER_FRACTION);
       }
-      return compactSunR + 10 + t * (maxOrbitR - compactSunR - 10);
+      // Bahnradien wachsen exakt proportional zum Zoom (die Sonne bleibt
+      // gleich groß) — nur so bleibt beim Zoomen der Punkt unter der Maus
+      // wirklich an seiner Stelle.
+      const zoomNow = maxOrbitR / baseMaxOrbitR;
+      return zoomNow * (compactSunR + 10 + t * (baseMaxOrbitR - compactSunR - 10));
     }
 
     // Größen (Durchmesser in km) — "kompakt": gemäßigt gestaucht
@@ -197,6 +205,9 @@ export default function SolarSystem({
         }
       }
 
+      // Sonne = Bildmitte + Verschiebung (beim Zoomen auf einen Punkt)
+      const cx = size.w / 2 + panRef.current.x;
+      const cy = size.h / 2 + panRef.current.y;
       const zoom = zoomRef.current;
       const maxOrbitR = baseMaxOrbitR * zoom;
       const tilt = tiltRef.current;
@@ -210,7 +221,7 @@ export default function SolarSystem({
       const sunR = realMode ? Math.max(2.5, SUN_RADIUS_AU * pxPerAu) : compactSunR;
       // Planetengröße im echten Maßstab: echtes Verhältnis untereinander,
       // Jupiter wächst beim Reinzoomen mit (bis 40 px).
-      const jupiterPx = Math.min(40, (smallCanvas ? 7 : 9) * Math.sqrt(zoom));
+      const jupiterPx = Math.min(120, (smallCanvas ? 7 : 9) * Math.sqrt(zoom));
 
       function project(p: Vec3): [number, number] {
         let k: number;
@@ -231,7 +242,9 @@ export default function SolarSystem({
 
       function bodyRadius(planet: PlanetData): number {
         if (realMode) return Math.max(1.2, (planet.diameterKm / JUPITER_KM) * jupiterPx);
-        return compactPlanetRadius(planet.diameterKm);
+        // Beim Reinzoomen wachsen die Planeten mit (gedämpft), sonst blieben
+        // sie auch bei 60× Zoom winzige Punkte.
+        return Math.min(70, compactPlanetRadius(planet.diameterKm) * Math.sqrt(Math.max(1, zoom)));
       }
 
       ctx.clearRect(0, 0, size.w, size.h);
@@ -460,6 +473,7 @@ export default function SolarSystem({
       const pts = Array.from(pointersRef.current.values());
       pinchStartDistRef.current = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
       pinchStartZoomRef.current = zoomRef.current;
+      pinchCenterRef.current = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
     } else {
       dragRef.current = { x: e.clientX, y: e.clientY, dragged: false };
     }
@@ -476,8 +490,8 @@ export default function SolarSystem({
       const pts = Array.from(pointersRef.current.values());
       const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
       const ratio = dist / pinchStartDistRef.current;
-      const [zMin, zMax] = zoomLimitsRef.current;
-      zoomRef.current = Math.min(zMax, Math.max(zMin, pinchStartZoomRef.current * ratio));
+      const c = pinchCenterRef.current ?? { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+      zoomAt(pinchStartZoomRef.current * ratio, c.x, c.y);
       return;
     }
 
@@ -530,10 +544,35 @@ export default function SolarSystem({
   function handleWheel(e: globalThis.WheelEvent) {
     if (!interactive) return;
     e.preventDefault();
+    // multiplikativ, damit auch sehr hohe Zoomstufen in vernünftig vielen Schritten erreichbar sind
+    const factor = Math.exp(-Math.max(-200, Math.min(200, e.deltaY)) * 0.0018);
+    zoomAt(zoomRef.current * factor, e.clientX, e.clientY);
+  }
+
+  /** Zoomt so, dass der Punkt unter (clientX, clientY) an seiner Stelle bleibt. */
+  function zoomAt(targetZoom: number, clientX: number, clientY: number) {
     const [zMin, zMax] = zoomLimitsRef.current;
-    // multiplikativ, damit auch Zoom 400× in vernünftig vielen Schritten erreichbar ist
-    const factor = Math.exp(-Math.max(-200, Math.min(200, e.deltaY)) * 0.0015);
-    zoomRef.current = Math.min(zMax, Math.max(zMin, zoomRef.current * factor));
+    const oldZoom = zoomRef.current;
+    const newZoom = Math.min(zMax, Math.max(zMin, targetZoom));
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (rect) {
+      const px = clientX - rect.left - rect.width / 2;
+      const py = clientY - rect.top - rect.height / 2;
+      const k = newZoom / oldZoom;
+      panRef.current = {
+        x: px - (px - panRef.current.x) * k,
+        y: py - (py - panRef.current.y) * k,
+      };
+      // Bei Zoom ≤ 1 (alles sichtbar) die Sonne wieder in die Mitte holen
+      if (newZoom <= 1) panRef.current = { x: 0, y: 0 };
+    }
+    zoomRef.current = newZoom;
+  }
+
+  function zoomByButton(factor: number) {
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    zoomAt(zoomRef.current * factor, rect.left + rect.width / 2, rect.top + rect.height / 2);
   }
 
   function selectFromPoint(clientX: number, clientY: number) {
@@ -576,6 +615,22 @@ export default function SolarSystem({
             </span>
           </div>
           <div className="pointer-events-auto flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => zoomByButton(1 / 1.8)}
+              aria-label="−"
+              className="label-mono border border-border bg-background/80 whitespace-nowrap px-2 py-1 text-[10px] uppercase text-muted transition-colors hover:border-accent hover:text-accent"
+            >
+              −
+            </button>
+            <button
+              type="button"
+              onClick={() => zoomByButton(1.8)}
+              aria-label="+"
+              className="label-mono border border-border bg-background/80 whitespace-nowrap px-2 py-1 text-[10px] uppercase text-muted transition-colors hover:border-accent hover:text-accent"
+            >
+              +
+            </button>
             <button
               type="button"
               onClick={() => {
