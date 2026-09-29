@@ -248,11 +248,11 @@ const TRANSLATIONS_SOURCE = {
     pt: "Tudo à escala: distâncias, Sol e planetas · os minúsculos como pontos", ar: "كل شيء بالمقياس الحقيقي: المسافات والشمس والكواكب · الصغيرة جدًا كنقاط", el: "Όλα σε κλίμακα: αποστάσεις, Ήλιος & πλανήτες · οι μικροσκοπικοί ως τελείες",
   },
   solarScaleCompactNote: {
-    de: "Abstände gestaucht · ab 8× Zoom Größen echt im Verhältnis zur Sonne", en: "Distances compressed · from 8× zoom, sizes true relative to the Sun",
-    hi: "दूरियाँ संकुचित · 8× ज़ूम से आकार सूर्य के अनुपात में वास्तविक", zh: "距离已压缩 · 放大8倍起，大小与太阳的比例真实", ko: "거리 압축 · 8배 확대부터 크기가 태양 대비 실제 비율", ja: "距離は圧縮 · 8倍ズーム以上で太陽との大きさの比が実寸",
-    es: "Distancias comprimidas · desde zoom 8×, tamaños reales respecto al Sol", fr: "Distances compressées · dès le zoom 8×, tailles réelles par rapport au Soleil",
-    tr: "Mesafeler sıkıştırılmış · 8× yakınlaştırmadan itibaren boyutlar Güneş'e göre gerçek", ru: "Расстояния сжаты · с 8× размеры реальны относительно Солнца",
-    pt: "Distâncias comprimidas · a partir de zoom 8×, tamanhos reais em relação ao Sol", ar: "المسافات مضغوطة · من تكبير 8× الأحجام حقيقية نسبةً إلى الشمس", el: "Συμπιεσμένες αποστάσεις · από ζουμ 8× μεγέθη πραγματικά σε σχέση με τον Ήλιο",
+    de: "Abstände gestaucht · ab 3× Zoom Größen echt im Verhältnis zur Sonne", en: "Distances compressed · from 3× zoom, sizes true relative to the Sun",
+    hi: "दूरियाँ संकुचित · 3× ज़ूम से आकार सूर्य के अनुपात में वास्तविक", zh: "距离已压缩 · 放大3倍起，大小与太阳的比例真实", ko: "거리 압축 · 3배 확대부터 크기가 태양 대비 실제 비율", ja: "距離は圧縮 · 3倍ズーム以上で太陽との大きさの比が実寸",
+    es: "Distancias comprimidas · desde zoom 3×, tamaños reales respecto al Sol", fr: "Distances compressées · dès le zoom 3×, tailles réelles par rapport au Soleil",
+    tr: "Mesafeler sıkıştırılmış · 3× yakınlaştırmadan itibaren boyutlar Güneş'e göre gerçek", ru: "Расстояния сжаты · с 3× размеры реальны относительно Солнца",
+    pt: "Distâncias comprimidas · a partir de zoom 3×, tamanhos reais em relação ao Sol", ar: "المسافات مضغوطة · من تكبير 3× الأحجام حقيقية نسبةً إلى الشمس", el: "Συμπιεσμένες αποστάσεις · από ζουμ 3× μεγέθη πραγματικά σε σχέση με τον Ήλιο",
   },
   solarDaysPerSecond: {
     de: "Tage/s", en: "days/s", hi: "दिन/से", zh: "天/秒", ko: "일/초", ja: "日/秒",

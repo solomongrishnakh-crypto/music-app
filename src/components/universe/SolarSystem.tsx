@@ -155,7 +155,7 @@ export default function SolarSystem({
     const smallCanvas = size.w < 420;
     const pad = mode === "compact" ? 4 : smallCanvas ? 18 : 26;
     const baseMaxOrbitR = Math.min(size.w, size.h) / 2 - pad;
-    const compactSunR = mode === "compact" ? 6 : smallCanvas ? 11 : 16;
+    const compactSunR = mode === "compact" ? 7 : smallCanvas ? 13 : 19;
     const realMode = scaleMode === "real" && interactive;
 
     // --- Kompakt-Skala (wie bisher): innen Wurzel, jenseits Neptun linear ---
@@ -184,14 +184,18 @@ export default function SolarSystem({
     // teilen sich EINEN Größenmaßstab (Durchmesser in km × Pixel pro km).
     //  - Kompakt: in der Gesamtansicht sind die Planeten gegenüber der Sonne
     //    noch vergrößert (sonst wären Erde & Co. unsichtbar), dieser Faktor
-    //    schrumpft beim Reinzoomen und ist ab 8× Zoom exakt 1 — dann stimmt
+    //    schrumpft beim Reinzoomen und ist ab 3× Zoom exakt 1 — dann stimmt
     //    das Verhältnis zur Sonne (Jupiter = 1/10, Erde = 1/109).
     //  - Echter Maßstab: alles exakt — Abstände, Sonne und Planeten.
     // Zu kleine Körper werden als Mindest-Punkt gezeichnet, damit man sie
     // überhaupt findet.
     const SUN_KM = 1392700;
     const KM_PER_AU = 149597870.7;
-    const OVERVIEW_ENLARGE = 8;
+    // Nutzerkorrektur 29.09.2026 ("wieso sehen Planeten größer als die Sonne
+    // aus"): mit Faktor 8 war Jupiter in der Gesamtansicht fast so groß wie
+    // die Sonne. Jetzt nur noch ×3 — die Sonne bleibt klar am größten, ab 3×
+    // Zoom stimmt das Verhältnis exakt.
+    const OVERVIEW_ENLARGE = 3;
     const minDot = mode === "compact" ? 0.9 : smallCanvas ? 1.3 : 1.6;
 
     let lastTime = performance.now();
@@ -442,7 +446,8 @@ export default function SolarSystem({
         }
 
         ctx.globalAlpha = isDwarf ? 0.85 : 1;
-        const glowMult = smallCanvas ? 1.5 : 2.4;
+        // dezenter Schein, damit er den Planeten nicht optisch aufbläht
+        const glowMult = 1.6;
         const glowR = Math.max(pr * glowMult, 3);
         const glow = ctx.createRadialGradient(x, y, 0, x, y, glowR);
         glow.addColorStop(0, planet.glowColor);
