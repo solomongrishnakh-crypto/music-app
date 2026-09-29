@@ -16,21 +16,19 @@ import {
   getEmpiresYearRange,
   preloadEmpiresData,
 } from "@/lib/history/empiresClient";
+import { lookupWikiInBrowser } from "@/lib/history/wikiClientLookup";
 
 const LEAFLET_CSS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
 const LEAFLET_JS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
 
-// Ozean-Basiskarte (Wasser sichtbar in Blau, Land als Relief) von Esri —
-// bewusst OHNE heutige Landesgrenzen und -namen (sonst stünde auf einer
-// Karte von 700 v. Chr. "Uzbekistan", Nutzerkorrektur 18.09.2026) und
-// kostenlos ohne API-Key nutzbar (CARTOs frühere anonyme dark_all-Kacheln
-// verlangen inzwischen einen Account/Key, deshalb hier bewusst Esri statt
-// CARTO). Vorher wurde reines Hillshade (nur Grautöne, kein Wasser/Land-
-// Unterschied) genutzt — Nutzerkorrektur 18.09.2026: "man sieht kein
-// wasser". Achtung: Esri nutzt {z}/{y}/{x} (nicht {x}/{y} wie das übliche
-// Slippy-Map-Schema).
+// Basiskarte: echtes Satellitenbild (Esri World Imagery) — Gebirge, Wüsten,
+// Wälder und Küsten wie in echt, ohne heutige Grenzen oder Ortsnamen
+// (sonst stünde auf einer Karte von 700 v. Chr. "Uzbekistan",
+// Nutzerkorrektur 18.09.2026). Nutzerwunsch 29.09.2026: "mach die Karte
+// realistischer" — vorher Esris flache Ozean-Basiskarte. Kostenlos ohne
+// API-Key; Esri nutzt {z}/{y}/{x} (nicht {x}/{y}).
 const TILE_URL =
-  "https://server.arcgisonline.com/ArcGIS/rest/services/Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}";
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}";
 
 // Abspielgeschwindigkeiten fürs Durchspulen der Zeitleiste (ms pro Jahr).
 const PLAY_SPEEDS = [1600, 900, 450] as const;
@@ -60,7 +58,7 @@ interface EmpireInfo {
   thumbnail?: string | null;
   pageUrl?: string | null;
   language?: string | null;
-  lang?: "de" | "en";
+  lang?: string;
   source?: "wikipedia" | "editorial";
 }
 
@@ -513,6 +511,10 @@ export default function ImperienPage() {
   const mapRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const geoLayerRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const fillRendererRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const borderRendererRef = useRef<any>(null);
   const rulerRef = useRef<HTMLDivElement>(null);
   const rulerDragRef = useRef<{ startX: number; startYear: number; moved: boolean } | null>(
     null
@@ -637,6 +639,23 @@ export default function ImperienPage() {
       maxZoom: 16,
     }).addTo(map);
 
+    // Nutzerkorrektur 29.09.2026 ("die Territorien sind überlagert"): Flächen
+    // und Grenzlinien liegen in zwei eigenen Ebenen. Die Flächen werden darin
+    // VOLL deckend gezeichnet (kleinere/verschachtelte Gebiete zuletzt, also
+    // oben) und erst die GANZE Ebene wird halbtransparent über das
+    // Satellitenbild gelegt. Dadurch mischen sich überlappende Gebiete nicht
+    // mehr zu Matschfarben — das obere Gebiet deckt das untere sauber ab,
+    // wie in einem gedruckten Atlas. Die Grenzlinien liegen darüber in voller
+    // Stärke und fangen keine Klicks ab.
+    const fillPane = map.createPane("territoryFill");
+    fillPane.style.zIndex = "400";
+    fillPane.style.opacity = "0.5";
+    const borderPane = map.createPane("territoryBorder");
+    borderPane.style.zIndex = "410";
+    borderPane.style.pointerEvents = "none";
+    fillRendererRef.current = L.svg({ pane: "territoryFill", padding: 0.5 });
+    borderRendererRef.current = L.svg({ pane: "territoryBorder", padding: 0.5 });
+
     mapRef.current = map;
 
     // Nutzerkorrektur 20.09.2026: "es ist zu dicht ... kleine imperien
@@ -753,90 +772,139 @@ export default function ImperienPage() {
     // oben — Farben dürfen sich nicht mehr je nach Jahr/Nachbarn ändern).
     const colorByName = assignDistinctColors(sortedFeatures);
 
+    // Beschriftungsgröße wie im Atlas: die größten Reiche etwas größer.
+    const bigLabelNames = new Set(sortedFeatures.slice(0, 6).map((f) => f.properties?.NAME));
+
+    // Sammel-Umriss und Kern tragen seit empiresClient.normalizeEmpireName
+    // denselben Namen — nur das jeweils GRÖSSTE Teil bekommt die feste
+    // Beschriftung, sonst stünde "Kingdom of France" doppelt da.
+    const labeledNames = new Set<string>();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const layer = L.geoJSON(sortedGeojson, {
+    const permanentTooltips: { lyr: any; name: string; point: [number, number] | null }[] = [];
+
+    // Grenzlinien: eigene, nicht klickbare Ebene über den Flächen.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const borderByIndex: any[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function borderStyle(feature: any) {
+      const name: string = feature?.properties?.NAME ?? "";
+      const isMajor = permanentLabelNames.has(name);
+      return {
+        color: colorByName.get(name) ?? "hsl(0, 0%, 50%)",
+        weight: isMajor ? 1.4 : 0.7,
+        opacity: isMajor ? 0.95 : 0.75,
+        fill: false,
+        lineJoin: "round",
+        lineCap: "round",
+      };
+    }
+    const borderLayer = L.geoJSON(sortedGeojson, {
+      renderer: borderRendererRef.current ?? undefined,
+      pane: "territoryBorder",
+      interactive: false,
+      smoothFactor: 1.1,
+      style: borderStyle,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      onEachFeature: (_feature: any, lyr: any) => {
+        borderByIndex.push(lyr);
+      },
+    });
+
+    let featureIndex = 0;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fillLayer = L.geoJSON(sortedGeojson, {
+      renderer: fillRendererRef.current ?? undefined,
+      pane: "territoryFill",
       // Leaflet vereinfacht/rundet Linien beim Zeichnen zusätzlich zur
       // eigenen Chaikin-Glättung oben — niedrigerer Wert = weniger
-      // Vereinfachung = feinere Grenzen (Nutzerwunsch 20.09.2026: "mach
-      // grafik ... höher . sowohl grenzen").
+      // Vereinfachung = feinere Grenzen (Nutzerwunsch 20.09.2026).
       smoothFactor: 1.1,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       style: (feature: any) => {
         const name: string = feature?.properties?.NAME ?? "";
         const c = colorByName.get(name) ?? "hsl(0, 0%, 50%)";
-        // Nutzerkorrektur 21.09.2026 ("wieso ist alles in europa
-        // durcheinander und überlagert") — der eigentliche Grund: im
-        // Cliopatria-Datensatz existieren zur selben Zeit mehrere
-        // Herrschaftsebenen GLEICHZEITIG uebereinander (z.B. 1403 gleich-
-        // zeitig "Kingdom of France", darin verschachtelt "Duchy of
-        // Burgundy", darin die Dynastie "House of Valois-Anjou") — das ist
-        // historisch so korrekt (verschachtelte Lehnsherrschaft), aber
-        // bisher wurden ALLE davon mit derselben satten Deckkraft (0.42)
-        // uebereinandergemalt, was bei dicht verschachtelten Regionen wie
-        // Westeuropa zu vermatschten Mischfarben fuehrte. Schon vorhandene
-        // Logik (permanentLabelNames/labelLimit) waehlt bereits die beim
-        // aktuellen Zoom "wichtigsten" (flächengrößten) Gebiete aus — die
-        // wird jetzt ZUSÄTZLICH genutzt, um auch die FLÄCHENFARBE zu
-        // staffeln: die wichtigsten Gebiete bleiben satt eingefärbt, alle
-        // kleineren/verschachtelten bekommen nur noch eine sehr blasse
-        // Füllung (kaum sichtbare "Kontur"), erst beim Reinzoomen wachsen
-        // sie (wie schon bei den Namen) in die "wichtig"-Kategorie hinein
-        // und werden dann auch farblich vollwertig sichtbar. Wirkt dem
-        // Farbmatsch entgegen, ohne dass Gebiete verschwinden — anklickbar
-        // und per Hover benannt bleiben sie immer alle.
-        const isMajor = permanentLabelNames.has(name);
-        return {
-          color: c,
-          weight: isMajor ? 1.6 : 0.8,
-          fillColor: c,
-          fillOpacity: isMajor ? 0.42 : 0.1,
-          // Runde statt spitze Ecken an den Grenzlinien — wirkt weniger
-          // "kantig" (Nutzerwunsch 18.09.2026), auch wenn die zugrunde
-          // liegenden Geodaten selbst nicht glatter werden.
-          lineJoin: "round",
-          lineCap: "round",
-        };
+        // Volle Deckkraft INNERHALB der Flächen-Ebene; die Ebene selbst ist
+        // halbtransparent (siehe createPane("territoryFill")). Keine Linie
+        // hier — die Grenzen kommen aus borderLayer.
+        return { stroke: false, fillColor: c, fillOpacity: 1 };
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onEachFeature: (feature: any, lyr: any) => {
+        const index = featureIndex++;
         const name: string = feature?.properties?.NAME ?? "";
         const subjectTo: string = feature?.properties?.SUBJECTO ?? "";
         if (!name) return;
 
-        const isMajor = permanentLabelNames.has(name);
-        lyr.bindTooltip(name, {
-          permanent: isMajor,
-          direction: "center",
-          className: "empire-label",
-          opacity: isMajor ? 0.95 : 0.9,
-        });
-
-        // Nutzerkorrektur 20.09.2026: "die imperiennamen sind nicht in der
-        // mitte des terrirorium" — Tooltip-Position explizit auf den
-        // berechneten "Pole of Inaccessibility" setzen statt Leaflets
-        // Standard (Bounding-Box-Mitte, siehe geometryLabelPoint oben).
+        const wantsLabel = permanentLabelNames.has(name) && !labeledNames.has(name);
+        if (wantsLabel) labeledNames.add(name);
         const labelPoint = geometryLabelPoint(feature.geometry);
+        lyr.bindTooltip(name, {
+          permanent: wantsLabel,
+          direction: "center",
+          className: bigLabelNames.has(name) ? "empire-label empire-label-big" : "empire-label",
+          opacity: 0.95,
+        });
+        // Nutzerkorrektur 20.09.2026: Name in die echte Mitte der Fläche
+        // ("Pole of Inaccessibility", siehe geometryLabelPoint). Gesetzt bei
+        // JEDEM Öffnen — Leaflet setzt die Position beim Einblenden sonst
+        // auf den Schwerpunkt des ERSTEN Teilstücks zurück (29.09.2026 im
+        // Test gefunden: "Old Kingdom of Norway" stand dadurch bei Irland).
         if (labelPoint) {
-          const tooltip = lyr.getTooltip?.();
-          tooltip?.setLatLng?.(L.latLng(labelPoint[1], labelPoint[0]));
+          const labelLatLng = L.latLng(labelPoint[1], labelPoint[0]);
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          lyr.on("tooltipopen", (e: any) => e.tooltip?.setLatLng?.(labelLatLng));
+          lyr.getTooltip?.()?.setLatLng?.(labelLatLng);
         }
+        if (wantsLabel) permanentTooltips.push({ lyr, name, point: labelPoint });
 
         lyr.on({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          mouseover: (e: any) => {
-            e.target.setStyle({ weight: 2.6 });
-            e.target.bringToFront?.();
+          mouseover: () => {
+            const border = borderByIndex[index];
+            border?.setStyle({ weight: 2.6, opacity: 1, color: "#ffffff" });
           },
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          mouseout: (e: any) => {
-            e.target.setStyle({ weight: 1.4 });
+          mouseout: () => {
+            const border = borderByIndex[index];
+            border?.setStyle(borderStyle(feature));
           },
           click: () => {
             setSelected({ name, subjectTo, isEmpire: isEmpireName(name) });
           },
         });
       },
-    }).addTo(mapRef.current);
+    });
+
+    // Zuerst Flächen, dann Grenzen (Reihenfolge = Zeichenreihenfolge in den
+    // jeweiligen Ebenen: große Gebiete unten, kleine/verschachtelte oben).
+    const layer = L.layerGroup([fillLayer, borderLayer]).addTo(mapRef.current);
+
+    // Nutzerkorrektur 29.09.2026: Beschriftungen überlappten sich
+    // ("BYZANTINE EMHAMDANID EMIRATE"). Die festen Namen werden nach
+    // Wichtigkeit (Fläche) durchgegangen; überschneidet sich ein Name mit
+    // einem bereits platzierten, wird er statt fest nur beim Hover gezeigt.
+    const placedRects: DOMRect[] = [];
+    for (const { lyr, name, point } of permanentTooltips) {
+      const el: HTMLElement | undefined = lyr.getTooltip?.()?.getElement?.();
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      const pad = 3;
+      const collides = placedRects.some(
+        (p) =>
+          r.left - pad < p.right &&
+          r.right + pad > p.left &&
+          r.top - pad < p.bottom &&
+          r.bottom + pad > p.top
+      );
+      if (!collides) {
+        placedRects.push(r);
+        continue;
+      }
+      const className = lyr.getTooltip?.()?.options?.className ?? "empire-label";
+      lyr.unbindTooltip();
+      lyr.bindTooltip(name, { permanent: false, direction: "center", className, opacity: 0.95 });
+      if (point) lyr.getTooltip?.()?.setLatLng?.(L.latLng(point[1], point[0]));
+      // (der "tooltipopen"-Handler von oben bleibt bestehen und setzt die
+      // Position auch beim Hover auf die Flächenmitte)
+    }
 
     geoLayerRef.current = layer;
     setErrorMessage(null);
@@ -934,8 +1002,15 @@ export default function ImperienPage() {
       `/api/empires/info?name=${encodeURIComponent(selected.name)}&lang=${encodeURIComponent(lang)}`
     )
       .then((res) => res.json())
+      // Nutzerkorrektur 29.09.2026: Findet der Server nichts (oft wegen
+      // Wikipedia-Drosselung der Vercel-IPs), fragt der Browser selbst nach.
+      .then(async (data) => {
+        if (data?.found) return data;
+        return (await lookupWikiInBrowser(selected.name, lang)) ?? data;
+      })
+      .catch(() => lookupWikiInBrowser(selected.name, lang))
       .then((data) => {
-        if (!cancelled) setInfo(data);
+        if (!cancelled) setInfo(data ?? { found: false });
       })
       .catch(() => {
         if (!cancelled) setInfo({ found: false });
@@ -1088,13 +1163,11 @@ export default function ImperienPage() {
           sind, wie bei einem gedruckten historischen Atlas. */}
       <style>{`
         .leaflet-container { background: #030303; }
-        /* Die Esri-Ozeankarte ist von Haus aus hell/bunt — hier abgedunkelt,
-           damit sie zum dunklen Seitenstil passt, aber Wasser (blau) weiter
-           klar von Land (Relief) zu unterscheiden bleibt (Nutzerkorrektur
-           18.09.2026: "man sieht kein wasser" beim reinen Hillshade). Die
-           Reich-Flächen liegen in einer eigenen Ebene und werden davon
-           nicht mit verdunkelt. */
-        .leaflet-tile-pane { filter: brightness(0.4) saturate(1.3) contrast(1.05); }
+        /* Satellitenbild leicht abgedunkelt, passend zum dunklen Seitenstil;
+           Wasser, Wüsten und Gebirge bleiben klar erkennbar. Die
+           Reich-Flächen liegen in eigenen Ebenen und werden davon nicht
+           mit verdunkelt. */
+        .leaflet-tile-pane { filter: brightness(0.62) saturate(0.9) contrast(1.08); }
         .leaflet-control-zoom a {
           background: #111111 !important;
           color: #f2f2f0 !important;
@@ -1119,6 +1192,10 @@ export default function ImperienPage() {
           text-transform: uppercase;
           letter-spacing: 0.06em;
           text-shadow: 0 1px 2px #000, 0 0 6px #000, 0 0 12px #000;
+        }
+        .leaflet-tooltip.empire-label-big {
+          font-size: 13px;
+          letter-spacing: 0.14em;
         }
         .leaflet-tooltip-top:before,
         .leaflet-tooltip-bottom:before,

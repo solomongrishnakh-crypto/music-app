@@ -50,6 +50,24 @@ export interface EmpireFeatureCollection {
   features: EmpireGeojsonFeature[];
 }
 
+/**
+ * Cliopatria kennzeichnet "Sammel-Umrisse" mit Klammern, z.B.
+ * "(Kingdom of France)" = das ganze Königreich inkl. aller Lehen, während
+ * "Kingdom of France" nur die Krondomäne ist und die Lehen (County of
+ * Toulouse, Duchy of Aquitaine …) eigene Einträge sind. Nutzerkorrektur
+ * 29.09.2026 ("Territorien sind überlagert … manche Imperien haben keine
+ * Infos"): Die Klammern landeten 1:1 als Beschriftung auf der Karte und in
+ * der Wikipedia-Suche (die mit Klammern nichts fand). Jetzt werden sie beim
+ * Laden entfernt — Umriss und Kern tragen denselben Namen, damit dieselbe
+ * Farbe und nur EINE Beschriftung; die Lehen liegen darüber (siehe
+ * Zeichenreihenfolge in imperien/page.tsx).
+ */
+export function normalizeEmpireName(name: string): string {
+  const trimmed = name.trim();
+  if (trimmed.startsWith("(") && trimmed.endsWith(")")) return trimmed.slice(1, -1).trim();
+  return trimmed;
+}
+
 let cachedEntriesPromise: Promise<RawEmpireEntry[]> | null = null;
 
 function loadEntries(): Promise<RawEmpireEntry[]> {
@@ -59,7 +77,13 @@ function loadEntries(): Promise<RawEmpireEntry[]> {
         if (!res.ok) throw new Error(`Datensatz-Fehler (Status ${res.status})`);
         return res.json();
       })
-      .then((data) => (Array.isArray(data) ? (data as RawEmpireEntry[]) : []));
+      .then((data) => {
+        const entries = Array.isArray(data) ? (data as RawEmpireEntry[]) : [];
+        for (const e of entries) {
+          if (typeof e.n === "string") e.n = normalizeEmpireName(e.n);
+        }
+        return entries;
+      });
     cachedEntriesPromise.catch(() => {
       cachedEntriesPromise = null;
     });

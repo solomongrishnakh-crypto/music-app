@@ -44,7 +44,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://unpkg.com",
       "img-src 'self' data: https:",
       "media-src 'self'",
-      "connect-src 'self' https://www.googleapis.com https://api.spaceflightnewsapi.net https://techcrunch.com https://unpkg.com",
+      "connect-src 'self' https://www.googleapis.com https://api.spaceflightnewsapi.net https://techcrunch.com https://unpkg.com https://*.wikipedia.org",
       "frame-src 'self' https://www.youtube.com",
       "font-src 'self' data:",
       "object-src 'none'",

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getClientIp, isRateLimited } from "@/lib/security/rateLimit";
 import { getEmpireFallback, getEmpireLanguage } from "@/data/empireFallbacks";
+import { wikiLookupName } from "@/data/empireWikiAliases";
 
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 60;
@@ -45,7 +46,16 @@ function parseWikiLang(value: string | null): WikiLang {
   return "en";
 }
 
-const FETCH_HEADERS = { "User-Agent": "Centaurian/1.0 (privates Hobby-Projekt)" };
+// Nutzerkorrektur 29.09.2026 ("manche Imperien haben keine Infos"): Test
+// ergab, dass Wikipedia viele Anfragen vom Vercel-Server mit HTTP 429
+// ablehnte. Wikimedia drosselt Anfragen ohne Kontaktangabe im User-Agent
+// deutlich stärker (User-Agent-Richtlinie: Name/Version + URL oder E-Mail).
+// Zusätzlich fragt die Seite bei "nicht gefunden" jetzt selbst direkt aus
+// dem Browser bei Wikipedia nach (siehe wikiClientLookup.ts).
+const FETCH_HEADERS = {
+  "User-Agent": "Centaurian/1.1 (https://centaurian.vercel.app/; historical map info lookup)",
+  "Api-User-Agent": "Centaurian/1.1 (https://centaurian.vercel.app/)",
+};
 
 // Wikipedia/Wikidata antworten unter kurzzeitiger Last mit 429 ("zu viele
 // Anfragen") — ein einzelner Klick auf der Karte löst mehrere Anfragen
@@ -500,12 +510,17 @@ export async function GET(req: NextRequest) {
   // Anfrage mehr, macht aber den "nicht gefunden"-Fall (beide schlagen
   // fehl) doppelt so schnell, weil beide Versuche parallel statt
   // nacheinander laufen.
+  // Mehrdeutige Kurznamen ("Qi", "Song" …) auf den eindeutigen Artikel
+  // umlenken (siehe empireWikiAliases.ts). Die Alias-Titel sind englisch,
+  // die UI-Sprache kommt dann über den Wikidata-Sprachlink unten.
+  const lookupName = wikiLookupName(name);
+  const aliased = lookupName !== name;
   const [uiResult, enPreload] =
     uiLang === "en"
-      ? [await resolveSummary("en", name, debug ? trace : undefined), null]
+      ? [await resolveSummary("en", lookupName, debug ? trace : undefined), null]
       : await Promise.all([
-          resolveSummary(uiLang, name, debug ? trace : undefined),
-          resolveSummary("en", name, debug ? trace : undefined),
+          aliased ? Promise.resolve(null) : resolveSummary(uiLang, lookupName, debug ? trace : undefined),
+          resolveSummary("en", lookupName, debug ? trace : undefined),
         ]);
 
   let data = uiResult;
