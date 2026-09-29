@@ -230,6 +230,38 @@ const TRANSLATIONS_SOURCE = {
     de: "Planet tippen für Details", en: "Tap a planet for details", hi: "विवरण के लिए ग्रह पर टैप करें", zh: "点击行星查看详情", ko: "행성을 탭하면 자세히 보기", ja: "惑星をタップして詳細を表示",
     es: "Toca un planeta para más detalles", fr: "Touchez une planète pour les détails", tr: "Ayrıntılar için gezegene dokunun", ru: "Нажмите на планету для подробностей", pt: "Toque num planeta para detalhes", ar: "اضغط على كوكب لعرض التفاصيل", el: "Πατήστε έναν πλανήτη για λεπτομέρειες",
   },
+  // Nutzerwunsch 29.09.2026 ("realistischer mit Größe, Abstand"): Umschalter
+  // echter Maßstab / kompakt, Zeitraffer und Datum im Sonnensystem.
+  solarScaleReal: {
+    de: "Echter Maßstab", en: "True scale", hi: "वास्तविक पैमाना", zh: "真实比例", ko: "실제 축척", ja: "実寸スケール",
+    es: "Escala real", fr: "Échelle réelle", tr: "Gerçek ölçek", ru: "Реальный масштаб", pt: "Escala real", ar: "المقياس الحقيقي", el: "Πραγματική κλίμακα",
+  },
+  solarScaleCompact: {
+    de: "Kompakt", en: "Compact", hi: "संक्षिप्त", zh: "紧凑", ko: "간략", ja: "コンパクト",
+    es: "Compacto", fr: "Compact", tr: "Kompakt", ru: "Компактно", pt: "Compacto", ar: "مضغوط", el: "Συμπαγές",
+  },
+  solarScaleRealNote: {
+    de: "Abstände & Sonne maßstabsgetreu · Planeten vergrößert", en: "Distances & Sun to scale · planets enlarged",
+    hi: "दूरियाँ और सूर्य पैमाने पर · ग्रह बड़े दिखाए गए", zh: "距离和太阳按比例 · 行星已放大", ko: "거리와 태양은 실제 비율 · 행성은 확대", ja: "距離と太陽は実寸 · 惑星は拡大表示",
+    es: "Distancias y Sol a escala · planetas ampliados", fr: "Distances et Soleil à l'échelle · planètes agrandies",
+    tr: "Mesafeler ve Güneş ölçekli · gezegenler büyütülmüş", ru: "Расстояния и Солнце в масштабе · планеты увеличены",
+    pt: "Distâncias e Sol à escala · planetas ampliados", ar: "المسافات والشمس بالمقياس الحقيقي · الكواكب مكبّرة", el: "Αποστάσεις & Ήλιος σε κλίμακα · πλανήτες μεγεθυμένοι",
+  },
+  solarScaleCompactNote: {
+    de: "Abstände gestaucht · echte Positionen & Bahnen", en: "Distances compressed · real positions & orbits",
+    hi: "दूरियाँ संकुचित · वास्तविक स्थितियाँ और कक्षाएँ", zh: "距离已压缩 · 真实位置与轨道", ko: "거리 압축 · 실제 위치와 궤도", ja: "距離は圧縮 · 実際の位置と軌道",
+    es: "Distancias comprimidas · posiciones y órbitas reales", fr: "Distances compressées · positions et orbites réelles",
+    tr: "Mesafeler sıkıştırılmış · gerçek konumlar ve yörüngeler", ru: "Расстояния сжаты · реальные положения и орбиты",
+    pt: "Distâncias comprimidas · posições e órbitas reais", ar: "المسافات مضغوطة · مواقع ومدارات حقيقية", el: "Συμπιεσμένες αποστάσεις · πραγματικές θέσεις & τροχιές",
+  },
+  solarDaysPerSecond: {
+    de: "Tage/s", en: "days/s", hi: "दिन/से", zh: "天/秒", ko: "일/초", ja: "日/秒",
+    es: "días/s", fr: "jours/s", tr: "gün/sn", ru: "дн./с", pt: "dias/s", ar: "يوم/ث", el: "ημέρες/δ",
+  },
+  solarToday: {
+    de: "Heute", en: "Today", hi: "आज", zh: "今天", ko: "오늘", ja: "今日",
+    es: "Hoy", fr: "Aujourd'hui", tr: "Bugün", ru: "Сегодня", pt: "Hoje", ar: "اليوم", el: "Σήμερα",
+  },
   solarSystemDragHint: {
     de: "Ziehen: drehen & neigen · Scrollen: zoomen", en: "Drag: rotate & tilt · Scroll: zoom",
     hi: "खींचें: घुमाएं और झुकाएं · स्क्रॉल: ज़ूम करें", zh: "拖动：旋转与倾斜 · 滚动：缩放", ko: "드래그: 회전 및 기울이기 · 스크롤: 확대/축소", ja: "ドラッグ：回転・傾き · スクロール：ズーム",

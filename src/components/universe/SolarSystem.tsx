@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type PointerEvent, type WheelEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { PLANETS, ALL_BODIES, SUN, type PlanetData } from "@/data/solarSystem";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { localize } from "@/lib/i18n";
+import { bodyPosition, dateToJd, jdToDate, orbitPath, SUN_RADIUS_AU, type Vec3 } from "@/lib/astro/orbits";
 
 interface DrawnPlanet {
   planet: PlanetData;
@@ -22,20 +23,32 @@ interface SolarSystemProps {
 }
 
 /**
- * Zeichnet das Sonnensystem auf einem <canvas> — echte relative Abstände
- * (AE) und Größen (km), aber für die Darstellung auf Wurzel-Skala gestaucht
- * (Nutzerwunsch 20.09.2026: "sehr realistische umlaufbahnen und abstände"
- * — Reihenfolge/Verhältnisse bleiben astronomisch korrekt). Umlaufgeschwin-
- * digkeiten sind proportional zur echten Umlaufzeit (Kepler), nur zeitlich
- * gerafft.
+ * Zeichnet das Sonnensystem auf einem <canvas>.
  *
- * Nutzerwunsch 20.09.2026 (zweite Runde): Zwergplaneten (Pluto, Haumea,
- * Makemake, Eris, Ceres) und Voyager 1 als feste Sonde ohne Umlaufbahn
- * ergänzt (nur im "full"-Modus, damit die kompakte Vorschau übersichtlich
- * bleibt) — sowie Maussteuerung: Ziehen dreht die Ansicht (horizontal) und
- * neigt sie (vertikal, wie eine Kamera, die sich hebt/senkt), Scrollen/
- * Pinch zoomt.
+ * Nutzerwunsch 29.09.2026 ("realistischer machen mit Größe, Abstand und so
+ * was") — seitdem:
+ *  - ECHTE Positionen zum heutigen Datum und echte Bahnellipsen (mit
+ *    Exzentrizität und Neigung, Sonne im Brennpunkt), berechnet aus
+ *    NASA/JPL-Horizons-Bahnelementen (siehe lib/astro/orbits.ts). Plutos
+ *    Bahn kreuzt dadurch sichtbar die von Neptun, Eris' Bahn ist stark
+ *    gestreckt und geneigt.
+ *  - Echte relative Geschwindigkeiten (Kepler): Zeitraffer in Tagen pro
+ *    Sekunde, mit Datumsanzeige.
+ *  - Umschalter "Echter Maßstab": Abstände und Sonnengröße linear und
+ *    maßstabsgetreu (die inneren Planeten kleben dann eng an der Sonne —
+ *    reinzoomen, bis zu 400×). Planeten müssen dabei vergrößert werden
+ *    (in echter Größe wären sie unsichtbar klein), ihre Größen UNTEREINANDER
+ *    bleiben aber im echten Verhältnis. "Kompakt" staucht die Abstände
+ *    (innen Wurzel-, außen lineare Skala) wie bisher, damit alles auf
+ *    einmal sichtbar ist.
+ *
+ * Maussteuerung: Ziehen dreht die Ansicht und neigt sie (von oben bis fast
+ * von der Seite), Scrollen/Pinch zoomt.
  */
+type ScaleMode = "compact" | "real";
+const SPEEDS = [1, 10, 100, 1000] as const; // Tage pro Sekunde
+const DEFAULT_SPEED_INDEX = 1;
+
 export default function SolarSystem({
   mode = "full",
   onSelectPlanet,
@@ -45,25 +58,42 @@ export default function SolarSystem({
   const { lang, t } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const dateLabelRef = useRef<HTMLSpanElement>(null);
   const drawnRef = useRef<DrawnPlanet[]>([]);
-  const angleRef = useRef<number[]>(ALL_BODIES.map((_, i) => (i / ALL_BODIES.length) * Math.PI * 2));
   const rafRef = useRef<number>(0);
   const [size, setSize] = useState({ w: 300, h: 300 });
 
   const interactive = mode === "full";
   const bodies = useMemo(() => (mode === "compact" ? PLANETS : ALL_BODIES), [mode]);
 
+  // Simulierte Zeit (Julianisches Datum) — startet bei "jetzt".
+  const jdRef = useRef(dateToJd(new Date()));
+  const [scaleMode, setScaleMode] = useState<ScaleMode>("compact");
+  const [speedIndex, setSpeedIndex] = useState(DEFAULT_SPEED_INDEX);
+  const speedRef = useRef<number>(SPEEDS[DEFAULT_SPEED_INDEX]);
+  useEffect(() => {
+    speedRef.current = SPEEDS[speedIndex];
+  }, [speedIndex]);
+
+  // Bahnellipsen einmalig als 3D-Punktfolgen (AE) vorberechnen.
+  const orbitPaths = useMemo(() => {
+    const m = new Map<string, Vec3[]>();
+    for (const b of bodies) if (b.kind !== "probe") m.set(b.id, orbitPath(b.id));
+    return m;
+  }, [bodies]);
+
   // Kamera-Zustand als Ref statt State: wird pro Frame im rAF-Loop gelesen,
   // ein Re-Render pro Mausbewegung wäre unnötig teuer.
   const zoomRef = useRef(1);
   const rotateRef = useRef(0); // zusätzliche Drehung der Ansicht (Radiant)
-  const tiltRef = useRef(0.94); // vertikale Stauchung: 1 = von oben, 0.25 = fast von der Seite
+  const tiltRef = useRef(0.94); // 1 = senkrecht von oben, 0.22 = fast von der Seite
   const dragRef = useRef<{ x: number; y: number; dragged: boolean } | null>(null);
   // Nutzerwunsch 20.09.2026 ("man kann auch nicht zoomen"): Wheel (Desktop)
   // reicht nicht — auf dem Handy braucht es Pinch-Zoom über zwei Touch-Punkte.
   const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
   const pinchStartDistRef = useRef<number | null>(null);
   const pinchStartZoomRef = useRef(1);
+  const zoomLimitsRef = useRef<[number, number]>([0.5, 4.5]);
 
   // Sehr wenige, sehr dezente Hintergrundsterne (Nutzerwunsch: "sterne im
   // hintergrund soll kaum sehbar sein") — fest generiert, kein Funkeln,
@@ -92,6 +122,14 @@ export default function SolarSystem({
     return () => ro.disconnect();
   }, []);
 
+  // Beim Umschalten des Maßstabs Zoom zurücksetzen und Zoom-Grenzen anpassen
+  // (im echten Maßstab muss man sehr weit reinzoomen können, um Merkur bis
+  // Mars überhaupt getrennt zu sehen).
+  useEffect(() => {
+    zoomRef.current = 1;
+    zoomLimitsRef.current = scaleMode === "real" ? [0.15, 400] : [0.5, 4.5];
+  }, [scaleMode]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -108,76 +146,93 @@ export default function SolarSystem({
 
     const cx = size.w / 2;
     const cy = size.h / 2;
-    // Umlaufbahnen bleiben echte Kreise (nicht oval verzerrt) — begrenzt von
-    // der kleineren Canvas-Dimension. Auf Hochkant-Handys per Pinch/Wheel
-    // zoombar, um trotzdem den verfügbaren Platz zu nutzen.
     const smallCanvas = size.w < 420;
     const pad = mode === "compact" ? 4 : smallCanvas ? 18 : 26;
     const baseMaxOrbitR = Math.min(size.w, size.h) / 2 - pad;
-    const sunR = mode === "compact" ? 6 : smallCanvas ? 11 : 16;
+    const compactSunR = mode === "compact" ? 6 : smallCanvas ? 11 : 16;
+    const realMode = scaleMode === "real" && interactive;
 
-    const orbitBodies = bodies.filter((b) => b.kind !== "probe");
-    const minAu = Math.sqrt(Math.min(...orbitBodies.map((b) => b.distanceAu)));
-    const minDiam = Math.sqrt(Math.min(...orbitBodies.map((b) => b.diameterKm)));
-    const maxDiam = Math.sqrt(Math.max(...orbitBodies.map((b) => b.diameterKm)));
-
-    // Nutzerwunsch 20.09.2026 ("echte distanz") — eine einzige Wurzel-Skalierung
-    // über den GESAMTEN Bereich (0,39 AE bis 167 AE) komprimiert die Distanz
-    // zwischen den äußeren Zwergplaneten (Kuipergürtel, bis Eris ≈ 68 AE) und
-    // Voyager 1 (≈167 AE, real gut 2,5x weiter draußen als Eris) optisch fast
-    // weg. Deshalb zweistufig: Merkur bis Neptun weiterhin wurzelskaliert
-    // (damit die inneren Planeten nicht winzig nah an der Sonne kleben),
-    // jenseits von Neptun (Zwergplaneten + Voyager 1) LINEAR skaliert — das
-    // bildet die echten relativen Abstände dort unverfälscht ab.
+    // --- Kompakt-Skala (wie bisher): innen Wurzel, jenseits Neptun linear ---
     const NEPTUNE_AU = 30.05;
-    // Nutzerkorrektur 20.09.2026 ("voyager soll bisschen entfernter sein es
-    // ist nicht korrekt") — bei 0.58 lag Voyager 1 im linear skalierten
-    // Außenbereich nur ~1,44x weiter draußen als Eris (statt real ≈2,46x,
-    // 167 AE vs. ≈68 AE), weil der Neptun..Eris-Anteil des Außenbereichs zu
-    // groß war. Kleinerer Wert gibt dem Außenbereich mehr Radius-Anteil,
-    // wodurch der lineare Abstand zwischen Eris und Voyager 1 sichtbar größer
-    // und näher am echten Verhältnis wird.
-    const INNER_FRACTION = 0.42; // Anteil des Radius für Merkur..Neptun (+Ceres)
-    const innerMaxAuSqrt = Math.sqrt(NEPTUNE_AU);
-    const outerBodyValues = bodies
-      .filter((b) => b.distanceAu > NEPTUNE_AU)
-      .map((b) => b.distanceAu);
-    const outerMaxAu = outerBodyValues.length > 0 ? Math.max(...outerBodyValues) : NEPTUNE_AU;
+    const MIN_AU_SQRT = Math.sqrt(0.3); // ≈ Merkurs Perihel
+    const INNER_FRACTION = 0.42;
+    const OUTER_MAX_AU = mode === "compact" ? NEPTUNE_AU : 175; // ≈ Voyager 1
+    function compactRadius(rAu: number, maxOrbitR: number): number {
+      let t: number;
+      if (rAu <= NEPTUNE_AU || mode === "compact") {
+        t =
+          (Math.max(0, Math.sqrt(rAu) - MIN_AU_SQRT) / (Math.sqrt(NEPTUNE_AU) - MIN_AU_SQRT)) *
+          (mode === "compact" ? 1 : INNER_FRACTION);
+      } else {
+        t = INNER_FRACTION + ((rAu - NEPTUNE_AU) / (OUTER_MAX_AU - NEPTUNE_AU)) * (1 - INNER_FRACTION);
+      }
+      return compactSunR + 10 + t * (maxOrbitR - compactSunR - 10);
+    }
+
+    // Größen (Durchmesser in km) — "kompakt": gemäßigt gestaucht
+    // (Exponent 0.6 statt der alten Wurzel, Jupiter wirkt dadurch deutlich
+    // größer als die Erde, wie in echt ~11×).
+    const EARTH_KM = 12742;
+    const JUPITER_KM = 139820;
+    function compactPlanetRadius(diameterKm: number): number {
+      const base = mode === "compact" ? 1.1 : smallCanvas ? 2.2 : 3.1;
+      return Math.max(mode === "compact" ? 0.9 : 1.2, base * Math.pow(diameterKm / EARTH_KM, 0.6));
+    }
 
     let lastTime = performance.now();
-
-    function orbitT(distanceAu: number) {
-      if (distanceAu <= NEPTUNE_AU) {
-        const t = (Math.sqrt(distanceAu) - minAu) / (innerMaxAuSqrt - minAu);
-        return t * INNER_FRACTION;
-      }
-      const t = (distanceAu - NEPTUNE_AU) / (outerMaxAu - NEPTUNE_AU || 1);
-      return INNER_FRACTION + t * (1 - INNER_FRACTION);
-    }
-
-    function planetRadius(diameterKm: number, kind: PlanetData["kind"]) {
-      if (kind === "dwarf") {
-        const t = (Math.sqrt(diameterKm) - minDiam) / (maxDiam - minDiam || 1);
-        const min = mode === "compact" ? 1 : 1.4;
-        const max = mode === "compact" ? 2 : smallCanvas ? 3.2 : 4.5;
-        return min + t * (max - min);
-      }
-      const t = (Math.sqrt(diameterKm) - minDiam) / (maxDiam - minDiam || 1);
-      const min = mode === "compact" ? 1.3 : smallCanvas ? 2.4 : 3;
-      // Kleinere Höchstgröße auf schmalen Handys, damit Jupiter/Saturn nicht
-      // zu einem unrealistisch großen, mit Nachbarn verschmelzenden Klumpen
-      // werden (Nutzerwunsch: "scheint ... kaum realistisch und groß").
-      const max = mode === "compact" ? 4 : smallCanvas ? 8 : 12;
-      return min + t * (max - min);
-    }
+    let lastDateKey = "";
+    const dateFmt = new Intl.DateTimeFormat(lang, { year: "numeric", month: "short", day: "numeric" });
 
     function draw(now: number) {
-      const dtMs = now - lastTime;
+      const dtMs = Math.min(100, now - lastTime);
       lastTime = now;
+      jdRef.current += (speedRef.current * dtMs) / 1000;
+      const jd = jdRef.current;
 
-      const maxOrbitR = baseMaxOrbitR * zoomRef.current;
+      if (dateLabelRef.current) {
+        const key = Math.floor(jd).toString();
+        if (key !== lastDateKey) {
+          lastDateKey = key;
+          dateLabelRef.current.textContent = dateFmt.format(jdToDate(jd));
+        }
+      }
+
+      const zoom = zoomRef.current;
+      const maxOrbitR = baseMaxOrbitR * zoom;
       const tilt = tiltRef.current;
+      const side = Math.sqrt(Math.max(0, 1 - tilt * tilt));
       const rot = rotateRef.current;
+      const cosR = Math.cos(rot);
+      const sinR = Math.sin(rot);
+
+      // Echter Maßstab: Neptuns Bahn füllt bei Zoom 1 den Rahmen.
+      const pxPerAu = maxOrbitR / 30.4;
+      const sunR = realMode ? Math.max(2.5, SUN_RADIUS_AU * pxPerAu) : compactSunR;
+      // Planetengröße im echten Maßstab: echtes Verhältnis untereinander,
+      // Jupiter wächst beim Reinzoomen mit (bis 40 px).
+      const jupiterPx = Math.min(40, (smallCanvas ? 7 : 9) * Math.sqrt(zoom));
+
+      function project(p: Vec3): [number, number] {
+        let k: number;
+        if (realMode) {
+          k = pxPerAu;
+        } else {
+          const r = Math.hypot(p[0], p[1], p[2]) || 1e-9;
+          k = compactRadius(r, maxOrbitR) / r;
+        }
+        const X = p[0] * k;
+        const Y = p[1] * k;
+        const Z = p[2] * k;
+        const xr = X * cosR - Y * sinR;
+        const yr = X * sinR + Y * cosR;
+        // Blick von "Norden": Umlauf gegen den Uhrzeigersinn wie in echt.
+        return [cx + xr, cy - yr * tilt - Z * side];
+      }
+
+      function bodyRadius(planet: PlanetData): number {
+        if (realMode) return Math.max(1.2, (planet.diameterKm / JUPITER_KM) * jupiterPx);
+        return compactPlanetRadius(planet.diameterKm);
+      }
 
       ctx.clearRect(0, 0, size.w, size.h);
 
@@ -193,22 +248,16 @@ export default function SolarSystem({
       ctx.restore();
 
       // Sonne (mit Glühen)
-      const sunGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, sunR * 3.2);
+      const glowR = realMode ? Math.max(sunR * 3.2, 14) : sunR * 3.2;
+      const sunGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
       sunGlow.addColorStop(0, "rgba(255,196,110,0.55)");
       sunGlow.addColorStop(1, "rgba(255,196,110,0)");
       ctx.fillStyle = sunGlow;
       ctx.beginPath();
-      ctx.arc(cx, cy, sunR * 3.2, 0, Math.PI * 2);
+      ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
       ctx.fill();
 
-      const sunBody = ctx.createRadialGradient(
-        cx - sunR * 0.3,
-        cy - sunR * 0.3,
-        sunR * 0.1,
-        cx,
-        cy,
-        sunR
-      );
+      const sunBody = ctx.createRadialGradient(cx - sunR * 0.3, cy - sunR * 0.3, sunR * 0.1, cx, cy, sunR);
       sunBody.addColorStop(0, "#fff3d6");
       sunBody.addColorStop(0.5, "#ffcf6b");
       sunBody.addColorStop(1, "#ff9a3c");
@@ -219,7 +268,7 @@ export default function SolarSystem({
 
       const drawn: DrawnPlanet[] = [];
       if (interactive) {
-        drawn.push({ planet: SUN, x: cx, y: cy, r: sunR });
+        drawn.push({ planet: SUN, x: cx, y: cy, r: Math.max(sunR, 8) });
       }
 
       // Nutzerwunsch 20.09.2026 ("bei mobile ansicht ist alles dicht"):
@@ -228,6 +277,7 @@ export default function SolarSystem({
       const minLabelGap = smallCanvas ? 24 : 15;
       const labelRects: { x: number; y: number }[] = [];
       function drawLabel(text: string, x: number, y: number, color: string, font: string, force = false) {
+        if (x < -40 || x > size.w + 40 || y < -20 || y > size.h + 20) return;
         if (!force) {
           for (const r of labelRects) {
             if (Math.abs(r.x - x) < minLabelGap && Math.abs(r.y - y) < 11) return;
@@ -240,19 +290,40 @@ export default function SolarSystem({
         labelRects.push({ x, y });
       }
 
-      bodies.forEach((planet, i) => {
+      // 1) Alle Bahnlinien zuerst (echte Ellipsen, 3D-geneigt)
+      for (const planet of bodies) {
+        const path = orbitPaths.get(planet.id);
+        if (!path || path.length < 2) continue;
+        const isDwarf = planet.kind === "dwarf";
+        ctx.beginPath();
+        path.forEach((p, k) => {
+          const [x, y] = project(p);
+          if (k === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        if (isDwarf) {
+          ctx.setLineDash([2, 3]);
+          ctx.strokeStyle = "rgba(255,255,255,0.08)";
+        } else {
+          ctx.setLineDash([]);
+          ctx.strokeStyle = "rgba(255,255,255,0.12)";
+        }
+        ctx.lineWidth = 1;
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+
+      // 2) Himmelskörper an ihrer echten Position zum simulierten Datum
+      for (const planet of bodies) {
+        const pos = bodyPosition(planet.id, jd);
+        if (!pos) continue;
         const isDwarf = planet.kind === "dwarf";
         const isProbe = planet.kind === "probe";
-        const t = orbitT(planet.distanceAu);
-        const orbitR = sunR + 10 + t * (maxOrbitR - sunR - 10);
+        const [x, y] = project(pos);
 
         if (isProbe) {
-          // Sonde: keine Umlaufbahn, fester Winkel + gestrichelte Linie nach außen.
-          const angle = -0.61 + rot;
-          const x = cx + Math.cos(angle) * orbitR;
-          const y = cy + Math.sin(angle) * orbitR * tilt;
+          // Sonde: fliegt geradlinig hinaus, gestrichelte Linie von der Sonne.
           const pr = 3;
-
           ctx.save();
           ctx.setLineDash([3, 4]);
           ctx.strokeStyle = "rgba(255,255,255,0.25)";
@@ -291,47 +362,23 @@ export default function SolarSystem({
           }
 
           drawn.push({ planet, x, y, r: pr + 4 });
-          return;
+          continue;
         }
 
-        // Umlaufbahn-Linie
-        ctx.beginPath();
-        ctx.ellipse(cx, cy, orbitR, orbitR * tilt, 0, 0, Math.PI * 2);
-        if (isDwarf) {
-          ctx.setLineDash([2, 3]);
-          ctx.strokeStyle = "rgba(255,255,255,0.08)";
-        } else {
-          ctx.setLineDash([]);
-          ctx.strokeStyle = "rgba(255,255,255,0.12)";
-        }
-        ctx.lineWidth = 1;
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // Winkelgeschwindigkeit proportional zur echten (Kepler-)Umlaufzeit,
-        // aber zeitlich gerafft.
-        const visualPeriodMs = Math.sqrt(planet.periodDays) * 900;
-        const angularSpeed = (Math.PI * 2) / visualPeriodMs;
-        angleRef.current[i] += angularSpeed * dtMs;
-
-        const angle = angleRef.current[i] + rot;
-        const x = cx + Math.cos(angle) * orbitR;
-        const y = cy + Math.sin(angle) * orbitR * tilt;
-        const pr = planetRadius(planet.diameterKm, planet.kind);
-
+        const pr = bodyRadius(planet);
         drawn.push({ planet, x, y, r: pr });
 
         const isSelected = interactive && selectedId === planet.id;
 
-        // Saturn-Ringe
+        // Saturn-Ringe (Ringebene ~27° gegen die Bahn geneigt)
         if (planet.hasRings) {
           ctx.save();
           ctx.translate(x, y);
           ctx.rotate(-0.35);
           ctx.strokeStyle = "rgba(227,209,163,0.55)";
-          ctx.lineWidth = mode === "compact" ? 1 : 1.6;
+          ctx.lineWidth = mode === "compact" ? 1 : Math.max(1, pr * 0.25);
           ctx.beginPath();
-          ctx.ellipse(0, 0, pr * 1.9, pr * 0.7, 0, 0, Math.PI * 2);
+          ctx.ellipse(0, 0, pr * 2.1, pr * 0.75, 0, 0, Math.PI * 2);
           ctx.stroke();
           ctx.restore();
         }
@@ -346,15 +393,31 @@ export default function SolarSystem({
 
         ctx.globalAlpha = isDwarf ? 0.85 : 1;
         const glowMult = smallCanvas ? 1.5 : 2.4;
-        const glow = ctx.createRadialGradient(x, y, 0, x, y, pr * glowMult);
+        const glowR = Math.max(pr * glowMult, 3);
+        const glow = ctx.createRadialGradient(x, y, 0, x, y, glowR);
         glow.addColorStop(0, planet.glowColor);
         glow.addColorStop(1, "rgba(0,0,0,0)");
         ctx.fillStyle = glow;
         ctx.beginPath();
-        ctx.arc(x, y, pr * glowMult, 0, Math.PI * 2);
+        ctx.arc(x, y, glowR, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.fillStyle = planet.color;
+        // Tag-/Nachtseite: zur Sonne hin hell, abgewandt dunkler
+        const toSunX = cx - x;
+        const toSunY = cy - y;
+        const len = Math.hypot(toSunX, toSunY) || 1;
+        const lit = ctx.createRadialGradient(
+          x + (toSunX / len) * pr * 0.45,
+          y + (toSunY / len) * pr * 0.45,
+          pr * 0.1,
+          x,
+          y,
+          pr * 1.05
+        );
+        lit.addColorStop(0, planet.color);
+        lit.addColorStop(0.7, planet.color);
+        lit.addColorStop(1, "rgba(0,0,0,0.85)");
+        ctx.fillStyle = pr >= 3 ? lit : planet.color;
         ctx.beginPath();
         ctx.arc(x, y, pr, 0, Math.PI * 2);
         ctx.fill();
@@ -375,7 +438,7 @@ export default function SolarSystem({
               : "rgba(242,242,240,0.75)";
           drawLabel(localize(planet.name, lang), x, y - pr - 6, color, font, isSelected);
         }
-      });
+      }
 
       drawnRef.current = drawn;
       rafRef.current = requestAnimationFrame(draw);
@@ -384,7 +447,7 @@ export default function SolarSystem({
     rafRef.current = requestAnimationFrame(draw);
     return () => cancelAnimationFrame(rafRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [size, mode, selectedId, stars, bodies, interactive, lang]);
+  }, [size, mode, selectedId, stars, bodies, interactive, lang, scaleMode, orbitPaths]);
 
   function handlePointerDown(e: PointerEvent<HTMLCanvasElement>) {
     if (!interactive) return;
@@ -413,7 +476,8 @@ export default function SolarSystem({
       const pts = Array.from(pointersRef.current.values());
       const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
       const ratio = dist / pinchStartDistRef.current;
-      zoomRef.current = Math.min(4.5, Math.max(0.5, pinchStartZoomRef.current * ratio));
+      const [zMin, zMax] = zoomLimitsRef.current;
+      zoomRef.current = Math.min(zMax, Math.max(zMin, pinchStartZoomRef.current * ratio));
       return;
     }
 
@@ -451,10 +515,25 @@ export default function SolarSystem({
     }
   }
 
-  function handleWheel(e: WheelEvent<HTMLCanvasElement>) {
+  // Wheel als nativer Listener mit passive:false — Reacts onWheel ist
+  // passiv, preventDefault() wurde dort ignoriert und die Seite scrollte
+  // beim Zoomen mit (29.09.2026 im Test gefunden).
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || !interactive) return;
+    const onWheel = (e: globalThis.WheelEvent) => handleWheel(e);
+    canvas.addEventListener("wheel", onWheel, { passive: false });
+    return () => canvas.removeEventListener("wheel", onWheel);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [interactive]);
+
+  function handleWheel(e: globalThis.WheelEvent) {
     if (!interactive) return;
     e.preventDefault();
-    zoomRef.current = Math.min(4.5, Math.max(0.5, zoomRef.current * (1 - e.deltaY * 0.0012)));
+    const [zMin, zMax] = zoomLimitsRef.current;
+    // multiplikativ, damit auch Zoom 400× in vernünftig vielen Schritten erreichbar ist
+    const factor = Math.exp(-Math.max(-200, Math.min(200, e.deltaY)) * 0.0015);
+    zoomRef.current = Math.min(zMax, Math.max(zMin, zoomRef.current * factor));
   }
 
   function selectFromPoint(clientX: number, clientY: number) {
@@ -485,10 +564,49 @@ export default function SolarSystem({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
-        onWheel={handleWheel}
         className={interactive ? "cursor-grab touch-none" : ""}
         aria-label={t("solarSystemVisAria")}
       />
+      {interactive && (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-2 p-2 sm:p-3">
+          <div className="label-mono text-[10px] uppercase text-muted">
+            <span ref={dateLabelRef} className="text-foreground" />
+            <span className="block text-[9px] normal-case opacity-70">
+              {scaleMode === "real" ? t("solarScaleRealNote") : t("solarScaleCompactNote")}
+            </span>
+          </div>
+          <div className="pointer-events-auto flex flex-wrap gap-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                jdRef.current = dateToJd(new Date());
+              }}
+              className="label-mono border border-border bg-background/80 whitespace-nowrap px-2 py-1 text-[10px] uppercase text-muted transition-colors hover:border-accent hover:text-accent"
+            >
+              {t("solarToday")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setSpeedIndex((i) => (i + 1) % SPEEDS.length)}
+              className="label-mono border border-border bg-background/80 whitespace-nowrap px-2 py-1 text-[10px] uppercase text-muted transition-colors hover:border-accent hover:text-accent"
+            >
+              {SPEEDS[speedIndex]} {t("solarDaysPerSecond")}
+            </button>
+            <button
+              type="button"
+              onClick={() => setScaleMode((m) => (m === "real" ? "compact" : "real"))}
+              aria-pressed={scaleMode === "real"}
+              className={`label-mono border whitespace-nowrap px-2 py-1 text-[10px] uppercase transition-colors ${
+                scaleMode === "real"
+                  ? "border-accent bg-accent/15 text-accent"
+                  : "border-border bg-background/80 text-muted hover:border-accent hover:text-accent"
+              }`}
+            >
+              {scaleMode === "real" ? t("solarScaleCompact") : t("solarScaleReal")}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

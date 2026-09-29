@@ -672,7 +672,7 @@ export const VOYAGER1: PlanetData = {
     de: "Voyager 1", en: "Voyager 1", hi: "वॉयजर 1", zh: "旅行者1号", ko: "보이저 1호", ja: "ボイジャー1号",
     es: "Voyager 1", fr: "Voyager 1", tr: "Voyager 1", ru: "Вояджер-1", pt: "Voyager 1", ar: "فوييجر 1", el: "Voyager 1",
   },
-  distanceAu: 167,
+  distanceAu: 172,
   periodDays: 0,
   diameterKm: 5,
   color: "#f2f2f0",
@@ -698,8 +698,8 @@ export const VOYAGER1: PlanetData = {
   ],
   facts: {
     distance: {
-      de: "≈ 167 AE (≈ 25 Mrd. km)", en: "≈ 167 AU (≈ 25 billion km)", hi: "≈ 167 AU (≈ 25 अरब किमी)", zh: "约167天文单位（约250亿公里）", ko: "약 167 AU (약 250억 km)", ja: "約167 AU（約250億km）",
-      es: "≈ 167 UA (≈ 25 mil millones de km)", fr: "≈ 167 ua (≈ 25 milliards de km)", tr: "≈ 167 AB (≈ 25 milyar km)", ru: "≈ 167 а.е. (≈ 25 млрд км)", pt: "≈ 167 UA (≈ 25 mil milhões de km)", ar: "≈ 167 و.ف (≈ 25 مليار كم)", el: "≈ 167 AU (≈ 25 δισ. χλμ.)",
+      de: "≈ 172 AE (≈ 26 Mrd. km)", en: "≈ 172 AU (≈ 26 billion km)", hi: "≈ 172 AU (≈ 26 अरब किमी)", zh: "约172天文单位（约260亿公里）", ko: "약 172 AU (약 260억 km)", ja: "約172 AU（約260億km）",
+      es: "≈ 172 UA (≈ 26 mil millones de km)", fr: "≈ 172 ua (≈ 26 milliards de km)", tr: "≈ 172 AB (≈ 26 milyar km)", ru: "≈ 172 а.е. (≈ 26 млрд км)", pt: "≈ 172 UA (≈ 26 mil milhões de km)", ar: "≈ 172 و.ف (≈ 26 مليار كم)", el: "≈ 172 AU (≈ 26 δισ. χλμ.)",
     },
     period: {
       de: "5. September 1977", en: "September 5, 1977", hi: "5 सितंबर 1977", zh: "1977年9月5日", ko: "1977년 9월 5일", ja: "1977年9月5日",
