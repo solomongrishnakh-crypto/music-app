@@ -46,8 +46,10 @@ interface SolarSystemProps {
  * von der Seite), Scrollen/Pinch zoomt.
  */
 type ScaleMode = "compact" | "real";
-const SPEEDS = [1, 10, 100, 1000] as const; // Tage pro Sekunde
-const DEFAULT_SPEED_INDEX = 1;
+// Tage pro Sekunde; 0 = Pause (nötig bei starkem Zoom, sonst fliegt der
+// Planet in Sekundenbruchteilen aus dem Bild)
+const SPEEDS = [0, 1, 10, 100, 1000] as const;
+const DEFAULT_SPEED_INDEX = 2;
 
 export default function SolarSystem({
   mode = "full",
@@ -133,7 +135,7 @@ export default function SolarSystem({
   useEffect(() => {
     zoomRef.current = 1;
     panRef.current = { x: 0, y: 0 };
-    zoomLimitsRef.current = scaleMode === "real" ? [0.15, 3000] : [0.5, 60];
+    zoomLimitsRef.current = scaleMode === "real" ? [0.15, 100000] : [0.5, 60];
   }, [scaleMode]);
 
   useEffect(() => {
@@ -177,17 +179,23 @@ export default function SolarSystem({
       return zoomNow * (compactSunR + 10 + t * (baseMaxOrbitR - compactSunR - 10));
     }
 
-    // Größen (Durchmesser in km) — "kompakt": gemäßigt gestaucht
-    // (Exponent 0.6 statt der alten Wurzel, Jupiter wirkt dadurch deutlich
-    // größer als die Erde, wie in echt ~11×).
-    const EARTH_KM = 12742;
-    const JUPITER_KM = 139820;
-    function compactPlanetRadius(diameterKm: number): number {
-      const base = mode === "compact" ? 1.1 : smallCanvas ? 2.2 : 3.1;
-      return Math.max(mode === "compact" ? 0.9 : 1.2, base * Math.pow(diameterKm / EARTH_KM, 0.6));
-    }
+    // Größen — Nutzerwunsch 29.09.2026 ("wenn man zoomt, soll die Größe der
+    // Planeten im Vergleich zur Sonne realistisch sein"): Sonne und Planeten
+    // teilen sich EINEN Größenmaßstab (Durchmesser in km × Pixel pro km).
+    //  - Kompakt: in der Gesamtansicht sind die Planeten gegenüber der Sonne
+    //    noch vergrößert (sonst wären Erde & Co. unsichtbar), dieser Faktor
+    //    schrumpft beim Reinzoomen und ist ab 8× Zoom exakt 1 — dann stimmt
+    //    das Verhältnis zur Sonne (Jupiter = 1/10, Erde = 1/109).
+    //  - Echter Maßstab: alles exakt — Abstände, Sonne und Planeten.
+    // Zu kleine Körper werden als Mindest-Punkt gezeichnet, damit man sie
+    // überhaupt findet.
+    const SUN_KM = 1392700;
+    const KM_PER_AU = 149597870.7;
+    const OVERVIEW_ENLARGE = 8;
+    const minDot = mode === "compact" ? 0.9 : smallCanvas ? 1.3 : 1.6;
 
     let lastTime = performance.now();
+    const followStart = performance.now();
     let lastDateKey = "";
     const dateFmt = new Intl.DateTimeFormat(lang, { year: "numeric", month: "short", day: "numeric" });
 
@@ -206,8 +214,8 @@ export default function SolarSystem({
       }
 
       // Sonne = Bildmitte + Verschiebung (beim Zoomen auf einen Punkt)
-      const cx = size.w / 2 + panRef.current.x;
-      const cy = size.h / 2 + panRef.current.y;
+      let cx = size.w / 2 + panRef.current.x;
+      let cy = size.h / 2 + panRef.current.y;
       const zoom = zoomRef.current;
       const maxOrbitR = baseMaxOrbitR * zoom;
       const tilt = tiltRef.current;
@@ -218,11 +226,7 @@ export default function SolarSystem({
 
       // Echter Maßstab: Neptuns Bahn füllt bei Zoom 1 den Rahmen.
       const pxPerAu = maxOrbitR / 30.4;
-      const sunR = realMode ? Math.max(2.5, SUN_RADIUS_AU * pxPerAu) : compactSunR;
-      // Planetengröße im echten Maßstab: echtes Verhältnis untereinander,
-      // Jupiter wächst beim Reinzoomen mit (bis 40 px).
-      const jupiterPx = Math.min(120, (smallCanvas ? 7 : 9) * Math.sqrt(zoom));
-
+      const sunR = realMode ? Math.max(2.5, SUN_RADIUS_AU * pxPerAu) : compactSunR * zoom;
       function project(p: Vec3): [number, number] {
         let k: number;
         if (realMode) {
@@ -241,10 +245,28 @@ export default function SolarSystem({
       }
 
       function bodyRadius(planet: PlanetData): number {
-        if (realMode) return Math.max(1.2, (planet.diameterKm / JUPITER_KM) * jupiterPx);
-        // Beim Reinzoomen wachsen die Planeten mit (gedämpft), sonst blieben
-        // sie auch bei 60× Zoom winzige Punkte.
-        return Math.min(70, compactPlanetRadius(planet.diameterKm) * Math.sqrt(Math.max(1, zoom)));
+        if (realMode) {
+          return Math.max(minDot, (planet.diameterKm / 2 / KM_PER_AU) * pxPerAu);
+        }
+        const enlarge = Math.max(1, OVERVIEW_ENLARGE / zoom);
+        return Math.max(minDot, sunR * (planet.diameterKm / SUN_KM) * enlarge);
+      }
+
+      // Angeklickten Körper beim Zoomen in der Bildmitte halten ("mitfliegen"),
+      // damit man z.B. die Erde neben der Sonne in echter Größe ansehen
+      // kann, ohne dass sie aus dem Bild läuft.
+      if (interactive && selectedId && zoom > 1.5) {
+        const fp: Vec3 | null = selectedId === "sun" ? [0, 0, 0] : bodyPosition(selectedId, jd);
+        if (fp) {
+          const [sx, sy] = project(fp);
+          const f = now - followStart < 600 ? 0.15 : 1;
+          panRef.current = {
+            x: panRef.current.x + (size.w / 2 - sx) * f,
+            y: panRef.current.y + (size.h / 2 - sy) * f,
+          };
+          cx = size.w / 2 + panRef.current.x;
+          cy = size.h / 2 + panRef.current.y;
+        }
       }
 
       ctx.clearRect(0, 0, size.w, size.h);
@@ -261,7 +283,7 @@ export default function SolarSystem({
       ctx.restore();
 
       // Sonne (mit Glühen)
-      const glowR = realMode ? Math.max(sunR * 3.2, 14) : sunR * 3.2;
+      const glowR = sunR + Math.max(10, Math.min(sunR * 2.2, 60));
       const sunGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
       sunGlow.addColorStop(0, "rgba(255,196,110,0.55)");
       sunGlow.addColorStop(1, "rgba(255,196,110,0)");
@@ -309,11 +331,26 @@ export default function SolarSystem({
         if (!path || path.length < 2) continue;
         const isDwarf = planet.kind === "dwarf";
         ctx.beginPath();
-        path.forEach((p, k) => {
-          const [x, y] = project(p);
-          if (k === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-        });
+        if (realMode) {
+          // Im echten Maßstab ist die Projektion linear → die Bahn ist eine
+          // exakte Ellipse. Als echte Kurve gezeichnet (statt Streckenzug),
+          // damit sie auch bei extremem Zoom genau durch den Planeten läuft.
+          const n = path.length - 1; // Punkte bei E = 0, π/2, π (Segmente durch 4 teilbar)
+          const p0 = project(path[0]);
+          const pHalf = project(path[n / 2]);
+          const pQuarter = project(path[n / 4]);
+          const c: [number, number] = [(p0[0] + pHalf[0]) / 2, (p0[1] + pHalf[1]) / 2];
+          ctx.save();
+          ctx.transform(p0[0] - c[0], p0[1] - c[1], pQuarter[0] - c[0], pQuarter[1] - c[1], c[0], c[1]);
+          ctx.arc(0, 0, 1, 0, Math.PI * 2);
+          ctx.restore();
+        } else {
+          path.forEach((p, k) => {
+            const [x, y] = project(p);
+            if (k === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          });
+        }
         if (isDwarf) {
           ctx.setLineDash([2, 3]);
           ctx.strokeStyle = "rgba(255,255,255,0.08)";
@@ -645,7 +682,7 @@ export default function SolarSystem({
               onClick={() => setSpeedIndex((i) => (i + 1) % SPEEDS.length)}
               className="label-mono border border-border bg-background/80 whitespace-nowrap px-2 py-1 text-[10px] uppercase text-muted transition-colors hover:border-accent hover:text-accent"
             >
-              {SPEEDS[speedIndex]} {t("solarDaysPerSecond")}
+              {SPEEDS[speedIndex] === 0 ? "❚❚" : `${SPEEDS[speedIndex]} ${t("solarDaysPerSecond")}`}
             </button>
             <button
               type="button"
