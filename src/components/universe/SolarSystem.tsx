@@ -176,7 +176,11 @@ export default function SolarSystem({
       // gleich groß) — nur so bleibt beim Zoomen der Punkt unter der Maus
       // wirklich an seiner Stelle.
       const zoomNow = maxOrbitR / baseMaxOrbitR;
-      return zoomNow * (compactSunR + 10 + t * (baseMaxOrbitR - compactSunR - 10));
+      // Merkurs Bahn beginnt erst bei ~2,5 Sonnenradien — sonst wirkt die
+      // Sonne in der Schrägansicht so groß, dass die inneren Planeten
+      // ständig vor/hinter ihr durchlaufen (Nutzerkorrektur 29.09.2026).
+      const inner = compactSunR * 2 + 14;
+      return zoomNow * (inner + t * (baseMaxOrbitR - inner));
     }
 
     // Größen — Nutzerwunsch 29.09.2026 ("wenn man zoomt, soll die Größe der
@@ -248,6 +252,12 @@ export default function SolarSystem({
         return [cx + xr, cy - yr * tilt - Z * side];
       }
 
+      /** Entfernung von der Kamera relativ zur Sonne (> 0 = hinter der Sonne). */
+      function depthOf(p: Vec3): number {
+        const yr = p[0] * sinR + p[1] * cosR;
+        return yr * side - p[2] * tilt;
+      }
+
       function bodyRadius(planet: PlanetData): number {
         if (realMode) {
           return Math.max(minDot, (planet.diameterKm / 2 / KM_PER_AU) * pxPerAu);
@@ -286,24 +296,29 @@ export default function SolarSystem({
       }
       ctx.restore();
 
-      // Sonne (mit Glühen)
-      const glowR = sunR + Math.max(10, Math.min(sunR * 2.2, 60));
-      const sunGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
-      sunGlow.addColorStop(0, "rgba(255,196,110,0.55)");
-      sunGlow.addColorStop(1, "rgba(255,196,110,0)");
-      ctx.fillStyle = sunGlow;
-      ctx.beginPath();
-      ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
-      ctx.fill();
+      // Sonne (mit Glühen) — wird erst in der Tiefen-Reihenfolge unten
+      // gezeichnet, damit Planeten HINTER der Sonne verdeckt werden und
+      // Planeten DAVOR sie verdecken (Nutzerkorrektur 29.09.2026: "wieso
+      // laufen Planeten über die Sonne").
+      function drawSun() {
+        const glowR = sunR + Math.max(10, Math.min(sunR * 2.2, 60));
+        const sunGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
+        sunGlow.addColorStop(0, "rgba(255,196,110,0.55)");
+        sunGlow.addColorStop(1, "rgba(255,196,110,0)");
+        ctx.fillStyle = sunGlow;
+        ctx.beginPath();
+        ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
+        ctx.fill();
 
-      const sunBody = ctx.createRadialGradient(cx - sunR * 0.3, cy - sunR * 0.3, sunR * 0.1, cx, cy, sunR);
-      sunBody.addColorStop(0, "#fff3d6");
-      sunBody.addColorStop(0.5, "#ffcf6b");
-      sunBody.addColorStop(1, "#ff9a3c");
-      ctx.fillStyle = sunBody;
-      ctx.beginPath();
-      ctx.arc(cx, cy, sunR, 0, Math.PI * 2);
-      ctx.fill();
+        const sunBody = ctx.createRadialGradient(cx - sunR * 0.3, cy - sunR * 0.3, sunR * 0.1, cx, cy, sunR);
+        sunBody.addColorStop(0, "#fff3d6");
+        sunBody.addColorStop(0.5, "#ffcf6b");
+        sunBody.addColorStop(1, "#ff9a3c");
+        ctx.fillStyle = sunBody;
+        ctx.beginPath();
+        ctx.arc(cx, cy, sunR, 0, Math.PI * 2);
+        ctx.fill();
+      }
 
       const drawn: DrawnPlanet[] = [];
       if (interactive) {
@@ -367,10 +382,20 @@ export default function SolarSystem({
       }
       ctx.setLineDash([]);
 
-      // 2) Himmelskörper an ihrer echten Position zum simulierten Datum
+      // 2) Himmelskörper an ihrer echten Position zum simulierten Datum,
+      //    von hinten nach vorne gezeichnet (Sonne an ihrer Tiefe dazwischen)
+      const items: { planet: PlanetData; pos: Vec3; depth: number }[] = [];
       for (const planet of bodies) {
         const pos = bodyPosition(planet.id, jd);
-        if (!pos) continue;
+        if (pos) items.push({ planet, pos, depth: depthOf(pos) });
+      }
+      items.sort((a, b) => b.depth - a.depth);
+      let sunDrawn = false;
+      for (const { planet, pos, depth } of items) {
+        if (!sunDrawn && depth <= 0) {
+          drawSun();
+          sunDrawn = true;
+        }
         const isDwarf = planet.kind === "dwarf";
         const isProbe = planet.kind === "probe";
         const [x, y] = project(pos);
@@ -494,6 +519,7 @@ export default function SolarSystem({
           drawLabel(localize(planet.name, lang), x, y - pr - 6, color, font, isSelected);
         }
       }
+      if (!sunDrawn) drawSun();
 
       drawnRef.current = drawn;
       rafRef.current = requestAnimationFrame(draw);
