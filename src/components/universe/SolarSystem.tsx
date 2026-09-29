@@ -567,8 +567,9 @@ export default function SolarSystem({
     const dx = e.clientX - dragRef.current.x;
     const dy = e.clientY - dragRef.current.y;
     if (Math.abs(dx) > 2 || Math.abs(dy) > 2) dragRef.current.dragged = true;
-    rotateRef.current += dx * 0.006;
-    tiltRef.current = Math.min(1, Math.max(0.22, tiltRef.current - dy * 0.003));
+    // Nutzerwunsch 29.09.2026 ("Sensitivity zu hoch"): halbiert
+    rotateRef.current += dx * 0.003;
+    tiltRef.current = Math.min(1, Math.max(0.22, tiltRef.current - dy * 0.0015));
     dragRef.current.x = e.clientX;
     dragRef.current.y = e.clientY;
   }
@@ -613,7 +614,8 @@ export default function SolarSystem({
     if (!interactive) return;
     e.preventDefault();
     // multiplikativ, damit auch sehr hohe Zoomstufen in vernünftig vielen Schritten erreichbar sind
-    const factor = Math.exp(-Math.max(-200, Math.min(200, e.deltaY)) * 0.0018);
+    // ~10 % pro Mausrad-Raste (vorher ~20–40 %)
+    const factor = Math.exp(-Math.max(-100, Math.min(100, e.deltaY)) * 0.001);
     zoomAt(zoomRef.current * factor, e.clientX, e.clientY);
   }
 
