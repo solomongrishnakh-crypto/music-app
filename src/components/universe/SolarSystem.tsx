@@ -101,6 +101,11 @@ export default function SolarSystem({
   const zoomLimitsRef = useRef<[number, number]>([0.5, 60]);
   const panRef = useRef({ x: 0, y: 0 });
   const pinchCenterRef = useRef<{ x: number; y: number } | null>(null);
+  // Angeklickten Körper mitverfolgen — aus, sobald man selbst verschiebt
+  const followRef = useRef(true);
+  useEffect(() => {
+    followRef.current = true;
+  }, [selectedId]);
 
   // Sehr wenige, sehr dezente Hintergrundsterne (Nutzerwunsch: "sterne im
   // hintergrund soll kaum sehbar sein") — fest generiert, kein Funkeln,
@@ -269,7 +274,7 @@ export default function SolarSystem({
       // Angeklickten Körper beim Zoomen in der Bildmitte halten ("mitfliegen"),
       // damit man z.B. die Erde neben der Sonne in echter Größe ansehen
       // kann, ohne dass sie aus dem Bild läuft.
-      if (interactive && selectedId && zoom > 1.5) {
+      if (interactive && selectedId && zoom > 1.5 && followRef.current) {
         const fp: Vec3 | null = selectedId === "sun" ? [0, 0, 0] : bodyPosition(selectedId, jd);
         if (fp) {
           const [sx, sy] = project(fp);
@@ -558,8 +563,20 @@ export default function SolarSystem({
       const pts = Array.from(pointersRef.current.values());
       const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
       const ratio = dist / pinchStartDistRef.current;
-      const c = pinchCenterRef.current ?? { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
-      zoomAt(pinchStartZoomRef.current * ratio, c.x, c.y);
+      // Nutzerkorrektur 30.09.2026 ("man kann es mit 2 Fingern nicht
+      // richtig bewegen/zoomen"): Zoom um die AKTUELLE Fingermitte, und
+      // wenn beide Finger zusammen wandern, wird die Ansicht verschoben.
+      const mid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+      zoomAt(pinchStartZoomRef.current * ratio, mid.x, mid.y);
+      const prev = pinchCenterRef.current;
+      if (prev) {
+        panRef.current = {
+          x: panRef.current.x + (mid.x - prev.x),
+          y: panRef.current.y + (mid.y - prev.y),
+        };
+        if (Math.hypot(mid.x - prev.x, mid.y - prev.y) > 0.5) followRef.current = false;
+      }
+      pinchCenterRef.current = mid;
       return;
     }
 
@@ -576,11 +593,16 @@ export default function SolarSystem({
 
   function handlePointerUp(e: PointerEvent<HTMLCanvasElement>) {
     if (!interactive) return;
-    canvasRef.current?.releasePointerCapture(e.pointerId);
+    try {
+      canvasRef.current?.releasePointerCapture(e.pointerId);
+    } catch {
+      /* Pointer war nicht (mehr) gefangen — egal */
+    }
     pointersRef.current.delete(e.pointerId);
 
     if (pointersRef.current.size < 2) {
       pinchStartDistRef.current = null;
+      pinchCenterRef.current = null;
     }
 
     if (pointersRef.current.size === 0) {
@@ -673,6 +695,9 @@ export default function SolarSystem({
         onPointerMove={handlePointerMove}
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
+        // Bricht der Browser eine Touch-Geste ab (pointercancel), blieben
+        // Finger sonst als "noch aufgelegt" hängen → Pinch spielte verrückt.
+        onPointerCancel={handlePointerUp}
         className={interactive ? "cursor-grab touch-none" : ""}
         aria-label={t("solarSystemVisAria")}
       />
