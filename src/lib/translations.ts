@@ -350,6 +350,15 @@ const TRANSLATIONS_SOURCE = {
     es: "El mundo a través de los siglos", fr: "Le monde à travers les siècles", tr: "Yüzyıllar Boyunca Dünya",
     ru: "Мир сквозь века", pt: "O mundo através dos séculos", ar: "العالم عبر القرون", el: "Ο κόσμος μέσα από τους αιώνες",
   },
+  // Sichtbare Unterzeile mit den Suchbegriffen (Nutzerwunsch 30.09.2026:
+  // bei "Weltgeschichte Karte" gefunden werden)
+  empiresSeoTagline: {
+    de: "Interaktive Weltgeschichte-Karte · alle Reiche von 3400 v. Chr. bis heute", en: "Interactive world history map · every empire from 3400 BC to today",
+    hi: "इंटरैक्टिव विश्व इतिहास मानचित्र · 3400 ई.पू. से आज तक सभी साम्राज्य", zh: "互动世界历史地图 · 从公元前3400年至今的所有帝国", ko: "인터랙티브 세계사 지도 · 기원전 3400년부터 오늘날까지 모든 제국", ja: "インタラクティブ世界史マップ · 紀元前3400年から現在までのすべての帝国",
+    es: "Mapa interactivo de historia mundial · todos los imperios desde el 3400 a. C. hasta hoy", fr: "Carte interactive de l'histoire du monde · tous les empires de 3400 av. J.-C. à aujourd'hui",
+    tr: "Etkileşimli dünya tarihi haritası · MÖ 3400'den bugüne tüm imparatorluklar", ru: "Интерактивная карта всемирной истории · все империи с 3400 г. до н. э. до наших дней",
+    pt: "Mapa interativo da história mundial · todos os impérios de 3400 a.C. até hoje", ar: "خريطة تفاعلية لتاريخ العالم · كل الإمبراطوريات من 3400 ق.م حتى اليوم", el: "Διαδραστικός χάρτης παγκόσμιας ιστορίας · όλες οι αυτοκρατορίες από το 3400 π.Χ. έως σήμερα",
+  },
   empiresIntroPrefix: {
     de: "Historische Grenzen von der Antike bis heute — große Reiche (rot, mit Namen auf der Karte) auf einer echten Zeitleiste. Auf ein Gebiet klicken für eine ausführliche Beschreibung. Datenquelle:",
     en: "Historical borders from antiquity to today — major empires (red, labeled on the map) on a real timeline. Click a territory for a detailed description. Data source:",

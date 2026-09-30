@@ -29,9 +29,9 @@ export const metadata: Metadata = {
     template: "%s | CENTAURIAN",
   },
   description:
-    "Centaurian: Songs suchen und direkt im Browser hören, das Universum interaktiv entdecken und die Geschichte großer Imperien erleben — kostenlos, ohne Anmeldung.",
+    "Centaurian: Songs suchen und direkt im Browser hören, das Sonnensystem interaktiv entdecken und auf einer Weltgeschichte-Karte alle Imperien von 3400 v. Chr. bis heute erleben — kostenlos, ohne Anmeldung.",
   applicationName: "Centaurian",
-  keywords: ["Centaurian", "Musik", "Songs hören", "Universum", "Sonnensystem", "Imperien", "Geschichte", "Schwarzes Loch"],
+  keywords: ["Centaurian", "Musik", "Songs hören", "Universum", "Sonnensystem", "Imperien", "Geschichte", "Weltgeschichte Karte", "historische Weltkarte", "Schwarzes Loch"],
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",

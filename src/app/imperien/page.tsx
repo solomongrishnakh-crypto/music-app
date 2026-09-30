@@ -1246,6 +1246,9 @@ export default function ImperienPage() {
           <h1 className="font-display mt-2 text-2xl font-bold uppercase tracking-tight text-foreground sm:text-4xl">
             {t("empiresTitle")}
           </h1>
+          <p className="label-mono mt-2 text-[11px] uppercase tracking-wide text-accent sm:text-xs">
+            {t("empiresSeoTagline")}
+          </p>
           <p className="mt-3 max-w-2xl text-xs leading-relaxed text-muted sm:text-sm">
             {t("empiresIntroPrefix")}{" "}
             <a
