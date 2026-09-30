@@ -89,7 +89,8 @@ export default function SolarSystem({
   const zoomRef = useRef(1);
   const rotateRef = useRef(0); // zusätzliche Drehung der Ansicht (Radiant)
   const tiltRef = useRef(0.94); // 1 = senkrecht von oben, 0.22 = fast von der Seite
-  const dragRef = useRef<{ x: number; y: number; dragged: boolean } | null>(null);
+  const dragRef = useRef<{ x: number; y: number; dragged: boolean; pan: boolean; t: number } | null>(null);
+  const stepMotionRef = useRef<(dtMs: number) => void>(() => {});
   // Nutzerwunsch 20.09.2026 ("man kann auch nicht zoomen"): Wheel (Desktop)
   // reicht nicht — auf dem Handy braucht es Pinch-Zoom über zwei Touch-Punkte.
   const pointersRef = useRef<Map<number, { x: number; y: number }>>(new Map());
@@ -216,6 +217,7 @@ export default function SolarSystem({
       const dtMs = Math.min(100, now - lastTime);
       lastTime = now;
       jdRef.current += (speedRef.current * dtMs) / 1000;
+      stepMotionRef.current(dtMs);
       const jd = jdRef.current;
 
       if (dateLabelRef.current) {
@@ -535,20 +537,72 @@ export default function SolarSystem({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [size, mode, selectedId, stars, bodies, interactive, lang, scaleMode, orbitPaths]);
 
+  // ------------------------------------------------------------------
+  // Steuerung wie in 3D-Apps/Spielen (Nutzerwunsch 30.09.2026: "wie in
+  // einem Videospiel … als ob man ein 3D-Objekt bewegt"):
+  //  - 1 Finger / linke Maustaste: Orbit (drehen + neigen), mit Schwung —
+  //    nach dem Loslassen dreht die Ansicht sanft aus.
+  //  - 2 Finger: Pinch = Zoom um die Fingermitte, gemeinsam bewegen =
+  //    verschieben, Finger drehen = Ansicht drehen (alles gleichzeitig).
+  //  - Mausrad / +/−: weicher Zoom auf den Mauszeiger.
+  //  - Rechte Maustaste oder Shift + Ziehen: verschieben.
+  //  - Doppeltippen / Doppelklick: auf die Stelle heranzoomen.
+  // ------------------------------------------------------------------
+  const velRef = useRef({ rot: 0, tilt: 0 }); // rad pro ms (Schwung)
+  const zoomGoalRef = useRef<{ z: number; x: number; y: number } | null>(null);
+  const pinchAngleRef = useRef<number | null>(null);
+  const lastTapRef = useRef<{ t: number; x: number; y: number } | null>(null);
+  const TILT_MIN = 0.06;
+
+  /** Wird in jedem Frame aus der Zeichenschleife aufgerufen. */
+  function stepMotion(dtMs: number) {
+    const dragging = dragRef.current !== null || pointersRef.current.size > 0;
+    const v = velRef.current;
+    if (!dragging && (Math.abs(v.rot) > 1e-6 || Math.abs(v.tilt) > 1e-6)) {
+      rotateRef.current += v.rot * dtMs;
+      tiltRef.current = Math.min(1, Math.max(TILT_MIN, tiltRef.current + v.tilt * dtMs));
+      const decay = Math.exp(-dtMs / 320);
+      v.rot *= decay;
+      v.tilt *= decay;
+    }
+    const goal = zoomGoalRef.current;
+    if (goal) {
+      const f = 1 - Math.exp(-dtMs / 90);
+      const next = zoomRef.current * Math.pow(goal.z / zoomRef.current, f);
+      zoomAt(next, goal.x, goal.y);
+      if (Math.abs(Math.log(goal.z / zoomRef.current)) < 0.002) zoomGoalRef.current = null;
+    }
+  }
+  stepMotionRef.current = stepMotion;
+
+  function smoothZoom(factor: number, clientX: number, clientY: number) {
+    const [zMin, zMax] = zoomLimitsRef.current;
+    const base = zoomGoalRef.current ? zoomGoalRef.current.z : zoomRef.current;
+    zoomGoalRef.current = { z: Math.min(zMax, Math.max(zMin, base * factor)), x: clientX, y: clientY };
+  }
+
+  function startPinch() {
+    const pts = Array.from(pointersRef.current.values());
+    pinchStartDistRef.current = Math.max(1, Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y));
+    pinchStartZoomRef.current = zoomRef.current;
+    pinchCenterRef.current = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+    pinchAngleRef.current = Math.atan2(pts[1].y - pts[0].y, pts[1].x - pts[0].x);
+  }
+
   function handlePointerDown(e: PointerEvent<HTMLCanvasElement>) {
     if (!interactive) return;
     canvasRef.current?.setPointerCapture(e.pointerId);
     pointersRef.current.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    velRef.current = { rot: 0, tilt: 0 };
+    zoomGoalRef.current = null;
 
     if (pointersRef.current.size >= 2) {
-      // Zweiter Finger kam dazu → ab jetzt Pinch-Zoom statt Dreh-Geste.
+      // Zweiter Finger → Pinch/Drehen/Verschieben statt Orbit
       dragRef.current = null;
-      const pts = Array.from(pointersRef.current.values());
-      pinchStartDistRef.current = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      pinchStartZoomRef.current = zoomRef.current;
-      pinchCenterRef.current = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
+      startPinch();
     } else {
-      dragRef.current = { x: e.clientX, y: e.clientY, dragged: false };
+      const pan = e.button === 2 || e.shiftKey;
+      dragRef.current = { x: e.clientX, y: e.clientY, dragged: false, pan, t: performance.now() };
     }
     if (canvasRef.current) canvasRef.current.style.cursor = "grabbing";
   }
@@ -562,12 +616,10 @@ export default function SolarSystem({
     if (pointersRef.current.size >= 2 && pinchStartDistRef.current) {
       const pts = Array.from(pointersRef.current.values());
       const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-      const ratio = dist / pinchStartDistRef.current;
-      // Nutzerkorrektur 30.09.2026 ("man kann es mit 2 Fingern nicht
-      // richtig bewegen/zoomen"): Zoom um die AKTUELLE Fingermitte, und
-      // wenn beide Finger zusammen wandern, wird die Ansicht verschoben.
       const mid = { x: (pts[0].x + pts[1].x) / 2, y: (pts[0].y + pts[1].y) / 2 };
-      zoomAt(pinchStartZoomRef.current * ratio, mid.x, mid.y);
+      // 1) Zoom um die aktuelle Fingermitte
+      zoomAt(pinchStartZoomRef.current * (dist / pinchStartDistRef.current), mid.x, mid.y);
+      // 2) Verschieben mit beiden Fingern
       const prev = pinchCenterRef.current;
       if (prev) {
         panRef.current = {
@@ -577,18 +629,55 @@ export default function SolarSystem({
         if (Math.hypot(mid.x - prev.x, mid.y - prev.y) > 0.5) followRef.current = false;
       }
       pinchCenterRef.current = mid;
+      // 3) Drehen mit zwei Fingern (um die Fingermitte)
+      const ang = Math.atan2(pts[1].y - pts[0].y, pts[1].x - pts[0].x);
+      if (pinchAngleRef.current !== null) {
+        let d = ang - pinchAngleRef.current;
+        if (d > Math.PI) d -= Math.PI * 2;
+        if (d < -Math.PI) d += Math.PI * 2;
+        if (Math.abs(d) > 0.002) {
+          rotateRef.current -= d;
+          const rect = canvasRef.current?.getBoundingClientRect();
+          if (rect) {
+            const mx = mid.x - rect.left - rect.width / 2;
+            const my = mid.y - rect.top - rect.height / 2;
+            const vx = panRef.current.x - mx;
+            const vy = panRef.current.y - my;
+            const c = Math.cos(d);
+            const s = Math.sin(d);
+            panRef.current = { x: mx + vx * c - vy * s, y: my + vx * s + vy * c };
+          }
+        }
+      }
+      pinchAngleRef.current = ang;
       return;
     }
 
-    if (!dragRef.current) return;
-    const dx = e.clientX - dragRef.current.x;
-    const dy = e.clientY - dragRef.current.y;
-    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) dragRef.current.dragged = true;
-    // Nutzerwunsch 29.09.2026 ("Sensitivity zu hoch"): halbiert
-    rotateRef.current += dx * 0.003;
-    tiltRef.current = Math.min(1, Math.max(0.22, tiltRef.current - dy * 0.0015));
-    dragRef.current.x = e.clientX;
-    dragRef.current.y = e.clientY;
+    const drag = dragRef.current;
+    if (!drag) return;
+    const dx = e.clientX - drag.x;
+    const dy = e.clientY - drag.y;
+    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) drag.dragged = true;
+    const now = performance.now();
+    const dt = Math.max(1, now - drag.t);
+    if (drag.pan) {
+      panRef.current = { x: panRef.current.x + dx, y: panRef.current.y + dy };
+      followRef.current = false;
+    } else {
+      // Nutzerwunsch 29.09.2026 ("Sensitivity zu hoch"): gedämpfte Werte
+      const dRot = dx * 0.003;
+      const dTilt = -dy * 0.0015;
+      rotateRef.current += dRot;
+      tiltRef.current = Math.min(1, Math.max(TILT_MIN, tiltRef.current + dTilt));
+      // Schwung aus den letzten Bewegungen (geglättet)
+      velRef.current = {
+        rot: velRef.current.rot * 0.6 + (dRot / dt) * 0.4,
+        tilt: velRef.current.tilt * 0.6 + (dTilt / dt) * 0.4,
+      };
+    }
+    drag.x = e.clientX;
+    drag.y = e.clientY;
+    drag.t = now;
   }
 
   function handlePointerUp(e: PointerEvent<HTMLCanvasElement>) {
@@ -598,25 +687,41 @@ export default function SolarSystem({
     } catch {
       /* Pointer war nicht (mehr) gefangen — egal */
     }
-    pointersRef.current.delete(e.pointerId);
+    const wasTracked = pointersRef.current.delete(e.pointerId);
+    // pointerleave/-cancel NACH pointerup (bei Touch normal) nicht nochmal
+    // auswerten — sonst würde der Schwung sofort wieder genullt.
+    if (!wasTracked) return;
 
     if (pointersRef.current.size < 2) {
       pinchStartDistRef.current = null;
       pinchCenterRef.current = null;
+      pinchAngleRef.current = null;
     }
 
     if (pointersRef.current.size === 0) {
       if (canvasRef.current) canvasRef.current.style.cursor = "grab";
-      // Klick nur werten, wenn nicht gezogen/gepincht wurde.
-      if (dragRef.current && !dragRef.current.dragged) {
+      const drag = dragRef.current;
+      // Kein Schwung, wenn der Finger vor dem Loslassen stillstand
+      if (!drag || performance.now() - drag.t > 80) velRef.current = { rot: 0, tilt: 0 };
+      // Tippen/Klicken ohne Ziehen: auswählen, Doppeltippen: heranzoomen
+      if (drag && !drag.dragged) {
         selectFromPoint(e.clientX, e.clientY);
+        const now = performance.now();
+        const last = lastTapRef.current;
+        if (last && now - last.t < 320 && Math.hypot(last.x - e.clientX, last.y - e.clientY) < 30) {
+          smoothZoom(2.5, e.clientX, e.clientY);
+          lastTapRef.current = null;
+        } else {
+          lastTapRef.current = { t: now, x: e.clientX, y: e.clientY };
+        }
       }
       dragRef.current = null;
     } else if (pointersRef.current.size === 1) {
-      // Nach dem Pinch bleibt ein Finger übrig — Dreh-Geste neu ansetzen,
-      // ohne dass es als Klick zählt.
+      // Nach dem Pinch bleibt ein Finger übrig — Orbit neu ansetzen,
+      // ohne dass es als Klick zählt und ohne Sprung.
       const remaining = Array.from(pointersRef.current.values())[0];
-      dragRef.current = { x: remaining.x, y: remaining.y, dragged: true };
+      dragRef.current = { x: remaining.x, y: remaining.y, dragged: true, pan: false, t: performance.now() };
+      velRef.current = { rot: 0, tilt: 0 };
     }
   }
 
@@ -635,10 +740,10 @@ export default function SolarSystem({
   function handleWheel(e: globalThis.WheelEvent) {
     if (!interactive) return;
     e.preventDefault();
-    // multiplikativ, damit auch sehr hohe Zoomstufen in vernünftig vielen Schritten erreichbar sind
-    // ~10 % pro Mausrad-Raste (vorher ~20–40 %)
-    const factor = Math.exp(-Math.max(-100, Math.min(100, e.deltaY)) * 0.001);
-    zoomAt(zoomRef.current * factor, e.clientX, e.clientY);
+    // ~10 % pro Mausrad-Raste, weich animiert; Touchpad-Pinch (ctrlKey) feiner
+    const k = e.ctrlKey ? 0.01 : 0.001;
+    const factor = Math.exp(-Math.max(-100, Math.min(100, e.deltaY)) * k);
+    smoothZoom(factor, e.clientX, e.clientY);
   }
 
   /** Zoomt so, dass der Punkt unter (clientX, clientY) an seiner Stelle bleibt. */
@@ -655,8 +760,10 @@ export default function SolarSystem({
         x: px - (px - panRef.current.x) * k,
         y: py - (py - panRef.current.y) * k,
       };
-      // Bei Zoom ≤ 1 (alles sichtbar) die Sonne wieder in die Mitte holen
-      if (newZoom <= 1) panRef.current = { x: 0, y: 0 };
+      // Ganz herausgezoomt: Sonne sanft zurück in die Mitte
+      if (newZoom <= 1) {
+        panRef.current = { x: panRef.current.x * 0.85, y: panRef.current.y * 0.85 };
+      }
     }
     zoomRef.current = newZoom;
   }
@@ -664,7 +771,7 @@ export default function SolarSystem({
   function zoomByButton(factor: number) {
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
-    zoomAt(zoomRef.current * factor, rect.left + rect.width / 2, rect.top + rect.height / 2);
+    smoothZoom(factor, rect.left + rect.width / 2, rect.top + rect.height / 2);
   }
 
   function selectFromPoint(clientX: number, clientY: number) {
@@ -698,6 +805,7 @@ export default function SolarSystem({
         // Bricht der Browser eine Touch-Geste ab (pointercancel), blieben
         // Finger sonst als "noch aufgelegt" hängen → Pinch spielte verrückt.
         onPointerCancel={handlePointerUp}
+        onContextMenu={(e) => e.preventDefault()}
         className={interactive ? "cursor-grab touch-none" : ""}
         aria-label={t("solarSystemVisAria")}
       />

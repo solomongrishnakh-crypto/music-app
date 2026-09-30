@@ -271,11 +271,11 @@ const TRANSLATIONS_SOURCE = {
     es: "Hoy", fr: "Aujourd'hui", tr: "Bugün", ru: "Сегодня", pt: "Hoje", ar: "اليوم", el: "Σήμερα",
   },
   solarSystemDragHint: {
-    de: "Ziehen: drehen & neigen · Scrollen: zoomen", en: "Drag: rotate & tilt · Scroll: zoom",
-    hi: "खींचें: घुमाएं और झुकाएं · स्क्रॉल: ज़ूम करें", zh: "拖动：旋转与倾斜 · 滚动：缩放", ko: "드래그: 회전 및 기울이기 · 스크롤: 확대/축소", ja: "ドラッグ：回転・傾き · スクロール：ズーム",
-    es: "Arrastrar: rotar e inclinar · Desplazar: zoom", fr: "Glisser : pivoter et incliner · Défiler : zoom",
-    tr: "Sürükle: döndür ve eğ · Kaydır: yakınlaştır", ru: "Перетаскивание: вращение и наклон · Прокрутка: масштаб",
-    pt: "Arrastar: girar e inclinar · Rolar: zoom", ar: "اسحب: تدوير وإمالة · مرر: تكبير", el: "Σύρετε: περιστροφή & κλίση · Κύλιση: ζουμ",
+    de: "Ziehen: drehen & neigen · 2 Finger: zoomen, verschieben, drehen · Mausrad: zoomen · Doppeltippen: heran", en: "Drag: rotate & tilt · 2 fingers: zoom, pan, rotate · Scroll: zoom · Double-tap: zoom in",
+    hi: "खींचें: घुमाएं और झुकाएं · 2 उंगलियां: ज़ूम, खिसकाएं, घुमाएं · स्क्रॉल: ज़ूम · डबल-टैप: पास जाएं", zh: "拖动：旋转与倾斜 · 双指：缩放、平移、旋转 · 滚轮：缩放 · 双击：放大", ko: "드래그: 회전·기울이기 · 두 손가락: 확대, 이동, 회전 · 스크롤: 확대/축소 · 두 번 탭: 확대", ja: "ドラッグ：回転・傾き · 2本指：ズーム・移動・回転 · ホイール：ズーム · ダブルタップ：拡大",
+    es: "Arrastrar: rotar e inclinar · 2 dedos: zoom, mover, girar · Rueda: zoom · Doble toque: acercar", fr: "Glisser : pivoter et incliner · 2 doigts : zoom, déplacer, tourner · Molette : zoom · Double tap : zoomer",
+    tr: "Sürükle: döndür ve eğ · 2 parmak: yakınlaştır, kaydır, döndür · Tekerlek: yakınlaştır · Çift dokun: yaklaş", ru: "Перетаскивание: вращение и наклон · 2 пальца: масштаб, сдвиг, поворот · Колесо: масштаб · Двойное касание: приблизить",
+    pt: "Arrastar: girar e inclinar · 2 dedos: zoom, mover, girar · Roda: zoom · Toque duplo: aproximar", ar: "اسحب: تدوير وإمالة · إصبعان: تكبير وتحريك وتدوير · العجلة: تكبير · نقرتان: تقريب", el: "Σύρετε: περιστροφή & κλίση · 2 δάχτυλα: ζουμ, μετακίνηση, περιστροφή · Ροδέλα: ζουμ · Διπλό πάτημα: κοντά",
   },
   kindStar: {
     de: "Stern", en: "Star", hi: "तारा", zh: "恒星", ko: "항성", ja: "恒星",
