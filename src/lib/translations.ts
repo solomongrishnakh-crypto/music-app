@@ -112,6 +112,14 @@ const TRANSLATIONS_SOURCE = {
     de: "Live erkunden", en: "Explore live", hi: "लाइव देखें", zh: "实时探索", ko: "실시간 탐험", ja: "ライブで探索",
     es: "Explorar en vivo", fr: "Explorer en direct", tr: "Canlı keşfet", ru: "Исследовать вживую", pt: "Explorar ao vivo", ar: "استكشف مباشرة", el: "Εξερεύνηση ζωντανά",
   },
+  // Sichtbare Unterzeile mit Suchbegriffen (Nutzerwunsch 30.09.2026)
+  universeSeoTagline: {
+    de: "Sonnensystem live mit echten Positionen · Maschine der Ewigkeit · Alter des Universums", en: "Live solar system with real positions · Machine of Eternity · age of the universe",
+    hi: "वास्तविक स्थितियों के साथ लाइव सौर मंडल · अनंतता की मशीन · ब्रह्मांड की आयु", zh: "真实位置的实时太阳系 · 永恒之机 · 宇宙年龄", ko: "실제 위치의 실시간 태양계 · 영원의 기계 · 우주의 나이", ja: "実際の位置によるライブ太陽系 · 永遠の機械 · 宇宙の年齢",
+    es: "Sistema solar en vivo con posiciones reales · Máquina de la eternidad · edad del universo", fr: "Système solaire en direct aux positions réelles · Machine de l'éternité · âge de l'univers",
+    tr: "Gerçek konumlarla canlı Güneş Sistemi · Sonsuzluk Makinesi · evrenin yaşı", ru: "Солнечная система в реальном времени · Машина вечности · возраст Вселенной",
+    pt: "Sistema solar ao vivo com posições reais · Máquina da eternidade · idade do universo", ar: "النظام الشمسي مباشرةً بمواقع حقيقية · آلة الأبدية · عمر الكون", el: "Ζωντανό ηλιακό σύστημα με πραγματικές θέσεις · Μηχανή της αιωνιότητας · ηλικία του σύμπαντος",
+  },
   universeIntro: {
     de: "Zahlen und Fakten zum Kosmos — vom Alter des Universums über Dunkle Materie bis zu Schwarzen Löchern. Auf eine Karte klicken für eine ausführlichere Erklärung. Dazu aktuelle Live-News aus der Raumfahrt.",
     en: "Numbers and facts about the cosmos — from the age of the universe to dark matter and black holes. Click a card for a more detailed explanation. Plus live space news.",
