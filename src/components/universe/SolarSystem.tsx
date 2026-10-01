@@ -16,6 +16,7 @@ import {
   SUN_RADIUS_AU,
   type Vec3,
 } from "@/lib/astro/orbits";
+import SolarSystem3D from "./SolarSystem3D";
 
 interface DrawnPlanet {
   planet: PlanetData;
@@ -117,7 +118,27 @@ const ATMOSPHERE: Record<string, string> = {
   neptune: "120,150,255",
 };
 
-export default function SolarSystem({
+/**
+ * Vollbild ("full") = echte 3D-Ansicht (SolarSystem3D, Nutzerwunsch
+ * 01.10.2026: Drehen/Zoomen wie bei einem 3D-Objekt). Die 2D-Canvas-Ansicht
+ * bleibt für die kleine Vorschau-Box und als Rückfall ohne WebGL.
+ */
+export default function SolarSystem(props: SolarSystemProps) {
+  const [webglFailed, setWebglFailed] = useState(false);
+  if ((props.mode ?? "full") === "full" && !webglFailed) {
+    return (
+      <SolarSystem3D
+        onSelectPlanet={props.onSelectPlanet}
+        selectedId={props.selectedId}
+        className={props.className}
+        onWebglError={() => setWebglFailed(true)}
+      />
+    );
+  }
+  return <SolarSystem2D {...props} />;
+}
+
+function SolarSystem2D({
   mode = "full",
   onSelectPlanet,
   selectedId,
