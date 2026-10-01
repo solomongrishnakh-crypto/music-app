@@ -50,9 +50,6 @@ interface Props {
 
 type ScaleMode = "compact" | "real";
 
-const LIVE = 1 / 86400;
-const SPEEDS = [0, LIVE, 1, 10, 100, 1000] as const;
-const DEFAULT_SPEED_INDEX = 1;
 const KM_PER_AU = 149597870.7;
 const LIGHT_KM_PER_MIN = 299792.458 * 60;
 const SUN_KM = 1392700;
@@ -262,11 +259,10 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
   const jdRef = useRef(dateToJd(new Date()));
   const [scaleMode, setScaleMode] = useState<ScaleMode>("compact");
   const scaleModeRef = useRef<ScaleMode>("compact");
-  const [speedIndex, setSpeedIndex] = useState(DEFAULT_SPEED_INDEX);
-  const speedRef = useRef<number>(SPEEDS[DEFAULT_SPEED_INDEX]);
-  useEffect(() => {
-    speedRef.current = SPEEDS[speedIndex];
-  }, [speedIndex]);
+  // Zeit läuft immer in Echtzeit (Nutzerwunsch 01.10.2026: Option "Live"
+  // löschen). Ein gewähltes Datum verschiebt nur den Startpunkt; die Zeit
+  // läuft von dort aus normal weiter. Datumsfeld leeren = zurück zu jetzt.
+  const offsetDaysRef = useRef(0);
 
   const langRef = useRef(lang);
   langRef.current = lang;
@@ -288,8 +284,8 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
   const approachCacheRef = useRef<{ jd: number; map: Map<string, { jd: number; au: number } | null> } | null>(null);
   function jumpTo(jd: number, planet?: PlanetData) {
     jdRef.current = jd;
+    offsetDaysRef.current = jd - dateToJd(new Date());
     approachCacheRef.current = null;
-    setSpeedIndex(0);
     const d = jdToDate(jd);
     const pad = (n: number) => String(n).padStart(2, "0");
     setDateInput(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
@@ -1045,7 +1041,6 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
     // --- Datumsanzeige ---
     let lastDateKey = "";
     let dateFmtLang = "";
-    let dateFmt: Intl.DateTimeFormat | null = null;
     let dateTimeFmt: Intl.DateTimeFormat | null = null;
 
     // --- Render-Schleife ---
@@ -1060,10 +1055,8 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
       last = now;
 
       // Zeit
-      const speed = speedRef.current;
       const prevJd = jdRef.current;
-      if (speed === LIVE) jdRef.current = dateToJd(new Date());
-      else jdRef.current += (speed * dt) / 1000;
+      jdRef.current = dateToJd(new Date()) + offsetDaysRef.current;
       const jd = jdRef.current;
       updatePositions(jd);
 
@@ -1215,9 +1208,8 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
       const dl = dateLabelRef.current;
       if (dl) {
         const lng = langRef.current;
-        if (lng !== dateFmtLang || !dateFmt || !dateTimeFmt) {
+        if (lng !== dateFmtLang || !dateTimeFmt) {
           dateFmtLang = lng;
-          dateFmt = new Intl.DateTimeFormat(lng, { year: "numeric", month: "short", day: "numeric" });
           dateTimeFmt = new Intl.DateTimeFormat(lng, {
             year: "numeric",
             month: "short",
@@ -1228,11 +1220,10 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
           });
           lastDateKey = "";
         }
-        const live = speed === LIVE;
-        const key = live ? Math.floor(jd * 86400).toString() : Math.floor(jd).toString();
+        const key = Math.floor(jd * 86400).toString();
         if (key !== lastDateKey) {
           lastDateKey = key;
-          dl.textContent = (live ? dateTimeFmt : dateFmt).format(jdToDate(jd));
+          dl.textContent = dateTimeFmt.format(jdToDate(jd));
         }
       }
     }
@@ -1395,7 +1386,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
         <div className="label-mono text-[10px] uppercase text-muted">
           <span ref={dateLabelRef} className="text-foreground" />
           <span className="block text-[9px] normal-case text-accent">
-            {SPEEDS[speedIndex] === LIVE || SPEEDS[speedIndex] === 0 ? t("solarRealMotionLive") : t("solarRealMotionFast")}
+            {t("solarRealMotionLive")}
           </span>
           <span className="block text-[9px] normal-case opacity-70">
             {scaleMode === "real" ? t("solarScaleRealNote") : t("solarScaleCompactNote")}
@@ -1427,22 +1418,16 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
             title={t("solarGoToDate")}
             onChange={(e) => {
               setDateInput(e.target.value);
+              if (!e.target.value) {
+                offsetDaysRef.current = 0; // geleert → wieder "jetzt"
+                approachCacheRef.current = null;
+                return;
+              }
               const d = new Date(`${e.target.value}T12:00:00`);
               if (!Number.isNaN(d.getTime())) jumpTo(dateToJd(d));
             }}
             className="label-mono border border-border bg-background/80 px-2 py-1 text-[10px] uppercase text-muted [color-scheme:dark] hover:border-accent focus:border-accent focus:outline-none"
           />
-          <button
-            type="button"
-            onClick={() => setSpeedIndex((i) => (i + 1) % SPEEDS.length)}
-            className="label-mono border border-border bg-background/80 whitespace-nowrap px-2 py-1 text-[10px] uppercase text-muted transition-colors hover:border-accent hover:text-accent"
-          >
-            {SPEEDS[speedIndex] === 0
-              ? "❚❚"
-              : SPEEDS[speedIndex] === LIVE
-                ? `● ${t("solarLive")}`
-                : `${SPEEDS[speedIndex]} ${t("solarDaysPerSecond")}`}
-          </button>
           <button
             type="button"
             onClick={() => setShowDistances((v) => !v)}
