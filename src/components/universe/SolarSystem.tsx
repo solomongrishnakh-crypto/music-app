@@ -263,7 +263,8 @@ export default function SolarSystem({
     const smallCanvas = size.w < 420;
     const pad = mode === "compact" ? 4 : smallCanvas ? 18 : 26;
     const baseMaxOrbitR = Math.min(size.w, size.h) / 2 - pad;
-    const compactSunR = mode === "compact" ? 7 : smallCanvas ? 13 : 19;
+    // Nutzerwunsch 01.10.2026: Sonne etwas kleiner
+    const compactSunR = mode === "compact" ? 6 : smallCanvas ? 11 : 15;
     const realMode = scaleMode === "real" && interactive;
 
     // --- Kompakt-Skala (wie bisher): innen Wurzel, jenseits Neptun linear ---
@@ -554,9 +555,9 @@ export default function SolarSystem({
         // weiter, weicher Schein
         const glowR = sunR + Math.max(14, Math.min(sunR * 3, 90));
         const sunGlow = ctx.createRadialGradient(cx, cy, sunR * 0.6, cx, cy, glowR);
-        sunGlow.addColorStop(0, "rgba(255,190,110,0.5)");
-        sunGlow.addColorStop(0.35, "rgba(255,140,60,0.16)");
-        sunGlow.addColorStop(1, "rgba(255,120,40,0)");
+        sunGlow.addColorStop(0, "rgba(255,245,225,0.5)");
+        sunGlow.addColorStop(0.35, "rgba(255,215,160,0.15)");
+        sunGlow.addColorStop(1, "rgba(255,190,120,0)");
         ctx.fillStyle = sunGlow;
         ctx.beginPath();
         ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
@@ -574,8 +575,8 @@ export default function SolarSystem({
             const x2 = cx + Math.cos(ang) * (sunR + len);
             const y2 = cy + Math.sin(ang) * (sunR + len);
             const g = ctx.createLinearGradient(x1, y1, x2, y2);
-            g.addColorStop(0, `rgba(255,200,130,${0.22 * flick})`);
-            g.addColorStop(1, "rgba(255,150,70,0)");
+            g.addColorStop(0, `rgba(255,240,215,${0.22 * flick})`);
+            g.addColorStop(1, "rgba(255,210,150,0)");
             ctx.strokeStyle = g;
             ctx.lineWidth = Math.max(1, sunR * 0.14);
             ctx.beginPath();
@@ -588,10 +589,11 @@ export default function SolarSystem({
 
         // Sonnenscheibe mit Randverdunkelung (wie auf echten Sonnenfotos)
         const sunBody = ctx.createRadialGradient(cx, cy, 0, cx, cy, sunR);
-        sunBody.addColorStop(0, "#fffaf0");
-        sunBody.addColorStop(0.45, "#ffe3a1");
-        sunBody.addColorStop(0.8, "#ffb54d");
-        sunBody.addColorStop(1, "#f07a26");
+        // weißer, wie die echte Sonne im All (Nutzerwunsch 01.10.2026)
+        sunBody.addColorStop(0, "#ffffff");
+        sunBody.addColorStop(0.55, "#fffaf0");
+        sunBody.addColorStop(0.85, "#ffeccc");
+        sunBody.addColorStop(1, "#ffd08f");
         ctx.fillStyle = sunBody;
         ctx.beginPath();
         ctx.arc(cx, cy, sunR, 0, Math.PI * 2);
@@ -605,7 +607,7 @@ export default function SolarSystem({
           for (let k = 0; k < 60; k++) {
             const a2 = k * 2.399 + tSec * 0.01;
             const rr = Math.sqrt((k + 0.5) / 60) * sunR;
-            ctx.fillStyle = `rgba(255,${150 + (k % 3) * 25},80,0.08)`;
+            ctx.fillStyle = `rgba(255,${215 + (k % 3) * 12},175,0.1)`;
             ctx.beginPath();
             ctx.arc(cx + Math.cos(a2) * rr, cy + Math.sin(a2) * rr, sunR * 0.09, 0, Math.PI * 2);
             ctx.fill();
@@ -1277,16 +1279,6 @@ export default function SolarSystem({
               }}
               className="label-mono border border-border bg-background/80 px-2 py-1 text-[10px] uppercase text-muted [color-scheme:dark] hover:border-accent focus:border-accent focus:outline-none"
             />
-            <button
-              type="button"
-              onClick={() => {
-                jdRef.current = dateToJd(new Date());
-                setSpeedIndex(SPEEDS.indexOf(LIVE));
-              }}
-              className="label-mono border border-border bg-background/80 whitespace-nowrap px-2 py-1 text-[10px] uppercase text-muted transition-colors hover:border-accent hover:text-accent"
-            >
-              {t("solarToday")}
-            </button>
             <button
               type="button"
               onClick={() => setSpeedIndex((i) => (i + 1) % SPEEDS.length)}
