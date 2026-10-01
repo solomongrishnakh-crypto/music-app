@@ -113,6 +113,12 @@ export function bodyPosition(id: string, jd: number): Vec3 | null {
   return pointFromEccentricAnomaly(o, solveKepler(M * DEG, o.e));
 }
 
+/** Punkt auf der Bahn von `id` zur exzentrischen Anomalie E (rad), heliozentrisch in AE. */
+export function orbitPointAtE(id: string, E: number): Vec3 | null {
+  const o = ORBITS[id];
+  return o ? pointFromEccentricAnomaly(o, E) : null;
+}
+
 /** Die ganze Bahnellipse als Punktfolge (für die Bahnlinie). */
 export function orbitPath(id: string, segments = 160): Vec3[] {
   const o = ORBITS[id];

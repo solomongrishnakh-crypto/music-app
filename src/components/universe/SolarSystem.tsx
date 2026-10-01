@@ -12,6 +12,7 @@ import {
   jdToDate,
   nextClosestApproach,
   orbitPath,
+  orbitPointAtE,
   SUN_RADIUS_AU,
   type Vec3,
 } from "@/lib/astro/orbits";
@@ -65,6 +66,40 @@ const SPEEDS = [0, LIVE, 1, 10, 100, 1000] as const;
 const DEFAULT_SPEED_INDEX = 1;
 const KM_PER_AU = 149597870.7;
 const LIGHT_KM_PER_MIN = 299792.458 * 60;
+
+/** Strecke auf ein Rechteck zuschneiden (Liang–Barsky); null = komplett außerhalb. */
+function clipSegment(
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
+  xmin: number,
+  ymin: number,
+  xmax: number,
+  ymax: number
+): [number, number, number, number] | null {
+  const dx = x1 - x0;
+  const dy = y1 - y0;
+  let t0 = 0;
+  let t1 = 1;
+  const p = [-dx, dx, -dy, dy];
+  const q = [x0 - xmin, xmax - x0, y0 - ymin, ymax - y0];
+  for (let i = 0; i < 4; i++) {
+    if (p[i] === 0) {
+      if (q[i] < 0) return null;
+    } else {
+      const r = q[i] / p[i];
+      if (p[i] < 0) {
+        if (r > t1) return null;
+        if (r > t0) t0 = r;
+      } else {
+        if (r < t0) return null;
+        if (r < t1) t1 = r;
+      }
+    }
+  }
+  return [x0 + t0 * dx, y0 + t0 * dy, x0 + t1 * dx, y0 + t1 * dy];
+}
 
 function hexToRgb(hex: string): string {
   const h = hex.replace("#", "");
@@ -613,6 +648,9 @@ export default function SolarSystem({
       // Planeten DAVOR sie verdecken (Nutzerkorrektur 29.09.2026: "wieso
       // laufen Planeten über die Sonne").
       function drawSun() {
+        // außerhalb des Bildes? dann gar nicht zeichnen
+        const reach = sunR + Math.max(14, Math.min(sunR * 3, 90)) + 130;
+        if (cx + reach < 0 || cx - reach > size.w || cy + reach < 0 || cy - reach > size.h) return;
         ctx.save();
         ctx.globalCompositeOperation = "lighter";
         // weiter, weicher Schein
@@ -626,7 +664,7 @@ export default function SolarSystem({
         ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
         ctx.fill();
         // Korona: feine, langsam drehende Strahlen, die leicht flackern
-        if (sunR >= 6) {
+        if (sunR >= 6 && sunR < 1500) {
           const rays = 16;
           const rayLen = Math.min(sunR * 1.6, 120);
           for (let k = 0; k < rays; k++) {
@@ -641,7 +679,7 @@ export default function SolarSystem({
             g.addColorStop(0, `rgba(255,240,215,${0.22 * flick})`);
             g.addColorStop(1, "rgba(255,210,150,0)");
             ctx.strokeStyle = g;
-            ctx.lineWidth = Math.max(1, sunR * 0.14);
+            ctx.lineWidth = Math.min(10, Math.max(1, sunR * 0.14));
             ctx.beginPath();
             ctx.moveTo(x1, y1);
             ctx.lineTo(x2, y2);
@@ -662,7 +700,9 @@ export default function SolarSystem({
         ctx.arc(cx, cy, sunR, 0, Math.PI * 2);
         ctx.fill();
         // feine Granulation/Flecken nur bei großer Sonne
-        if (sunR >= 40) {
+        // nur solange die Sonne nicht riesig ist (sonst füllt jeder Fleck den
+        // ganzen Bildschirm → ruckelt)
+        if (sunR >= 40 && sunR < 1500) {
           ctx.save();
           ctx.beginPath();
           ctx.arc(cx, cy, sunR, 0, Math.PI * 2);
@@ -709,7 +749,56 @@ export default function SolarSystem({
         if (!path || path.length < 2) continue;
         const isDwarf = planet.kind === "dwarf";
         ctx.beginPath();
-        if (realMode) {
+        const aPx = realMode && ORBITS[planet.id] ? ORBITS[planet.id].a * pxPerAu : 0;
+        if (realMode && aPx > 4000) {
+          // Nutzerkorrektur 01.10.2026 ("wird immer mehr laggy beim
+          // Ranzoomen"): Bei starkem Zoom ist die Bahn Millionen Pixel groß —
+          // die ganze Ellipse (und bei Zwergplaneten Millionen Strichel) zu
+          // zeichnen, kostete immer mehr Zeit. Jetzt wird nur das Stück der
+          // Bahn gezeichnet, das in der Nähe des Bildes liegt — dafür
+          // dicht abgetastet, also weiterhin exakt.
+          let bestE = 0;
+          let bestD = Infinity;
+          const COARSE = 360;
+          for (let k = 0; k < COARSE; k++) {
+            const E = (k / COARSE) * Math.PI * 2;
+            const q = orbitPointAtE(planet.id, E);
+            if (!q) break;
+            const [qx, qy] = project(q);
+            const dd = (qx - size.w / 2) ** 2 + (qy - size.h / 2) ** 2;
+            if (dd < bestD) {
+              bestD = dd;
+              bestE = E;
+            }
+          }
+          // Feinsuche: genauer Bahnpunkt nächst der Bildmitte (sonst liegt das
+          // kurze Stück bei sehr starkem Zoom neben dem Planeten)
+          const distAt = (E: number) => {
+            const q = orbitPointAtE(planet.id, E);
+            if (!q) return Infinity;
+            const [qx, qy] = project(q);
+            return (qx - size.w / 2) ** 2 + (qy - size.h / 2) ** 2;
+          };
+          let lo = bestE - (Math.PI * 2) / COARSE;
+          let hi = bestE + (Math.PI * 2) / COARSE;
+          for (let it = 0; it < 50; it++) {
+            const m1 = lo + (hi - lo) * 0.382;
+            const m2 = lo + (hi - lo) * 0.618;
+            if (distAt(m1) < distAt(m2)) hi = m2;
+            else lo = m1;
+          }
+          bestE = (lo + hi) / 2;
+          const span = Math.min(Math.PI / 90, (4 * Math.max(size.w, size.h)) / aPx);
+          const SAMPLES = 96;
+          for (let k = 0; k <= SAMPLES; k++) {
+            const E = bestE - span + (2 * span * k) / SAMPLES;
+            const q = orbitPointAtE(planet.id, E);
+            if (!q) break;
+            const [qx, qy] = project(q);
+            if (k === 0) ctx.moveTo(qx, qy);
+            else ctx.lineTo(qx, qy);
+          }
+        } else if (realMode) {
           // Im echten Maßstab ist die Projektion linear → die Bahn ist eine
           // exakte Ellipse. Als echte Kurve gezeichnet (statt Streckenzug),
           // damit sie auch bei extremem Zoom genau durch den Planeten läuft.
@@ -729,9 +818,15 @@ export default function SolarSystem({
             else ctx.lineTo(x, y);
           });
         }
-        if (isDwarf) {
+        // Strichelung nur bei kleinen Bahnen — bei großen wären es zehntausende
+        // Striche pro Bild (ruckelt); dann einfach eine blassere Linie
+        const orbitPx = realMode ? aPx : maxOrbitR;
+        if (isDwarf && orbitPx < 2500) {
           ctx.setLineDash([2, 3]);
           ctx.strokeStyle = "rgba(255,255,255,0.06)";
+        } else if (isDwarf) {
+          ctx.setLineDash([]);
+          ctx.strokeStyle = "rgba(255,255,255,0.04)";
         } else {
           ctx.setLineDash([]);
           ctx.strokeStyle = "rgba(255,255,255,0.08)";
@@ -804,10 +899,15 @@ export default function SolarSystem({
           ctx.setLineDash([3, 4]);
           ctx.strokeStyle = "rgba(255,255,255,0.25)";
           ctx.lineWidth = 1;
-          ctx.beginPath();
-          ctx.moveTo(cx, cy);
-          ctx.lineTo(x, y);
-          ctx.stroke();
+          // Linie auf den sichtbaren Bereich zuschneiden — sonst würden bei
+          // starkem Zoom Millionen Strichel gezeichnet (ruckelt)
+          const seg = clipSegment(cx, cy, x, y, -20, -20, size.w + 20, size.h + 20);
+          if (seg) {
+            ctx.beginPath();
+            ctx.moveTo(seg[0], seg[1]);
+            ctx.lineTo(seg[2], seg[3]);
+            ctx.stroke();
+          }
           ctx.restore();
 
           const isSelectedProbe = interactive && selectedId === planet.id;
@@ -843,6 +943,9 @@ export default function SolarSystem({
 
         const pr = bodyRadius(planet);
         drawn.push({ planet, x, y, r: pr });
+        // außerhalb des Bildes → nicht zeichnen (spart bei starkem Zoom viel)
+        const margin = pr * 2.6 + 30;
+        if (x < -margin || x > size.w + margin || y < -margin || y > size.h + margin) continue;
 
         const isSelected = interactive && selectedId === planet.id;
 
