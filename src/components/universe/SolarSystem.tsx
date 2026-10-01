@@ -96,6 +96,18 @@ export default function SolarSystem({
   // Sekunde neu, die (teurere) Annäherungs-Suche nur, wenn sich das
   // angezeigte Datum um mehr als einen Tag geändert hat.
   const [showDistances, setShowDistances] = useState(false);
+  // Nutzerwunsch 01.10.2026: "man soll auch eine Zeit eingeben können" →
+  // Datum wählen bzw. auf eine Annäherung tippen springt dorthin (pausiert).
+  const [dateInput, setDateInput] = useState("");
+  function jumpTo(jd: number, planet?: PlanetData) {
+    jdRef.current = jd;
+    approachCacheRef.current = null;
+    setSpeedIndex(0);
+    const d = jdToDate(jd);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    setDateInput(`${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`);
+    if (planet) onSelectPlanet?.(planet);
+  }
   const [distanceRows, setDistanceRows] = useState<
     { planet: PlanetData; nowKm: number; next: { jd: number; au: number } | null }[]
   >([]);
@@ -910,12 +922,21 @@ export default function SolarSystem({
                   </td>
                   <td className="py-1 tabular-nums">
                     {row.next ? (
-                      <>
+                      // Antippen springt zu diesem Datum (Nutzerwunsch 01.10.2026)
+                      <button
+                        type="button"
+                        title={t("solarJumpToDate")}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (row.next) jumpTo(row.next.jd, row.planet);
+                        }}
+                        className="text-left underline decoration-dotted underline-offset-2 hover:text-accent"
+                      >
                         {shortDateFmt.format(jdToDate(row.next.jd))}
-                        <span className="block text-[9px] text-muted">
+                        <span className="block text-[9px] text-muted no-underline">
                           {numFmt.format((row.next.au * KM_PER_AU) / 1e6)} {t("solarMillionKm")}
                         </span>
-                      </>
+                      </button>
                     ) : (
                       <span className="text-muted">—</span>
                     )}
@@ -957,10 +978,25 @@ export default function SolarSystem({
             >
               +
             </button>
+            <input
+              type="date"
+              min="1900-01-01"
+              max="2100-12-31"
+              value={dateInput}
+              aria-label={t("solarGoToDate")}
+              title={t("solarGoToDate")}
+              onChange={(e) => {
+                setDateInput(e.target.value);
+                const d = new Date(`${e.target.value}T12:00:00`);
+                if (!Number.isNaN(d.getTime())) jumpTo(dateToJd(d));
+              }}
+              className="label-mono border border-border bg-background/80 px-2 py-1 text-[10px] uppercase text-muted [color-scheme:dark] hover:border-accent focus:border-accent focus:outline-none"
+            />
             <button
               type="button"
               onClick={() => {
                 jdRef.current = dateToJd(new Date());
+                setSpeedIndex(SPEEDS.indexOf(LIVE));
               }}
               className="label-mono border border-border bg-background/80 whitespace-nowrap px-2 py-1 text-[10px] uppercase text-muted transition-colors hover:border-accent hover:text-accent"
             >

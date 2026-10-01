@@ -286,6 +286,14 @@ const TRANSLATIONS_SOURCE = {
     tr: "Hızlandırılmış gerçek yörüngeler ve hızlar · NASA/JPL yörünge verileri", ru: "Реальные орбиты и скорости в ускоренном режиме · данные NASA/JPL",
     pt: "Órbitas e velocidades reais em time-lapse · dados orbitais da NASA/JPL", ar: "مدارات وسرعات حقيقية بتسريع زمني · بيانات مدارات NASA/JPL", el: "Πραγματικές τροχιές & ταχύτητες σε επιτάχυνση · τροχιακά δεδομένα NASA/JPL",
   },
+  solarGoToDate: {
+    de: "Datum wählen", en: "Choose date", hi: "तिथि चुनें", zh: "选择日期", ko: "날짜 선택", ja: "日付を選択",
+    es: "Elegir fecha", fr: "Choisir une date", tr: "Tarih seç", ru: "Выбрать дату", pt: "Escolher data", ar: "اختر التاريخ", el: "Επιλογή ημερομηνίας",
+  },
+  solarJumpToDate: {
+    de: "Zu diesem Datum springen", en: "Jump to this date", hi: "इस तिथि पर जाएँ", zh: "跳转到此日期", ko: "이 날짜로 이동", ja: "この日付へ移動",
+    es: "Ir a esta fecha", fr: "Aller à cette date", tr: "Bu tarihe git", ru: "Перейти к этой дате", pt: "Ir para esta data", ar: "الانتقال إلى هذا التاريخ", el: "Μετάβαση σε αυτή την ημερομηνία",
+  },
   solarDistances: {
     de: "Abstand zur Erde", en: "Distance from Earth", hi: "पृथ्वी से दूरी", zh: "与地球的距离", ko: "지구와의 거리", ja: "地球からの距離",
     es: "Distancia a la Tierra", fr: "Distance à la Terre", tr: "Dünya'ya uzaklık", ru: "Расстояние до Земли", pt: "Distância da Terra", ar: "المسافة عن الأرض", el: "Απόσταση από τη Γη",
