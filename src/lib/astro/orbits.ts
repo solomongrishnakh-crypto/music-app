@@ -125,3 +125,49 @@ export function orbitPath(id: string, segments = 160): Vec3[] {
 }
 
 export const SUN_RADIUS_AU = 695700 / KM_PER_AU;
+
+/** Abstand zweier Körper in AE zum Datum jd. */
+export function distanceAu(a: string, b: string, jd: number): number | null {
+  const pa = bodyPosition(a, jd);
+  const pb = bodyPosition(b, jd);
+  if (!pa || !pb) return null;
+  return Math.hypot(pa[0] - pb[0], pa[1] - pb[1], pa[2] - pb[2]);
+}
+
+/**
+ * Nächste größte Annäherung von `id` an die Erde ab Datum jd (Nutzerwunsch
+ * 01.10.2026: "wann kommt Mars nah"). Sucht in Tagesschritten das nächste
+ * lokale Minimum des Abstands und verfeinert es auf ~1 Stunde. Gibt null
+ * zurück, wenn im Suchzeitraum keins liegt (Pluto & Co. schwanken kaum).
+ */
+export function nextClosestApproach(
+  id: string,
+  jd: number,
+  maxDays = 1200
+): { jd: number; au: number } | null {
+  const d = (t: number) => distanceAu(id, "earth", t) ?? Infinity;
+  let prev = d(jd);
+  let cur = d(jd + 1);
+  // Steht der Planet gerade im Minimum bzw. kommt näher, ab jetzt suchen
+  for (let day = 1; day < maxDays; day++) {
+    const next = d(jd + day + 1);
+    if (cur <= prev && cur < next) {
+      // Feinsuche (Goldener Schnitt) im Intervall [day-1, day+1]
+      let lo = jd + day - 1;
+      let hi = jd + day + 1;
+      for (let k = 0; k < 40; k++) {
+        const m1 = lo + (hi - lo) * 0.382;
+        const m2 = lo + (hi - lo) * 0.618;
+        if (d(m1) < d(m2)) hi = m2;
+        else lo = m1;
+      }
+      const t = (lo + hi) / 2;
+      return { jd: t, au: d(t) };
+    }
+    prev = cur;
+    cur = next;
+  }
+  return null;
+}
+
+export const KM_PER_AU_EXPORT = KM_PER_AU;

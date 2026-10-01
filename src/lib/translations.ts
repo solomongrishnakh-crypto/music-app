@@ -266,6 +266,38 @@ const TRANSLATIONS_SOURCE = {
     de: "Tage/s", en: "days/s", hi: "दिन/से", zh: "天/秒", ko: "일/초", ja: "日/秒",
     es: "días/s", fr: "jours/s", tr: "gün/sn", ru: "дн./с", pt: "dias/s", ar: "يوم/ث", el: "ημέρες/δ",
   },
+  // Nutzerwunsch 01.10.2026: Live-Bewegung + "wann kommt Mars nah"
+  solarLive: {
+    de: "Live", en: "Live", hi: "लाइव", zh: "实时", ko: "실시간", ja: "ライブ",
+    es: "En vivo", fr: "En direct", tr: "Canlı", ru: "Онлайн", pt: "Ao vivo", ar: "مباشر", el: "Ζωντανά",
+  },
+  solarDistances: {
+    de: "Abstand zur Erde", en: "Distance from Earth", hi: "पृथ्वी से दूरी", zh: "与地球的距离", ko: "지구와의 거리", ja: "地球からの距離",
+    es: "Distancia a la Tierra", fr: "Distance à la Terre", tr: "Dünya'ya uzaklık", ru: "Расстояние до Земли", pt: "Distância da Terra", ar: "المسافة عن الأرض", el: "Απόσταση από τη Γη",
+  },
+  solarNow: {
+    de: "Jetzt", en: "Now", hi: "अभी", zh: "现在", ko: "지금", ja: "現在",
+    es: "Ahora", fr: "Maintenant", tr: "Şimdi", ru: "Сейчас", pt: "Agora", ar: "الآن", el: "Τώρα",
+  },
+  solarNextClosest: {
+    de: "Nächste Annäherung", en: "Next closest approach", hi: "अगला निकटतम दृष्टिकोण", zh: "下次最接近", ko: "다음 최근접", ja: "次の最接近",
+    es: "Próxima máxima aproximación", fr: "Prochain rapprochement", tr: "Sonraki en yakın yaklaşım", ru: "Следующее сближение", pt: "Próxima aproximação máxima", ar: "أقرب اقتراب قادم", el: "Επόμενη μέγιστη προσέγγιση",
+  },
+  solarMillionKm: {
+    de: "Mio. km", en: "million km", hi: "मिलियन किमी", zh: "百万公里", ko: "백만 km", ja: "百万km",
+    es: "mill. km", fr: "millions km", tr: "milyon km", ru: "млн км", pt: "milhões km", ar: "مليون كم", el: "εκατ. χλμ.",
+  },
+  solarLightMinutes: {
+    de: "Licht-Min.", en: "light-min", hi: "प्रकाश-मिनट", zh: "光分", ko: "광분", ja: "光分",
+    es: "min-luz", fr: "min-lumière", tr: "ışık-dk", ru: "свет. мин", pt: "min-luz", ar: "دقيقة ضوئية", el: "λεπτά φωτός",
+  },
+  solarDistanceNote: {
+    de: "Berechnet aus NASA/JPL-Bahndaten zum angezeigten Datum.", en: "Calculated from NASA/JPL orbital data for the date shown.",
+    hi: "दिखाई गई तिथि के लिए NASA/JPL कक्षीय डेटा से गणना।", zh: "根据NASA/JPL轨道数据按所示日期计算。", ko: "표시된 날짜 기준 NASA/JPL 궤도 데이터로 계산.", ja: "表示日付のNASA/JPL軌道データから計算。",
+    es: "Calculado con datos orbitales de NASA/JPL para la fecha mostrada.", fr: "Calculé à partir des données orbitales NASA/JPL pour la date affichée.",
+    tr: "Gösterilen tarih için NASA/JPL yörünge verilerinden hesaplandı.", ru: "Рассчитано по орбитальным данным NASA/JPL на показанную дату.",
+    pt: "Calculado a partir de dados orbitais da NASA/JPL para a data mostrada.", ar: "محسوب من بيانات مدارات NASA/JPL للتاريخ المعروض.", el: "Υπολογισμένο από τροχιακά δεδομένα NASA/JPL για την εμφανιζόμενη ημερομηνία.",
+  },
   solarToday: {
     de: "Heute", en: "Today", hi: "आज", zh: "今天", ko: "오늘", ja: "今日",
     es: "Hoy", fr: "Aujourd'hui", tr: "Bugün", ru: "Сегодня", pt: "Hoje", ar: "اليوم", el: "Σήμερα",

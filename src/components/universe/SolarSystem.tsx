@@ -4,7 +4,16 @@ import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import { PLANETS, ALL_BODIES, SUN, type PlanetData } from "@/data/solarSystem";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { localize } from "@/lib/i18n";
-import { bodyPosition, dateToJd, jdToDate, orbitPath, SUN_RADIUS_AU, type Vec3 } from "@/lib/astro/orbits";
+import {
+  bodyPosition,
+  dateToJd,
+  distanceAu,
+  jdToDate,
+  nextClosestApproach,
+  orbitPath,
+  SUN_RADIUS_AU,
+  type Vec3,
+} from "@/lib/astro/orbits";
 
 interface DrawnPlanet {
   planet: PlanetData;
@@ -48,8 +57,13 @@ interface SolarSystemProps {
 type ScaleMode = "compact" | "real";
 // Tage pro Sekunde; 0 = Pause (nötig bei starkem Zoom, sonst fliegt der
 // Planet in Sekundenbruchteilen aus dem Bild)
-const SPEEDS = [0, 1, 10, 100, 1000] as const;
-const DEFAULT_SPEED_INDEX = 2;
+// LIVE = echte Zeit (1 Sekunde = 1 Sekunde); Nutzerwunsch 01.10.2026
+// ("realistischer mit Live-Bewegung") → Standard beim Öffnen.
+const LIVE = 1 / 86400;
+const SPEEDS = [0, LIVE, 1, 10, 100, 1000] as const;
+const DEFAULT_SPEED_INDEX = 1;
+const KM_PER_AU = 149597870.7;
+const LIGHT_KM_PER_MIN = 299792.458 * 60;
 
 export default function SolarSystem({
   mode = "full",
@@ -76,6 +90,47 @@ export default function SolarSystem({
   useEffect(() => {
     speedRef.current = SPEEDS[speedIndex];
   }, [speedIndex]);
+
+  // Live-Abstände zur Erde + nächste größte Annäherung (Nutzerwunsch
+  // 01.10.2026: "ich will wissen, wann Mars nah wird"). Abstände jede
+  // Sekunde neu, die (teurere) Annäherungs-Suche nur, wenn sich das
+  // angezeigte Datum um mehr als einen Tag geändert hat.
+  const [showDistances, setShowDistances] = useState(false);
+  const [distanceRows, setDistanceRows] = useState<
+    { planet: PlanetData; nowKm: number; next: { jd: number; au: number } | null }[]
+  >([]);
+  const approachCacheRef = useRef<{ jd: number; map: Map<string, { jd: number; au: number } | null> } | null>(null);
+  useEffect(() => {
+    if (!showDistances) return;
+    function update() {
+      const jd = jdRef.current;
+      let cache = approachCacheRef.current;
+      if (!cache || Math.abs(cache.jd - jd) > 1) {
+        const map = new Map<string, { jd: number; au: number } | null>();
+        for (const b of ALL_BODIES) {
+          if (b.id !== "earth") map.set(b.id, b.kind === "probe" ? null : nextClosestApproach(b.id, jd));
+        }
+        cache = { jd, map };
+        approachCacheRef.current = cache;
+      }
+      const rows = ALL_BODIES.filter((b) => b.id !== "earth").map((planet) => {
+        const au = distanceAu(planet.id, "earth", jd) ?? 0;
+        const next = cache!.map.get(planet.id) ?? null;
+        // vergangene Annäherungen (bei schnellem Zeitraffer) nicht anzeigen
+        return { planet, nowKm: au * KM_PER_AU, next: next && next.jd >= jd ? next : null };
+      });
+      setDistanceRows(rows);
+    }
+    update();
+    const id = setInterval(update, 1000);
+    return () => clearInterval(id);
+  }, [showDistances]);
+  const numFmt = useMemo(() => new Intl.NumberFormat(lang, { maximumFractionDigits: 1, minimumFractionDigits: 1 }), [lang]);
+  const lightFmt = useMemo(() => new Intl.NumberFormat(lang, { maximumFractionDigits: 1 }), [lang]);
+  const shortDateFmt = useMemo(
+    () => new Intl.DateTimeFormat(lang, { year: "numeric", month: "short", day: "numeric" }),
+    [lang]
+  );
 
   // Bahnellipsen einmalig als 3D-Punktfolgen (AE) vorberechnen.
   const orbitPaths = useMemo(() => {
@@ -212,19 +267,33 @@ export default function SolarSystem({
     const followStart = performance.now();
     let lastDateKey = "";
     const dateFmt = new Intl.DateTimeFormat(lang, { year: "numeric", month: "short", day: "numeric" });
+    const dateTimeFmt = new Intl.DateTimeFormat(lang, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
 
     function draw(now: number) {
       const dtMs = Math.min(100, now - lastTime);
       lastTime = now;
-      jdRef.current += (speedRef.current * dtMs) / 1000;
+      if (speedRef.current === LIVE) {
+        // Live: exakt die echte Uhrzeit, keine aufsummierte Abweichung
+        jdRef.current = dateToJd(new Date());
+      } else {
+        jdRef.current += (speedRef.current * dtMs) / 1000;
+      }
       stepMotionRef.current(dtMs);
       const jd = jdRef.current;
 
       if (dateLabelRef.current) {
-        const key = Math.floor(jd).toString();
+        const live = speedRef.current === LIVE;
+        const key = live ? Math.floor(jd * 86400).toString() : Math.floor(jd).toString();
         if (key !== lastDateKey) {
           lastDateKey = key;
-          dateLabelRef.current.textContent = dateFmt.format(jdToDate(jd));
+          dateLabelRef.current.textContent = (live ? dateTimeFmt : dateFmt).format(jdToDate(jd));
         }
       }
 
@@ -809,6 +878,55 @@ export default function SolarSystem({
         className={interactive ? "cursor-grab touch-none" : ""}
         aria-label={t("solarSystemVisAria")}
       />
+      {interactive && showDistances && (
+        <div className="absolute inset-x-2 top-2 z-10 max-h-[55%] overflow-y-auto border border-border bg-background/90 p-3 backdrop-blur-sm sm:left-auto sm:right-3 sm:top-3 sm:w-[25rem]">
+          <p className="label-mono text-[10px] uppercase text-accent">{t("solarDistances")}</p>
+          <table className="mt-2 w-full border-collapse text-left text-[11px]">
+            <thead>
+              <tr className="label-mono text-[9px] uppercase text-muted">
+                <th className="pb-1 pr-2 font-normal" />
+                <th className="pb-1 pr-2 font-normal">{t("solarNow")}</th>
+                <th className="pb-1 font-normal">{t("solarNextClosest")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {distanceRows.map((row) => (
+                <tr
+                  key={row.planet.id}
+                  className={`cursor-pointer border-t border-border/60 align-top hover:bg-accent/10 ${
+                    selectedId === row.planet.id ? "text-accent" : "text-foreground"
+                  }`}
+                  onClick={() => onSelectPlanet?.(row.planet)}
+                >
+                  <td className="py-1 pr-2">
+                    <span className="mr-1.5 inline-block h-2 w-2 rounded-full" style={{ background: row.planet.color }} />
+                    {localize(row.planet.name, lang)}
+                  </td>
+                  <td className="py-1 pr-2 tabular-nums">
+                    {numFmt.format(row.nowKm / 1e6)} {t("solarMillionKm")}
+                    <span className="block text-[9px] text-muted">
+                      {lightFmt.format(row.nowKm / LIGHT_KM_PER_MIN)} {t("solarLightMinutes")}
+                    </span>
+                  </td>
+                  <td className="py-1 tabular-nums">
+                    {row.next ? (
+                      <>
+                        {shortDateFmt.format(jdToDate(row.next.jd))}
+                        <span className="block text-[9px] text-muted">
+                          {numFmt.format((row.next.au * KM_PER_AU) / 1e6)} {t("solarMillionKm")}
+                        </span>
+                      </>
+                    ) : (
+                      <span className="text-muted">—</span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="mt-2 text-[9px] text-muted">{t("solarDistanceNote")}</p>
+        </div>
+      )}
       {interactive && (
         <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-2 p-2 sm:p-3">
           <div className="label-mono text-[10px] uppercase text-muted">
@@ -848,7 +966,23 @@ export default function SolarSystem({
               onClick={() => setSpeedIndex((i) => (i + 1) % SPEEDS.length)}
               className="label-mono border border-border bg-background/80 whitespace-nowrap px-2 py-1 text-[10px] uppercase text-muted transition-colors hover:border-accent hover:text-accent"
             >
-              {SPEEDS[speedIndex] === 0 ? "❚❚" : `${SPEEDS[speedIndex]} ${t("solarDaysPerSecond")}`}
+              {SPEEDS[speedIndex] === 0
+                ? "❚❚"
+                : SPEEDS[speedIndex] === LIVE
+                  ? `● ${t("solarLive")}`
+                  : `${SPEEDS[speedIndex]} ${t("solarDaysPerSecond")}`}
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowDistances((v) => !v)}
+              aria-pressed={showDistances}
+              className={`label-mono border whitespace-nowrap px-2 py-1 text-[10px] uppercase transition-colors ${
+                showDistances
+                  ? "border-accent bg-accent/15 text-accent"
+                  : "border-border bg-background/80 text-muted hover:border-accent hover:text-accent"
+              }`}
+            >
+              {t("solarDistances")}
             </button>
             <button
               type="button"
