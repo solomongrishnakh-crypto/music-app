@@ -5,6 +5,7 @@ import { PLANETS, ALL_BODIES, SUN, type PlanetData } from "@/data/solarSystem";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { localize } from "@/lib/i18n";
 import {
+  ORBITS,
   bodyPosition,
   dateToJd,
   distanceAu,
@@ -64,6 +65,22 @@ const SPEEDS = [0, LIVE, 1, 10, 100, 1000] as const;
 const DEFAULT_SPEED_INDEX = 1;
 const KM_PER_AU = 149597870.7;
 const LIGHT_KM_PER_MIN = 299792.458 * 60;
+
+function hexToRgb(hex: string): string {
+  const h = hex.replace("#", "");
+  const n = parseInt(h.length === 3 ? h.split("").map((c) => c + c).join("") : h, 16);
+  return `${(n >> 16) & 255},${(n >> 8) & 255},${n & 255}`;
+}
+
+// Farbe des Atmosphären-Saums (Planeten mit nennenswerter Atmosphäre)
+const ATMOSPHERE: Record<string, string> = {
+  earth: "110,170,255",
+  venus: "255,228,170",
+  mars: "255,150,120",
+  jupiter: "255,215,170",
+  uranus: "170,235,240",
+  neptune: "120,150,255",
+};
 
 export default function SolarSystem({
   mode = "full",
@@ -155,7 +172,12 @@ export default function SolarSystem({
   // ein Re-Render pro Mausbewegung wäre unnötig teuer.
   const zoomRef = useRef(1);
   const rotateRef = useRef(0); // zusätzliche Drehung der Ansicht (Radiant)
-  const tiltRef = useRef(0.94); // 1 = senkrecht von oben, 0.22 = fast von der Seite
+  const tiltRef = useRef(0.94); // = sin(Blickhöhe): 1 = senkrecht von oben, klein = fast von der Seite
+  // Nutzerkorrektur 01.10.2026 ("vertikal Sensitivity, fix es"): Die Neigung
+  // wird jetzt als echter Winkel geführt (vorher direkt der Sinus — dadurch
+  // reagierte sie oben träge und unten sprunghaft) und zieht in dieselbe
+  // Richtung wie in 3D-Programmen: nach unten ziehen = mehr von oben.
+  const elevRef = useRef(Math.asin(0.94));
   const dragRef = useRef<{ x: number; y: number; dragged: boolean; pan: boolean; t: number } | null>(null);
   const stepMotionRef = useRef<(dtMs: number) => void>(() => {});
   // Nutzerwunsch 20.09.2026 ("man kann auch nicht zoomen"): Wheel (Desktop)
@@ -178,16 +200,29 @@ export default function SolarSystem({
   // Sehr wenige, sehr dezente Hintergrundsterne (Nutzerwunsch: "sterne im
   // hintergrund soll kaum sehbar sein") — fest generiert, kein Funkeln,
   // damit sie nicht von den Planeten ablenken.
-  const stars = useMemo(
-    () =>
-      Array.from({ length: mode === "compact" ? 25 : 90 }, () => ({
-        x: Math.random(),
-        y: Math.random(),
-        r: Math.random() < 0.85 ? 0.6 : 1,
-        a: 0.08 + Math.random() * 0.14,
-      })),
-    [mode]
-  );
+  // Nutzerwunsch 01.10.2026 ("realistischer und moderner"): dichteres,
+  // farbiges Sternenfeld mit angedeuteter Milchstraße; es verschiebt sich
+  // beim Drehen/Neigen leicht mit (Parallaxe → räumlicher Eindruck).
+  const stars = useMemo(() => {
+    const STAR_TINTS = ["255,255,255", "200,220,255", "255,236,210", "255,214,190"];
+    const n = mode === "compact" ? 60 : 260;
+    return Array.from({ length: n }, (_, i) => {
+      // ein Teil der Sterne liegt im Band der Milchstraße (diagonal)
+      const inBand = i % 3 === 0;
+      const u = Math.random();
+      const x = inBand ? u : Math.random();
+      const y = inBand ? Math.min(1, Math.max(0, 0.15 + u * 0.7 + (Math.random() - 0.5) * 0.18)) : Math.random();
+      return {
+        x,
+        y,
+        r: Math.random() < 0.8 ? 0.5 + Math.random() * 0.4 : 0.9 + Math.random() * 0.6,
+        a: 0.12 + Math.random() * 0.4,
+        tint: STAR_TINTS[Math.floor(Math.random() * STAR_TINTS.length)],
+        tw: Math.random() < 0.25 ? 0.6 + Math.random() * 1.6 : 0,
+        ph: Math.random() * 6.28,
+      };
+    });
+  }, [mode]);
 
   useEffect(() => {
     const el = containerRef.current;
@@ -274,6 +309,117 @@ export default function SolarSystem({
     // Zoom stimmt das Verhältnis exakt.
     const OVERVIEW_ENLARGE = 3;
     const minDot = mode === "compact" ? 0.9 : smallCanvas ? 1.3 : 1.6;
+
+    /**
+     * Oberflächen-Details (nur bei ausreichender Größe sichtbar):
+     * Wolkenbänder der Gasriesen inkl. Großem Roten Fleck, Kontinente und
+     * Wolken der Erde, Polkappen des Mars, Krater auf Merkur. Rein optisch
+     * angedeutet; die Planeten drehen sich dabei langsam.
+     */
+    function drawSurface(id: string, x: number, y: number, r: number, t: number) {
+      const band = (fy: number, h: number, color: string) => {
+        ctx.fillStyle = color;
+        ctx.fillRect(x - r, y + fy * r, r * 2, h * r);
+      };
+      if (id === "jupiter") {
+        const rows: [number, number, string][] = [
+          [-0.95, 0.25, "rgba(150,110,80,0.35)"],
+          [-0.55, 0.18, "rgba(250,236,215,0.35)"],
+          [-0.3, 0.22, "rgba(160,95,60,0.45)"],
+          [-0.02, 0.16, "rgba(255,240,222,0.35)"],
+          [0.16, 0.22, "rgba(170,105,70,0.45)"],
+          [0.5, 0.2, "rgba(245,228,205,0.3)"],
+          [0.75, 0.25, "rgba(140,100,75,0.35)"],
+        ];
+        for (const [fy, h, c] of rows) band(fy, h, c);
+        const lon = t * 0.25;
+        if (Math.cos(lon) > 0) {
+          ctx.fillStyle = "rgba(195,90,55,0.75)";
+          ctx.beginPath();
+          ctx.ellipse(x + Math.sin(lon) * r * 0.7, y + r * 0.3, r * 0.22 * Math.cos(lon) + 0.5, r * 0.12, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (id === "saturn") {
+        band(-0.7, 0.3, "rgba(200,170,120,0.3)");
+        band(-0.25, 0.2, "rgba(255,240,210,0.3)");
+        band(0.1, 0.25, "rgba(190,160,110,0.3)");
+        band(0.55, 0.3, "rgba(170,140,100,0.3)");
+      } else if (id === "earth") {
+        const continents: [number, number, number, number][] = [
+          [0, -0.25, 0.32, 0.28],
+          [1.4, 0.15, 0.25, 0.35],
+          [2.6, -0.35, 0.4, 0.22],
+          [3.9, 0.3, 0.22, 0.3],
+          [5.0, -0.05, 0.3, 0.2],
+        ];
+        for (const [lon0, lat, w, h] of continents) {
+          const lon = lon0 + t * 0.2;
+          const c = Math.cos(lon);
+          if (c <= 0.05) continue;
+          ctx.fillStyle = "rgba(80,140,75,0.8)";
+          ctx.beginPath();
+          ctx.ellipse(x + Math.sin(lon) * r * 0.75, y + lat * r, r * w * c, r * h, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = "rgba(240,248,255,0.85)";
+        ctx.beginPath();
+        ctx.ellipse(x, y - r * 0.95, r * 0.5, r * 0.16, 0, 0, Math.PI * 2);
+        ctx.ellipse(x, y + r * 0.95, r * 0.45, r * 0.14, 0, 0, Math.PI * 2);
+        ctx.fill();
+        for (let k = 0; k < 4; k++) {
+          const lon = k * 1.7 + t * 0.32;
+          const c = Math.cos(lon);
+          if (c <= 0) continue;
+          ctx.fillStyle = "rgba(255,255,255,0.35)";
+          ctx.beginPath();
+          ctx.ellipse(x + Math.sin(lon) * r * 0.7, y + (k % 2 ? 0.45 : -0.55) * r, r * 0.45 * c, r * 0.08, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (id === "mars") {
+        for (let k = 0; k < 4; k++) {
+          const lon = k * 1.6 + t * 0.2;
+          const c = Math.cos(lon);
+          if (c <= 0.05) continue;
+          ctx.fillStyle = "rgba(110,45,30,0.5)";
+          ctx.beginPath();
+          ctx.ellipse(x + Math.sin(lon) * r * 0.7, y + (k % 2 ? 0.25 : -0.15) * r, r * 0.3 * c, r * 0.18, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.fillStyle = "rgba(250,245,240,0.85)";
+        ctx.beginPath();
+        ctx.ellipse(x, y - r * 0.92, r * 0.35, r * 0.13, 0, 0, Math.PI * 2);
+        ctx.fill();
+      } else if (id === "venus") {
+        band(-0.6, 0.35, "rgba(255,245,215,0.25)");
+        band(0.05, 0.3, "rgba(210,170,100,0.2)");
+      } else if (id === "mercury") {
+        const craters: [number, number, number][] = [
+          [-0.3, -0.2, 0.18],
+          [0.35, 0.1, 0.12],
+          [0, 0.45, 0.15],
+          [-0.45, 0.35, 0.09],
+          [0.2, -0.5, 0.1],
+        ];
+        for (const [fx, fy, fr] of craters) {
+          ctx.fillStyle = "rgba(90,85,80,0.45)";
+          ctx.beginPath();
+          ctx.arc(x + fx * r, y + fy * r, fr * r, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      } else if (id === "uranus") {
+        band(-0.2, 0.4, "rgba(220,250,250,0.18)");
+      } else if (id === "neptune") {
+        band(-0.5, 0.2, "rgba(150,180,255,0.25)");
+        band(0.2, 0.15, "rgba(40,60,160,0.35)");
+        const lon = t * 0.3 + 1;
+        if (Math.cos(lon) > 0) {
+          ctx.fillStyle = "rgba(30,40,110,0.6)";
+          ctx.beginPath();
+          ctx.ellipse(x + Math.sin(lon) * r * 0.6, y - r * 0.2, r * 0.18 * Math.cos(lon) + 0.4, r * 0.1, 0, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
 
     let lastTime = performance.now();
     const followStart = performance.now();
@@ -373,39 +519,99 @@ export default function SolarSystem({
 
       ctx.clearRect(0, 0, size.w, size.h);
 
-      // Hintergrundsterne
-      ctx.save();
+      // Hintergrund: Milchstraßen-Schimmer + Sterne mit Parallaxe
+      const tSec = now / 1000;
+      const shiftX = ((rot * 70) % size.w + size.w) % size.w;
+      const shiftY = (1 - tilt) * 40;
+      if (interactive) {
+        const band = ctx.createLinearGradient(0, size.h * 0.1 + shiftY * 0.5, size.w, size.h * 0.9 + shiftY * 0.5);
+        band.addColorStop(0, "rgba(120,110,160,0)");
+        band.addColorStop(0.45, "rgba(150,130,170,0.035)");
+        band.addColorStop(0.5, "rgba(190,160,170,0.055)");
+        band.addColorStop(0.55, "rgba(150,130,170,0.035)");
+        band.addColorStop(1, "rgba(120,110,160,0)");
+        ctx.fillStyle = band;
+        ctx.fillRect(0, 0, size.w, size.h);
+      }
       for (const s of stars) {
-        ctx.globalAlpha = s.a;
-        ctx.fillStyle = "#ffffff";
+        let a = s.a;
+        if (s.tw) a *= 0.65 + 0.35 * Math.sin(tSec * s.tw + s.ph);
+        const sx = (s.x * size.w + shiftX) % size.w;
+        const sy = ((s.y * size.h + shiftY) % size.h + size.h) % size.h;
+        ctx.fillStyle = `rgba(${s.tint},${a})`;
         ctx.beginPath();
-        ctx.arc(s.x * size.w, s.y * size.h, s.r, 0, Math.PI * 2);
+        ctx.arc(sx, sy, s.r, 0, Math.PI * 2);
         ctx.fill();
       }
-      ctx.restore();
 
       // Sonne (mit Glühen) — wird erst in der Tiefen-Reihenfolge unten
       // gezeichnet, damit Planeten HINTER der Sonne verdeckt werden und
       // Planeten DAVOR sie verdecken (Nutzerkorrektur 29.09.2026: "wieso
       // laufen Planeten über die Sonne").
       function drawSun() {
-        const glowR = sunR + Math.max(10, Math.min(sunR * 2.2, 60));
-        const sunGlow = ctx.createRadialGradient(cx, cy, 0, cx, cy, glowR);
-        sunGlow.addColorStop(0, "rgba(255,196,110,0.55)");
-        sunGlow.addColorStop(1, "rgba(255,196,110,0)");
+        ctx.save();
+        ctx.globalCompositeOperation = "lighter";
+        // weiter, weicher Schein
+        const glowR = sunR + Math.max(14, Math.min(sunR * 3, 90));
+        const sunGlow = ctx.createRadialGradient(cx, cy, sunR * 0.6, cx, cy, glowR);
+        sunGlow.addColorStop(0, "rgba(255,190,110,0.5)");
+        sunGlow.addColorStop(0.35, "rgba(255,140,60,0.16)");
+        sunGlow.addColorStop(1, "rgba(255,120,40,0)");
         ctx.fillStyle = sunGlow;
         ctx.beginPath();
         ctx.arc(cx, cy, glowR, 0, Math.PI * 2);
         ctx.fill();
+        // Korona: feine, langsam drehende Strahlen, die leicht flackern
+        if (sunR >= 6) {
+          const rays = 28;
+          const rayLen = Math.min(sunR * 1.6, 120);
+          for (let k = 0; k < rays; k++) {
+            const ang = (k / rays) * Math.PI * 2 + tSec * 0.03;
+            const flick = 0.55 + 0.45 * Math.sin(tSec * (0.7 + (k % 5) * 0.23) + k * 1.7);
+            const len = rayLen * (0.45 + 0.55 * flick);
+            const x1 = cx + Math.cos(ang) * sunR * 0.9;
+            const y1 = cy + Math.sin(ang) * sunR * 0.9;
+            const x2 = cx + Math.cos(ang) * (sunR + len);
+            const y2 = cy + Math.sin(ang) * (sunR + len);
+            const g = ctx.createLinearGradient(x1, y1, x2, y2);
+            g.addColorStop(0, `rgba(255,200,130,${0.22 * flick})`);
+            g.addColorStop(1, "rgba(255,150,70,0)");
+            ctx.strokeStyle = g;
+            ctx.lineWidth = Math.max(1, sunR * 0.14);
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.stroke();
+          }
+        }
+        ctx.restore();
 
-        const sunBody = ctx.createRadialGradient(cx - sunR * 0.3, cy - sunR * 0.3, sunR * 0.1, cx, cy, sunR);
-        sunBody.addColorStop(0, "#fff3d6");
-        sunBody.addColorStop(0.5, "#ffcf6b");
-        sunBody.addColorStop(1, "#ff9a3c");
+        // Sonnenscheibe mit Randverdunkelung (wie auf echten Sonnenfotos)
+        const sunBody = ctx.createRadialGradient(cx, cy, 0, cx, cy, sunR);
+        sunBody.addColorStop(0, "#fffaf0");
+        sunBody.addColorStop(0.45, "#ffe3a1");
+        sunBody.addColorStop(0.8, "#ffb54d");
+        sunBody.addColorStop(1, "#f07a26");
         ctx.fillStyle = sunBody;
         ctx.beginPath();
         ctx.arc(cx, cy, sunR, 0, Math.PI * 2);
         ctx.fill();
+        // feine Granulation/Flecken nur bei großer Sonne
+        if (sunR >= 40) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(cx, cy, sunR, 0, Math.PI * 2);
+          ctx.clip();
+          for (let k = 0; k < 60; k++) {
+            const a2 = k * 2.399 + tSec * 0.01;
+            const rr = Math.sqrt((k + 0.5) / 60) * sunR;
+            ctx.fillStyle = `rgba(255,${150 + (k % 3) * 25},80,0.08)`;
+            ctx.beginPath();
+            ctx.arc(cx + Math.cos(a2) * rr, cy + Math.sin(a2) * rr, sunR * 0.09, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          ctx.restore();
+        }
       }
 
       const drawn: DrawnPlanet[] = [];
@@ -460,15 +666,50 @@ export default function SolarSystem({
         }
         if (isDwarf) {
           ctx.setLineDash([2, 3]);
-          ctx.strokeStyle = "rgba(255,255,255,0.08)";
+          ctx.strokeStyle = "rgba(255,255,255,0.06)";
         } else {
           ctx.setLineDash([]);
-          ctx.strokeStyle = "rgba(255,255,255,0.12)";
+          ctx.strokeStyle = "rgba(255,255,255,0.08)";
         }
         ctx.lineWidth = 1;
         ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Leuchtspur in Planetenfarbe hinter dem Planeten (zeigt die
+        // Bewegungsrichtung). Bei extremem Zoom im echten Maßstab wäre der
+        // Streckenzug zu ungenau → dann nur die exakte Bahnlinie.
+        const posNow = bodyPosition(planet.id, jd);
+        const o = ORBITS[planet.id];
+        const chordErrorPx = realMode && o ? o.a * pxPerAu * 0.0002 : 0;
+        if (posNow && chordErrorPx < 1.5) {
+          let i0 = 0;
+          let best = Infinity;
+          for (let k = 0; k < path.length; k++) {
+            const d2 = (path[k][0] - posNow[0]) ** 2 + (path[k][1] - posNow[1]) ** 2 + (path[k][2] - posNow[2]) ** 2;
+            if (d2 < best) {
+              best = d2;
+              i0 = k;
+            }
+          }
+          const n = path.length - 1;
+          const L = isDwarf ? 28 : 46;
+          const rgb = hexToRgb(planet.color);
+          let [px, py] = project(posNow);
+          for (let k = 1; k <= L; k++) {
+            const idx = (((i0 - k) % n) + n) % n;
+            const [qx, qy] = project(path[idx]);
+            const f = 1 - k / L;
+            ctx.strokeStyle = `rgba(${rgb},${(isDwarf ? 0.22 : 0.42) * f * f})`;
+            ctx.lineWidth = isDwarf ? 1 : 1.6;
+            ctx.beginPath();
+            ctx.moveTo(px, py);
+            ctx.lineTo(qx, qy);
+            ctx.stroke();
+            px = qx;
+            py = qy;
+          }
+        }
       }
-      ctx.setLineDash([]);
 
       // 2) Himmelskörper an ihrer echten Position zum simulierten Datum,
       //    von hinten nach vorne gezeichnet (Sonne an ihrer Tiefe dazwischen)
@@ -537,32 +778,51 @@ export default function SolarSystem({
 
         const isSelected = interactive && selectedId === planet.id;
 
-        // Saturn-Ringe (Ringebene ~27° gegen die Bahn geneigt)
-        if (planet.hasRings) {
-          ctx.save();
-          ctx.translate(x, y);
-          ctx.rotate(-0.35);
-          ctx.strokeStyle = "rgba(227,209,163,0.55)";
-          ctx.lineWidth = mode === "compact" ? 1 : Math.max(1, pr * 0.25);
-          ctx.beginPath();
-          ctx.ellipse(0, 0, pr * 2.1, pr * 0.75, 0, 0, Math.PI * 2);
-          ctx.stroke();
-          ctx.restore();
-        }
-
         if (isSelected) {
+          // pulsierender Auswahlring
+          const pulse = 0.5 + 0.5 * Math.sin(tSec * 3);
           ctx.beginPath();
-          ctx.arc(x, y, pr + 5, 0, Math.PI * 2);
-          ctx.strokeStyle = "rgba(255,90,77,0.9)";
+          ctx.arc(x, y, pr + 5 + pulse * 3, 0, Math.PI * 2);
+          ctx.strokeStyle = `rgba(255,90,77,${0.55 + 0.4 * pulse})`;
           ctx.lineWidth = 1.5;
           ctx.stroke();
         }
 
-        ctx.globalAlpha = isDwarf ? 0.85 : 1;
-        // dezenter Schein, damit er den Planeten nicht optisch aufbläht
-        const glowMult = 1.6;
-        const glowR = Math.max(pr * glowMult, 3);
-        const glow = ctx.createRadialGradient(x, y, 0, x, y, glowR);
+        // Richtung zur Sonne (für Licht und Schatten)
+        const toSunX = cx - x;
+        const toSunY = cy - y;
+        const len = Math.hypot(toSunX, toSunY) || 1;
+        const lx = toSunX / len;
+        const ly = toSunY / len;
+
+        // Saturn-Ringe: hintere Hälfte vor dem Planeten zeichnen, vordere danach
+        const ringTilt = 0.32 + 0.25 * (1 - tilt);
+        function drawRings(front: boolean) {
+          if (!planet.hasRings) return;
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.rotate(-0.35);
+          const bands: [number, number, number][] = [
+            [1.35, 0.18, 0.28], // C-Ring (schwach)
+            [1.6, 0.42, 0.75], // B-Ring (hell)
+            [1.88, 0.3, 0.6],
+            [2.12, 0.32, 0.55], // A-Ring (nach der Cassini-Teilung)
+          ];
+          for (const [rf, wf, alpha] of bands) {
+            ctx.beginPath();
+            ctx.ellipse(0, 0, pr * rf, pr * rf * ringTilt, 0, front ? 0 : Math.PI, front ? Math.PI : Math.PI * 2);
+            ctx.strokeStyle = `rgba(227,209,163,${alpha})`;
+            ctx.lineWidth = mode === "compact" ? 0.8 : Math.max(0.8, pr * wf);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+        drawRings(false);
+
+        ctx.globalAlpha = isDwarf ? 0.9 : 1;
+        // dezenter Schein in Planetenfarbe
+        const glowR = Math.max(pr * 1.7, 3);
+        const glow = ctx.createRadialGradient(x, y, pr * 0.6, x, y, glowR);
         glow.addColorStop(0, planet.glowColor);
         glow.addColorStop(1, "rgba(0,0,0,0)");
         ctx.fillStyle = glow;
@@ -570,26 +830,46 @@ export default function SolarSystem({
         ctx.arc(x, y, glowR, 0, Math.PI * 2);
         ctx.fill();
 
-        // Tag-/Nachtseite: zur Sonne hin hell, abgewandt dunkler
-        const toSunX = cx - x;
-        const toSunY = cy - y;
-        const len = Math.hypot(toSunX, toSunY) || 1;
-        const lit = ctx.createRadialGradient(
-          x + (toSunX / len) * pr * 0.45,
-          y + (toSunY / len) * pr * 0.45,
-          pr * 0.1,
-          x,
-          y,
-          pr * 1.05
-        );
-        lit.addColorStop(0, planet.color);
-        lit.addColorStop(0.7, planet.color);
-        lit.addColorStop(1, "rgba(0,0,0,0.85)");
-        ctx.fillStyle = pr >= 3 ? lit : planet.color;
+        // Grundkugel
+        ctx.fillStyle = planet.color;
         ctx.beginPath();
         ctx.arc(x, y, pr, 0, Math.PI * 2);
         ctx.fill();
+
+        if (pr >= 3) {
+          ctx.save();
+          ctx.beginPath();
+          ctx.arc(x, y, pr, 0, Math.PI * 2);
+          ctx.clip();
+          drawSurface(planet.id, x, y, pr, tSec);
+          // Licht & Schatten: Tagseite zur Sonne, scharfe Dämmerungszone
+          const shade = ctx.createRadialGradient(x + lx * pr * 0.55, y + ly * pr * 0.55, pr * 0.15, x + lx * pr * 0.2, y + ly * pr * 0.2, pr * 1.45);
+          shade.addColorStop(0, "rgba(255,255,255,0.18)");
+          shade.addColorStop(0.45, "rgba(0,0,0,0)");
+          shade.addColorStop(0.75, "rgba(0,0,0,0.55)");
+          shade.addColorStop(1, "rgba(0,0,0,0.92)");
+          ctx.fillStyle = shade;
+          ctx.fillRect(x - pr, y - pr, pr * 2, pr * 2);
+          ctx.restore();
+
+          // Atmosphären-Saum auf der Tagseite
+          const atmo = ATMOSPHERE[planet.id];
+          if (atmo) {
+            ctx.save();
+            ctx.globalCompositeOperation = "lighter";
+            const rim = ctx.createRadialGradient(x, y, pr * 0.85, x, y, pr * 1.25);
+            rim.addColorStop(0, `rgba(${atmo},0)`);
+            rim.addColorStop(0.3, `rgba(${atmo},0.45)`);
+            rim.addColorStop(1, `rgba(${atmo},0)`);
+            ctx.fillStyle = rim;
+            ctx.beginPath();
+            ctx.arc(x + lx * pr * 0.12, y + ly * pr * 0.12, pr * 1.25, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+          }
+        }
         ctx.globalAlpha = 1;
+        drawRings(true);
 
         if (mode === "full") {
           const font = isDwarf
@@ -633,7 +913,12 @@ export default function SolarSystem({
   const zoomGoalRef = useRef<{ z: number; x: number; y: number } | null>(null);
   const pinchAngleRef = useRef<number | null>(null);
   const lastTapRef = useRef<{ t: number; x: number; y: number } | null>(null);
-  const TILT_MIN = 0.06;
+  const ELEV_MIN = (4 * Math.PI) / 180; // fast genau von der Seite
+  const ELEV_MAX = Math.PI / 2; // genau von oben
+  function setElevation(rad: number) {
+    elevRef.current = Math.min(ELEV_MAX, Math.max(ELEV_MIN, rad));
+    tiltRef.current = Math.sin(elevRef.current);
+  }
 
   /** Wird in jedem Frame aus der Zeichenschleife aufgerufen. */
   function stepMotion(dtMs: number) {
@@ -641,7 +926,7 @@ export default function SolarSystem({
     const v = velRef.current;
     if (!dragging && (Math.abs(v.rot) > 1e-6 || Math.abs(v.tilt) > 1e-6)) {
       rotateRef.current += v.rot * dtMs;
-      tiltRef.current = Math.min(1, Math.max(TILT_MIN, tiltRef.current + v.tilt * dtMs));
+      setElevation(elevRef.current + v.tilt * dtMs);
       const decay = Math.exp(-dtMs / 320);
       v.rot *= decay;
       v.tilt *= decay;
@@ -745,11 +1030,11 @@ export default function SolarSystem({
       panRef.current = { x: panRef.current.x + dx, y: panRef.current.y + dy };
       followRef.current = false;
     } else {
-      // Nutzerwunsch 29.09.2026 ("Sensitivity zu hoch"): gedämpfte Werte
+      // gleichmäßige Empfindlichkeit: ~0,17° bzw. ~0,2° pro Pixel
       const dRot = dx * 0.003;
-      const dTilt = -dy * 0.0015;
+      const dTilt = dy * 0.0035;
       rotateRef.current += dRot;
-      tiltRef.current = Math.min(1, Math.max(TILT_MIN, tiltRef.current + dTilt));
+      setElevation(elevRef.current + dTilt);
       // Schwung aus den letzten Bewegungen (geglättet)
       velRef.current = {
         rot: velRef.current.rot * 0.6 + (dRot / dt) * 0.4,
