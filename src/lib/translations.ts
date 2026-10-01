@@ -326,11 +326,11 @@ const TRANSLATIONS_SOURCE = {
     es: "Hoy", fr: "Aujourd'hui", tr: "Bugün", ru: "Сегодня", pt: "Hoje", ar: "اليوم", el: "Σήμερα",
   },
   solarSystemDragHint: {
-    de: "Ziehen: drehen & neigen · 2 Finger: zoomen, verschieben, drehen · Mausrad: zoomen · Doppeltippen: heran", en: "Drag: rotate & tilt · 2 fingers: zoom, pan, rotate · Scroll: zoom · Double-tap: zoom in",
-    hi: "खींचें: घुमाएं और झुकाएं · 2 उंगलियां: ज़ूम, खिसकाएं, घुमाएं · स्क्रॉल: ज़ूम · डबल-टैप: पास जाएं", zh: "拖动：旋转与倾斜 · 双指：缩放、平移、旋转 · 滚轮：缩放 · 双击：放大", ko: "드래그: 회전·기울이기 · 두 손가락: 확대, 이동, 회전 · 스크롤: 확대/축소 · 두 번 탭: 확대", ja: "ドラッグ：回転・傾き · 2本指：ズーム・移動・回転 · ホイール：ズーム · ダブルタップ：拡大",
-    es: "Arrastrar: rotar e inclinar · 2 dedos: zoom, mover, girar · Rueda: zoom · Doble toque: acercar", fr: "Glisser : pivoter et incliner · 2 doigts : zoom, déplacer, tourner · Molette : zoom · Double tap : zoomer",
-    tr: "Sürükle: döndür ve eğ · 2 parmak: yakınlaştır, kaydır, döndür · Tekerlek: yakınlaştır · Çift dokun: yaklaş", ru: "Перетаскивание: вращение и наклон · 2 пальца: масштаб, сдвиг, поворот · Колесо: масштаб · Двойное касание: приблизить",
-    pt: "Arrastar: girar e inclinar · 2 dedos: zoom, mover, girar · Roda: zoom · Toque duplo: aproximar", ar: "اسحب: تدوير وإمالة · إصبعان: تكبير وتحريك وتدوير · العجلة: تكبير · نقرتان: تقريب", el: "Σύρετε: περιστροφή & κλίση · 2 δάχτυλα: ζουμ, μετακίνηση, περιστροφή · Ροδέλα: ζουμ · Διπλό πάτημα: κοντά",
+    de: "Ziehen: drehen & neigen · Rechtsklick-Ziehen / WASD / 2 Finger: verschieben · Mausrad / 2 Finger: zoomen · Doppeltippen: heran", en: "Drag: rotate & tilt · Right-drag / WASD / 2 fingers: pan · Scroll / 2 fingers: zoom · Double-tap: zoom in",
+    hi: "खींचें: घुमाएं और झुकाएं · राइट-ड्रैग / WASD / 2 उंगलियां: खिसकाएं · स्क्रॉल / 2 उंगलियां: ज़ूम · डबल-टैप: पास जाएं", zh: "拖动：旋转与倾斜 · 右键拖动 / WASD / 双指：平移 · 滚轮 / 双指：缩放 · 双击：放大", ko: "드래그: 회전·기울이기 · 우클릭 드래그 / WASD / 두 손가락: 이동 · 스크롤 / 두 손가락: 확대/축소 · 두 번 탭: 확대", ja: "ドラッグ：回転・傾き · 右ドラッグ / WASD / 2本指：移動 · ホイール / 2本指：ズーム · ダブルタップ：拡大",
+    es: "Arrastrar: rotar e inclinar · Clic derecho / WASD / 2 dedos: mover · Rueda / 2 dedos: zoom · Doble toque: acercar", fr: "Glisser : pivoter et incliner · Clic droit / WASD / 2 doigts : déplacer · Molette / 2 doigts : zoom · Double tap : zoomer",
+    tr: "Sürükle: döndür ve eğ · Sağ tık / WASD / 2 parmak: kaydır · Tekerlek / 2 parmak: yakınlaştır · Çift dokun: yaklaş", ru: "Перетаскивание: вращение и наклон · Правая кнопка / WASD / 2 пальца: сдвиг · Колесо / 2 пальца: масштаб · Двойное касание: приблизить",
+    pt: "Arrastar: girar e inclinar · Botão direito / WASD / 2 dedos: mover · Roda / 2 dedos: zoom · Toque duplo: aproximar", ar: "اسحب: تدوير وإمالة · زر يمين / WASD / إصبعان: تحريك · العجلة / إصبعان: تكبير · نقرتان: تقريب", el: "Σύρετε: περιστροφή & κλίση · Δεξί κλικ / WASD / 2 δάχτυλα: μετακίνηση · Ροδέλα / 2 δάχτυλα: ζουμ · Διπλό πάτημα: κοντά",
   },
   kindStar: {
     de: "Stern", en: "Star", hi: "तारा", zh: "恒星", ko: "항성", ja: "恒星",

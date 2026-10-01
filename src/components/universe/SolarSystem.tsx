@@ -189,7 +189,31 @@ export default function SolarSystem({
   // höhere Grenzen + Zoom auf den Punkt unter Maus/Fingern statt immer auf
   // die Sonne (panRef = Verschiebung der Sonne gegenüber der Bildmitte).
   const zoomLimitsRef = useRef<[number, number]>([0.5, 60]);
-  const panRef = useRef({ x: 0, y: 0 });
+  // Nutzerkorrektur 01.10.2026 ("Kamera frei bewegen geht nicht, wie
+  // gesperrt"): Die Kamera dreht/neigt sich jetzt um den Punkt in der
+  // BILDMITTE (wie in 3D-Programmen) statt immer um die Sonne. targetRef ist
+  // dieser Blickpunkt in Darstellungs-Einheiten bei Zoom 1; Verschieben,
+  // Zoomen auf den Mauszeiger und Mitfliegen bewegen nur ihn.
+  const targetRef = useRef<Vec3>([0, 0, 0]);
+
+  /** Bildschirm-Versatz (px, relativ zur Bildmitte) → Punkt in der Ebene (Zoom-1-Einheiten ×Zoom). */
+  function screenToPlane(sx: number, sy: number): [number, number] {
+    const rot = rotateRef.current;
+    const tilt = Math.max(0.05, tiltRef.current);
+    const xr = sx;
+    const yr = -sy / tilt;
+    const c = Math.cos(rot);
+    const sn = Math.sin(rot);
+    return [xr * c + yr * sn, -xr * sn + yr * c];
+  }
+
+  function panByScreen(dx: number, dy: number) {
+    const [x, y] = screenToPlane(dx, dy);
+    const z = zoomRef.current;
+    const t = targetRef.current;
+    targetRef.current = [t[0] - x / z, t[1] - y / z, t[2]];
+    followRef.current = false;
+  }
   const pinchCenterRef = useRef<{ x: number; y: number } | null>(null);
   // Angeklickten Körper mitverfolgen — aus, sobald man selbst verschiebt
   const followRef = useRef(true);
@@ -242,7 +266,7 @@ export default function SolarSystem({
   // Mars überhaupt getrennt zu sehen).
   useEffect(() => {
     zoomRef.current = 1;
-    panRef.current = { x: 0, y: 0 };
+    targetRef.current = [0, 0, 0];
     zoomLimitsRef.current = scaleMode === "real" ? [0.15, 100000] : [0.5, 60];
   }, [scaleMode]);
 
@@ -253,7 +277,8 @@ export default function SolarSystem({
     if (!ctx2d) return;
     const ctx = ctx2d;
 
-    const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 2) : 1;
+    // max. 1,5-fache Auflösung: kaum sichtbarer Unterschied, aber deutlich weniger Pixel pro Bild (flüssiger)
+    const dpr = typeof window !== "undefined" ? Math.min(window.devicePixelRatio || 1, 1.5) : 1;
     canvas.width = size.w * dpr;
     canvas.height = size.h * dpr;
     canvas.style.width = `${size.w}px`;
@@ -422,6 +447,43 @@ export default function SolarSystem({
       }
     }
 
+    // Vorgezeichneter Himmel (Milchstraßen-Schimmer + nicht funkelnde
+    // Sterne), etwas größer als das Bild für die Parallaxe — pro Bild wird
+    // nur noch EINE Kopie davon gezeichnet (flüssiger).
+    const SKY_PAD_X = 120;
+    const SKY_PAD_Y = 50;
+    let starLayer: HTMLCanvasElement | null = null;
+    if (typeof document !== "undefined") {
+      starLayer = document.createElement("canvas");
+      const LW = size.w + SKY_PAD_X;
+      const LH = size.h + SKY_PAD_Y;
+      starLayer.width = Math.max(1, Math.round(LW * dpr));
+      starLayer.height = Math.max(1, Math.round(LH * dpr));
+      const sctx = starLayer.getContext("2d");
+      if (sctx) {
+        sctx.scale(dpr, dpr);
+        if (interactive) {
+          const band = sctx.createLinearGradient(0, LH * 0.1, LW, LH * 0.9);
+          band.addColorStop(0, "rgba(120,110,160,0)");
+          band.addColorStop(0.45, "rgba(150,130,170,0.035)");
+          band.addColorStop(0.5, "rgba(190,160,170,0.055)");
+          band.addColorStop(0.55, "rgba(150,130,170,0.035)");
+          band.addColorStop(1, "rgba(120,110,160,0)");
+          sctx.fillStyle = band;
+          sctx.fillRect(0, 0, LW, LH);
+        }
+        for (const st of stars) {
+          if (st.tw) continue;
+          sctx.fillStyle = `rgba(${st.tint},${st.a})`;
+          sctx.beginPath();
+          sctx.arc(st.x * LW, st.y * LH, st.r, 0, Math.PI * 2);
+          sctx.fill();
+        }
+      } else {
+        starLayer = null;
+      }
+    }
+
     let lastTime = performance.now();
     const followStart = performance.now();
     let lastDateKey = "";
@@ -456,9 +518,6 @@ export default function SolarSystem({
         }
       }
 
-      // Sonne = Bildmitte + Verschiebung (beim Zoomen auf einen Punkt)
-      let cx = size.w / 2 + panRef.current.x;
-      let cy = size.h / 2 + panRef.current.y;
       const zoom = zoomRef.current;
       const maxOrbitR = baseMaxOrbitR * zoom;
       const tilt = tiltRef.current;
@@ -470,7 +529,9 @@ export default function SolarSystem({
       // Echter Maßstab: Neptuns Bahn füllt bei Zoom 1 den Rahmen.
       const pxPerAu = maxOrbitR / 30.4;
       const sunR = realMode ? Math.max(2.5, SUN_RADIUS_AU * pxPerAu) : compactSunR * zoom;
-      function project(p: Vec3): [number, number] {
+
+      /** Heliozentrische Position (AE) → Darstellungs-Koordinaten (px, unrotiert). */
+      function displayVec(p: Vec3): Vec3 {
         let k: number;
         if (realMode) {
           k = pxPerAu;
@@ -478,9 +539,29 @@ export default function SolarSystem({
           const r = Math.hypot(p[0], p[1], p[2]) || 1e-9;
           k = compactRadius(r, maxOrbitR) / r;
         }
-        const X = p[0] * k;
-        const Y = p[1] * k;
-        const Z = p[2] * k;
+        return [p[0] * k, p[1] * k, p[2] * k];
+      }
+
+      // Angeklickten Körper beim Zoomen in der Bildmitte halten ("mitfliegen")
+      if (interactive && selectedId && zoom > 1.5 && followRef.current) {
+        const fp: Vec3 | null = selectedId === "sun" ? [0, 0, 0] : bodyPosition(selectedId, jd);
+        if (fp) {
+          const d = displayVec(fp);
+          const goal: Vec3 = [d[0] / zoom, d[1] / zoom, d[2] / zoom];
+          const f = now - followStart < 600 ? 0.15 : 1;
+          const t = targetRef.current;
+          targetRef.current = [t[0] + (goal[0] - t[0]) * f, t[1] + (goal[1] - t[1]) * f, t[2] + (goal[2] - t[2]) * f];
+        }
+      }
+
+      // Sonne auf dem Bildschirm = Bildmitte − Blickpunkt (gedreht/geneigt)
+      const tgt = targetRef.current;
+      const txr = (tgt[0] * cosR - tgt[1] * sinR) * zoom;
+      const tyr = (tgt[0] * sinR + tgt[1] * cosR) * zoom;
+      const cx = size.w / 2 - txr;
+      const cy = size.h / 2 + tyr * tilt + tgt[2] * zoom * side;
+      function project(p: Vec3): [number, number] {
+        const [X, Y, Z] = displayVec(p);
         const xr = X * cosR - Y * sinR;
         const yr = X * sinR + Y * cosR;
         // Blick von "Norden": Umlauf gegen den Uhrzeigersinn wie in echt.
@@ -501,44 +582,26 @@ export default function SolarSystem({
         return Math.max(minDot, sunR * (planet.diameterKm / SUN_KM) * enlarge);
       }
 
-      // Angeklickten Körper beim Zoomen in der Bildmitte halten ("mitfliegen"),
-      // damit man z.B. die Erde neben der Sonne in echter Größe ansehen
-      // kann, ohne dass sie aus dem Bild läuft.
-      if (interactive && selectedId && zoom > 1.5 && followRef.current) {
-        const fp: Vec3 | null = selectedId === "sun" ? [0, 0, 0] : bodyPosition(selectedId, jd);
-        if (fp) {
-          const [sx, sy] = project(fp);
-          const f = now - followStart < 600 ? 0.15 : 1;
-          panRef.current = {
-            x: panRef.current.x + (size.w / 2 - sx) * f,
-            y: panRef.current.y + (size.h / 2 - sy) * f,
-          };
-          cx = size.w / 2 + panRef.current.x;
-          cy = size.h / 2 + panRef.current.y;
-        }
-      }
-
       ctx.clearRect(0, 0, size.w, size.h);
 
       // Hintergrund: Milchstraßen-Schimmer + Sterne mit Parallaxe
       const tSec = now / 1000;
-      const shiftX = ((rot * 70) % size.w + size.w) % size.w;
-      const shiftY = (1 - tilt) * 40;
-      if (interactive) {
-        const band = ctx.createLinearGradient(0, size.h * 0.1 + shiftY * 0.5, size.w, size.h * 0.9 + shiftY * 0.5);
-        band.addColorStop(0, "rgba(120,110,160,0)");
-        band.addColorStop(0.45, "rgba(150,130,170,0.035)");
-        band.addColorStop(0.5, "rgba(190,160,170,0.055)");
-        band.addColorStop(0.55, "rgba(150,130,170,0.035)");
-        band.addColorStop(1, "rgba(120,110,160,0)");
-        ctx.fillStyle = band;
-        ctx.fillRect(0, 0, size.w, size.h);
+      // Parallaxe: Himmel verschiebt sich beim Drehen/Neigen leicht mit
+      const parX = SKY_PAD_X / 2 + Math.sin(rot) * (SKY_PAD_X / 2 - 1);
+      const parY = (1 - tilt) * (SKY_PAD_Y - 1);
+
+      // statische Sterne als vorgezeichnete Ebene (2× wegen Rundumlauf), nur
+      // die funkelnden einzeln — spart pro Bild ~200 Zeichenaufrufe
+      if (starLayer) {
+        // eine einzige Kopie der etwas größeren Himmels-Ebene, leicht versetzt
+        ctx.drawImage(starLayer, parX * dpr, parY * dpr, size.w * dpr, size.h * dpr, 0, 0, size.w, size.h);
       }
       for (const s of stars) {
-        let a = s.a;
-        if (s.tw) a *= 0.65 + 0.35 * Math.sin(tSec * s.tw + s.ph);
-        const sx = (s.x * size.w + shiftX) % size.w;
-        const sy = ((s.y * size.h + shiftY) % size.h + size.h) % size.h;
+        if (!s.tw) continue;
+        const a = s.a * (0.65 + 0.35 * Math.sin(tSec * s.tw + s.ph));
+        const sx = s.x * (size.w + SKY_PAD_X) - parX;
+        const sy = s.y * (size.h + SKY_PAD_Y) - parY;
+        if (sx < -2 || sy < -2 || sx > size.w + 2 || sy > size.h + 2) continue;
         ctx.fillStyle = `rgba(${s.tint},${a})`;
         ctx.beginPath();
         ctx.arc(sx, sy, s.r, 0, Math.PI * 2);
@@ -564,7 +627,7 @@ export default function SolarSystem({
         ctx.fill();
         // Korona: feine, langsam drehende Strahlen, die leicht flackern
         if (sunR >= 6) {
-          const rays = 28;
+          const rays = 16;
           const rayLen = Math.min(sunR * 1.6, 120);
           for (let k = 0; k < rays; k++) {
             const ang = (k / rays) * Math.PI * 2 + tSec * 0.03;
@@ -696,19 +759,22 @@ export default function SolarSystem({
           const n = path.length - 1;
           const L = isDwarf ? 28 : 46;
           const rgb = hexToRgb(planet.color);
+          // in 8 Abschnitten mit abnehmender Helligkeit (weniger Zeichenaufrufe → flüssiger)
+          const CHUNKS = 8;
+          const per = Math.ceil(L / CHUNKS);
           let [px, py] = project(posNow);
-          for (let k = 1; k <= L; k++) {
-            const idx = (((i0 - k) % n) + n) % n;
-            const [qx, qy] = project(path[idx]);
-            const f = 1 - k / L;
+          ctx.lineWidth = isDwarf ? 1 : 1.6;
+          for (let c = 0; c < CHUNKS; c++) {
+            const f = 1 - (c + 0.5) / CHUNKS;
             ctx.strokeStyle = `rgba(${rgb},${(isDwarf ? 0.22 : 0.42) * f * f})`;
-            ctx.lineWidth = isDwarf ? 1 : 1.6;
             ctx.beginPath();
             ctx.moveTo(px, py);
-            ctx.lineTo(qx, qy);
+            for (let k = c * per + 1; k <= Math.min(L, (c + 1) * per); k++) {
+              const idx = (((i0 - k) % n) + n) % n;
+              [px, py] = project(path[idx]);
+              ctx.lineTo(px, py);
+            }
             ctx.stroke();
-            px = qx;
-            py = qy;
           }
         }
       }
@@ -922,8 +988,58 @@ export default function SolarSystem({
     tiltRef.current = Math.sin(elevRef.current);
   }
 
+  // Tastatur wie in Spielen: WASD/Pfeile = verschieben, Q/E = drehen,
+  // R/F = neigen, +/− = zoomen (gedrückt halten für fließende Bewegung)
+  const keysRef = useRef<Set<string>>(new Set());
+  useEffect(() => {
+    if (!interactive) return;
+    const KEYS = new Set(["w", "a", "s", "d", "q", "e", "r", "f", "+", "-", "arrowup", "arrowdown", "arrowleft", "arrowright"]);
+    function down(e: KeyboardEvent) {
+      const el = e.target as HTMLElement | null;
+      if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable)) return;
+      const k = e.key.toLowerCase();
+      if (!KEYS.has(k)) return;
+      keysRef.current.add(k);
+      e.preventDefault();
+    }
+    function up(e: KeyboardEvent) {
+      keysRef.current.delete(e.key.toLowerCase());
+    }
+    function clear() {
+      keysRef.current.clear();
+    }
+    window.addEventListener("keydown", down);
+    window.addEventListener("keyup", up);
+    window.addEventListener("blur", clear);
+    return () => {
+      window.removeEventListener("keydown", down);
+      window.removeEventListener("keyup", up);
+      window.removeEventListener("blur", clear);
+    };
+  }, [interactive]);
+
   /** Wird in jedem Frame aus der Zeichenschleife aufgerufen. */
   function stepMotion(dtMs: number) {
+    const keys = keysRef.current;
+    if (keys.size > 0) {
+      const p = 0.45 * dtMs; // px pro Bild
+      let dx = 0;
+      let dy = 0;
+      if (keys.has("w") || keys.has("arrowup")) dy += p;
+      if (keys.has("s") || keys.has("arrowdown")) dy -= p;
+      if (keys.has("a") || keys.has("arrowleft")) dx += p;
+      if (keys.has("d") || keys.has("arrowright")) dx -= p;
+      if (dx || dy) panByScreen(dx, dy);
+      if (keys.has("q")) rotateRef.current -= 0.0012 * dtMs;
+      if (keys.has("e")) rotateRef.current += 0.0012 * dtMs;
+      if (keys.has("r")) setElevation(elevRef.current - 0.0012 * dtMs);
+      if (keys.has("f")) setElevation(elevRef.current + 0.0012 * dtMs);
+      const rect = canvasRef.current?.getBoundingClientRect();
+      if (rect && (keys.has("+") || keys.has("-"))) {
+        const factor = Math.exp((keys.has("+") ? 1 : -1) * 0.0015 * dtMs);
+        zoomAt(zoomRef.current * factor, rect.left + rect.width / 2, rect.top + rect.height / 2);
+      }
+    }
     const dragging = dragRef.current !== null || pointersRef.current.size > 0;
     const v = velRef.current;
     if (!dragging && (Math.abs(v.rot) > 1e-6 || Math.abs(v.tilt) > 1e-6)) {
@@ -989,12 +1105,8 @@ export default function SolarSystem({
       zoomAt(pinchStartZoomRef.current * (dist / pinchStartDistRef.current), mid.x, mid.y);
       // 2) Verschieben mit beiden Fingern
       const prev = pinchCenterRef.current;
-      if (prev) {
-        panRef.current = {
-          x: panRef.current.x + (mid.x - prev.x),
-          y: panRef.current.y + (mid.y - prev.y),
-        };
-        if (Math.hypot(mid.x - prev.x, mid.y - prev.y) > 0.5) followRef.current = false;
+      if (prev && Math.hypot(mid.x - prev.x, mid.y - prev.y) > 0.5) {
+        panByScreen(mid.x - prev.x, mid.y - prev.y);
       }
       pinchCenterRef.current = mid;
       // 3) Drehen mit zwei Fingern (um die Fingermitte)
@@ -1004,16 +1116,20 @@ export default function SolarSystem({
         if (d > Math.PI) d -= Math.PI * 2;
         if (d < -Math.PI) d += Math.PI * 2;
         if (Math.abs(d) > 0.002) {
-          rotateRef.current -= d;
+          // um die Fingermitte drehen: Punkt unter den Fingern bleibt stehen
           const rect = canvasRef.current?.getBoundingClientRect();
+          const z = zoomRef.current;
           if (rect) {
             const mx = mid.x - rect.left - rect.width / 2;
             const my = mid.y - rect.top - rect.height / 2;
-            const vx = panRef.current.x - mx;
-            const vy = panRef.current.y - my;
-            const c = Math.cos(d);
-            const s = Math.sin(d);
-            panRef.current = { x: mx + vx * c - vy * s, y: my + vx * s + vy * c };
+            const [qx, qy] = screenToPlane(mx, my);
+            const t = targetRef.current;
+            const q: [number, number] = [t[0] + qx / z, t[1] + qy / z];
+            rotateRef.current -= d;
+            const [nx, ny] = screenToPlane(mx, my);
+            targetRef.current = [q[0] - nx / z, q[1] - ny / z, t[2]];
+          } else {
+            rotateRef.current -= d;
           }
         }
       }
@@ -1029,8 +1145,7 @@ export default function SolarSystem({
     const now = performance.now();
     const dt = Math.max(1, now - drag.t);
     if (drag.pan) {
-      panRef.current = { x: panRef.current.x + dx, y: panRef.current.y + dy };
-      followRef.current = false;
+      panByScreen(dx, dy);
     } else {
       // gleichmäßige Empfindlichkeit: ~0,17° bzw. ~0,2° pro Pixel
       const dRot = dx * 0.003;
@@ -1121,17 +1236,14 @@ export default function SolarSystem({
     const newZoom = Math.min(zMax, Math.max(zMin, targetZoom));
     const rect = canvasRef.current?.getBoundingClientRect();
     if (rect) {
-      const px = clientX - rect.left - rect.width / 2;
-      const py = clientY - rect.top - rect.height / 2;
-      const k = newZoom / oldZoom;
-      panRef.current = {
-        x: px - (px - panRef.current.x) * k,
-        y: py - (py - panRef.current.y) * k,
-      };
-      // Ganz herausgezoomt: Sonne sanft zurück in die Mitte
-      if (newZoom <= 1) {
-        panRef.current = { x: panRef.current.x * 0.85, y: panRef.current.y * 0.85 };
-      }
+      const [sx, sy] = screenToPlane(clientX - rect.left - rect.width / 2, clientY - rect.top - rect.height / 2);
+      const t = targetRef.current;
+      // Punkt unter dem Mauszeiger bleibt beim Zoomen stehen
+      const q: [number, number] = [t[0] + sx / oldZoom, t[1] + sy / oldZoom];
+      let next: Vec3 = [q[0] - sx / newZoom, q[1] - sy / newZoom, t[2]];
+      // Ganz herausgezoomt: Blick sanft zurück auf die Sonne
+      if (newZoom <= 1) next = [next[0] * 0.85, next[1] * 0.85, next[2] * 0.85];
+      targetRef.current = next;
     }
     zoomRef.current = newZoom;
   }
