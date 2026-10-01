@@ -271,6 +271,21 @@ const TRANSLATIONS_SOURCE = {
     de: "Live", en: "Live", hi: "लाइव", zh: "实时", ko: "실시간", ja: "ライブ",
     es: "En vivo", fr: "En direct", tr: "Canlı", ru: "Онлайн", pt: "Ao vivo", ar: "مباشر", el: "Ζωντανά",
   },
+  // Nutzerwunsch 01.10.2026: "schreib, dass es echte Rotation ist"
+  solarRealMotionLive: {
+    de: "Echte Bewegung in Echtzeit · Positionen aus NASA/JPL-Bahndaten", en: "Real motion in real time · positions from NASA/JPL orbital data",
+    hi: "वास्तविक समय में वास्तविक गति · NASA/JPL कक्षीय डेटा से स्थितियाँ", zh: "实时的真实运动 · 位置来自NASA/JPL轨道数据", ko: "실시간 실제 움직임 · NASA/JPL 궤도 데이터 기반 위치", ja: "リアルタイムの実際の動き · NASA/JPL軌道データによる位置",
+    es: "Movimiento real en tiempo real · posiciones de datos orbitales de NASA/JPL", fr: "Mouvement réel en temps réel · positions d'après les données orbitales NASA/JPL",
+    tr: "Gerçek zamanlı gerçek hareket · konumlar NASA/JPL yörünge verilerinden", ru: "Реальное движение в реальном времени · положения по орбитальным данным NASA/JPL",
+    pt: "Movimento real em tempo real · posições de dados orbitais da NASA/JPL", ar: "حركة حقيقية في الوقت الفعلي · المواقع من بيانات مدارات NASA/JPL", el: "Πραγματική κίνηση σε πραγματικό χρόνο · θέσεις από τροχιακά δεδομένα NASA/JPL",
+  },
+  solarRealMotionFast: {
+    de: "Echte Bahnen & Geschwindigkeiten im Zeitraffer · NASA/JPL-Bahndaten", en: "Real orbits & speeds in time-lapse · NASA/JPL orbital data",
+    hi: "टाइम-लैप्स में वास्तविक कक्षाएँ और गति · NASA/JPL कक्षीय डेटा", zh: "延时播放的真实轨道与速度 · NASA/JPL轨道数据", ko: "타임랩스로 보는 실제 궤도와 속도 · NASA/JPL 궤도 데이터", ja: "タイムラプスで見る実際の軌道と速度 · NASA/JPL軌道データ",
+    es: "Órbitas y velocidades reales en cámara rápida · datos orbitales de NASA/JPL", fr: "Orbites et vitesses réelles en accéléré · données orbitales NASA/JPL",
+    tr: "Hızlandırılmış gerçek yörüngeler ve hızlar · NASA/JPL yörünge verileri", ru: "Реальные орбиты и скорости в ускоренном режиме · данные NASA/JPL",
+    pt: "Órbitas e velocidades reais em time-lapse · dados orbitais da NASA/JPL", ar: "مدارات وسرعات حقيقية بتسريع زمني · بيانات مدارات NASA/JPL", el: "Πραγματικές τροχιές & ταχύτητες σε επιτάχυνση · τροχιακά δεδομένα NASA/JPL",
+  },
   solarDistances: {
     de: "Abstand zur Erde", en: "Distance from Earth", hi: "पृथ्वी से दूरी", zh: "与地球的距离", ko: "지구와의 거리", ja: "地球からの距離",
     es: "Distancia a la Tierra", fr: "Distance à la Terre", tr: "Dünya'ya uzaklık", ru: "Расстояние до Земли", pt: "Distância da Terra", ar: "المسافة عن الأرض", el: "Απόσταση από τη Γη",

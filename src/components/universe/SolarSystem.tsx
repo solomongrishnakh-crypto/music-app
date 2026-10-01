@@ -931,6 +931,11 @@ export default function SolarSystem({
         <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-2 p-2 sm:p-3">
           <div className="label-mono text-[10px] uppercase text-muted">
             <span ref={dateLabelRef} className="text-foreground" />
+            <span className="block text-[9px] normal-case text-accent">
+              {SPEEDS[speedIndex] === LIVE || SPEEDS[speedIndex] === 0
+                ? t("solarRealMotionLive")
+                : t("solarRealMotionFast")}
+            </span>
             <span className="block text-[9px] normal-case opacity-70">
               {scaleMode === "real" ? t("solarScaleRealNote") : t("solarScaleCompactNote")}
             </span>
