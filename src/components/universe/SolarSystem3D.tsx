@@ -635,7 +635,12 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
     controls.minPolarAngle = 0.001;
     controls.maxPolarAngle = Math.PI - 0.001;
     controls.mouseButtons = { LEFT: THREE.MOUSE.ROTATE, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.PAN };
-    controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+    // 2 Finger macht der eigene Handler unten (Pinch-Zoom + Verschieben +
+    // Drehen gleichzeitig). Der eingebaute 2-Finger-Zoom von OrbitControls
+    // mischt pageX/pageY mit clientX/Y — auf einer gescrollten Seite zoomte
+    // er dadurch auf einen falschen Punkt und die Ansicht sprang wild herum
+    // (Nutzer-Video 01.10.2026: "alles durcheinander mit Zoomen").
+    controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: null };
 
     let width = 1;
     let height = 1;
@@ -883,7 +888,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
       offset.set(Math.cos(el) * Math.cos(az), Math.cos(el) * Math.sin(az), Math.sin(el)).multiplyScalar(r);
       camera.position.copy(controls.target).add(offset);
     }
-    function panPixels(dx: number, dy: number) {
+    function panPixels(dx: number, dy: number, keepFollow = false) {
       const dist = camera.position.distanceTo(controls.target);
       const perPx = (2 * dist * Math.tan((camera.fov * DEG) / 2)) / height;
       tmp.setFromMatrixColumn(camera.matrix, 0).multiplyScalar(-dx * perPx);
@@ -891,8 +896,64 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
       tmp.add(tmp2);
       controls.target.add(tmp);
       camera.position.add(tmp);
-      followId = null;
+      if (!keepFollow) followId = null;
     }
+
+    // --- 2 Finger (Handy): Pinch = Zoom auf die Fingermitte, gemeinsam
+    // bewegen = verschieben, Finger drehen = Ansicht drehen ---
+    const touchPts = new Map<number, { x: number; y: number }>();
+    let pinch: { dist: number; cx: number; cy: number; ang: number } | null = null;
+    function pinchState() {
+      const [a, b] = Array.from(touchPts.values());
+      return {
+        dist: Math.max(1, Math.hypot(a.x - b.x, a.y - b.y)),
+        cx: (a.x + b.x) / 2,
+        cy: (a.y + b.y) / 2,
+        ang: Math.atan2(b.y - a.y, b.x - a.x),
+      };
+    }
+    function touchXY(e: PointerEvent) {
+      const rect = canvas!.getBoundingClientRect();
+      return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+    }
+    function onTouchDown(e: PointerEvent) {
+      if (e.pointerType !== "touch") return;
+      touchPts.set(e.pointerId, touchXY(e));
+      if (touchPts.size === 2) {
+        pinch = pinchState();
+        flight = null;
+        zoomGoal = null;
+      }
+    }
+    function onTouchMove(e: PointerEvent) {
+      if (e.pointerType !== "touch" || !touchPts.has(e.pointerId)) return;
+      touchPts.set(e.pointerId, touchXY(e));
+      if (touchPts.size !== 2 || !pinch) return;
+      const st = pinchState();
+      const followed = followId ? (byId.get(followId) ?? null) : null;
+      // 1) verschieben (beim Mitfliegen erst ab deutlicher Bewegung beendet)
+      if (!followed) panPixels(st.cx - pinch.cx, st.cy - pinch.cy, true);
+      // 2) drehen um den Blickpunkt
+      let dAng = st.ang - pinch.ang;
+      if (dAng > Math.PI) dAng -= Math.PI * 2;
+      if (dAng < -Math.PI) dAng += Math.PI * 2;
+      if (Math.abs(dAng) > 0.002) orbitBy(dAng, 0);
+      // 3) zoomen: Inhalt folgt genau den Fingern (1:1)
+      const r = camera.position.distanceTo(controls.target);
+      const newR = Math.min(controls.maxDistance, Math.max(minDistFor(followed), (r * pinch.dist) / st.dist));
+      camera.updateMatrixWorld();
+      dollyTo(newR, st.cx, st.cy, !!followed);
+      pinch = st;
+    }
+    function onTouchUp(e: PointerEvent) {
+      if (!touchPts.delete(e.pointerId)) return;
+      if (touchPts.size < 2) pinch = null;
+      if (touchPts.size === 2) pinch = pinchState();
+    }
+    canvas.addEventListener("pointerdown", onTouchDown);
+    canvas.addEventListener("pointermove", onTouchMove);
+    window.addEventListener("pointerup", onTouchUp);
+    window.addEventListener("pointercancel", onTouchUp);
     function stepKeys(dt: number) {
       if (keys.size === 0) return;
       const p = 0.5 * dt;
@@ -922,6 +983,22 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
 
     const ray = new THREE.Vector3();
     const fwd = new THREE.Vector3();
+    /** Kamera-Abstand auf newR setzen; der Punkt unter (x, y) bleibt stehen (bzw. die Mitte). */
+    function dollyTo(newR: number, x: number, y: number, center: boolean) {
+      const r = camera.position.distanceTo(controls.target);
+      if (center) {
+        // gerade auf den Blickpunkt zu (der verfolgte Körper bleibt in der Mitte)
+        ray.copy(controls.target).sub(camera.position).normalize();
+        camera.position.addScaledVector(ray, r - newR);
+      } else {
+        // auf den Mauszeiger zu: der Punkt unter dem Zeiger bleibt stehen
+        ray.set((x / width) * 2 - 1, -(y / height) * 2 + 1, 0.5).unproject(camera).sub(camera.position).normalize();
+        camera.getWorldDirection(fwd);
+        const cosA = Math.max(0.2, ray.dot(fwd));
+        camera.position.addScaledVector(ray, (r - newR) / cosA);
+        controls.target.copy(camera.position).addScaledVector(fwd, newR);
+      }
+    }
     function stepZoom(dt: number) {
       const g = zoomGoal;
       if (!g) return;
@@ -931,18 +1008,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
       const r = camera.position.distanceTo(controls.target);
       const f = 1 - Math.exp(-dt / 85);
       const newR = r * Math.pow(g.dist / r, f);
-      if (followed || g.center) {
-        // gerade auf den Blickpunkt zu (der verfolgte Körper bleibt in der Mitte)
-        ray.copy(controls.target).sub(camera.position).normalize();
-        camera.position.addScaledVector(ray, r - newR);
-      } else {
-        // auf den Mauszeiger zu: der Punkt unter dem Zeiger bleibt stehen
-        ray.set((g.x / width) * 2 - 1, -(g.y / height) * 2 + 1, 0.5).unproject(camera).sub(camera.position).normalize();
-        camera.getWorldDirection(fwd);
-        const cosA = Math.max(0.2, ray.dot(fwd));
-        camera.position.addScaledVector(ray, (r - newR) / cosA);
-        controls.target.copy(camera.position).addScaledVector(fwd, newR);
-      }
+      dollyTo(newR, g.x, g.y, !!followed || g.center);
       if (Math.abs(Math.log(g.dist / newR)) < 0.002) zoomGoal = null;
     }
 
@@ -1241,6 +1307,10 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
       ro.disconnect();
       container.removeEventListener("wheel", onWheel, { capture: true });
       canvas.removeEventListener("pointerdown", onPointerDown);
+      canvas.removeEventListener("pointerdown", onTouchDown);
+      canvas.removeEventListener("pointermove", onTouchMove);
+      window.removeEventListener("pointerup", onTouchUp);
+      window.removeEventListener("pointercancel", onTouchUp);
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerCancel);
       canvas.removeEventListener("contextmenu", onContext);
