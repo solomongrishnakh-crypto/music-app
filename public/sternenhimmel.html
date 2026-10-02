@@ -1682,6 +1682,7 @@ function endPointer(e) {
         if (id) h2 = { type: "const", id, ra: CONST.names[id].ra * DEG, dec: CONST.names[id].dec * DEG, name: CONST.names[id].n[LANG] || CONST.names[id].n.la };
       }
       S.selConst = h2 && h2.type === "const" ? h2.id : null;
+      if (h2 && (!S.sel || S.sel.type !== h2.type || S.sel.id !== h2.id || S.sel.ra !== h2.ra)) playSel(h2);
       S.sel = h2; document.getElementById("info").hidden = !h2; if (h2) fillInfo();
     }
     if (drag && performance.now() - drag.t > 80) vel = { az: 0, alt: 0 };
@@ -1895,6 +1896,7 @@ qEl.oninput = () => {
     bt.onclick = () => {
       openSheet(null); qEl.value = ""; resEl.innerHTML = "";
       const h = it.hit;
+      playSel(h);
       if (h.type === "const") { S.selConst = h.id; S.sel = h; document.getElementById("info").hidden = false; fillInfo(); zoomTo({ type: "star", ra: h.ra, dec: h.dec, wide: true }); return; }
       if (h.type === "dso") { const o = DSOS.find((x) => x.id === h.id); S.sel = h; document.getElementById("info").hidden = false; fillInfo(); zoomTo({ type: "star", ra: h.ra, dec: h.dec, dsoFov: Math.min(40, Math.max(0.8, (o.a / 60) * 3.5)) * DEG }); return; }
       S.sel = h; document.getElementById("info").hidden = false; fillInfo(); zoomTo(h);
@@ -1933,27 +1935,77 @@ function frame(now) {
   requestAnimationFrame(frame);
 }
 
+
+// ---------------- Soundeffekte beim Antippen ----------------
+// Selbst erzeugt (Web Audio): glitzernde Glockentöne, kein fremdes Tonmaterial.
+// Stern: heller Funkel-Klang (blaue Sterne höher, rote tiefer), Sternbild: sanftes
+// Akkord-Arpeggio, Planet/Mond: tiefere Glocke, Galaxie/Nebel: schwebender Klang.
+let soundOn = () => true;
+const sfx = (() => {
+  let ac = null, out = null;
+  const init = () => {
+    if (ac) return ac;
+    const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
+    ac = new C();
+    out = ac.createGain(); out.gain.value = 0.32;
+    // kleiner Hall: zwei Echos mit Rückkopplung und Tiefpass
+    const d1 = ac.createDelay(1), d2 = ac.createDelay(1), fb = ac.createGain(), lp = ac.createBiquadFilter(), wet = ac.createGain();
+    d1.delayTime.value = 0.17; d2.delayTime.value = 0.29; fb.gain.value = 0.38; lp.type = "lowpass"; lp.frequency.value = 3800; wet.gain.value = 0.55;
+    out.connect(ac.destination); out.connect(d1); d1.connect(lp); lp.connect(d2); d2.connect(fb); fb.connect(d1); lp.connect(wet); d2.connect(wet); wet.connect(ac.destination);
+    return ac;
+  };
+  ["pointerup", "touchend", "click", "keydown"].forEach((t) => window.addEventListener(t, () => { if (init() && ac.state === "suspended") ac.resume(); }, true));
+  const bell = (f, t0, dur, vol) => {
+    for (const [m, g] of [[1, 1], [2.01, 0.35], [3.98, 0.12]]) {
+      const o = ac.createOscillator(), e = ac.createGain();
+      o.type = m === 1 ? "sine" : "triangle"; o.frequency.value = f * m;
+      e.gain.setValueAtTime(0.0001, t0); e.gain.exponentialRampToValueAtTime(vol * g, t0 + 0.008); e.gain.exponentialRampToValueAtTime(0.0001, t0 + dur / m);
+      o.connect(e); e.connect(out); o.start(t0); o.stop(t0 + dur + 0.05);
+    }
+  };
+  const PENTA = [0, 2, 4, 7, 9, 12, 14, 16, 19, 21, 24];
+  const hz = (semi) => 440 * Math.pow(2, semi / 12);
+  return (kind, opts = {}) => {
+    if (!(window.soundOn || soundOn)() || !init() || ac.state !== "running") return;
+    const t = ac.currentTime + 0.01;
+    if (kind === "star") {
+      // Farbe → Tonhöhe: heiß/blau hoch, kühl/rot tiefer
+      const bv = opts.bv ?? 0.6, base = 15 - Math.round(Math.max(-0.3, Math.min(1.8, bv)) * 4);
+      [0, 2, 4, 5].forEach((k, i) => bell(hz(base + PENTA[k]), t + i * 0.055, 1.4 - i * 0.15, 0.22 - i * 0.03));
+    } else if (kind === "const") {
+      [0, 1, 2, 3, 4, 5].forEach((k, i) => bell(hz(-2 + PENTA[k]), t + i * 0.09, 2.2, 0.16));
+    } else if (kind === "body") {
+      bell(hz(-14), t, 2.8, 0.3); bell(hz(-7), t + 0.06, 2.4, 0.16); bell(hz(-2), t + 0.12, 2, 0.1);
+    } else {
+      [0, 4, 7, 11].forEach((k, i) => bell(hz(-5 + k), t + i * 0.12, 2.6, 0.12));
+    }
+  };
+})();
+function playSel(h) { if (h) sfx(h.type === "star" ? "star" : h.type === "const" ? "const" : h.type === "body" ? "body" : "dso", { bv: h.bv }); }
+
 // ---------------- Hintergrundmusik ----------------
 // Browser erlauben Ton erst nach einer Berührung/einem Klick → startet beim
 // ersten Antippen, leise eingeblendet, in Schleife. Ein/Aus wird gemerkt.
 (() => {
   const btn = document.getElementById("tMusic");
   const audio = new Audio("sky-audio/music.mp3");
-  audio.loop = true; audio.preload = "none"; audio.volume = 0;
+  audio.loop = true; audio.preload = "auto"; audio.volume = 0;
   let on = true;
   try { on = localStorage.getItem("sky-music") !== "off"; } catch {}
+  window.soundOn = () => on;
   btn.setAttribute("aria-pressed", String(on));
   let fadeT = null;
   const fade = (to, done) => {
     clearInterval(fadeT);
     fadeT = setInterval(() => {
-      const v = audio.volume + (to > audio.volume ? 0.02 : -0.04);
+      const v = audio.volume + (to > audio.volume ? 0.05 : -0.05);
       if ((to > audio.volume && v >= to) || (to <= audio.volume && v <= to)) { audio.volume = to; clearInterval(fadeT); if (done) done(); }
       else audio.volume = Math.max(0, Math.min(1, v));
     }, 60);
   };
   let started = false;
-  const play = () => audio.play().then(() => { started = true; fade(0.4); }).catch(() => {});
+  // (Datei ist schon gekürzt: das sehr leise Intro fehlt, damit sofort Musik zu hören ist)
+  const play = () => audio.play().then(() => { started = true; fade(0.5); }).catch(() => {});
   const stop = () => fade(0, () => audio.pause());
   // Handys zählen nur pointerup/touchend/click als „Nutzer-Aktion“ (nicht pointerdown) →
   // bei jeder dieser Aktionen versuchen, bis die Musik wirklich läuft
