@@ -116,7 +116,7 @@ export default function SpaceNewsSection() {
   if (!isLoading && news.length === 0 && !errorMessage) return null;
 
   return (
-    <div className="mx-auto mt-20 w-full max-w-5xl sm:mt-28">
+    <div className="mx-auto w-full max-w-5xl">
       <button
         type="button"
         onClick={() => setIsExpanded((v) => !v)}

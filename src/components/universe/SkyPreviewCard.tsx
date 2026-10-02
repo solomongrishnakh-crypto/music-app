@@ -276,7 +276,7 @@ export default function SkyPreviewCard({ label, title }: { label: string; title:
     <Link
       ref={wrapRef}
       href="/sternenhimmel"
-      className="hud-card group relative block h-64 w-full overflow-hidden sm:h-80"
+      className="hud-card group relative block h-52 w-full overflow-hidden sm:h-64"
     >
       <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 h-full w-full" />
 

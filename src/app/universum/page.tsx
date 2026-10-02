@@ -1416,13 +1416,13 @@ export default function UniversumPage() {
         {/* Neu sortiert (Nutzerwunsch 02.10.2026, HUD-Design):
             01 Live erkunden (Sonnensystem + Sternenhimmel) → 02 Universum in Zahlen
             → 03 Maschine der Ewigkeit → Weltraum-News */}
-        <section className="mb-14">
+        <section className="mb-10">
           <SectionHeading index="01" label={t("liveExplore")} />
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             <button
               type="button"
               onClick={() => setShowSolarSystem(true)}
-              className="hud-card group relative h-64 w-full overflow-hidden text-left sm:h-80"
+              className="hud-card group relative h-52 w-full overflow-hidden text-left sm:h-64"
             >
               <SolarSystem mode="compact" />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent p-4">
@@ -1438,7 +1438,7 @@ export default function UniversumPage() {
           </div>
         </section>
 
-        <section className="mb-14">
+        <section className="mb-10">
           <SectionHeading index="02" label={t("universeInNumbers")} />
         <UniverseAgeTicker />
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -1475,10 +1475,11 @@ export default function UniversumPage() {
         </div>
         </section>
 
-        <section className="mb-14">
+        {/* Nutzerwunsch 02.10.2026: Maschine der Ewigkeit direkt über den Space News */}
+        <section className="mb-6">
           <SectionHeading index="03" label={t("gearLabel")} />
         <div className="hud-card flex flex-col items-center overflow-hidden p-3">
-          <Gear3D className="h-[19rem] w-full sm:h-[23rem]" />
+          <Gear3D className="h-60 w-full sm:h-72" />
           <p className="mt-2 max-w-md text-center text-[10px] leading-snug text-muted">{t("gearCaption")}</p>
         </div>
         </section>
