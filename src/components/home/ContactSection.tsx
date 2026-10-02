@@ -1,5 +1,6 @@
 "use client";
 
+import SectionHeading from "@/components/ui/SectionHeading";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const CONTACTS = [
@@ -34,10 +35,8 @@ const CONTACTS = [
 export default function ContactSection() {
   const { t } = useLanguage();
   return (
-    <div className="mx-auto mb-4 mt-20 w-full max-w-5xl sm:mt-28">
-      <div className="mb-6 border-b border-border pb-4">
-        <p className="label-mono text-xs uppercase">{t("contactsLabel")}</p>
-      </div>
+    <footer className="mx-auto mb-4 mt-20 w-full max-w-5xl sm:mt-28">
+      <SectionHeading index="04" label={t("contactsLabel")} />
       <div className="flex flex-wrap items-center gap-3 sm:gap-4">
         {CONTACTS.map((contact) => (
           <a
@@ -46,7 +45,7 @@ export default function ContactSection() {
             target="_blank"
             rel="noopener noreferrer me"
             title={contact.label + " " + contact.handle}
-            className="flex h-10 items-center gap-3 border border-border px-3 text-muted transition-colors hover:border-accent hover:text-accent"
+            className="hud-btn text-muted"
           >
             <span className="h-4 w-4 shrink-0">{contact.icon}</span>
             <span className="text-xs">
@@ -55,6 +54,19 @@ export default function ContactSection() {
           </a>
         ))}
       </div>
-    </div>
+
+      {/* Fußzeile: Info + Copyright (Nutzerwunsch 02.10.2026 "richtig sortieren" —
+          vorher schwebten diese Texte fest in den Bildschirmecken) */}
+      <div className="hud-card mt-10 flex flex-col gap-4 p-5 text-xs sm:flex-row sm:items-start sm:justify-between">
+        <div className="max-w-md">
+          <p className="label-mono mb-1 uppercase">{t("infoLabel")}</p>
+          <p className="text-muted">{t("infoText")}</p>
+        </div>
+        <div className="sm:text-right">
+          <p className="label-mono uppercase">{t("copyrightLabel")} {new Date().getFullYear()}</p>
+          <p className="text-muted">Centaurian.</p>
+        </div>
+      </div>
+    </footer>
   );
 }

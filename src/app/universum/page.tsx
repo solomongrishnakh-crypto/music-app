@@ -11,6 +11,7 @@ import UniverseAgeTicker from "@/components/universe/UniverseAgeTicker";
 import Gear3D from "@/components/universe/Gear3D";
 import SolarSystemModal from "@/components/universe/SolarSystemModal";
 import SkyPreviewCard from "@/components/universe/SkyPreviewCard";
+import SectionHeading from "@/components/ui/SectionHeading";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useInView } from "@/hooks/useInView";
@@ -1412,54 +1413,35 @@ export default function UniversumPage() {
           </p>
         </header>
 
-        <UniverseAgeTicker />
-
-        {/* Nutzerwunsch 27.09.2026 (nach "Google Gear"-Reel: "kannst auch
-            ein 3d zahnrad bauen?", dann Korrektur: "wieso gibt es ein rad?
-            ich dachte es wird hundeter geben?") — eine ganze Kette echter,
-            ineinandergreifender Three.js-Zahnräder (nicht nur eins), als
-            spielerische Anspielung auf die virale "bis sich das letzte Rad
-            bewegt, ist das Universum vorbei"-Untersetzungskette. Volle
-            Zeilenbreite statt schmaler Seiten-Box, damit alle Räder der
-            Reihe sichtbar Platz haben. */}
-        <div className="mb-10 flex flex-col items-center overflow-hidden border border-border/60 bg-black/35 p-3 backdrop-blur-xl">
-          {/* Titel über der Maschine, kurze Beschreibung klein und kompakt darunter */}
-          <h2 className="font-display mb-2 text-center text-sm font-semibold uppercase tracking-[0.18em] text-foreground sm:text-base">
-            {t("gearLabel")}
-          </h2>
-          <Gear3D className="h-[19rem] w-full sm:h-[23rem]" />
-          <p className="mt-2 max-w-md text-center text-[10px] leading-snug text-muted">{t("gearCaption")}</p>
-        </div>
-
-        {/* Nutzerwunsch 20.09.2026: "erstelle so ein box mit solarsystem
-            oben. wenn ich auf dem box drücke dann soll was ähnliches
-            kommen aber mit vollbildbfenster mit X button" — kleine
-            animierte Vorschau, öffnet per Klick die interaktive
-            Vollbild-Ansicht (SolarSystemModal). */}
-        <button
-          type="button"
-          onClick={() => setShowSolarSystem(true)}
-          className="group relative mb-10 h-64 w-full overflow-hidden border border-border bg-background text-left transition-colors hover:border-accent sm:h-80"
-        >
-          <SolarSystem mode="compact" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent p-4">
-            <p className="label-mono text-xs uppercase text-accent">{t("solarSystemLabel")}</p>
-            <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-foreground">
-              {t("liveExplore")}
-              <span className="transition-transform group-hover:translate-x-1">↗</span>
-            </p>
+        {/* Neu sortiert (Nutzerwunsch 02.10.2026, HUD-Design):
+            01 Live erkunden (Sonnensystem + Sternenhimmel) → 02 Universum in Zahlen
+            → 03 Maschine der Ewigkeit → Weltraum-News */}
+        <section className="mb-14">
+          <SectionHeading index="01" label={t("liveExplore")} />
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+            <button
+              type="button"
+              onClick={() => setShowSolarSystem(true)}
+              className="hud-card group relative h-64 w-full overflow-hidden text-left sm:h-80"
+            >
+              <SolarSystem mode="compact" />
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent p-4">
+                <p className="label-mono text-xs uppercase text-accent">{t("solarSystemLabel")}</p>
+                <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-foreground">
+                  {t("liveExplore")}
+                  <span className="transition-transform group-hover:translate-x-1">↗</span>
+                </p>
+              </div>
+            </button>
+            {/* Nutzerwunsch 01.10.2026: Sternenhimmel wie in Star-Walk-Apps */}
+            <SkyPreviewCard label={t("skyLinkLabel")} title={t("skyLinkTitle")} />
           </div>
-        </button>
+        </section>
 
-        {/* Nutzerwunsch 01.10.2026: Sternenhimmel wie in Star-Walk-Apps
-            (echte Sterne, Sternbilder, Milchstraße, Handy hochhalten). */}
-        <SkyPreviewCard label={t("skyLinkLabel")} title={t("skyLinkTitle")} />
-
-        <div className="mb-10">
-          <p className="label-mono text-xs uppercase">{t("universeInNumbers")}</p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-px bg-border sm:grid-cols-2 lg:grid-cols-3">
+        <section className="mb-14">
+          <SectionHeading index="02" label={t("universeInNumbers")} />
+        <UniverseAgeTicker />
+        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {UNIVERSE_FACTS.map((fact, i) => {
             const value = localize(fact.value, lang);
             const label = localize(fact.label, lang);
@@ -1491,6 +1473,15 @@ export default function UniversumPage() {
             );
           })}
         </div>
+        </section>
+
+        <section className="mb-14">
+          <SectionHeading index="03" label={t("gearLabel")} />
+        <div className="hud-card flex flex-col items-center overflow-hidden p-3">
+          <Gear3D className="h-[19rem] w-full sm:h-[23rem]" />
+          <p className="mt-2 max-w-md text-center text-[10px] leading-snug text-muted">{t("gearCaption")}</p>
+        </div>
+        </section>
 
         <SpaceNewsSection />
 

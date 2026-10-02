@@ -117,17 +117,6 @@ export default function Home() {
         <LanguageSwitcher />
       </div>
 
-      <div className="pointer-events-none fixed inset-0 z-10 hidden select-none p-6 sm:block sm:p-8">
-        <div className="pointer-events-auto absolute right-6 top-16 max-w-[220px] text-right text-xs leading-relaxed sm:right-8 sm:top-20">
-          <p className="label-mono mb-1 uppercase">{t("infoLabel")}</p>
-          <p className="text-muted">{t("infoText")}</p>
-        </div>
-        <div className="pointer-events-none absolute bottom-24 left-6 max-w-[220px] text-xs text-muted sm:bottom-8 sm:left-8">
-          <p className="label-mono uppercase">{t("copyrightLabel")} {new Date().getFullYear()}</p>
-          <p>Centaurian.</p>
-        </div>
-      </div>
-
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-20 pt-24 sm:px-8 sm:pt-32">
         <div id="musik" className="scroll-mt-24" />
 

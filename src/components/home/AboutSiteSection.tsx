@@ -23,26 +23,27 @@
 "use client";
 
 import SmokePortrait from "@/components/home/SmokePortrait";
+import SectionHeading from "@/components/ui/SectionHeading";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function AboutSiteSection() {
   const { t } = useLanguage();
   return (
-    <div className="mx-auto mt-16 w-full max-w-5xl sm:mt-20">
-      <div className="grid grid-cols-1 gap-px bg-border sm:grid-cols-2">
+    <section className="mx-auto mt-20 w-full max-w-5xl sm:mt-28">
+      <SectionHeading index="03" label={t("aboutLabel")} />
+      <div className="hud-card grid grid-cols-1 overflow-hidden sm:grid-cols-2">
         <div className="relative aspect-square overflow-hidden bg-black sm:aspect-auto sm:min-h-[26rem]">
           {/* Nutzerwunsch 28.09.2026: Video durch das Partikel-Porträt
               ersetzt; Partikel lösen sich aus den hellen Fäden, driften nach
               hinten und verwehen wie Rauch. */}
           <SmokePortrait src="/branding/about-portrait.jpg" alt="Centaurian — visuelle Identität" />
         </div>
-        <div className="glass-card flex flex-col justify-center p-6 sm:p-10">
-          <p className="label-mono mb-3 text-xs uppercase">{t("aboutLabel")}</p>
+        <div className="flex flex-col justify-center p-6 sm:p-10">
           <p className="text-sm leading-relaxed text-muted sm:text-base">
             {t("aboutText")}
           </p>
         </div>
       </div>
-    </div>
+    </section>
   );
 }

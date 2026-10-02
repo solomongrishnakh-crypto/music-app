@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Spinner from "@/components/ui/Spinner";
+import SectionHeading from "@/components/ui/SectionHeading";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AiNewsArticle {
@@ -122,9 +123,7 @@ export default function AiNewsSection() {
 
   return (
     <div id="ai-news" className="mx-auto mt-20 w-full max-w-5xl scroll-mt-24 sm:mt-28">
-      <div className="mb-10 border-b border-border pb-4">
-        <p className="label-mono text-xs uppercase">// {t("navAiNews")}</p>
-      </div>
+      <SectionHeading index="02" label={t("navAiNews")} />
 
       <button
         onClick={toggle}

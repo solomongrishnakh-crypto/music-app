@@ -4,6 +4,7 @@ import Link from "next/link";
 import UniverseTypewriter from "./UniverseTypewriter";
 import TwinkleStars from "@/components/ui/TwinkleStars";
 import SmallClock from "@/components/ui/SmallClock";
+import SectionHeading from "@/components/ui/SectionHeading";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
@@ -23,68 +24,50 @@ export default function FeaturesSection() {
     { index: "03", title: t("featureHistoryTitle"), text: t("featureHistoryText") },
   ];
 
-  return (
-    <div className="mx-auto mt-20 w-full max-w-5xl sm:mt-28">
-      <div className="mb-4 flex items-end justify-between border-b border-border pb-3">
-        <p className="label-mono text-xs uppercase">{t("featuresLabel")}</p>
-        <p className="label-mono hidden text-xs uppercase sm:block">
-          Centaurian, {new Date().getFullYear()}
-        </p>
-      </div>
+  // Nutzerwunsch 02.10.2026 (neues HUD-Design, "richtig sortieren"): die drei
+  // kleinen Kästchen und die zwei großen Teaser sind jetzt EINE Reihe aus drei
+  // großen Karten — jede führt direkt zu ihrem Bereich.
+  const CARDS = [
+    { ...FEATURES[0], href: "#musik", cta: t("navMusic"), visual: "eq" as const },
+    { ...FEATURES[1], href: "/universum", cta: t("discoverCta"), visual: "stars" as const },
+    { ...FEATURES[2], href: "/imperien", cta: t("viewMapCta"), visual: "clock" as const },
+  ];
 
-      <div className="grid grid-cols-1 gap-px bg-border sm:grid-cols-3">
-        {FEATURES.map((f) => (
-          <div key={f.index} className="glass-card flex items-center gap-3 p-3">
-            <p className="font-display text-lg font-bold text-accent">{f.index}</p>
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-foreground">
-                {f.title}
-              </p>
-              <p className="mt-0.5 text-[11px] leading-relaxed text-muted">{f.text}</p>
+  return (
+    <section className="mx-auto mt-20 w-full max-w-5xl sm:mt-28">
+      <SectionHeading index="01" label={t("featuresLabel")} />
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        {CARDS.map((c) => (
+          <Link
+            key={c.index}
+            href={c.href}
+            className="hud-card group flex min-h-[14rem] flex-col overflow-hidden p-5 sm:p-6"
+          >
+            {c.visual === "stars" && <TwinkleStars count={18} />}
+            <div className="relative flex items-start justify-between">
+              <p className="font-display text-3xl font-bold text-accent/90">{c.index}</p>
+              {c.visual === "clock" && <SmallClock />}
+              {c.visual === "eq" && (
+                <div aria-hidden="true" className="flex h-8 items-end gap-[3px]">
+                  {[40, 75, 55, 90, 60, 80, 45].map((h, i) => (
+                    <span key={i} className="w-[3px] bg-accent/70" style={{ height: `${h}%` }} />
+                  ))}
+                </div>
+              )}
             </div>
-          </div>
+            <p className="relative mt-6 font-display text-lg font-bold uppercase tracking-wide text-foreground">
+              {c.title}
+            </p>
+            <p className="relative mt-2 flex-1 text-xs leading-relaxed text-muted">{c.text}</p>
+            <p className="label-mono relative mt-5 inline-flex items-center gap-2 text-[11px] uppercase text-foreground transition-colors group-hover:text-accent">
+              {c.cta} <span className="transition-transform group-hover:translate-x-1">↗</span>
+            </p>
+          </Link>
         ))}
       </div>
 
       <UniverseTypewriter />
-
-      <Link
-        href="/universum"
-        className="group relative mt-16 flex flex-col items-start justify-between gap-4 overflow-hidden border border-border bg-surface-elevated p-6 transition-colors hover:border-accent sm:flex-row sm:items-center sm:p-10"
-      >
-        <TwinkleStars count={22} />
-        <div className="relative">
-          <p className="font-display text-lg font-bold text-accent sm:text-2xl">
-            {t("universeTitle")}
-          </p>
-          <p className="mt-3 max-w-xl text-xs leading-relaxed text-muted sm:text-sm">
-            {t("discoverUniverseText")}
-          </p>
-        </div>
-        <p className="label-mono relative inline-flex shrink-0 items-center gap-2 text-xs uppercase text-foreground transition-colors group-hover:text-accent">
-          {t("discoverCta")} ↗
-        </p>
-      </Link>
-
-      <Link
-        href="/imperien"
-        className="group mt-6 flex flex-col items-start justify-between gap-4 border border-border bg-surface-elevated p-6 transition-colors hover:border-accent sm:flex-row sm:items-center sm:p-10"
-      >
-        <div className="flex items-center gap-4">
-          <div>
-            <p className="font-display text-lg font-bold text-accent sm:text-2xl">
-              {t("historyTitle")}
-            </p>
-            <p className="mt-3 max-w-xl text-xs leading-relaxed text-muted sm:text-sm">
-              {t("historyText")}
-            </p>
-          </div>
-          <SmallClock />
-        </div>
-        <p className="label-mono inline-flex shrink-0 items-center gap-2 text-xs uppercase text-foreground transition-colors group-hover:text-accent">
-          {t("viewMapCta")} ↗
-        </p>
-      </Link>
-    </div>
+    </section>
   );
 }
