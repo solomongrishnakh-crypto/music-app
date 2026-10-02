@@ -193,14 +193,28 @@ const stars = (() => {
   }
   return out;
 })();
+// Farbindex B−V → physikalisch korrekte Sternfarbe:
+// B−V → Temperatur (Ballesteros 2012) → Planck-Spektrum → CIE-1931-Farbwerte
+// (analytische Näherung nach Wyman et al. 2013) → sRGB. Danach leicht
+// verstärkt, weil Sternfarben am Bildschirm sonst fast nur weiß wirken.
 function bvColor(bv) {
-  // grobe Umrechnung Farbindex → Farbe (blau-weiß … orange-rot)
-  const stops = [[-0.4, [155, 176, 255]], [0, [202, 216, 255]], [0.4, [248, 247, 255]], [0.8, [255, 236, 210]], [1.2, [255, 210, 161]], [1.6, [255, 187, 123]], [2.0, [255, 160, 100]]];
-  for (let i = 0; i < stops.length - 1; i++) {
-    const [a, ca] = stops[i], [b, cb] = stops[i + 1];
-    if (bv <= b) { const t = Math.max(0, (bv - a) / (b - a)); return ca.map((v, k) => Math.round(v + (cb[k] - v) * t)); }
+  const T = 4600 * (1 / (0.92 * bv + 1.7) + 1 / (0.92 * bv + 0.62));
+  const g = (x, m, s1, s2) => { const t = (x - m) / (x < m ? s1 : s2); return Math.exp(-0.5 * t * t); };
+  let X = 0, Y = 0, Z = 0;
+  for (let l = 380; l <= 780; l += 5) {
+    const lm = l * 1e-9;
+    const B = 1 / (Math.pow(lm, 5) * (Math.exp(1.4388e-2 / (lm * T)) - 1));
+    X += B * (1.056 * g(l, 599.8, 37.9, 31.0) + 0.362 * g(l, 442.0, 16.0, 26.7) - 0.065 * g(l, 501.1, 20.4, 26.2));
+    Y += B * (0.821 * g(l, 568.8, 46.9, 40.5) + 0.286 * g(l, 530.9, 16.3, 31.1));
+    Z += B * (1.217 * g(l, 437.0, 11.8, 36.0) + 0.681 * g(l, 459.0, 26.0, 13.8));
   }
-  return stops[stops.length - 1][1];
+  let r = 3.2406 * X - 1.5372 * Y - 0.4986 * Z, gg = -0.9689 * X + 1.8758 * Y + 0.0415 * Z, bb = 0.0557 * X - 0.204 * Y + 1.057 * Z;
+  r = Math.max(0, r); gg = Math.max(0, gg); bb = Math.max(0, bb);
+  const m = Math.max(r, gg, bb); r /= m; gg /= m; bb /= m;
+  // Sättigung leicht anheben (um den Mittelwert), dann Gamma
+  const avg = (r + gg + bb) / 3, k = 1.35;
+  const f = (v) => { v = Math.min(1, Math.max(0, avg + (v - avg) * k)); return Math.round(255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055)); };
+  return [f(r), f(gg), f(bb)];
 }
 
 // ---------------- Astronomie ----------------
@@ -901,6 +915,7 @@ function draw() {
     if (a < 0.02) continue;
     visStars.push(i); s.x = P.x; s.y = P.y; s.r = r;
     let [cr, cg, cb] = s.col;
+    { const sat = Math.min(1, Math.max(0.3, (4.6 - s.mag) / 3.6)); cr = Math.round(255 + (cr - 255) * sat * 1) ; cg = Math.round(255 + (cg - 255) * sat); cb = Math.round(255 + (cb - 255) * sat); }
     if (red > 0) { cr = Math.round(cr + (255 - cr) * red * 0.6); cg = Math.round(cg - cg * red * 0.25); cb = Math.round(cb - cb * red * 0.55); }
     if (r > 1.5) {
       ctx.globalAlpha = a * 0.7;
