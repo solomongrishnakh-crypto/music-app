@@ -1544,8 +1544,13 @@ document.getElementById("tLoc").onclick = () => {
 };
 
 // Handy hochhalten: Kompass + Lagesensor steuern die Blickrichtung
-let sensorAz = null, sensorAlt = null;
+let sensorAz = null, sensorAlt = null, absSeen = false;
 function onOrient(e) {
+  // Android liefert zwei Ereignisse: "deviceorientationabsolute" (Kompass, Nord = 0)
+  // und "deviceorientation" (relativ, beliebiger Nullpunkt). Gemischt springt die
+  // Richtung hin und her → sobald ein absolutes Ereignis kam, relative ignorieren.
+  if (e.type === "deviceorientationabsolute" || e.absolute === true) absSeen = true;
+  else if (absSeen) return;
   let alpha = e.alpha;
   if (typeof e.webkitCompassHeading === "number") alpha = 360 - e.webkitCompassHeading;
   if (alpha == null || e.beta == null || e.gamma == null) return;
@@ -1565,7 +1570,7 @@ document.getElementById("tSensor").onclick = async () => {
       if (r !== "granted") throw new Error("denied");
     }
   } catch { msg.hidden = false; msg.textContent = tr("sensorDenied"); return; }
-  sensorAz = null;
+  sensorAz = null; absSeen = false;
   window.addEventListener("deviceorientationabsolute", onOrient);
   window.addEventListener("deviceorientation", onOrient);
   S.sensor = true; btn.setAttribute("aria-pressed", "true");
