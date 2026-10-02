@@ -370,7 +370,9 @@ void main(){
   } else {
     float alt = max(e.z, 0.0);
     col = mix(uHor, uTop, smoothstep(0.0, 0.55, alt));
-    if (uMW > 0.5) col += milkyWay(e) * uFade * 0.62;
+    // Airglow: schwaches grünliches Leuchten der Hochatmosphäre ~10° über dem Horizont
+    col += vec3(0.010, 0.028, 0.014) * exp(-pow((alt - 0.17) / 0.09, 2.0)) * uFade * uAtmo;
+    if (uMW > 0.5) col += milkyWay(e) * uFade * 0.7;
   }
   gl_FragColor = vec4(col, 1.0);
 }`;
@@ -795,7 +797,7 @@ function draw() {
   // Helligkeit des Himmels: Tag → Dämmerung → Nacht
   const day = S.atmo ? Math.min(1, Math.max(0, (sunAlt + 12) / 16)) : 0;
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  const top = mix([2, 3, 14], [30, 100, 200], day), hor = mix([12, 17, 52], [150, 196, 242], day);
+  const top = mix([1, 2, 8], [30, 100, 200], day), hor = mix([22, 26, 46], [150, 196, 242], day);
   // Himmel: Verlauf zum Horizont, Dämmerungsglühen auf der Sonnenseite
   const water = mix([9, 15, 42], [60, 100, 150], day);
   if (glSky) {
@@ -844,9 +846,10 @@ function draw() {
   }
   // Sternbilder (unter dem Horizont schwächer, wie durch Wasser)
   if (S.showConst && starFade > 0.05) {
-    ctx.lineWidth = 1.2;
+    ctx.lineWidth = 0.9;
+    const gap = 5; // Lücke um die Sterne wie bei Stellarium
     for (const pass of [0, 1]) {
-      ctx.strokeStyle = pass === 0 ? `rgba(150,190,255,${0.5 * starFade})` : `rgba(150,190,255,${0.16 * starFade})`;
+      ctx.strokeStyle = pass === 0 ? `rgba(140,175,240,${0.36 * starFade})` : `rgba(140,175,240,${0.12 * starFade})`;
       ctx.beginPath();
       for (const id in CONST.lines) for (const seg of CONST.lines[id]) {
         let prev = null, prevUp = true;
@@ -854,7 +857,10 @@ function draw() {
           const v = eqToEnu(ra * DEG, Math.sin(dec * DEG), Math.cos(dec * DEG), tmpV);
           const up = !S.atmo || v[2] >= 0;
           const ok = project(v, P) && P.z > -0.3;
-          if (ok && prev && (up && prevUp) === (pass === 0)) { ctx.moveTo(prev.x, prev.y); ctx.lineTo(P.x, P.y); }
+          if (ok && prev && (up && prevUp) === (pass === 0)) {
+            const dx = P.x - prev.x, dy = P.y - prev.y, L = Math.hypot(dx, dy);
+            if (L > gap * 2.5) { const ux = dx / L * gap, uy = dy / L * gap; ctx.moveTo(prev.x + ux, prev.y + uy); ctx.lineTo(P.x - ux, P.y - uy); }
+          }
           prev = ok ? { x: P.x, y: P.y } : null; prevUp = up;
         }
       }
@@ -872,15 +878,30 @@ function draw() {
     const under = S.atmo && tmpV[2] < 0;
     if (under && s.mag > magLimit - 1.2) continue; // unter dem Horizont nur die helleren
     if (!project(tmpV, P) || P.x < -8 || P.y < -8 || P.x > W + 8 || P.y > H + 8) continue;
-    // Helligkeit → Größe und Deckkraft; Funkeln nur in Horizontnähe, wie echt
-    const b = Math.max(0, (magLimit + 0.5 - s.mag) / (magLimit + 2));
-    let r = 1.1 + Math.pow(b, 1.4) * 4.2 * Math.min(1.6, Math.sqrt(70 * DEG / S.fov));
-    let a = Math.min(1, 0.22 + b * 1.25) * starFade;
+    // Atmosphäre: Luftmasse → Extinktion (dunkler) und Rötung nahe am Horizont
+    let mag = s.mag, red = 0, airX = 1;
+    if (S.atmo && !under) {
+      const h = Math.max(0, tmpV[2]);
+      airX = 1 / (h + 0.025 * Math.exp(-11 * h));
+      mag += 0.22 * (airX - 1);
+      red = Math.min(1, (airX - 1) / 12);
+      if (mag > magLimit + 0.3) continue;
+    }
+    // Helligkeit → Größe/Deckkraft (logarithmisch wie das Auge)
+    const b = Math.max(0, (magLimit + 0.5 - mag) / (magLimit + 2));
+    let r = 0.9 + Math.pow(b, 1.7) * 5.2 * Math.min(1.6, Math.sqrt(70 * DEG / S.fov));
+    let a = Math.min(1, 0.16 + b * 1.35) * starFade;
     if (under) a *= 0.38; // „durch das Wasser“ gesehen
-    else if (S.atmo && tmpV[2] < 0.35) a *= 0.75 + 0.25 * Math.sin(tw * 3 + i);
+    else if (S.atmo) {
+      // Szintillation: überall leicht, nah am Horizont deutlich und schneller
+      const k = Math.min(0.55, 0.06 + 0.05 * (airX - 1));
+      const ph = i * 12.9898;
+      a *= 1 - k * (0.5 + 0.5 * Math.sin(tw * (4 + (i % 7)) + ph) * Math.sin(tw * (2.3 + (i % 5) * 0.7) + ph * 0.5));
+    }
     if (a < 0.02) continue;
     visStars.push(i); s.x = P.x; s.y = P.y; s.r = r;
-    const [cr, cg, cb] = s.col;
+    let [cr, cg, cb] = s.col;
+    if (red > 0) { cr = Math.round(cr + (255 - cr) * red * 0.6); cg = Math.round(cg - cg * red * 0.25); cb = Math.round(cb - cb * red * 0.55); }
     if (r > 1.5) {
       ctx.globalAlpha = a * 0.7;
       const g = r * 3.4;
