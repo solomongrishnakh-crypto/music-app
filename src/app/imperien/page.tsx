@@ -1331,7 +1331,7 @@ export default function ImperienPage() {
             // Kartenrahmen, Schließen-Button und Scrollen funktionieren
             // dadurch zuverlässig.
             <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/60 p-3">
-              <div className="relative max-h-[85vh] w-full max-w-md overflow-y-auto border border-border bg-background/95 p-4 pt-10 backdrop-blur-sm sm:max-w-lg sm:p-5 sm:pt-5">
+              <div className="hud-card relative max-h-[85vh] w-full max-w-md overflow-y-auto border border-border p-4 pt-10 sm:max-w-lg sm:p-5 sm:pt-5">
                 <button
                   type="button"
                   onClick={() => setSelected(null)}
@@ -1449,7 +1449,7 @@ export default function ImperienPage() {
             — Abstand zur Karte verkleinert (mt-6 -> mt-3), damit die
             Zeitleiste/Abspiel-Regler näher an der Karte sitzen und weniger
             gescrollt werden muss. */}
-        <div className="mt-3 border border-border bg-surface-elevated p-5 sm:p-6">
+        <div className="hud-card mt-3 border border-border p-5 sm:p-6">
           {/* Fix 28.09.2026 (Bildschirmvideo vom Nutzer): Beim Abspielen
               sprang die Box auf dem Handy ständig hoch und runter — die
               Jahreszahl ist je nach Ziffern unterschiedlich breit, dadurch

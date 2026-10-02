@@ -128,7 +128,7 @@ export default function AiNewsSection() {
       <button
         onClick={toggle}
         aria-expanded={expanded}
-        className="flex w-full flex-col items-stretch overflow-hidden border border-border bg-surface-elevated text-left transition-colors hover:border-accent sm:flex-row"
+        className="hud-card flex w-full flex-col items-stretch overflow-hidden border border-border text-left transition-colors hover:border-accent sm:flex-row"
       >
         <div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden bg-black sm:aspect-square sm:w-64">
           {/* Nutzerkorrektur 19.09.2026: "dieses titel bild ... sieht man auf
@@ -180,7 +180,7 @@ export default function AiNewsSection() {
                     href={item.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group flex flex-row overflow-hidden border border-border bg-surface-elevated transition-colors hover:border-accent sm:flex-col"
+                    className="hud-card group flex flex-row overflow-hidden border border-border transition-colors hover:border-accent sm:flex-col"
                   >
                     <CardThumbnail src={item.imageUrl} alt={item.title} />
                     {/* Kompaktere Karte auf Handy (Nutzerkorrektur 19.09.2026:
