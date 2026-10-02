@@ -1952,11 +1952,18 @@ function frame(now) {
       else audio.volume = Math.max(0, Math.min(1, v));
     }, 60);
   };
-  const play = () => { audio.play().then(() => fade(0.4)).catch(() => {}); };
+  let started = false;
+  const play = () => audio.play().then(() => { started = true; fade(0.4); }).catch(() => {});
   const stop = () => fade(0, () => audio.pause());
-  const first = () => { if (on && audio.paused) play(); };
-  window.addEventListener("pointerdown", first, { once: true, capture: true });
-  window.addEventListener("keydown", first, { once: true, capture: true });
+  // Handys zählen nur pointerup/touchend/click als „Nutzer-Aktion“ (nicht pointerdown) →
+  // bei jeder dieser Aktionen versuchen, bis die Musik wirklich läuft
+  const EV = ["pointerup", "touchend", "click", "keydown", "mousedown"];
+  const first = () => {
+    if (started || !on) return;
+    if (audio.paused) play();
+    if (started) EV.forEach((t) => window.removeEventListener(t, first, true));
+  };
+  EV.forEach((t) => window.addEventListener(t, first, true));
   btn.onclick = () => {
     on = !on; btn.setAttribute("aria-pressed", String(on));
     try { localStorage.setItem("sky-music", on ? "on" : "off"); } catch {}
