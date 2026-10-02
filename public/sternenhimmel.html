@@ -532,34 +532,48 @@ for (const f of ART) {
   f.img = null; f.tex = null; f.alpha = 0;
 }
 function artTexture(f) {
-  if (f.tex) return f.tex;
+  if (f.img && f.img.complete && f.img.naturalWidth) return f.img;
   if (!f.img) {
-    f.img = new Image();
-    f.img.onload = () => {
-      const c = document.createElement("canvas"); c.width = f.w; c.height = f.h;
-      const x = c.getContext("2d");
-      x.drawImage(f.img, 0, 0, f.w, f.h);
-      // Helligkeit → Deckkraft (schwarzer Hintergrund wird durchsichtig), Farbe: Hellblau
-      const d = x.getImageData(0, 0, f.w, f.h), px = d.data;
-      for (let i = 0; i < px.length; i += 4) { const l = px[i]; px[i] = 150; px[i + 1] = 180; px[i + 2] = 255; px[i + 3] = l; }
-      x.putImageData(d, 0, 0);
-      f.tex = c;
-    };
-    f.img.src = "sky-art/" + f.f;
+    // vorbereitete Bilder: 2× hochskaliert + geschärft, Hellblau mit Transparenz (WebP)
+    f.img = new Image(); f.img.decoding = "async";
+    f.img.src = "sky-art/" + f.f.replace(/\.jpg$/, ".webp");
   }
   return null;
 }
 const artTmp = [0, 0, 0];
 function drawFigures(fade, dt) {
-  const k = Math.min(1, dt / 250);
+  const k = Math.min(1, dt / 220);
+  // Nur das Sternbild in Blickrichtung zeigen (+ leise das nächste), damit es übersichtlich bleibt
+  const lim = Math.max(S.fov * 0.35, 6 * DEG);
+  let best = null, bestA = 9, second = null, secA = 9;
   for (const f of ART) {
     eqToEnu(f.cra, f.csd, f.ccd, artTmp);
-    // Winkel zur Blickrichtung → Sichtbarkeit (weich ein-/ausblenden)
     const cosA = artTmp[0] * cam.f[0] + artTmp[1] * cam.f[1] + artTmp[2] * cam.f[2];
-    const ang = Math.acos(Math.max(-1, Math.min(1, cosA)));
+    f.ang = Math.acos(Math.max(-1, Math.min(1, cosA)));
+    if (f.ang < bestA) { second = best; secA = bestA; best = f; bestA = f.ang; }
+    else if (f.ang < secA) { second = f; secA = f.ang; }
+  }
+  // Sternbild genau in der Bildmitte bevorzugen (IAU-Grenzen)
+  if (!S.selConst) {
+    const v = cam.f, c = drawFigures.c || (drawFigures.c = { v: [0, 0, 0], id: null, lst: -1 });
+    if (Math.abs(v[0] - c.v[0]) + Math.abs(v[1] - c.v[1]) + Math.abs(v[2] - c.v[2]) > 0.004 || Math.abs(LST - c.lst) > 0.004) {
+      const sd = v[1] * CL + v[2] * SL, cdcH = v[2] * CL - v[1] * SL, cdsH = -v[0];
+      const ra = LST - Math.atan2(cdsH, cdcH), dec = Math.asin(Math.max(-1, Math.min(1, sd)));
+      c.id = constellationIdAt(((ra % (2 * Math.PI)) + 2 * Math.PI) % (2 * Math.PI), dec);
+      c.v = v.slice(); c.lst = LST;
+    }
+    const cid = c.id;
+    const hit = cid && ART.find(f => f.id === cid);
+    if (hit && hit !== best) { second = best; best = hit; }
+  }
+  for (const f of ART) {
     const sel = S.selConst === f.id;
-    let target = sel ? 1 : 1 - Math.min(1, Math.max(0, (ang - S.fov * 0.18) / (S.fov * 0.3)));
-    if (S.fov > 120 * DEG && !sel) target *= 0.5;
+    let target = 0;
+    if (sel) target = 1;
+    else if (!S.selConst) {
+      if (f === best) target = f.ang < lim * 1.6 ? 1 : 0;
+      else if (f === second) target = f.ang < lim ? 0.3 : 0;
+    }
     f.alpha += (target - f.alpha) * k;
     if (f.alpha < 0.02) continue;
     const tex = artTexture(f);
@@ -576,13 +590,13 @@ function drawFigures(fade, dt) {
     const mb = ((s1[1] - s0[1]) * (a2.iy - a0.iy) - (s2[1] - s0[1]) * (a1.iy - a0.iy)) / det;
     const md = ((s2[1] - s0[1]) * (a1.ix - a0.ix) - (s1[1] - s0[1]) * (a2.ix - a0.ix)) / det;
     const me = s0[0] - ma * a0.ix - mc * a0.iy, mf = s0[1] - mb * a0.ix - md * a0.iy;
-    // unsinnig große Verzerrung (Figur hinter dem Betrachter) überspringen
     if (Math.hypot(ma, mb) * f.w > W * 8) continue;
     ctx.save();
     ctx.setTransform(DPR * ma, DPR * mb, DPR * mc, DPR * md, DPR * me, DPR * mf);
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
     ctx.globalCompositeOperation = "source-over";
-    ctx.globalAlpha = f.alpha * 0.75 * fade * (S.selConst && !sel ? 0.5 : 1);
-    ctx.drawImage(tex, 0, 0);
+    ctx.globalAlpha = f.alpha * 0.8 * fade;
+    ctx.drawImage(tex, 0, 0, f.w, f.h);
     ctx.restore();
   }
 }
