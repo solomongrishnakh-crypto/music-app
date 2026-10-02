@@ -1449,14 +1449,14 @@ export default function ImperienPage() {
             — Abstand zur Karte verkleinert (mt-6 -> mt-3), damit die
             Zeitleiste/Abspiel-Regler näher an der Karte sitzen und weniger
             gescrollt werden muss. */}
-        <div className="hud-card mt-3 border border-border p-5 sm:p-6">
+        <div className="hud-card mt-3 border border-border p-3 sm:p-4">
           {/* Fix 28.09.2026 (Bildschirmvideo vom Nutzer): Beim Abspielen
               sprang die Box auf dem Handy ständig hoch und runter — die
               Jahreszahl ist je nach Ziffern unterschiedlich breit, dadurch
               rutschte "Jahr" mal in dieselbe Zeile, mal darüber. Jetzt steht
               "Jahr" am Handy immer oben, und die Jahreszahl hat eine feste
               Mindestbreite → nichts verschiebt sich mehr. */}
-          <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+          <div className="mb-2 flex flex-row items-center justify-between gap-2 sm:gap-3">
             <p className="label-mono text-xs uppercase text-muted">Jahr</p>
             <div className="flex items-center gap-3">
               {/* Nutzerwunsch 20.09.2026: "option hinzufügen das man auch
@@ -1485,7 +1485,7 @@ export default function ImperienPage() {
                   Los
                 </button>
               </form>
-              <p className="min-w-[9rem] whitespace-nowrap text-right font-display text-base font-bold tabular-nums text-accent sm:min-w-[11rem] sm:text-xl">
+              <p className="whitespace-nowrap text-right font-display text-sm font-bold tabular-nums text-accent sm:min-w-[11rem] sm:text-xl">
                 {formatYear(currentYear, t)}
               </p>
             </div>
@@ -1514,7 +1514,7 @@ export default function ImperienPage() {
             onPointerUp={handleRulerPointerUp}
             onPointerCancel={handleRulerPointerUp}
             onKeyDown={handleRulerKeyDown}
-            className="relative h-14 touch-none select-none overflow-hidden rounded-sm border border-border bg-black/30 focus:outline-none focus-visible:border-accent"
+            className="relative h-12 touch-none select-none overflow-hidden rounded-sm border border-border bg-black/30 focus:outline-none focus-visible:border-accent"
             style={{ cursor: isDraggingRuler ? "grabbing" : "grab" }}
           >
             {/* Grundlinie wie beim Vorbild — ein dünner Strich, auf dem die
@@ -1544,8 +1544,8 @@ export default function ImperienPage() {
           {/* Abspiel-Steuerung: automatisch durch die Jahre vorspulen statt
               jedes Jahr einzeln per Hand zu ziehen (Nutzerwunsch
               18.09.2026, "durch zeit besser vorspulen"). */}
-          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-1.5">
+          <div className="mt-2 flex flex-nowrap items-center justify-between gap-1.5">
+            <div className="flex min-w-0 items-center gap-1.5">
               <button
                 type="button"
                 onClick={() => {
@@ -1563,7 +1563,7 @@ export default function ImperienPage() {
                 type="button"
                 onClick={() => setIsPlaying((p) => !p)}
                 disabled={!yearRange}
-                className="border border-border px-3 py-1.5 text-xs uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
+                className="min-w-0 truncate border border-border px-2 py-1.5 text-[10px] uppercase tracking-wide text-foreground sm:px-3 sm:text-xs transition-colors hover:border-accent hover:text-accent disabled:opacity-40"
                 aria-label={isPlaying ? t("empiresPause") : t("empiresPlay")}
                 title={isPlaying ? t("empiresPause") : t("empiresPlay")}
               >
@@ -1587,7 +1587,7 @@ export default function ImperienPage() {
             <button
               type="button"
               onClick={() => setSpeedStep((s) => (s + 1) % PLAY_SPEEDS.length)}
-              className="label-mono flex items-center gap-1.5 border border-border px-2.5 py-1.5 text-[11px] uppercase text-foreground transition-colors hover:border-accent hover:text-accent"
+              className="label-mono flex shrink-0 items-center gap-1 border border-border px-2 py-1.5 text-[10px] uppercase text-foreground transition-colors hover:border-accent hover:text-accent"
               aria-label={t("empiresSpeed")}
               title={t("empiresSpeed")}
             >
