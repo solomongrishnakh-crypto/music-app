@@ -147,7 +147,8 @@ export default function SkyPreviewCard({ label, title }: { label: string; title:
     const io = new IntersectionObserver(([e]) => { visible = e.isIntersecting; if (visible) loop(); }, { threshold: 0 });
     io.observe(wrap);
 
-    let raf = 0, t0 = performance.now(), lastClock = "";
+    const t0 = performance.now();
+    let raf = 0, lastClock = "";
 
     function drawFrame(now: number) {
       if (!ctx) return;
