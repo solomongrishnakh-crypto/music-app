@@ -278,7 +278,8 @@ const glSky = (() => {
   const vs = `attribute vec2 p; void main(){ gl_Position = vec4(p, 0.0, 1.0); }`;
   const fs = `precision ${prec} float;
 uniform vec2 uRes; uniform float uDpr, uScale, uLst, uSL, uCL, uDay, uFade, uAtmo, uMW, uTime;
-uniform vec3 uF, uR, uU, uTop, uHor, uWater;
+uniform vec3 uF, uR, uU, uTop, uHor, uWater, uMoon, uSun;
+uniform float uMoonI, uSunI;
 const float DEG = 0.017453292;
 float h3(vec3 p){ p = fract(p * 0.3183099 + vec3(0.71, 0.113, 0.419)); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
 float n3(vec3 x){ vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
@@ -333,15 +334,36 @@ void main(){
   vec3 e = normalize(uR * (X * k) + uU * (Y * k) + uF * z);
   vec3 col;
   if (uAtmo > 0.5 && e.z < 0.0) {
-    // Wasser: gespiegelter Himmel mit leichten Wellen
+    // Wasserfläche, fest in der Landschaft verankert: Punkt auf der Ebene
+    // (Augenhöhe 1), Wellen als Höhenfeld → Normale → Spiegelung + Fresnel
     float d = -e.z;
-    vec3 m = vec3(e.x + sin(px.y * 0.35 + uTime * 1.3) * 0.0025 * (0.3 + d * 6.0), e.y, d);
-    m = normalize(m);
-    col = mix(uHor * 0.8, uWater, smoothstep(0.0, 0.2, d));
-    if (uMW > 0.5) {
-      col += milkyWay(e) * uFade * 0.28;                                          // was wirklich unter dem Horizont liegt
-      col += milkyWay(m) * uFade * 0.3 * (1.0 - smoothstep(0.0, 0.15, d));        // Spiegelung nah am Ufer
-    }
+    vec2 wp = e.xy / max(d, 0.0015);
+    float near = smoothstep(0.0, 0.12, d);               // am Horizont glatt (streifender Blick)
+    float t = uTime;
+    vec2 gx = vec2(0.0), q;
+    q = wp * 0.9;  gx += vec2(0.8, 0.6) * cos(dot(q, vec2(0.8, 0.6)) * 1.0 + t * 0.9) * 0.55;
+    q = wp * 1.7;  gx += vec2(-0.5, 0.86) * cos(dot(q, vec2(-0.5, 0.86)) + t * 1.3) * 0.32;
+    q = wp * 3.1;  gx += vec2(0.96, -0.28) * cos(dot(q, vec2(0.96, -0.28)) + t * 1.9) * 0.2;
+    q = wp * 5.3;  gx += vec2(-0.2, -0.98) * cos(dot(q, vec2(-0.2, -0.98)) + t * 2.6) * 0.12;
+    float nz = n3(vec3(wp * 2.2, t * 0.4)) - 0.5;
+    gx += vec2(nz, -nz) * 0.25;
+    float amp = 0.16 * near;
+    vec3 n = normalize(vec3(-gx * amp, 1.0));
+    vec3 r = reflect(e, n); r.z = max(r.z, 0.002); r = normalize(r);
+    float cosI = clamp(-dot(e, n), 0.0, 1.0);
+    float F = 0.02 + 0.98 * pow(1.0 - cosI, 5.0);
+    vec3 sky = mix(uHor, uTop, smoothstep(0.0, 0.55, r.z));
+    if (uMW > 0.5) sky += milkyWay(r) * uFade * 0.55;
+    // Glitzerpfad von Mond und Sonne
+    sky += vec3(1.0, 0.96, 0.86) * pow(max(dot(r, uMoon), 0.0), 900.0) * uMoonI * 6.0;
+    sky += vec3(1.0, 0.92, 0.75) * pow(max(dot(r, uSun), 0.0), 600.0) * uSunI * 8.0;
+    vec3 body = uWater * (0.45 + 0.3 * smoothstep(0.0, 0.5, d));
+    col = mix(body, sky, F);
+    // leichte Schaumkämme / Lichtkräuselung in der Nähe
+    col += uHor * 0.18 * smoothstep(0.55, 1.0, n3(vec3(wp * 4.0, t * 0.7))) * smoothstep(0.02, 0.25, d);
+    col += uHor * 0.25 * pow(1.0 - cosI, 3.0) * clamp(dot(gx, normalize(e.xy + 1e-4)), 0.0, 1.0) * near; // Wellenkämme fangen den Horizontschein
+    // was wirklich unter dem Horizont liegt (schwach durchscheinend)
+    if (uMW > 0.5) col += milkyWay(e) * uFade * 0.12;
   } else {
     float alt = max(e.z, 0.0);
     col = mix(uHor, uTop, smoothstep(0.0, 0.55, alt));
@@ -361,7 +383,7 @@ void main(){
   const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
   const loc = gl.getAttribLocation(prog, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-  const U = {}; for (const n of ["uRes", "uDpr", "uScale", "uLst", "uSL", "uCL", "uDay", "uFade", "uAtmo", "uMW", "uTime", "uF", "uR", "uU", "uTop", "uHor", "uWater"]) U[n] = gl.getUniformLocation(prog, n);
+  const U = {}; for (const n of ["uRes", "uDpr", "uScale", "uLst", "uSL", "uCL", "uDay", "uFade", "uAtmo", "uMW", "uTime", "uF", "uR", "uU", "uTop", "uHor", "uWater", "uMoon", "uSun", "uMoonI", "uSunI"]) U[n] = gl.getUniformLocation(prog, n);
   // geringere Auflösung genügt (der Schleier ist weich) und schont Handys
   let gDpr = 1;
   function resize() {
@@ -379,6 +401,9 @@ void main(){
       gl.uniform1f(U.uTime, performance.now() / 1000);
       gl.uniform3fv(U.uF, cam.f); gl.uniform3fv(U.uR, cam.r); gl.uniform3fv(U.uU, cam.u);
       gl.uniform3fv(U.uTop, top.map((v) => v / 255)); gl.uniform3fv(U.uHor, hor.map((v) => v / 255)); gl.uniform3fv(U.uWater, water.map((v) => v / 255));
+      const mo = bodies[1], su = bodies[0];
+      gl.uniform3fv(U.uMoon, mo && mo.v ? mo.v : [0, 0, -1]); gl.uniform1f(U.uMoonI, mo && mo.v && mo.v[2] > 0 ? Math.max(0.15, mo.illum ?? 0.5) : 0);
+      gl.uniform3fv(U.uSun, su && su.v ? su.v : [0, 0, -1]); gl.uniform1f(U.uSunI, su && su.v && su.v[2] > 0 ? 1 : 0);
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     },
   };
@@ -542,6 +567,7 @@ function artTexture(f) {
 }
 const artTmp = [0, 0, 0];
 function drawFigures(fade, dt) {
+  drawFigures.gp = null; drawFigures.sky = null;
   const k = Math.min(1, dt / 220);
   // Nur das Sternbild in Blickrichtung zeigen (+ leise das nächste), damit es übersichtlich bleibt
   const lim = Math.max(S.fov * 0.35, 6 * DEG);
@@ -549,7 +575,7 @@ function drawFigures(fade, dt) {
   for (const f of ART) {
     eqToEnu(f.cra, f.csd, f.ccd, artTmp);
     const cosA = artTmp[0] * cam.f[0] + artTmp[1] * cam.f[1] + artTmp[2] * cam.f[2];
-    f.ang = Math.acos(Math.max(-1, Math.min(1, cosA)));
+    f.ang = Math.acos(Math.max(-1, Math.min(1, cosA))); f._alt = artTmp[2];
     if (f.ang < bestA) { second = best; secA = bestA; best = f; bestA = f.ang; }
     else if (f.ang < secA) { second = f; secA = f.ang; }
   }
@@ -595,7 +621,18 @@ function drawFigures(fade, dt) {
     ctx.setTransform(DPR * ma, DPR * mb, DPR * mc, DPR * md, DPR * me, DPR * mf);
     ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
     ctx.globalCompositeOperation = "source-over";
-    ctx.globalAlpha = f.alpha * 0.8 * fade;
+    const A = f.alpha * 0.8 * fade;
+    if (S.atmo) {
+      // über dem Horizont voll, darunter (im Wasser) gedämpft
+      const gp = drawFigures.gp || (drawFigures.gp = groundPath());
+      ctx.save(); ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.clip(gp, "evenodd");
+      ctx.setTransform(DPR * ma, DPR * mb, DPR * mc, DPR * md, DPR * me, DPR * mf);
+      ctx.globalAlpha = A * 0.3; ctx.drawImage(tex, 0, 0, f.w, f.h); ctx.restore();
+      const sky = drawFigures.sky || (drawFigures.sky = (() => { const q = new Path2D(); q.rect(-2e5, -2e5, 4e5, 4e5); q.addPath(gp); return q; })());
+      ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.clip(sky, "evenodd");
+      ctx.setTransform(DPR * ma, DPR * mb, DPR * mc, DPR * md, DPR * me, DPR * mf);
+    }
+    ctx.globalAlpha = S.atmo ? A : A;
     ctx.drawImage(tex, 0, 0, f.w, f.h);
     ctx.restore();
   }
@@ -1056,9 +1093,10 @@ function drawMoon(x, y, r, moon, sun) {
   ctx.restore();
 }
 
-function drawGround(day) {
-  // Horizontkreis abtasten; der Boden ist die Seite, auf der der Nadir liegt
-  const pts = [];
+// Fläche unter dem Horizont als Path2D (Füllregel "evenodd")
+function groundPath() {
+  const path = new Path2D();
+  let first = true;
   for (let a = 0; a <= 360; a += 2) {
     const v = enu(a * DEG, 0);
     const z = v[0] * cam.f[0] + v[1] * cam.f[1] + v[2] * cam.f[2];
@@ -1066,43 +1104,56 @@ function drawGround(day) {
     let x = cam.cx + (v[0] * cam.r[0] + v[1] * cam.r[1]) * k;
     let y = cam.cy - (v[0] * cam.u[0] + v[1] * cam.u[1] + v[2] * cam.u[2]) * k;
     x = Math.max(-1e5, Math.min(1e5, x)); y = Math.max(-1e5, Math.min(1e5, y));
-    pts.push([x, y]);
+    first ? path.moveTo(x, y) : path.lineTo(x, y); first = false;
   }
-  const nad = [0, 0, -1];
+  path.closePath();
   const zN = -cam.f[2];
-  ctx.beginPath();
-  for (let i = 0; i < pts.length; i++) i ? ctx.lineTo(pts[i][0], pts[i][1]) : ctx.moveTo(pts[i][0], pts[i][1]);
-  ctx.closePath();
-  let nadirInside = true;
+  let nadirInside = false;
   if (zN > -0.999) {
     const k = 2 / (1 + zN) * cam.scale;
-    const nx = cam.cx + (nad[0] * cam.r[0] + nad[1] * cam.r[1]) * k;
-    const ny = cam.cy - (nad[2] * cam.u[2]) * k;
-    nadirInside = ctx.isPointInPath(nx * DPR, ny * DPR);
-  } else nadirInside = false;
-  if (!nadirInside) ctx.rect(-2e5, -2e5, 4e5, 4e5);
+    const nx = cam.cx, ny = cam.cy - (-cam.u[2]) * k;
+    nadirInside = ctx.isPointInPath(path, nx * DPR, ny * DPR);
+  }
+  if (!nadirInside) path.rect(-2e5, -2e5, 4e5, 4e5);
+  return path;
+}
+function drawGround(day) {
+  const gp = groundPath();
+  ctx.beginPath();
   // Wasserfläche (wie ein ruhiger See bis zum Horizont)
-  if (!glSky) { ctx.fillStyle = rgb(mix([16, 22, 74], [70, 110, 165], day)); ctx.fill("evenodd"); }
+  if (!glSky) { ctx.fillStyle = rgb(mix([16, 22, 74], [70, 110, 165], day)); ctx.fill(gp, "evenodd"); }
   ctx.save();
-  ctx.clip("evenodd");
+  ctx.clip(gp, "evenodd");
   drawReflections(day);
   ctx.restore();
-  // ferne Hügel als dunkle Silhouette knapp über dem Horizont (Vierecke je 1°)
-  ctx.beginPath();
-  const hillH = (a) => (0.32 + 0.3 * Math.sin(a * 0.11) * Math.sin(a * 0.037 + 1) + 0.15 * Math.sin(a * 0.53)) * DEG;
+  // gegenüberliegendes Ufer: Hügel + Baumreihe, fest an der Himmelsrichtung,
+  // dazu ihr Spiegelbild im Wasser
+  const tree = (a) => { const f = a * 7.3, i = Math.floor(f), fr = f - i, h = (Math.sin(i * 91.7) * 4375.85) % 1; return Math.abs(h) * Math.sin(fr * Math.PI) ; };
+  const hillH = (a) => {
+    const base = 0.9 + 1.3 * Math.sin(a * DEG * 2 + 1) * Math.sin(a * DEG * 5 + 0.3) + 0.6 * Math.sin(a * DEG * 13) + 0.25 * Math.sin(a * DEG * 37);
+    const land = Math.max(0, base);                       // wo base ≤ 0: offenes Wasser bis zum Horizont
+    return (land > 0 ? land + 0.6 * tree(a) * Math.min(1, land * 2) : 0) * DEG;
+  };
   const q = (az, alt) => (project(enu(az * DEG, alt), P) && P.z > -0.15 ? [P.x, P.y] : null);
-  let pa = q(0, 0), pb = q(0, hillH(0));
-  for (let a = 1; a <= 360; a++) {
-    const ca = q(a, 0), cb = q(a, hillH(a));
-    if (pa && pb && ca && cb && Math.abs(ca[0] - pa[0]) < W) {
-      ctx.moveTo(pa[0], pa[1]); ctx.lineTo(ca[0], ca[1] + 0.5); ctx.lineTo(cb[0], cb[1]); ctx.lineTo(pb[0], pb[1]); ctx.closePath();
+  const step = S.fov < 30 * DEG ? 0.125 : S.fov < 70 * DEG ? 0.25 : 0.5;
+  const shore = new Path2D(), mirror = new Path2D();
+  let pa = q(0, 0), pb = q(0, hillH(0)), pm = q(0, -hillH(0) * 0.9);
+  for (let a = step; a <= 360 + 1e-9; a += step) {
+    const h = hillH(a), ca = q(a, 0), cb = q(a, h), cm = q(a, -h * 0.9);
+    if (pa && pb && ca && cb && Math.abs(ca[0] - pa[0]) < W && (h > 0 || pb[1] !== pa[1])) {
+      shore.moveTo(pa[0], pa[1] + 0.6); shore.lineTo(ca[0], ca[1] + 0.6); shore.lineTo(cb[0], cb[1]); shore.lineTo(pb[0], pb[1]); shore.closePath();
+      if (pm && cm) { mirror.moveTo(pa[0], pa[1]); mirror.lineTo(ca[0], ca[1]); mirror.lineTo(cm[0], cm[1]); mirror.lineTo(pm[0], pm[1]); mirror.closePath(); }
     }
-    pa = ca; pb = cb;
+    pa = ca; pb = cb; pm = cm;
   }
-  ctx.fillStyle = rgb(mix([3, 4, 16], [30, 44, 40], day)); ctx.fill();
+  ctx.fillStyle = rgb(mix([2, 3, 12], [28, 46, 38], day)); ctx.fill(shore);
+  ctx.globalAlpha = 0.55; ctx.fillStyle = rgb(mix([1, 2, 10], [24, 40, 40], day)); ctx.fill(mirror); ctx.globalAlpha = 1;
   // feiner Lichtsaum am Horizont
-  ctx.beginPath();
-  for (let i = 0; i < pts.length; i++) i ? ctx.lineTo(pts[i][0], pts[i][1]) : ctx.moveTo(pts[i][0], pts[i][1]);
+  ctx.beginPath(); let first = true;
+  for (let a = 0; a <= 360; a += 2) {
+    if (!project(enu(a * DEG, 0), P) || P.z < -0.3) { first = true; continue; }
+    first ? ctx.moveTo(P.x, P.y) : ctx.lineTo(P.x, P.y); first = false;
+  }
   ctx.strokeStyle = `rgba(120,140,230,${0.25 + day * 0.3})`; ctx.lineWidth = 1; ctx.stroke();
 }
 // Spiegelung im Wasser: Sterne, Milchstraße, Mond und Planeten an der
@@ -1128,6 +1179,7 @@ function drawReflections(day) {
   }
   ctx.globalAlpha = 1;
   ctx.globalCompositeOperation = "source-over";
+  if (glSky) return; // Wellen, Glitzern und Spiegelung macht der Shader (in der Landschaft verankert)
   const hy = projectAltAz(S.az, 0);
   const y0 = hy ? hy.y : 0;
   // Himmelsschein am Horizont spiegelt sich im Wasser
