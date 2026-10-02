@@ -14,7 +14,9 @@ const securityHeaders = [
   // Deaktiviert Browser-Funktionen, die die Seite nicht braucht.
   {
     key: "Permissions-Policy",
-    value: "camera=(), microphone=(), geolocation=(), payment=()",
+    // geolocation=(self): der Sternenhimmel darf (nach Nachfrage) den
+    // eigenen Standort nutzen — fremde Seiten weiterhin nicht.
+    value: "camera=(), microphone=(), geolocation=(self), payment=()",
   },
   // Erzwingt HTTPS bei allen zukünftigen Aufrufen (nur wirksam, sobald
   // die Seite tatsächlich per HTTPS ausgeliefert wird).
@@ -44,7 +46,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://unpkg.com",
       "img-src 'self' data: https:",
       "media-src 'self'",
-      "connect-src 'self' https://www.googleapis.com https://api.spaceflightnewsapi.net https://techcrunch.com https://unpkg.com https://*.wikipedia.org",
+      "connect-src 'self' https://www.googleapis.com https://api.spaceflightnewsapi.net https://techcrunch.com https://unpkg.com https://*.wikipedia.org https://geocoding-api.open-meteo.com",
       "frame-src 'self' https://www.youtube.com",
       "font-src 'self' data:",
       "object-src 'none'",

@@ -325,6 +325,17 @@ const TRANSLATIONS_SOURCE = {
     de: "Heute", en: "Today", hi: "आज", zh: "今天", ko: "오늘", ja: "今日",
     es: "Hoy", fr: "Aujourd'hui", tr: "Bugün", ru: "Сегодня", pt: "Hoje", ar: "اليوم", el: "Σήμερα",
   },
+  skyLinkLabel: {
+    de: "Sternenhimmel live", en: "Night sky live", hi: "रात्रि आकाश लाइव", zh: "实时星空", ko: "실시간 밤하늘", ja: "ライブ星空",
+    es: "Cielo nocturno en vivo", fr: "Ciel nocturne en direct", tr: "Canlı gece gökyüzü", ru: "Звёздное небо онлайн", pt: "Céu noturno ao vivo", ar: "سماء الليل مباشرة", el: "Νυχτερινός ουρανός ζωντανά",
+  },
+  skyLinkTitle: {
+    de: "Welche Sterne siehst du gerade? Halte dein Handy in den Himmel", en: "Which stars can you see right now? Hold your phone up to the sky",
+    hi: "अभी कौन से तारे दिख रहे हैं? अपना फ़ोन आकाश की ओर करें", zh: "现在能看到哪些星星？把手机对准天空", ko: "지금 어떤 별이 보일까요? 휴대폰을 하늘로 향하세요", ja: "今どの星が見える？スマホを空にかざそう",
+    es: "¿Qué estrellas ves ahora? Apunta tu móvil al cielo", fr: "Quelles étoiles voyez-vous maintenant ? Pointez votre téléphone vers le ciel",
+    tr: "Şu an hangi yıldızları görüyorsun? Telefonunu gökyüzüne tut", ru: "Какие звёзды видны сейчас? Наведите телефон на небо",
+    pt: "Quais estrelas você vê agora? Aponte o celular para o céu", ar: "ما النجوم التي تراها الآن؟ وجّه هاتفك نحو السماء", el: "Ποια αστέρια βλέπεις τώρα; Στρέψε το κινητό στον ουρανό",
+  },
   solarSystemDragHint: {
     de: "Ziehen: drehen · Rechtsklick / 2 Finger: verschieben · Mausrad / Pinch: zoomen · Doppelklick: hinfliegen", en: "Drag: orbit · Right-drag / 2 fingers: pan · Scroll / pinch: zoom · Double-click: fly to",
     hi: "खींचें: घुमाएं · राइट-ड्रैग / 2 उंगलियां: खिसकाएं · स्क्रॉल / पिंच: ज़ूम · डबल-क्लिक: वहां जाएं", zh: "拖动：环绕旋转 · 右键 / 双指：平移 · 滚轮 / 双指捏合：缩放 · 双击：飞往", ko: "드래그: 회전 · 우클릭 / 두 손가락: 이동 · 스크롤 / 핀치: 확대/축소 · 더블클릭: 날아가기", ja: "ドラッグ：回転 · 右ドラッグ / 2本指：移動 · ホイール / ピンチ：ズーム · ダブルクリック：移動",

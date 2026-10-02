@@ -1450,6 +1450,25 @@ export default function UniversumPage() {
           </div>
         </button>
 
+        {/* Nutzerwunsch 01.10.2026: Sternenhimmel wie in Star-Walk-Apps
+            (echte Sterne, Sternbilder, Milchstraße, Handy hochhalten). */}
+        <Link
+          href="/sternenhimmel"
+          className="group relative -mt-6 mb-10 flex h-28 w-full items-end overflow-hidden border border-border p-4 transition-colors hover:border-accent sm:h-32"
+          style={{
+            background:
+              "radial-gradient(1px 1px at 12% 30%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 28% 62%, #dfe6ff 50%, transparent 51%), radial-gradient(1.5px 1.5px at 44% 22%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 61% 48%, #fff 50%, transparent 51%), radial-gradient(1.5px 1.5px at 77% 18%, #ffe9c9 50%, transparent 51%), radial-gradient(1px 1px at 88% 66%, #fff 50%, transparent 51%), radial-gradient(1px 1px at 52% 80%, #cfd8ff 50%, transparent 51%), linear-gradient(115deg, transparent 30%, rgba(170,160,255,0.18) 48%, transparent 66%), linear-gradient(#070a2e, #1a2266)",
+          }}
+        >
+          <div>
+            <p className="label-mono text-xs uppercase text-accent">{t("skyLinkLabel")}</p>
+            <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-foreground">
+              {t("skyLinkTitle")}
+              <span className="transition-transform group-hover:translate-x-1">↗</span>
+            </p>
+          </div>
+        </Link>
+
         <div className="mb-10">
           <p className="label-mono text-xs uppercase">{t("universeInNumbers")}</p>
         </div>

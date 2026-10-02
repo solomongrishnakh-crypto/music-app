@@ -11,6 +11,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: BASE + "/", lastModified: now, changeFrequency: "weekly", priority: 1 },
     { url: BASE + "/universum", lastModified: now, changeFrequency: "monthly", priority: 0.8 },
+    { url: BASE + "/sternenhimmel", lastModified: now, changeFrequency: "monthly", priority: 0.8 },
     { url: BASE + "/imperien", lastModified: now, changeFrequency: "monthly", priority: 0.8 },
   ];
 }
