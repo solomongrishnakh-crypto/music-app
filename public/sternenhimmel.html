@@ -823,6 +823,7 @@ function drawDSOLabels(free, fade) {
     ctx.shadowColor = "rgba(0,0,30,0.8)"; ctx.shadowBlur = 4;
     ctx.fillText(lab, d.x, y);
     ctx.shadowBlur = 0;
+    labelHits.push({ x0: d.x - w / 2 - 4, y0: y - 9, x1: d.x + w / 2 + 4, y1: y + 9, hit: { type: "dso", id: o.id, ra: o.rad, dec: o.decr } });
   }
 }
 function fmtDist(ly) {
@@ -833,6 +834,7 @@ function fmtDist(ly) {
 // ---------------- Zeichnen ----------------
 const tmpV = [0, 0, 0], P = { x: 0, y: 0, z: 0 };
 const visStars = [];
+const labelHits = []; // Beschriftungen zum Antippen: {x0,y0,x1,y1,hit}
 let bodies = []; // Sonne, Mond, Planeten des aktuellen Bildes
 const DIRS = TX.dirs;
 
@@ -1050,6 +1052,7 @@ function draw() {
   else drawHorizonLine();
 
   // Beschriftungen
+  labelHits.length = 0;
   const rects = [];
   const free = (x, y, w, h) => { for (const q of rects) if (x < q[2] && x + w > q[0] && y < q[3] && y + h > q[1]) return false; rects.push([x, y, x + w, y + h]); return true; };
   ctx.textAlign = "center"; ctx.textBaseline = "middle";
@@ -1087,6 +1090,7 @@ function draw() {
       ctx.shadowColor = "rgba(0,0,30,0.8)"; ctx.shadowBlur = 4;
       ctx.fillText(label, P.x + 8, P.y + 1);
       ctx.shadowBlur = 0; ctx.textAlign = "center";
+      labelHits.push({ x0: P.x - 6, y0: P.y - 9, x1: P.x + 10 + w, y1: P.y + 9, star: [n.ra * DEG, n.dec * DEG] });
     }
   }
   if (S.showDSO && starFade > 0.15) drawDSOLabels(free, starFade);
@@ -1105,6 +1109,8 @@ function draw() {
       ctx.letterSpacing = "1.5px";
       ctx.fillText(label, P.x, P.y);
       ctx.letterSpacing = "0px";
+      const lw = w + label.length * 1.5;
+      labelHits.push({ x0: P.x - lw / 2, y0: P.y - 9, x1: P.x + lw / 2, y1: P.y + 9, hit: { type: "const", id, ra: c.ra * DEG, dec: c.dec * DEG, name: c.n[LANG] || c.n.la } });
     }
   }
   // Auswahl-Ring
@@ -1651,6 +1657,19 @@ function nearestConstellationWide(ra, dec) {
   return bd < 12 * DEG ? CONST.names[best].n[LANG] || CONST.names[best].n.la : null;
 }
 function pick(x, y) {
+  // Wer auf einen Namen tippt, meint das Benannte (nicht einen Stern daneben)
+  for (let i = labelHits.length - 1; i >= 0; i--) {
+    const L = labelHits[i];
+    if (x < L.x0 - 4 || x > L.x1 + 4 || y < L.y0 - 5 || y > L.y1 + 5) continue;
+    if (L.hit) return L.hit;
+    if (L.star) {
+      // zugehörigen Katalogstern suchen (sichtbare Sterne, nächster zur Namensposition)
+      let si = -1, sd = 1e9;
+      const [ra, dec] = L.star;
+      for (const k of visStars) { const t = stars[k]; const dd = Math.abs(t.ra - ra) + Math.abs(Math.asin(t.sd) - dec); if (dd < sd) { sd = dd; si = k; } }
+      if (si >= 0 && sd < 0.01) return starHit(si);
+    }
+  }
   let best = null, bd = 22;
   for (const b of bodies) if (b.sx != null) { const d = Math.hypot(b.sx - x, b.sy - y) - (b.pr || 0); if (d < bd) { bd = d; best = { type: "body", id: b.id }; } }
   if (best) return best;
@@ -1662,6 +1681,9 @@ function pick(x, y) {
   // heller Stern direkt unter dem Finger gewinnt gegen eine große Galaxie dahinter
   if (bo && (si < 0 || sbd > 4 || stars[si].mag > 4)) return { type: "dso", id: bo.id, ra: bo.rad, dec: bo.decr };
   if (si < 0) return null;
+  return starHit(si);
+}
+function starHit(si) {
   const s = stars[si];
   const dec = Math.asin(s.sd);
   let name = null, key = null;
