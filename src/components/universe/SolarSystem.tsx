@@ -554,6 +554,10 @@ function SolarSystem2D({
     });
 
     function draw(now: number) {
+      if (mode === "compact" && document.documentElement.dataset.overlay === "1") {
+        rafRef.current = requestAnimationFrame(draw);
+        return;
+      }
       const dtMs = Math.min(100, now - lastTime);
       lastTime = now;
       if (speedRef.current === LIVE) {

@@ -260,6 +260,7 @@ export default function SkyPreviewCard({ label, title }: { label: string; title:
       cancelAnimationFrame(raf);
       const step = (now: number) => {
         if (!visible || document.hidden) return;
+        if (document.documentElement.dataset.overlay === "1") { raf = requestAnimationFrame(step); return; }
         drawFrame(now);
         if (!reduce) raf = requestAnimationFrame(step);
       };

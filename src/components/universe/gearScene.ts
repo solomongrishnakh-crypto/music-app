@@ -1146,6 +1146,10 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
   // (siehe machineTime.ts) — für alle Besucher gleich, startet nie neu.
   let animationId = 0;
   function animate() {
+    if (document.documentElement.dataset.overlay === "1") {
+      animationId = requestAnimationFrame(animate);
+      return;
+    }
     const { axles: axleAngles, motor } = machineAngles(preciseNow());
     axles.forEach((axle, i) => {
       axle.rotation.z = axleAngles[i];

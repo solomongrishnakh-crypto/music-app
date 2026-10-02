@@ -399,3 +399,12 @@ button.border:hover, a.border:hover { box-shadow: 0 0 18px -6px rgba(var(--hud-a
     linear-gradient(140deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 45%),
     rgba(10, 9, 14, 0.8) !important;
 }
+
+/* Vollbild-Sonnensystem offen: Glas-Unschärfe dahinter abschalten (Leistung) */
+html[data-overlay="1"] .glass-card,
+html[data-overlay="1"] .glass-panel,
+html[data-overlay="1"] .hud-card,
+html[data-overlay="1"] .hud-btn {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}

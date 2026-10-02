@@ -334,6 +334,11 @@ export default function ThreeBackground() {
     let elapsed = 0;
 
     function animate() {
+      // Vollbild-Sonnensystem offen → Hintergrund verdeckt, nicht rendern (Nutzer: "es laggt")
+      if (document.documentElement.dataset.overlay === "1") {
+        animationId = requestAnimationFrame(animate);
+        return;
+      }
       elapsed += 0.006;
 
       // Energieströme: gleichmäßig weiter auf zufälligem Weg, nie Pause

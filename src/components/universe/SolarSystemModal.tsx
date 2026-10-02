@@ -28,6 +28,16 @@ export default function SolarSystemModal({ onClose }: SolarSystemModalProps) {
     setImageFailed(false);
   }, [selected]);
 
+  // Nutzerkorrektur 03.10.2026 ("es laggt wenn ich auf Sonnensystem-Box
+  // drücke"): solange das Vollbild offen ist, pausieren Hintergrund,
+  // Box-Animationen und Glas-Unschärfe dahinter (sind ohnehin verdeckt).
+  useEffect(() => {
+    document.documentElement.dataset.overlay = "1";
+    return () => {
+      delete document.documentElement.dataset.overlay;
+    };
+  }, []);
+
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
       if (e.key !== "Escape") return;
