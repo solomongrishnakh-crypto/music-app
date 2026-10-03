@@ -1,0 +1,77 @@
+# Centaurian
+
+> Centaurian (https://centaurian.vercel.app) ist ein kostenloses, privates Hobby-Projekt ohne Anmeldung und ohne Werbung: Musik hören, den Sternenhimmel live erkunden, das Sonnensystem in 3D entdecken und die Weltgeschichte auf einer interaktiven Karte erleben. Die Webseite ist in 13 Sprachen verfügbar (Deutsch, Englisch, Hindi, Chinesisch, Koreanisch, Japanisch, Spanisch, Französisch, Türkisch, Russisch, Portugiesisch, Arabisch, Griechisch).
+>
+> Centaurian (https://centaurian.vercel.app) is a free, private hobby project with no sign-up and no ads: listen to music, explore the live night sky, discover the solar system in 3D and experience world history on an interactive map. Available in 13 languages.
+
+Diese Datei beschreibt alle Werkzeuge der Webseite für KI-Assistenten und Suchmaschinen, weil viele Inhalte interaktiv (Grafik, 3D, WebGL) sind und als Text schwer lesbar wären.
+
+## Seiten / Pages
+
+- [Startseite / Home](https://centaurian.vercel.app/): Musik-Suche und Wiedergabe, KI-News, Übersicht aller Bereiche, Kontakt.
+- [Universum / Universe](https://centaurian.vercel.app/universum): Sonnensystem live in 3D, Maschine der Ewigkeit, Universum in Zahlen, Weltraum-News.
+- [Sternenhimmel / Night sky](https://centaurian.vercel.app/sternenhimmel): interaktive Sternkarte live für den eigenen Ort.
+- [Imperien / Empires](https://centaurian.vercel.app/imperien): interaktive Weltgeschichte-Karte mit allen Reichen von 3400 v. Chr. bis heute.
+
+## Musik (Startseite)
+
+- Songs, Künstler und Alben suchen und direkt auf der Seite hören.
+- Läuft ausschließlich über die offizielle YouTube Data API und den offiziellen YouTube-Player; nichts wird heruntergeladen oder gespeichert.
+- Favoriten, Zufallswiedergabe, Player-Leiste, die beim Seitenwechsel weiterläuft.
+- Kein Login, kein Abo.
+
+## KI-News (Startseite)
+
+- Aktuelle Schlagzeilen rund um künstliche Intelligenz, live aus Nachrichtenquellen geladen (keine erfundenen Meldungen).
+
+## Sternenhimmel (/sternenhimmel)
+
+- Interaktive Sternkarte für den eigenen Ort und jede Uhrzeit (live oder Zeitreise ±12 Stunden, weltweite Ortswahl, GPS).
+- Über 108.000 echte Sterne (HYG-Katalog) in Teleskop-Farben nach ihrem Farbindex B−V: O/B blau, A blauweiß, F/G weiß bis gelblich, K orange, M rot-orange.
+- Alle 88 Sternbilder mit Linien, künstlerischen Figuren und Namen; Linien und Namen erscheinen nur beim Sternbild, auf das man gerade schaut.
+- Planeten, Mond und Sonne mit Entfernung zur Erde, Lichtlaufzeit, Phase/Beleuchtung, Auf- und Untergang, Durchmesser, Masse, Monde, Rotation, Umlaufzeit, Temperatur.
+- Milchstraße mit realistischen Sternwolken und Staubbahnen, Galaxien, Nebel und Sternhaufen (Messier- und NGC-Objekte) mit Infos.
+- Handy-Sensor („Handy in den Himmel halten“): Kompass und Lagesensor steuern die Ansicht wie ein echtes Gyroskop, inklusive Neigen/Kippen.
+- Antippen eines Sterns, Planeten oder Sternbilds zeigt Daten (Entfernung in Lichtjahren, Sterntyp, Oberflächentemperatur, Helligkeit, Leuchtkraft, Radius) und eine Einführung aus Wikipedia in der eingestellten Sprache.
+- Horizont mit Wasserfläche und Spiegelung, Tag-/Nacht-Himmel (am Tag nur helle Sterne und Planeten), Atmosphäre und Funkeln.
+- Hintergrundmusik und Klang-Effekte beim Antippen (abschaltbar).
+
+## Sonnensystem live (/universum)
+
+- Echte 3D-Ansicht des Sonnensystems mit den aktuellen Positionen aller Planeten (berechnet aus NASA/JPL-Bahndaten), Zwergplaneten und Raumsonden (z. B. Voyager 1).
+- Bewegung in Echtzeit, Datum frei wählbar, Abstände zur Erde, echter Maßstab umschaltbar.
+- Steuerung: ziehen zum Drehen, zwei Finger/Rechtsklick zum Verschieben, Pinch/Mausrad zum Zoomen, Doppelklick zum Hinfliegen; Planet antippen für Steckbrief.
+
+## Maschine der Ewigkeit (/universum)
+
+- Eine 3D-Zahnrad-Maschine, die symbolisch seit dem Urknall läuft.
+- Jedes Zahnrad treibt das nächste an, aber sechsmal langsamer: Das erste dreht sich in etwa 3 Sekunden einmal, das zweite in etwa 20 Sekunden, das dritte in etwa 2 Minuten – und so weiter.
+- Das letzte Zahnrad braucht für eine einzige Umdrehung 13,8 Milliarden Jahre – so lange, wie das Universum existiert. Niemand wird es sich je bewegen sehen.
+- Eine rote Markierung zeigt, wie weit sich jedes Rad seit dem Urknall gedreht hat. Man kann wischen oder Pfeile nutzen, um von Rad zu Rad bis zum letzten zu fahren.
+- Englisch: "Eternity machine / gear machine" – a chain of gears, each six times slower than the previous; the last one turns once every 13.8 billion years (the age of the universe).
+
+## Universum in Zahlen (/universum)
+
+- Live-Zähler für das Alter des Universums (≈ 13,797 Milliarden Jahre, Planck-Messung).
+- Fakten-Karten mit Erklärung und Bild: Alter des Universums, beobachtbares Universum (≈ 93 Mrd. Lichtjahre), Anzahl der Galaxien, Dunkle Materie, Dunkle Energie, Schwarze Löcher, Exoplaneten, James-Webb-Weltraumteleskop u. a.
+
+## Weltraum-News (/universum)
+
+- Aktuelle Raumfahrt-Nachrichten live (Spaceflight News API) mit Bild, Quelle, Mission und Link zum Artikel.
+
+## Weltgeschichte-Karte / Imperien (/imperien)
+
+- Interaktive Weltkarte mit allen Reichen, Imperien und Königreichen von etwa 3400 v. Chr. bis heute (Daten: Cliopatria / Seshat Global History Databank, CC BY 4.0).
+- Jahres-Regler mit Zeitleiste, Abspielen „durch die Jahre“ in mehreren Geschwindigkeiten, Sprung zu Anfang und Ende.
+- Reiche antippen für Steckbrief (Zeitraum, Sprache, Beschreibung aus Wikipedia); Suche nach Reich oder Herrscher.
+- Übersicht der größten Imperien der Geschichte.
+
+## Kontakt
+
+- Telegram: https://t.me/Perseus641
+- X: https://x.com/capone_835
+
+## Rechtliches / Datenquellen
+
+- Nur offizielle, öffentlich dokumentierte Schnittstellen und offene Daten: YouTube Data API, NASA/JPL, HYG-Sternkatalog (CC BY-SA 4.0), d3-celestial (BSD), Wikipedia (CC BY-SA 4.0), Cliopatria/Seshat (CC BY 4.0), Spaceflight News API.
+- Keine Anmeldung, keine Werbung, keine Downloads.

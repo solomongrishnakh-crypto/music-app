@@ -38,10 +38,53 @@ const JSON_LD = {
   isPartOf: { "@type": "WebSite", name: "Centaurian", url: "https://centaurian.vercel.app" },
 };
 
+// Fragen & Antworten für Google und KI-Assistenten (Nutzerwunsch 03.10.2026:
+// "KI soll alle Tools und Details auslesen können") — die 3D-Ansichten selbst
+// sind Grafik und für Maschinen nicht lesbar.
+const FAQ_LD = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "Was ist die Maschine der Ewigkeit?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Eine 3D-Zahnrad-Maschine, die symbolisch seit dem Urknall läuft. Jedes Zahnrad treibt das nächste an, aber sechsmal langsamer: das erste dreht sich in etwa 3 Sekunden, das zweite in etwa 20 Sekunden, das dritte in etwa 2 Minuten. Das letzte Zahnrad braucht für eine einzige Umdrehung 13,8 Milliarden Jahre – so lange, wie das Universum existiert. Eine rote Markierung zeigt, wie weit sich jedes Rad seit dem Urknall gedreht hat.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "What is the eternity machine (gear machine)?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "A 3D chain of gears that has symbolically been running since the Big Bang. Each gear turns the next one six times slower; the last gear needs 13.8 billion years – the age of the universe – for a single turn.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Was zeigt das Sonnensystem live?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Eine echte 3D-Ansicht des Sonnensystems mit den aktuellen Positionen aller Planeten aus NASA/JPL-Bahndaten, Zwergplaneten und Raumsonden wie Voyager 1. Die Planeten bewegen sich in Echtzeit, das Datum ist frei wählbar, Abstände zur Erde und echter Maßstab lassen sich anzeigen. Ein Planet antippen zeigt seinen Steckbrief.",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "Was ist Universum in Zahlen?",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "Ein Live-Zähler für das Alter des Universums (etwa 13,797 Milliarden Jahre nach der Planck-Messung) und Fakten-Karten mit Erklärungen: beobachtbares Universum (etwa 93 Milliarden Lichtjahre), Anzahl der Galaxien, Dunkle Materie, Dunkle Energie, Schwarze Löcher, Exoplaneten und mehr.",
+      },
+    },
+  ],
+};
+
 export default function UniversumLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(FAQ_LD) }} />
       {children}
     </>
   );
