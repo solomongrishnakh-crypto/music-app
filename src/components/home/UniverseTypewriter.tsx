@@ -14,14 +14,14 @@ import { useInView } from "@/hooks/useInView";
  * Text fertig eingetippt ist (Typewriter.onDone), fängt er an, langsam und
  * weich zwischen dunkler/heller zu pulsieren (animate-text-glow-pulse).
  */
-export default function UniverseTypewriter() {
+export default function UniverseTypewriter({ className = "mb-10 mt-16 sm:mb-14 sm:mt-24" }: { className?: string }) {
   const { ref, inView } = useInView<HTMLDivElement>();
   const [typingDone, setTypingDone] = useState(false);
 
   return (
-    <div ref={ref} className="mb-10 mt-16 flex justify-center sm:mb-14 sm:mt-24">
+    <div ref={ref} className={`flex w-full justify-center text-center ${className}`}>
       <p
-        className={`font-display min-h-[1.5em] text-xs uppercase tracking-[0.35em] text-foreground/90 sm:text-sm ${
+        className={`font-display min-h-[1.5em] text-xs uppercase tracking-[0.35em] pl-[0.35em] text-foreground/90 sm:text-sm ${
           typingDone ? "animate-text-glow-pulse" : ""
         }`}
         style={!typingDone ? { textShadow: "0 0 12px rgba(255, 242, 238, 0.5)" } : undefined}

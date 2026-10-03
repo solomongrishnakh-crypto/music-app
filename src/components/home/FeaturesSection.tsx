@@ -35,6 +35,8 @@ export default function FeaturesSection() {
 
   return (
     <section className="mx-auto mt-20 w-full max-w-5xl sm:mt-28">
+      {/* Nutzerwunsch 03.10.2026: Schriftzug genau mittig über "Was dich erwartet" */}
+      <UniverseTypewriter className="mb-8 sm:mb-10" />
       <SectionHeading index="01" label={t("featuresLabel")} />
 
       {/* Nutzerwunsch 03.10.2026: "Boxen kleiner, kompakter und moderner" —
@@ -76,7 +78,6 @@ export default function FeaturesSection() {
         ))}
       </div>
 
-      <UniverseTypewriter />
     </section>
   );
 }
