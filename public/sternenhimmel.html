@@ -533,8 +533,15 @@ function enu(az, alt) { const c = Math.cos(alt); return [Math.sin(az) * c, Math.
 let cam = null;
 function setupCamera() {
   const f = enu(S.az, S.alt);
-  const r = [Math.cos(S.az), -Math.sin(S.az), 0];
-  const u = [r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0]];
+  let r = [Math.cos(S.az), -Math.sin(S.az), 0];
+  let u = [r[1] * f[2] - r[2] * f[1], r[2] * f[0] - r[0] * f[2], r[0] * f[1] - r[1] * f[0]];
+  // Neigung (Rollen) wie bei einer echten Kamera: Handy schräg → Himmel kippt mit
+  if (S.roll && Math.abs(S.roll) > 1e-4) {
+    const c = Math.cos(S.roll), sn = Math.sin(S.roll);
+    const fx = (a) => [f[1] * a[2] - f[2] * a[1], f[2] * a[0] - f[0] * a[2], f[0] * a[1] - f[1] * a[0]];
+    const fr = fx(r), fu = fx(u);
+    r = r.map((v, i) => v * c + fr[i] * sn); u = u.map((v, i) => v * c + fu[i] * sn);
+  }
   const scale = (H / 2) / (2 * Math.tan(S.fov / 4));
   cam = { f, r, u, scale, cx: W / 2, cy: H / 2 };
 }
@@ -578,7 +585,7 @@ function project(v, out) {
   const z = v[0] * cam.f[0] + v[1] * cam.f[1] + v[2] * cam.f[2];
   if (z < -0.6) return false;
   const k = 2 / (1 + z) * cam.scale;
-  out.x = cam.cx + (v[0] * cam.r[0] + v[1] * cam.r[1]) * k;
+  out.x = cam.cx + (v[0] * cam.r[0] + v[1] * cam.r[1] + v[2] * cam.r[2]) * k;
   out.y = cam.cy - (v[0] * cam.u[0] + v[1] * cam.u[1] + v[2] * cam.u[2]) * k;
   out.z = z;
   return true;
@@ -587,7 +594,7 @@ function unproject(x, y) {
   const X = (x - cam.cx) / cam.scale, Y = -(y - cam.cy) / cam.scale;
   const rr = X * X + Y * Y, z = (4 - rr) / (4 + rr), k = (1 + z) / 2;
   const a = X * k, b = Y * k;
-  return [cam.r[0] * a + cam.u[0] * b + cam.f[0] * z, cam.r[1] * a + cam.u[1] * b + cam.f[1] * z, cam.u[2] * b + cam.f[2] * z];
+  return [cam.r[0] * a + cam.u[0] * b + cam.f[0] * z, cam.r[1] * a + cam.u[1] * b + cam.f[1] * z, cam.r[2] * a + cam.u[2] * b + cam.f[2] * z];
 }
 
 // Äquatorial → Horizont (Vektor), mit lokaler Sternzeit
@@ -1038,7 +1045,7 @@ function draw() {
   visStars.length = 0;
   // schnelle Variante von eqToEnu + project (ohne Winkelfunktionen pro Stern)
   const cLs = Math.cos(LST), sLs = Math.sin(LST);
-  const f0 = cam.f[0], f1 = cam.f[1], f2 = cam.f[2], r0 = cam.r[0], r1 = cam.r[1], u0 = cam.u[0], u1 = cam.u[1], u2 = cam.u[2];
+  const f0 = cam.f[0], f1 = cam.f[1], f2 = cam.f[2], r0 = cam.r[0], r1 = cam.r[1], r2 = cam.r[2], u0 = cam.u[0], u1 = cam.u[1], u2 = cam.u[2];
   const rCorner = Math.hypot(W, H) / 2 / cam.scale, zMin = Math.cos(Math.min(Math.PI, 2 * Math.atan(rCorner / 2) + 0.03));
   const nS = SMAG.length, atmo = S.atmo, lim2 = magLimit - 1.2;
   for (let i = 0; i < nS; i++) {
@@ -1052,7 +1059,7 @@ function draw() {
     const under = atmo && Uu < 0;
     if (under && sm > lim2) continue; // unter dem Horizont nur die helleren
     const kk = 2 / (1 + z) * cam.scale;
-    P.x = cam.cx + (E * r0 + N * r1) * kk; P.y = cam.cy - (E * u0 + N * u1 + Uu * u2) * kk;
+    P.x = cam.cx + (E * r0 + N * r1 + Uu * r2) * kk; P.y = cam.cy - (E * u0 + N * u1 + Uu * u2) * kk;
     if (P.x < -8 || P.y < -8 || P.x > W + 8 || P.y > H + 8) continue;
     const s = stars[i];
     tmpV[2] = Uu;
@@ -1215,8 +1222,6 @@ function draw() {
       ctx.lineWidth = 1;
       ctx.strokeStyle = grad(P.x - half - 26, P.x - half); ctx.beginPath(); ctx.moveTo(P.x - half - 26, P.y); ctx.lineTo(P.x - half, P.y); ctx.stroke();
       ctx.strokeStyle = grad(P.x + half + 26, P.x + half); ctx.beginPath(); ctx.moveTo(P.x + half + 26, P.y); ctx.lineTo(P.x + half, P.y); ctx.stroke();
-      ctx.fillStyle = `rgba(255,120,100,${0.85 * al})`;
-      for (const sx of [-1, 1]) { const dx = P.x + sx * (half + 1); ctx.beginPath(); ctx.moveTo(dx, P.y - 3); ctx.lineTo(dx + 3, P.y); ctx.lineTo(dx, P.y + 3); ctx.lineTo(dx - 3, P.y); ctx.closePath(); ctx.fill(); }
       // Schrift mit sanftem Leuchten
       ctx.shadowColor = `rgba(120,165,255,${0.9 * al})`; ctx.shadowBlur = 12;
       ctx.fillStyle = `rgba(240,245,255,${al})`;
@@ -1384,7 +1389,7 @@ function drawMoon(x, y, r, moon, sun) {
   moon.illum = (1 - Math.cos(elong)) / 2;
   let ang = 0;
   if (project(sun.v, P)) ang = Math.atan2(P.y - y, P.x - x);
-  else { const sv = sun.v; ang = Math.atan2(-(sv[0] * cam.u[0] + sv[1] * cam.u[1] + sv[2] * cam.u[2]), sv[0] * cam.r[0] + sv[1] * cam.r[1]); }
+  else { const sv = sun.v; ang = Math.atan2(-(sv[0] * cam.u[0] + sv[1] * cam.u[1] + sv[2] * cam.u[2]), sv[0] * cam.r[0] + sv[1] * cam.r[1] + sv[2] * cam.r[2]); }
   ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
   ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = 0.35;
   ctx.drawImage(tinted(230, 230, 220), -r * 4, -r * 4, r * 8, r * 8);
@@ -1416,7 +1421,7 @@ function groundPath() {
     const v = enu(a * DEG, 0);
     const z = v[0] * cam.f[0] + v[1] * cam.f[1] + v[2] * cam.f[2];
     const k = 2 / Math.max(1e-4, 1 + z) * cam.scale;
-    let x = cam.cx + (v[0] * cam.r[0] + v[1] * cam.r[1]) * k;
+    let x = cam.cx + (v[0] * cam.r[0] + v[1] * cam.r[1] + v[2] * cam.r[2]) * k;
     let y = cam.cy - (v[0] * cam.u[0] + v[1] * cam.u[1] + v[2] * cam.u[2]) * k;
     x = Math.max(-1e5, Math.min(1e5, x)); y = Math.max(-1e5, Math.min(1e5, y));
     first ? path.moveTo(x, y) : path.lineTo(x, y); first = false;
@@ -1426,7 +1431,7 @@ function groundPath() {
   let nadirInside = false;
   if (zN > -0.999) {
     const k = 2 / (1 + zN) * cam.scale;
-    const nx = cam.cx, ny = cam.cy - (-cam.u[2]) * k;
+    const nx = cam.cx - cam.r[2] * k, ny = cam.cy - (-cam.u[2]) * k;
     nadirInside = ctx.isPointInPath(path, nx * DPR, ny * DPR);
   }
   if (!nadirInside) path.rect(-2e5, -2e5, 4e5, 4e5);
@@ -2077,22 +2082,37 @@ document.getElementById("tLoc").onclick = () => {
 };
 
 // Handy hochhalten: Kompass + Lagesensor steuern die Blickrichtung
-let sensorAz = null, sensorAlt = null, absSeen = false;
+let sensorAz = null, sensorAlt = null, sensorRoll = 0, absSeen = false;
+// Nutzerwunsch 03.10.2026: "wie echtes Gyro – Handy schräg soll realistisch
+// sein". Komplette Drehmatrix aus alpha/beta/gamma (W3C, Ost-Nord-Oben):
+// Blickrichtung = Rückseite des Handys, Bild-oben = Oberkante des Displays
+// (bei Querformat entsprechend gedreht) → daraus Richtung UND Neigung.
 function onOrient(e) {
-  // Android liefert zwei Ereignisse: "deviceorientationabsolute" (Kompass, Nord = 0)
-  // und "deviceorientation" (relativ, beliebiger Nullpunkt). Gemischt springt die
-  // Richtung hin und her → sobald ein absolutes Ereignis kam, relative ignorieren.
-  if (e.type === "deviceorientationabsolute" || e.absolute === true) absSeen = true;
-  else if (absSeen) return;
+  // Android: "deviceorientationabsolute" (Kompass) + "deviceorientation" (relativ).
+  // Nur ein absolutes Ereignis MIT Werten zählt (manche Browser, z. B. Brave,
+  // schicken es leer) – sonst blieben wir bei leeren Daten hängen.
+  const isAbs = e.type === "deviceorientationabsolute" || e.absolute === true;
+  if (isAbs && e.alpha != null) absSeen = true;
+  else if (!isAbs && absSeen) return;
   let alpha = e.alpha;
   if (typeof e.webkitCompassHeading === "number") alpha = 360 - e.webkitCompassHeading;
   if (alpha == null || e.beta == null || e.gamma == null) return;
   const a = alpha * DEG, b = e.beta * DEG, g = e.gamma * DEG;
-  // Rückseite des Handys (Kamera-Richtung) im Ost-Nord-Oben-System
-  const E = -Math.sin(g) * Math.cos(a) - Math.cos(g) * Math.sin(b) * Math.sin(a);
-  const N = -Math.sin(g) * Math.sin(a) + Math.cos(g) * Math.sin(b) * Math.cos(a);
-  const U = -Math.cos(g) * Math.cos(b);
-  sensorAz = Math.atan2(E, N); sensorAlt = Math.asin(Math.max(-1, Math.min(1, U)));
+  const cA = Math.cos(a), sA = Math.sin(a), cB = Math.cos(b), sB = Math.sin(b), cG = Math.cos(g), sG = Math.sin(g);
+  // Geräteachsen in Weltkoordinaten (Spalten der Drehmatrix)
+  const X = [cA * cG - sA * sB * sG, cG * sA + cA * sB * sG, -cB * sG]; // rechts
+  const Y = [-cB * sA, cA * cB, sB];                                   // oben (Hochformat)
+  const Z = [cA * sG + cG * sA * sB, sA * sG - cA * cG * sB, cB * cG];  // aus dem Display heraus
+  const F = [-Z[0], -Z[1], -Z[2]];                                     // Kamera-Richtung
+  const ang = ((screen.orientation && screen.orientation.angle) || window.orientation || 0) * DEG;
+  const Us = [0, 1, 2].map((i) => Math.cos(ang) * Y[i] + Math.sin(ang) * X[i]); // Bild-oben
+  sensorAz = Math.atan2(F[0], F[1]);
+  sensorAlt = Math.asin(Math.max(-1, Math.min(1, F[2])));
+  // Rollwinkel: Bild-oben gegenüber dem "geraden" Kamera-oben um die Blickachse
+  const f = enu(sensorAz, sensorAlt), r0 = [Math.cos(sensorAz), -Math.sin(sensorAz), 0];
+  const u0 = [r0[1] * f[2] - r0[2] * f[1], r0[2] * f[0] - r0[0] * f[2], r0[0] * f[1] - r0[1] * f[0]];
+  const cx = [u0[1] * Us[2] - u0[2] * Us[1], u0[2] * Us[0] - u0[0] * Us[2], u0[0] * Us[1] - u0[1] * Us[0]];
+  sensorRoll = Math.atan2(cx[0] * f[0] + cx[1] * f[1] + cx[2] * f[2], u0[0] * Us[0] + u0[1] * Us[1] + u0[2] * Us[2]);
 }
 // Knopf „Zum Horizont“, wenn man steil nach unten oder oben schaut
 const horizonBtn = document.getElementById("horizonBtn");
@@ -2190,11 +2210,13 @@ function frame(now) {
     S.fov = Math.exp(Math.log(anim.fov0) + (Math.log(anim.fov1) - Math.log(anim.fov0)) * e);
     if (t >= 1) anim = null;
   } else if (S.sensor && sensorAz !== null) {
-    S.az += wrap(sensorAz - S.az) * 0.15; S.alt += (sensorAlt - S.alt) * 0.15; clampAlt();
+    S.az += wrap(sensorAz - S.az) * 0.2; S.alt += (sensorAlt - S.alt) * 0.2; clampAlt();
+    S.roll = (S.roll || 0) + wrap(sensorRoll - (S.roll || 0)) * 0.2;
   } else if (!drag && (Math.abs(vel.az) > 1e-6 || Math.abs(vel.alt) > 1e-6)) {
     S.az += vel.az * dt; S.alt += vel.alt * dt; clampAlt();
     const k = Math.exp(-dt / 350); vel.az *= k; vel.alt *= k;
   }
+  if (!S.sensor && S.roll) { S.roll *= Math.exp(-dt / 160); if (Math.abs(S.roll) < 1e-3) S.roll = 0; }
   if (keys.size) {
     const r = 0.0009 * dt * (S.fov / (70 * DEG));
     if (keys.has("ArrowLeft")) S.az -= r; if (keys.has("ArrowRight")) S.az += r;
