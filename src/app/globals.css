@@ -460,3 +460,35 @@ html[data-overlay="1"] .hud-btn {
   20%, 60% { box-shadow: 0 0 0 2px rgba(var(--hud-accent), 0.85), 0 0 28px rgba(var(--hud-accent), 0.45); }
 }
 .dl-flash { animation: dlFlash 2s ease; }
+
+/* Kompakter "App herunterladen"-Knopf (Pille mit Leuchtrand) */
+.dl-pill {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.3rem 0.7rem 0.3rem 0.3rem;
+  border-radius: 999px;
+  border: 1px solid rgba(var(--hud-accent), 0.35);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  font-family: var(--font-mono, ui-monospace), monospace;
+  font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+  color: #f2f2f0;
+  box-shadow: 0 0 18px -8px rgba(var(--hud-accent), 0.7);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.dl-pill:hover, .dl-pill:focus-visible {
+  border-color: rgba(var(--hud-accent), 0.8);
+  box-shadow: 0 0 22px -6px rgba(var(--hud-accent), 0.9);
+  transform: translateY(-1px);
+}
+.dl-pill-ico {
+  display: grid; place-items: center; width: 1.35rem; height: 1.35rem; border-radius: 999px;
+  color: #fff; background: rgba(var(--hud-accent), 0.85);
+  box-shadow: 0 0 10px rgba(var(--hud-accent), 0.6);
+}
+.dl-pill-ico svg { width: 0.75rem; height: 0.75rem; }
+.dl-pill:hover .dl-pill-ico svg { animation: dlBounce 0.8s ease infinite; }
+@keyframes dlBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(2px); } }
+.dl-pill-meta {
+  padding-left: 0.5rem; border-left: 1px solid rgba(var(--hud-accent), 0.3);
+  color: rgba(var(--hud-accent), 0.95); letter-spacing: 0.12em;
+}

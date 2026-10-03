@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import UniverseTypewriter from "./UniverseTypewriter";
+import AppDownloadPill from "./AppDownloadPill";
 import TwinkleStars from "@/components/ui/TwinkleStars";
 import SmallClock from "@/components/ui/SmallClock";
 import SectionHeading from "@/components/ui/SectionHeading";
@@ -36,7 +37,8 @@ export default function FeaturesSection() {
   return (
     <section className="mx-auto w-full max-w-5xl">
       {/* Nutzerwunsch 03.10.2026: Schriftzug genau mittig zwischen Suchleiste und "Was dich erwartet" (gleicher Abstand oben/unten) */}
-      <UniverseTypewriter className="mb-14 mt-6 sm:mb-20 sm:mt-12" />
+      <UniverseTypewriter className="mb-5 mt-6 sm:mb-6 sm:mt-12" />
+      <AppDownloadPill />
       <SectionHeading index="01" label={t("featuresLabel")} />
 
       {/* Nutzerwunsch 03.10.2026: "Boxen kleiner, kompakter und moderner" —

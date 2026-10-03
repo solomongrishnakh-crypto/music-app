@@ -117,31 +117,6 @@ export default function Home() {
         <LanguageSwitcher />
       </div>
 
-      {/* Nutzerwunsch 03.10.2026: kleiner "App herunterladen"-Knopf oben,
-          scrollt weich zur Download-Kachel bei den Kontakten und lässt sie
-          kurz aufleuchten. Nur auf der Startansicht, wo die Kachel existiert. */}
-      {!query.trim() && !showHero && (
-        <div className="fixed left-4 top-4 z-20 sm:left-8 sm:top-8">
-          <button
-            type="button"
-            onClick={() => {
-              const el = document.getElementById("app-download");
-              if (!el) return;
-              el.scrollIntoView({ behavior: "smooth", block: "center" });
-              el.classList.remove("dl-flash");
-              window.setTimeout(() => el.classList.add("dl-flash"), 600);
-              window.setTimeout(() => el.classList.remove("dl-flash"), 2600);
-            }}
-            className="glass-card flex items-center gap-1.5 px-2.5 py-1.5 text-[11px] uppercase tracking-wide text-foreground transition-colors hover:text-accent"
-          >
-            <svg viewBox="0 0 24 24" className="h-3 w-3 text-accent" fill="none" stroke="currentColor" strokeWidth={2.2} aria-hidden="true">
-              <path d="M12 4v11m0 0-4.5-4.5M12 15l4.5-4.5M5 19.5h14" strokeLinecap="round" strokeLinejoin="round" />
-            </svg>
-            <span className="label-mono">{t("appTopBtn")}</span>
-          </button>
-        </div>
-      )}
-
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-20 pt-12 sm:px-8 sm:pt-20">
         <div id="musik" className="scroll-mt-24" />
 
