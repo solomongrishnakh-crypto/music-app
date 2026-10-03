@@ -389,31 +389,40 @@ vec3 milkyWay(vec3 e){
                  dot(vec3(-0.8676661490, -0.1980763734,  0.4559837762), q));
   float l = atan(gv.y, gv.x) / DEG;   // −180 … 180, 0 = Zentrum (Schütze)
   float b = asin(clamp(gv.z, -1.0, 1.0)) / DEG;
-  float thick = 4.0 + 9.0 * g(l, 32.0);
-  float lumL = 0.28 + 0.75 * g(l, 26.0) + 0.42 * g(l - 77.0, 15.0) + 0.3 * g(l + 72.0, 20.0) + 0.18 * g(l - 140.0, 35.0);
-  float band = g(b + 0.6 * g(l, 40.0), thick);
-  if (band * lumL < 0.004) return vec3(0.0);
+  // Nutzerwunsch 03.10.2026: "Milchstraßen-Wolken sehr realistisch" —
+  // verwirbelte (domain-warped) Sternwolken, faserige dunkle Staubadern,
+  // Staub rötet statt nur abzudunkeln, neutralere Farben wie auf Fotos.
+  float bc = b + 0.6 * g(l, 40.0) + 1.4 * (n3(vec3(l * 0.045, 1.3, 2.1)) - 0.5);
+  float thick = 3.6 + 9.0 * g(l, 30.0);
+  float lumL = 0.26 + 0.78 * g(l, 24.0) + 0.42 * g(l - 77.0, 14.0) + 0.3 * g(l + 72.0, 20.0) + 0.22 * g(l - 27.0, 6.0) + 0.18 * g(l - 140.0, 35.0);
+  float band = g(bc, thick);
+  float halo = g(bc, thick * 2.6) * 0.22;
+  if ((band + halo) * lumL < 0.003) return vec3(0.0);
   vec3 P = gv * 6.0;
-  float big = fbm(P, 4);                       // große Wolkenzüge
-  float mid = fbm(P * 3.1 + 7.0, 4);           // Sternwolken
-  float fine = n3(gv * 260.0);                 // Körnung aus unaufgelösten Sternen
-  float clouds = smoothstep(0.25, 0.85, big) * (0.55 + 0.9 * smoothstep(0.35, 0.8, mid));
-  float grain = 0.75 + 0.5 * fine;
+  vec3 w = vec3(fbm(P * 1.3 + 1.0, 3), fbm(P * 1.3 + 5.2, 3), fbm(P * 1.3 + 9.7, 3)) - 0.5;
+  vec3 Q = P + w * 1.7;                        // verwirbelte Koordinaten
+  float big = fbm(Q, 5);                       // große Wolkenzüge
+  float mid = fbm(Q * 3.2 + 7.0, 4);           // Sternwolken
+  float clouds = smoothstep(0.27, 0.9, big) * (0.45 + 1.15 * smoothstep(0.4, 0.86, mid));
+  float grain = 0.72 + 0.34 * n3(gv * 170.0) + 0.2 * n3(gv * 340.0); // unaufgelöste Sterne
   // Großer Riss (l ≈ −10° … 85°) mit fleckigen Rändern
   float riftC = 0.6 + 2.0 * sin(radians(l) * 5.0 + 0.5) + 1.0 * sin(radians(l) * 17.0);
-  float rift = g(b - riftC, 1.6 + 1.2 * fbm(P * 2.0 + 3.0, 3)) * smoothstep(-16.0, -6.0, l) * (1.0 - smoothstep(78.0, 88.0, l));
-  rift *= smoothstep(0.3, 0.6, fbm(P * 4.0 + 11.0, 4));
-  // feine Staubfäden überall nahe der Ebene
-  float fil = smoothstep(0.52, 0.72, fbm(P * 5.0 + 23.0, 5)) * g(b, thick * 0.8);
-  // Kohlensack (l ≈ −58°, b ≈ −1°)
-  float coal = g(length(vec2(l + 58.5, b + 1.0)), 2.6);
-  float dust = clamp(rift * 0.95 + fil * 0.6 + coal * 0.85, 0.0, 0.95);
-  float lum = band * lumL * (0.35 + clouds) * grain * (1.0 - dust);
-  vec3 cool = vec3(0.62, 0.64, 0.98), warm = vec3(1.0, 0.86, 0.74);
-  vec3 col = mix(cool, warm, g(l, 30.0) * 0.85) * lum;
+  float rift = g(bc - riftC, 1.5 + 1.3 * fbm(Q * 2.0 + 3.0, 3)) * smoothstep(-16.0, -6.0, l) * (1.0 - smoothstep(78.0, 88.0, l));
+  rift *= smoothstep(0.3, 0.62, fbm(Q * 4.0 + 11.0, 4));
+  // dünne, verästelte Staubadern (ridged noise) + dunkle Wolkenflecken
+  float rdg = 1.0 - abs(2.0 * fbm(Q * 4.6 + 23.0, 4) - 1.0);
+  float fil = smoothstep(0.85, 0.97, rdg) * g(bc, thick * 0.8);
+  float blot = smoothstep(0.56, 0.76, fbm(Q * 2.2 + 31.0, 4)) * g(bc, thick * 0.6);
+  float coal = g(length(vec2(l + 58.5, b + 1.0)), 2.6); // Kohlensack
+  float dust = clamp(rift * 0.9 + fil * 0.38 + blot * 0.3 + coal * 0.85, 0.0, 0.95);
+  float lum = (band * (0.24 + 1.15 * clouds) + halo * 0.4) * lumL * grain;
+  vec3 cool = vec3(0.8, 0.84, 1.0), warm = vec3(1.0, 0.89, 0.74);
+  vec3 col = mix(cool, warm, clamp(g(l, 30.0) * 0.85 + 0.2 * (mid - 0.5), 0.0, 1.0)) * lum;
+  col *= 1.0 - dust * vec3(0.9, 0.94, 0.99);   // Staub schluckt Blau stärker → bräunliche Ränder
+  col += vec3(1.0, 0.97, 0.92) * pow(clouds, 3.0) * band * lumL * 0.22 * (1.0 - dust); // helle Sternwolken-Kerne
   // rötliche Gasnebel (H-II-Regionen) in Schütze, Schwan, Kiel
-  float neb = smoothstep(0.62, 0.8, fbm(P * 2.6 + 41.0, 4)) * g(b, 3.0) * (g(l - 6.0, 10.0) + g(l - 80.0, 8.0) + g(l + 73.0, 10.0) + 0.3);
-  col += vec3(0.9, 0.32, 0.45) * neb * 0.22 * band;
+  float neb = smoothstep(0.64, 0.82, fbm(Q * 2.6 + 41.0, 4)) * g(bc, 3.0) * (g(l - 6.0, 10.0) + g(l - 80.0, 8.0) + g(l + 73.0, 10.0) + 0.25);
+  col += vec3(0.95, 0.34, 0.42) * neb * 0.2 * band * (1.0 - dust * 0.6);
   return col;
 }
 void main(){
@@ -713,7 +722,7 @@ function drawFigures(fade, dt) {
     ctx.setTransform(DPR * ma, DPR * mb, DPR * mc, DPR * md, DPR * me, DPR * mf);
     ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
     ctx.globalCompositeOperation = "source-over";
-    const A = f.alpha * 0.8 * fade;
+    const A = f.alpha * 0.4 * fade; // Nutzerwunsch 03.10.2026: Sternbilder durchsichtiger
     if (S.atmo) {
       // über dem Horizont voll, darunter (im Wasser) gedämpft
       const gp = drawFigures.gp || (drawFigures.gp = groundPath());
@@ -886,7 +895,7 @@ function draw() {
   // Helligkeit des Himmels: Tag → Dämmerung → Nacht
   const day = S.atmo ? Math.min(1, Math.max(0, (sunAlt + 12) / 16)) : 0;
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-  const top = mix([1, 2, 8], [30, 100, 200], day), hor = mix([22, 26, 46], [150, 196, 242], day);
+  const top = mix([1, 2, 8], [30, 100, 200], day), hor = mix([18, 21, 36], [150, 196, 242], day);
   // Himmel: Verlauf zum Horizont, Dämmerungsglühen auf der Sonnenseite
   const water = mix([9, 15, 42], [60, 100, 150], day);
   if (glSky) {
