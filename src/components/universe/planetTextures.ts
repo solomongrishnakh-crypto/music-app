@@ -14,9 +14,32 @@
 
 type Rgb = [number, number, number];
 
+// Nutzerkorrektur 03.10.2026 ("hängt ca. 5 Sekunden, bevor das Fenster
+// aufgeht"): die Texturen werden Pixel für Pixel berechnet — hex() pro
+// Pixel neu zu parsen und Millionen echter Math.sin-Aufrufe kosteten ~5 s.
+// Jetzt: Farb-Cache + Sinus-Tabelle (für Texturen genau genug).
+const HEX_CACHE = new Map<string, Rgb>();
 function hex(h: string): Rgb {
-  const n = parseInt(h.replace("#", ""), 16);
-  return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+  let c = HEX_CACHE.get(h);
+  if (!c) {
+    const n = parseInt(h.replace("#", ""), 16);
+    c = [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    HEX_CACHE.set(h, c);
+  }
+  return c;
+}
+
+const SIN_N = 4096;
+const SIN_TAB = new Float32Array(SIN_N + 1);
+for (let i = 0; i <= SIN_N; i++) SIN_TAB[i] = Math.sin((i / SIN_N) * Math.PI * 2);
+const INV_TAU_N = SIN_N / (Math.PI * 2);
+/** Schneller Sinus per Tabelle mit linearer Interpolation (Fehler < 1e-6). */
+function fsin(x: number): number {
+  let f = x * INV_TAU_N;
+  f -= Math.floor(f / SIN_N) * SIN_N;
+  const i = f | 0;
+  const t = f - i;
+  return SIN_TAB[i] + (SIN_TAB[i + 1] - SIN_TAB[i]) * t;
 }
 
 function mix(a: Rgb, b: Rgb, t: number): Rgb {
@@ -48,10 +71,20 @@ function waveNoise(seed: number, terms = 14, maxFreq = 9): (u: number, v: number
     waves.push({ fu, fv, ph: r() * Math.PI * 2, a });
     norm += a;
   }
+  // flache Arrays statt Objekt-Schleife → deutlich schneller pro Pixel
+  const n = waves.length;
+  const KU = new Float64Array(n), KV = new Float64Array(n), PH = new Float64Array(n), A = new Float64Array(n);
+  waves.forEach((w, i) => {
+    KU[i] = Math.PI * 2 * w.fu;
+    KV[i] = Math.PI * w.fv;
+    PH[i] = w.ph;
+    A[i] = w.a;
+  });
+  const scale = 2.2 / norm;
   return (u, v) => {
     let s = 0;
-    for (const w of waves) s += w.a * Math.sin(Math.PI * 2 * w.fu * u + Math.PI * w.fv * v + w.ph);
-    return (s / norm) * 2.2;
+    for (let i = 0; i < n; i++) s += A[i] * fsin(KU[i] * u + KV[i] * v + PH[i]);
+    return s * scale;
   };
 }
 
@@ -104,6 +137,21 @@ function craters(c: HTMLCanvasElement, seed: number, count: number, maxR: number
 }
 
 /** Oberflächen-Textur eines Körpers (null = einfarbig nach `fallback`). */
+const CANVAS_CACHE = new Map<string, HTMLCanvasElement>();
+/** Einmal berechnen, danach aus dem Speicher (zweites Öffnen sofort). */
+export function cachedCanvas(key: string, make: () => HTMLCanvasElement): HTMLCanvasElement {
+  let c = CANVAS_CACHE.get(key);
+  if (!c) {
+    c = make();
+    CANVAS_CACHE.set(key, c);
+  }
+  return c;
+}
+
+export function hasCachedCanvas(key: string): boolean {
+  return CANVAS_CACHE.has(key);
+}
+
 export function surfaceCanvas(id: string, fallback: string): HTMLCanvasElement {
   switch (id) {
     case "mercury": {
@@ -129,17 +177,18 @@ export function surfaceCanvas(id: string, fallback: string): HTMLCanvasElement {
       const detail = waveNoise(32, 18, 22);
       return paint(1024, 512, (u, v, lat) => {
         const a = Math.abs(lat);
-        const h = land(u, v) + detail(u, v) * 0.35;
+        const dd = detail(u, v);
+        const h = land(u, v) + dd * 0.35;
         // Eis: Polkappen mit unregelmäßigem Rand (Antarktis größer als Arktis)
-        const capEdge = (lat < 0 ? 1.12 : 1.22) + detail(u, v) * 0.05;
+        const capEdge = (lat < 0 ? 1.12 : 1.22) + dd * 0.05;
         if (a > capEdge) {
-          const ice = mix(hex("#cfd8e0"), hex("#f4f7fa"), 0.5 + detail(u, v) * 0.5);
+          const ice = mix(hex("#cfd8e0"), hex("#f4f7fa"), 0.5 + dd * 0.5);
           return [ice[0], ice[1], ice[2]];
         }
         if (h > 0.18) {
           // Land: Wüstengürtel um ±25°, sonst grün, Gebirge heller
           const desert = Math.exp(-Math.pow((a - 0.42) / 0.16, 2));
-          let col = mix(hex("#3f6b33"), hex("#c2a36b"), desert * 0.85 + detail(u, v) * 0.15);
+          let col = mix(hex("#3f6b33"), hex("#c2a36b"), desert * 0.85 + dd * 0.15);
           if (h > 0.55) col = mix(col, hex("#8d7f6c"), (h - 0.55) * 1.8);
           return [col[0], col[1], col[2]];
         }
@@ -153,9 +202,10 @@ export function surfaceCanvas(id: string, fallback: string): HTMLCanvasElement {
       const fine = waveNoise(42, 14, 20);
       return paint(512, 256, (u, v, lat) => {
         const a = Math.abs(lat);
-        if (a > 1.32 + fine(u, v) * 0.05) return [238, 232, 226];
-        const k = n(u, v) + fine(u, v) * 0.3;
-        let col = mix(hex("#c4623a"), hex("#dd8a5a"), 0.5 + fine(u, v) * 0.4);
+        const ff = fine(u, v);
+        if (a > 1.32 + ff * 0.05) return [238, 232, 226];
+        const k = n(u, v) + ff * 0.3;
+        let col = mix(hex("#c4623a"), hex("#dd8a5a"), 0.5 + ff * 0.4);
         if (k > 0.25) col = mix(col, hex("#6e3a26"), Math.min(1, (k - 0.25) * 2));
         return [col[0], col[1], col[2]];
       });

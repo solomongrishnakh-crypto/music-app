@@ -17,7 +17,7 @@ import {
   orbitPath,
   type Vec3,
 } from "@/lib/astro/orbits";
-import { earthCloudsCanvas, glowCanvas, saturnRingCanvas, sunCanvas, surfaceCanvas } from "./planetTextures";
+import { cachedCanvas, earthCloudsCanvas, glowCanvas, hasCachedCanvas, saturnRingCanvas, sunCanvas, surfaceCanvas } from "./planetTextures";
 
 /**
  * Echte 3D-Ansicht des Sonnensystems (three.js + OrbitControls).
@@ -373,6 +373,37 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
       disposables.push(tx);
       return tx;
     };
+    // Nutzerkorrektur 03.10.2026 ("hängt ca. 5 Sekunden, bevor das Fenster
+    // aufgeht"): Oberflächen-Texturen nicht mehr alle vor dem ersten Bild
+    // berechnen. Erst einfarbiger Platzhalter, dann wird pro kurzem Takt
+    // eine Textur nachgeladen. Bereits berechnete kommen aus dem Speicher.
+    const texJobs: (() => void)[] = [];
+    const lazyTex = (key: string, make: () => HTMLCanvasElement, fill: string, srgb = true) => {
+      if (hasCachedCanvas(key)) return tex(cachedCanvas(key, make), srgb);
+      const ph = document.createElement("canvas");
+      ph.width = 2;
+      ph.height = 2;
+      const pc = ph.getContext("2d");
+      if (pc) {
+        pc.fillStyle = fill;
+        pc.fillRect(0, 0, 2, 2);
+      }
+      const tx = tex(ph, srgb);
+      texJobs.push(() => {
+        tx.image = cachedCanvas(key, make);
+        tx.needsUpdate = true;
+      });
+      return tx;
+    };
+    let texAlive = true;
+    let texTimer = 0;
+    const runTexJobs = () => {
+      if (!texAlive) return;
+      const job = texJobs.shift();
+      if (!job) return;
+      job();
+      texTimer = window.setTimeout(runTexJobs, 24);
+    };
 
     // --- Licht: Punktlicht in der Sonne, sehr schwaches Umgebungslicht ---
     const sunLight = new THREE.PointLight(0xffffff, 3.4, 0, 0);
@@ -448,12 +479,12 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
         const m = new THREE.ShaderMaterial({
           vertexShader: SUN_VERT,
           fragmentShader: SUN_FRAG,
-          uniforms: { uMap: { value: tex(sunCanvas(), false) } },
+          uniforms: { uMap: { value: lazyTex("sun", sunCanvas, "#fff1d2", false) } },
         });
         mesh = new THREE.Mesh(sphereGeo, m);
         materials.push(m);
         // Lichthof: zwei additive Sprites (innen kräftig, außen weit und schwach)
-        const glowTex = tex(glowCanvas("rgba(255,246,225,0.9)", "rgba(255,190,110,0.18)"));
+        const glowTex = tex(cachedCanvas("glow", () => glowCanvas("rgba(255,246,225,0.9)", "rgba(255,190,110,0.18)")));
         for (const [scale, opacity] of [
           [5, 0.85],
           [14, 0.3],
@@ -480,7 +511,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
       } else {
         const big = data.kind !== "dwarf";
         const m = new THREE.MeshStandardMaterial({
-          map: tex(surfaceCanvas(data.id, data.color)),
+          map: lazyTex("s:" + data.id, () => surfaceCanvas(data.id, data.color), data.color),
           roughness: 0.95,
           metalness: 0,
           emissive: new THREE.Color(data.color),
@@ -492,7 +523,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
 
         if (data.id === "earth") {
           const cm = new THREE.MeshStandardMaterial({
-            map: tex(earthCloudsCanvas()),
+            map: lazyTex("clouds", earthCloudsCanvas, "rgba(255,255,255,0)"),
             transparent: true,
             depthWrite: false,
             roughness: 1,
@@ -532,7 +563,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
             uv.setXY(i, (r - inner) / (outer - inner), 0.5);
           }
           const rm = new THREE.MeshStandardMaterial({
-            map: tex(saturnRingCanvas()),
+            map: tex(cachedCanvas("ring", saturnRingCanvas)),
             transparent: true,
             side: THREE.DoubleSide,
             depthWrite: false,
@@ -1293,7 +1324,11 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
 
     raf = requestAnimationFrame(frame);
 
+    texTimer = window.setTimeout(runTexJobs, 60);
+
     return () => {
+      texAlive = false;
+      window.clearTimeout(texTimer);
       cancelAnimationFrame(raf);
       ro.disconnect();
       container.removeEventListener("wheel", onWheel, { capture: true });
