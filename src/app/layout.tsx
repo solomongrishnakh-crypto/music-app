@@ -5,6 +5,7 @@ import { PlayerProvider } from "@/contexts/PlayerContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import PersistentPlayerBar from "@/components/player/PersistentPlayerBar";
 import { HOME_KEYWORDS } from "@/lib/seoKeywords";
+import Script from "next/script";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -130,6 +131,9 @@ export default function RootLayout({
             <PersistentPlayerBar />
           </PlayerProvider>
         </LanguageProvider>
+        {/* Besucherzahlen (Vercel Web Analytics, ohne Cookies): wirkt, sobald
+            "Analytics" im Vercel-Dashboard des Projekts eingeschaltet ist */}
+        <Script src="/_vercel/insights/script.js" strategy="afterInteractive" />
       </body>
     </html>
   );
