@@ -37,32 +37,41 @@ export default function FeaturesSection() {
     <section className="mx-auto mt-20 w-full max-w-5xl sm:mt-28">
       <SectionHeading index="01" label={t("featuresLabel")} />
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      {/* Nutzerwunsch 03.10.2026: "Boxen kleiner, kompakter und moderner" —
+          am Handy flache Zeilen (Symbol · Titel · Pfeil), am PC drei Kacheln */}
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-3 sm:gap-3">
         {CARDS.map((c) => (
           <Link
             key={c.index}
             href={c.href}
-            className="hud-card group flex flex-col overflow-hidden p-4"
+            className="hud-card group relative flex items-center gap-3.5 overflow-hidden p-3 sm:flex-col sm:items-start sm:gap-3 sm:p-4"
           >
-            {c.visual === "stars" && <TwinkleStars count={18} />}
-            <div className="relative flex items-start justify-between">
-              <p className="font-display text-xl font-bold text-accent/90">{c.index}</p>
-              {c.visual === "clock" && <SmallClock />}
+            {c.visual === "stars" && <TwinkleStars count={10} className="opacity-60" />}
+            <span className="feat-ico relative">
+              {c.visual === "clock" && <SmallClock className="!h-8 !w-8 sm:!h-8 sm:!w-8" />}
               {c.visual === "eq" && (
-                <div aria-hidden="true" className="flex h-6 items-end gap-[3px]">
-                  {[40, 75, 55, 90, 60, 80, 45].map((h, i) => (
-                    <span key={i} className="w-[3px] bg-accent/70" style={{ height: `${h}%` }} />
+                <span aria-hidden="true" className="flex h-5 items-end gap-[2px]">
+                  {[40, 75, 55, 90, 60].map((h, i) => (
+                    <span key={i} className="eq-bar w-[3px] bg-accent/80" style={{ height: `${h}%`, animationDelay: `${i * 0.12}s` }} />
                   ))}
-                </div>
+                </span>
               )}
-            </div>
-            <p className="relative mt-3 font-display text-base font-bold uppercase tracking-wide text-foreground">
-              {c.title}
-            </p>
-            <p className="relative mt-1.5 flex-1 text-xs leading-relaxed text-muted">{c.text}</p>
-            <p className="label-mono relative mt-3 inline-flex items-center gap-2 text-[11px] uppercase text-foreground transition-colors group-hover:text-accent">
-              {c.cta} <span className="transition-transform group-hover:translate-x-1">↗</span>
-            </p>
+              {c.visual === "stars" && (
+                <svg viewBox="0 0 24 24" className="h-5 w-5 text-accent" fill="none" stroke="currentColor" strokeWidth={1.4} aria-hidden="true">
+                  <circle cx="12" cy="12" r="3.2" />
+                  <ellipse cx="12" cy="12" rx="9.5" ry="3.6" transform="rotate(-24 12 12)" />
+                </svg>
+              )}
+            </span>
+            <span className="relative min-w-0 flex-1">
+              <span className="label-mono block text-[10px] text-accent/90">{c.index}</span>
+              <span className="block font-display text-sm font-bold uppercase tracking-wide text-foreground sm:text-base">
+                {c.title}
+              </span>
+              <span className="mt-0.5 line-clamp-2 block text-[11px] leading-snug text-muted sm:text-xs">{c.text}</span>
+            </span>
+            <span className="feat-go relative sm:absolute sm:right-4 sm:top-4" aria-hidden="true">↗</span>
+            <span className="sr-only">{c.cta}</span>
           </Link>
         ))}
       </div>

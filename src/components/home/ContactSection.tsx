@@ -35,9 +35,11 @@ const CONTACTS = [
 export default function ContactSection() {
   const { t } = useLanguage();
   return (
-    <footer className="mx-auto mb-4 mt-20 w-full max-w-5xl sm:mt-28">
+    <footer className="mx-auto mb-4 mt-16 w-full max-w-5xl sm:mt-24">
       <SectionHeading index="04" label={t("contactsLabel")} />
-      <div className="flex flex-wrap items-center gap-3 sm:gap-4">
+      {/* Nutzerwunsch 03.10.2026: Kontakte futuristischer — Kacheln mit
+          Sechseck-Symbol, Status-Punkt und Scan-Licht beim Antippen */}
+      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
         {CONTACTS.map((contact) => (
           <a
             key={contact.label}
@@ -45,19 +47,27 @@ export default function ContactSection() {
             target="_blank"
             rel="noopener noreferrer me"
             title={contact.label + " " + contact.handle}
-            className="hud-btn text-muted"
+            className="hud-card contact-card group relative flex items-center gap-3.5 overflow-hidden p-3 pr-4"
           >
-            <span className="h-4 w-4 shrink-0">{contact.icon}</span>
-            <span className="text-xs">
-              {contact.label} <span className="text-foreground/80">{contact.handle}</span>
+            <span className="contact-ico">
+              <span className="h-5 w-5">{contact.icon}</span>
             </span>
+            <span className="flex min-w-0 flex-col">
+              <span className="label-mono flex items-center gap-1.5 text-[10px] text-accent">
+                <span className="contact-dot" aria-hidden="true" />
+                {contact.label}
+              </span>
+              <span className="truncate text-sm font-semibold text-foreground">{contact.handle}</span>
+            </span>
+            <span className="feat-go ml-auto" aria-hidden="true">↗</span>
+            <span className="contact-scan" aria-hidden="true" />
           </a>
         ))}
       </div>
 
       {/* Fußzeile: Info + Copyright (Nutzerwunsch 02.10.2026 "richtig sortieren" —
           vorher schwebten diese Texte fest in den Bildschirmecken) */}
-      <div className="hud-card mt-10 flex flex-col gap-4 p-5 text-xs sm:flex-row sm:items-start sm:justify-between">
+      <div className="hud-card mt-6 flex flex-col gap-4 p-4 text-xs sm:flex-row sm:items-start sm:justify-between">
         <div className="max-w-md">
           <p className="label-mono mb-1 uppercase">{t("infoLabel")}</p>
           <p className="text-muted">{t("infoText")}</p>
