@@ -453,13 +453,6 @@ html[data-overlay="1"] .hud-btn {
 .contact-card:hover .contact-scan, .contact-card:focus-visible .contact-scan { animation: contactScan 0.9s ease; }
 @keyframes contactScan { to { transform: translateX(120%); } }
 
-/* Nutzerwunsch 03.10.2026: Download-Kachel leuchtet kurz auf, wenn man oben
-   auf "App herunterladen" tippt */
-@keyframes dlFlash {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(var(--hud-accent), 0); }
-  20%, 60% { box-shadow: 0 0 0 2px rgba(var(--hud-accent), 0.85), 0 0 28px rgba(var(--hud-accent), 0.45); }
-}
-.dl-flash { animation: dlFlash 2s ease; }
 
 /* Kompakter "App herunterladen"-Knopf (Pille mit Leuchtrand) */
 .dl-pill {
