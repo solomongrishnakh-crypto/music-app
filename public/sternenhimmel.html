@@ -724,9 +724,9 @@ for (const f of ART) {
 function artTexture(f) {
   if (f.img && f.img.complete && f.img.naturalWidth) return f.img;
   if (!f.img) {
-    // vorbereitete Bilder: 2× hochskaliert + geschärft, Hellblau mit Transparenz (WebP)
+    // vorbereitete Bilder (v3): 2× Auflösung, leuchtende Linien, zarter Schleier (WebP)
     f.img = new Image(); f.img.decoding = "async";
-    f.img.src = "sky-art/" + f.f.replace(/\.jpg$/, ".webp");
+    f.img.src = "sky-art/" + f.f.replace(/\.jpg$/, ".webp") + "?v=3"; // ?v=3: neue Bilder statt alter aus dem Cache
   }
   return null;
 }
@@ -786,7 +786,9 @@ function drawFigures(fade, dt) {
     ctx.setTransform(DPR * ma, DPR * mb, DPR * mc, DPR * md, DPR * me, DPR * mf);
     ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = "high";
     ctx.globalCompositeOperation = "source-over";
-    const A = f.alpha * 0.4 * fade; // Nutzerwunsch 03.10.2026: Sternbilder durchsichtiger
+    // Figuren v3 (03.10.2026): leuchtende Linien + zarter Schleier sind schon im Bild
+    // durchsichtig angelegt → kräftiger zeichnen als die alten, deckenden Flächen
+    const A = f.alpha * 0.85 * fade;
     if (S.atmo) {
       // über dem Horizont voll, darunter (im Wasser) gedämpft
       const gp = drawFigures.gp || (drawFigures.gp = groundPath());
