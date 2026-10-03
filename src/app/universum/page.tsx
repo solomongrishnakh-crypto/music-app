@@ -1414,8 +1414,8 @@ export default function UniversumPage() {
         </header>
 
         {/* Neu sortiert (Nutzerwunsch 02.10.2026, HUD-Design):
-            01 Live erkunden (Sonnensystem + Sternenhimmel) → 02 Universum in Zahlen
-            → 03 Maschine der Ewigkeit → Weltraum-News */}
+            01 Live erkunden (Sonnensystem + Sternenhimmel) → 02 Maschine der Ewigkeit
+            → 03 Universum in Zahlen → Weltraum-News */}
         <section className="mb-10">
           <SectionHeading index="01" label={t("liveExplore")} />
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
@@ -1438,8 +1438,17 @@ export default function UniversumPage() {
           </div>
         </section>
 
+        {/* Nutzerwunsch 03.10.2026: Maschine der Ewigkeit über "Universum in Zahlen" */}
         <section className="mb-10">
-          <SectionHeading index="02" label={t("universeInNumbers")} />
+          <SectionHeading index="02" label={t("gearLabel")} />
+        <div className="hud-card flex flex-col items-center overflow-hidden p-3">
+          <Gear3D className="h-60 w-full sm:h-72" />
+          <p className="mt-2 max-w-md text-center text-[10px] leading-snug text-muted">{t("gearCaption")}</p>
+        </div>
+        </section>
+
+        <section className="mb-6">
+          <SectionHeading index="03" label={t("universeInNumbers")} />
         <UniverseAgeTicker />
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {UNIVERSE_FACTS.map((fact, i) => {
@@ -1472,15 +1481,6 @@ export default function UniversumPage() {
               </RevealCard>
             );
           })}
-        </div>
-        </section>
-
-        {/* Nutzerwunsch 02.10.2026: Maschine der Ewigkeit direkt über den Space News */}
-        <section className="mb-6">
-          <SectionHeading index="03" label={t("gearLabel")} />
-        <div className="hud-card flex flex-col items-center overflow-hidden p-3">
-          <Gear3D className="h-60 w-full sm:h-72" />
-          <p className="mt-2 max-w-md text-center text-[10px] leading-snug text-muted">{t("gearCaption")}</p>
         </div>
         </section>
 

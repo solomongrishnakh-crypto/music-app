@@ -1438,18 +1438,13 @@ export default function ImperienPage() {
           )}
         </div>
 
-        <div className="mt-2 flex items-center gap-4 text-[10px] uppercase text-muted">
-          <span className="flex items-center gap-1.5">
-            <span className="inline-block h-2.5 w-2.5 border border-accent bg-accent/50" />
-            Alle Reiche &amp; Königreiche — jede Farbe eigenständig, große Gebiete mit Namen auf der Karte, kleine bei Hover
-          </span>
-        </div>
+        {/* Legenden-Text unter der Karte entfernt (Nutzerwunsch 03.10.2026) */}
 
         {/* Nutzerwunsch 21.09.2026: "bring diese regler bisschen nach oben"
             — Abstand zur Karte verkleinert (mt-6 -> mt-3), damit die
             Zeitleiste/Abspiel-Regler näher an der Karte sitzen und weniger
             gescrollt werden muss. */}
-        <div className="hud-card mt-3 border border-border p-3 sm:p-4">
+        <div className="hud-card mt-2 border border-border p-3 sm:p-4">
           {/* Fix 28.09.2026 (Bildschirmvideo vom Nutzer): Beim Abspielen
               sprang die Box auf dem Handy ständig hoch und runter — die
               Jahreszahl ist je nach Ziffern unterschiedlich breit, dadurch
