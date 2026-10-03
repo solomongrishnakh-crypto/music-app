@@ -63,6 +63,31 @@ export default function ContactSection() {
             <span className="contact-scan" aria-hidden="true" />
           </a>
         ))}
+        {/* Nutzerwunsch 03.10.2026: Android-App (TWA, öffnet diese Webseite als
+            Vollbild-App) zum Herunterladen anbieten. Keystore bleibt privat. */}
+        <a
+          href="/download/Centaurian.apk"
+          download="Centaurian.apk"
+          type="application/vnd.android.package-archive"
+          title={t("appName")}
+          className="hud-card contact-card group relative flex items-center gap-3.5 overflow-hidden p-3 pr-4 sm:col-span-2"
+        >
+          <span className="contact-ico">
+            <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" aria-hidden="true">
+              <path d="M17.6 9.48 19.44 6.3a.38.38 0 0 0-.66-.38l-1.87 3.23a11.5 11.5 0 0 0-9.82 0L5.22 5.92a.38.38 0 0 0-.66.38L6.4 9.48A10.8 10.8 0 0 0 1 18h22a10.8 10.8 0 0 0-5.4-8.52ZM7 15.25a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5Zm10 0a1.25 1.25 0 1 1 0-2.5 1.25 1.25 0 0 1 0 2.5Z" />
+            </svg>
+          </span>
+          <span className="flex min-w-0 flex-col">
+            <span className="label-mono flex items-center gap-1.5 text-[10px] text-accent">
+              <span className="contact-dot" aria-hidden="true" />
+              {t("appLabel")}
+            </span>
+            <span className="truncate text-sm font-semibold text-foreground">{t("appName")}</span>
+            <span className="text-[11px] leading-snug text-muted">{t("appHint")}</span>
+          </span>
+          <span className="feat-go ml-auto shrink-0" aria-hidden="true">↓</span>
+          <span className="contact-scan" aria-hidden="true" />
+        </a>
       </div>
 
       {/* Fußzeile: Info + Copyright (Nutzerwunsch 02.10.2026 "richtig sortieren" —

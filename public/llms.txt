@@ -66,6 +66,10 @@ Diese Datei beschreibt alle Werkzeuge der Webseite für KI-Assistenten und Suchm
 - Reiche antippen für Steckbrief (Zeitraum, Sprache, Beschreibung aus Wikipedia); Suche nach Reich oder Herrscher.
 - Übersicht der größten Imperien der Geschichte.
 
+## Android-App
+
+- Kostenlose Android-App (öffnet Centaurian im Vollbild): https://centaurian.vercel.app/download/Centaurian.apk (ca. 4 MB, Installation aus „unbekannter Quelle“ erlauben). iPhone: im Browser „Teilen → Zum Home-Bildschirm“.
+
 ## Kontakt
 
 - Telegram: https://t.me/Perseus641
