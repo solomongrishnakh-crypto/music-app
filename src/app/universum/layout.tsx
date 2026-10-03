@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { UNIVERSE_KEYWORDS } from "@/lib/seoKeywords";
 
 // Eigene Suchmaschinen-Angaben für /universum (die Seite selbst ist eine
 // Client-Komponente und kann deshalb kein metadata exportieren).
@@ -13,19 +14,7 @@ const DESCRIPTION =
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
-  keywords: [
-    "Sonnensystem live",
-    "interaktives Sonnensystem",
-    "Planeten aktuelle Position",
-    "Sonnensystem Maßstab",
-    "Maschine der Ewigkeit",
-    "Zahnrad Maschine",
-    "Zahnrad 13,8 Milliarden Jahre",
-    "Alter des Universums",
-    "solar system live",
-    "interactive solar system",
-    "gear machine universe",
-  ],
+  keywords: UNIVERSE_KEYWORDS,
   alternates: { canonical: "/universum" },
   openGraph: { url: "/universum", title: `${TITLE} | CENTAURIAN`, description: DESCRIPTION },
   twitter: { title: `${TITLE} | CENTAURIAN`, description: DESCRIPTION },
@@ -34,6 +23,7 @@ export const metadata: Metadata = {
 // Strukturierte Daten: interaktive Lern-Anwendung zu Sonnensystem & Kosmos
 const JSON_LD = {
   "@context": "https://schema.org",
+  keywords: UNIVERSE_KEYWORDS.join(", "),
   "@type": "WebApplication",
   name: "Sonnensystem live & Maschine der Ewigkeit — Centaurian",
   alternateName: ["Interaktives Sonnensystem", "Maschine der Ewigkeit", "Interactive Solar System", "Eternity Gear Machine"],

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { SKY_KEYWORDS } from "@/lib/seoKeywords";
 
 /**
  * Sternenhimmel (Nutzerwunsch 01.10.2026: "wie Star Walk 2").
@@ -16,25 +17,7 @@ const DESCRIPTION =
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
-  keywords: [
-    "Sternenhimmel heute",
-    "Sternenhimmel live",
-    "Sternkarte",
-    "welcher Stern ist das",
-    "Sternbilder finden",
-    "Planeten am Himmel heute",
-    "Milchstraße sehen",
-    "night sky map",
-    "star finder",
-    "star map live",
-    "Sternbilder erklärt",
-    "Stern bestimmen Handy",
-    "Planeten heute sichtbar",
-    "Sternbild finden App kostenlos",
-    "Sternenhimmel App online",
-    "sky map online free",
-    "what star is that",
-  ],
+  keywords: SKY_KEYWORDS,
   alternates: { canonical: "/sternenhimmel" },
   openGraph: { url: "/sternenhimmel", title: `${TITLE} | CENTAURIAN`, description: DESCRIPTION },
   twitter: { title: `${TITLE} | CENTAURIAN`, description: DESCRIPTION },
@@ -42,6 +25,7 @@ export const metadata: Metadata = {
 
 const JSON_LD = {
   "@context": "https://schema.org",
+  keywords: SKY_KEYWORDS.join(", "),
   "@type": "WebApplication",
   name: "Sternenhimmel live — Centaurian",
   alternateName: ["Sternkarte", "Night Sky Map", "Star Finder"],

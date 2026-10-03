@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { EMPIRES_KEYWORDS } from "@/lib/seoKeywords";
 
 // Eigene Suchmaschinen-Angaben für /imperien (Client-Seite → metadata hier).
 // Nutzerwunsch 30.09.2026: Seite soll z.B. bei "Weltgeschichte Karte"
@@ -12,18 +13,7 @@ const DESCRIPTION =
 export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
-  keywords: [
-    "Weltgeschichte Karte",
-    "historische Weltkarte",
-    "interaktive Geschichtskarte",
-    "Imperien Karte",
-    "Reiche der Geschichte",
-    "historische Grenzen",
-    "Zeitleiste Weltgeschichte",
-    "world history map",
-    "historical map",
-    "empires map",
-  ],
+  keywords: EMPIRES_KEYWORDS,
   alternates: { canonical: "/imperien" },
   openGraph: { url: "/imperien", title: `${TITLE} | CENTAURIAN`, description: DESCRIPTION },
   twitter: { title: `${TITLE} | CENTAURIAN`, description: DESCRIPTION },
@@ -33,6 +23,7 @@ export const metadata: Metadata = {
 // Web-Anwendung zum Thema Weltgeschichte.
 const JSON_LD = {
   "@context": "https://schema.org",
+  keywords: EMPIRES_KEYWORDS.join(", "),
   "@type": "WebApplication",
   name: "Weltgeschichte Karte — Centaurian",
   alternateName: ["Interaktive historische Weltkarte", "World History Map"],

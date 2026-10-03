@@ -4,6 +4,7 @@ import "./globals.css";
 import { PlayerProvider } from "@/contexts/PlayerContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import PersistentPlayerBar from "@/components/player/PersistentPlayerBar";
+import { HOME_KEYWORDS } from "@/lib/seoKeywords";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -31,7 +32,7 @@ export const metadata: Metadata = {
   description:
     "Centaurian: Songs suchen und direkt im Browser hören, das Sonnensystem interaktiv entdecken und auf einer Weltgeschichte-Karte alle Imperien von 3400 v. Chr. bis heute erleben — kostenlos, ohne Anmeldung.",
   applicationName: "Centaurian",
-  keywords: ["Centaurian", "Musik", "Songs hören", "Universum", "Sonnensystem", "Imperien", "Geschichte", "Weltgeschichte Karte", "historische Weltkarte", "Schwarzes Loch"],
+  keywords: HOME_KEYWORDS,
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
@@ -76,6 +77,7 @@ export default function RootLayout({
               "@context": "https://schema.org",
               "@type": "WebSite",
               name: "Centaurian",
+              keywords: HOME_KEYWORDS.join(", "),
               url: "https://centaurian.vercel.app",
               description: "Songs suchen und direkt hören, das Universum entdecken und die Geschichte großer Imperien erleben.",
               publisher: {
