@@ -122,15 +122,15 @@ export default function AiNewsSection() {
   }
 
   return (
-    <div id="ai-news" className="mx-auto mt-20 w-full max-w-5xl scroll-mt-24 sm:mt-28">
+    <div id="ai-news" className="mx-auto mt-14 w-full max-w-5xl scroll-mt-24 sm:mt-20">
       <SectionHeading index="02" label={t("navAiNews")} />
 
       <button
         onClick={toggle}
         aria-expanded={expanded}
-        className="hud-card flex w-full flex-col items-stretch overflow-hidden border border-border text-left transition-colors hover:border-accent sm:flex-row"
+        className="hud-card group flex w-full flex-row items-stretch overflow-hidden border border-border text-left transition-colors hover:border-accent"
       >
-        <div className="relative aspect-[16/9] w-full shrink-0 overflow-hidden bg-black sm:aspect-square sm:w-64">
+        <div className="relative w-28 shrink-0 overflow-hidden bg-black sm:w-48">
           {/* Nutzerkorrektur 19.09.2026: "dieses titel bild ... sieht man auf
               handy kaum also nicht das gesamtes bild" — auf Handy wird das
               Bild jetzt komplett angezeigt (object-contain), statt es per
@@ -140,17 +140,17 @@ export default function AiNewsSection() {
           <img
             src="/branding/consciousness.png"
             alt="Zwei Gestalten aus leuchtenden neuronalen Netzwerken berühren sich mit dem Finger"
-            className="h-full w-full object-contain sm:object-cover"
+            className="absolute inset-0 h-full w-full object-cover"
           />
         </div>
-        <div className="flex flex-1 flex-col justify-center p-6 sm:p-10">
-          <p className="font-display text-lg font-bold text-accent sm:text-2xl">
+        <div className="flex min-w-0 flex-1 flex-col justify-center p-3.5 sm:p-6">
+          <p className="font-display text-base font-bold uppercase tracking-wide text-accent sm:text-xl">
             {t("aiNewsHeroTitle")}
           </p>
-          <p className="mt-3 max-w-xl text-xs leading-relaxed text-muted sm:text-sm">
+          <p className="mt-1 line-clamp-2 max-w-xl text-[11px] leading-snug text-muted sm:text-sm">
             {t("aiNewsHeroText")}
           </p>
-          <p className="label-mono mt-4 inline-flex items-center gap-2 text-xs uppercase text-foreground">
+          <p className="label-mono mt-2.5 inline-flex items-center gap-2 text-[11px] uppercase text-foreground">
             {expanded ? t("collapse") : t("showAllNews")}
             <span aria-hidden className={`transition-transform ${expanded ? "rotate-180" : ""}`}>
               ▾

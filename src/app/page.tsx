@@ -117,7 +117,7 @@ export default function Home() {
         <LanguageSwitcher />
       </div>
 
-      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-20 pt-24 sm:px-8 sm:pt-32">
+      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-20 pt-12 sm:px-8 sm:pt-20">
         <div id="musik" className="scroll-mt-24" />
 
         {showHero && player.currentSong ? (

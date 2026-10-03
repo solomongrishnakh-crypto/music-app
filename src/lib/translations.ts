@@ -753,8 +753,8 @@ const TRANSLATIONS_SOURCE = {
     es: "Ver mapa", fr: "Voir la carte", tr: "Haritayı görüntüle", ru: "Смотреть карту", pt: "Ver mapa", ar: "عرض الخريطة", el: "Προβολή χάρτη",
   },
   aiNewsHeroTitle: {
-    de: "Was gerade in der KI passiert", en: "What's happening in AI right now", hi: "AI में अभी क्या हो रहा है", zh: "AI 领域的最新动态", ko: "지금 AI에서 일어나는 일", ja: "今、AIで起きていること",
-    es: "Lo que está pasando ahora en la IA", fr: "Ce qui se passe en ce moment dans l'IA", tr: "Yapay zekada şu anda neler oluyor", ru: "Что сейчас происходит в мире ИИ", pt: "O que está a acontecer agora na IA", ar: "ما الذي يحدث الآن في الذكاء الاصطناعي", el: "Τι συμβαίνει τώρα στην τεχνητή νοημοσύνη",
+    de: "KI-News", en: "AI News", hi: "AI समाचार", zh: "AI 新闻", ko: "AI 뉴스", ja: "AIニュース",
+    es: "Noticias de IA", fr: "Actus IA", tr: "Yapay Zekâ Haberleri", ru: "Новости ИИ", pt: "Notícias de IA", ar: "أخبار الذكاء الاصطناعي", el: "Νέα AI",
   },
   aiNewsHeroText: {
     de: "Aktuelle Schlagzeilen rund um künstliche Intelligenz — live geladen, keine erfundenen Meldungen.",
