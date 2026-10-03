@@ -11,7 +11,7 @@ import type { Metadata } from "next";
  */
 const TITLE = "Sternenhimmel live — welche Sterne siehst du gerade?";
 const DESCRIPTION =
-  "Interaktive Sternkarte für deinen Ort: echte Sterne, Sternbilder, Planeten, Mond und Milchstraße — live oder zu jeder Uhrzeit. Handy in den Himmel halten, Sterne antippen und Entfernung, Typ und Temperatur sehen. Night sky map, star finder.";
+  "Interaktive Sternkarte für deinen Ort: 108.000 echte Sterne in Teleskop-Farben, Sternbilder, Planeten, Mond und Milchstraße — live oder zu jeder Uhrzeit. Handy in den Himmel halten (Gyro), Sterne antippen und Entfernung, Typ, Temperatur und Wissen dazu sehen. Night sky map, star finder.";
 
 export const metadata: Metadata = {
   title: TITLE,
@@ -27,6 +27,13 @@ export const metadata: Metadata = {
     "night sky map",
     "star finder",
     "star map live",
+    "Sternbilder erklärt",
+    "Stern bestimmen Handy",
+    "Planeten heute sichtbar",
+    "Sternbild finden App kostenlos",
+    "Sternenhimmel App online",
+    "sky map online free",
+    "what star is that",
   ],
   alternates: { canonical: "/sternenhimmel" },
   openGraph: { url: "/sternenhimmel", title: `${TITLE} | CENTAURIAN`, description: DESCRIPTION },
@@ -46,6 +53,14 @@ const JSON_LD = {
   isAccessibleForFree: true,
   offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
   about: ["Sternenhimmel", "Sterne", "Sternbilder", "Planeten", "Milchstraße", "Astronomie"],
+  featureList: [
+    "108.000 echte Sterne in Teleskop-Farben",
+    "88 Sternbilder mit Linien und Figuren",
+    "Planeten, Mond und Sonne mit Entfernung zur Erde",
+    "Handy-Sensor (Gyro und Kompass)",
+    "Infos und Wikipedia-Wissen beim Antippen",
+    "13 Sprachen",
+  ],
   isPartOf: { "@type": "WebSite", name: "Centaurian", url: "https://centaurian.vercel.app" },
 };
 
@@ -54,6 +69,23 @@ export default function SternenhimmelPage() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
       <h1 className="sr-only">{TITLE}</h1>
+      {/* Beschreibender Text für Suchmaschinen und Screenreader (die Ansicht
+          selbst ist eine Grafik im iframe und für Google kaum lesbar) */}
+      <section className="sr-only">
+        <h2>Interaktive Sternkarte — kostenlos im Browser</h2>
+        <p>
+          Sieh dir den Sternenhimmel für deinen Ort an, live oder zu jeder Uhrzeit: über 108.000 echte Sterne in
+          ihren Teleskop-Farben, alle 88 Sternbilder mit Linien und Figuren, Planeten, Mond, Sonne, Milchstraße,
+          Galaxien und Nebel.
+        </p>
+        <ul>
+          <li>Handy in den Himmel halten: die Karte folgt Kompass und Lagesensor wie ein echtes Gyroskop.</li>
+          <li>Stern, Planet oder Sternbild antippen: Entfernung, Lichtlaufzeit, Sterntyp, Temperatur, Helligkeit und Wissen aus Wikipedia.</li>
+          <li>Planeten mit Abstand zur Erde, Phase, Auf- und Untergang.</li>
+          <li>Suche nach Sternen, Planeten und Sternbildern, weltweite Ortswahl und Zeitreise.</li>
+          <li>In 13 Sprachen verfügbar, ohne Anmeldung und ohne App-Installation.</li>
+        </ul>
+      </section>
       <iframe
         src="/sternenhimmel.html"
         title="Sternenhimmel"
