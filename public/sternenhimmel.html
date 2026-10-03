@@ -522,6 +522,41 @@ function setupCamera() {
   cam = { f, r, u, scale, cx: W / 2, cy: H / 2 };
 }
 // stereografische Projektion (wie Star Walk / Stellarium): winkeltreu, Sternbilder unverzerrt
+// ---- Sternbild-Fokus: wie stark ein Sternbild gerade "angeschaut" wird ----
+// Mittelpunkt + Ausdehnung jedes Sternbilds aus seinen Linien-Sternen.
+const CONST_GEO = {};
+for (const id in CONST.lines) {
+  let x = 0, y = 0, z = 0; const pts = [];
+  for (const seg of CONST.lines[id]) for (const [ra, dec] of seg) {
+    const cd = Math.cos(dec * DEG); const p = [cd * Math.cos(ra * DEG), cd * Math.sin(ra * DEG), Math.sin(dec * DEG)];
+    pts.push(p); x += p[0]; y += p[1]; z += p[2];
+  }
+  const n = Math.hypot(x, y, z) || 1; const c = [x / n, y / n, z / n];
+  let rad = 0; for (const p of pts) rad = Math.max(rad, Math.acos(Math.min(1, p[0] * c[0] + p[1] * c[1] + p[2] * c[2])));
+  CONST_GEO[id] = { ra: Math.atan2(c[1], c[0]), sd: c[2], cd: Math.hypot(c[0], c[1]), rad };
+}
+const constFocus = {};
+const focusTmp = [0, 0, 0];
+let constFocusT = 0;
+function updateConstFocus() {
+  const now = performance.now();
+  const dtMs = constFocusT ? Math.min(500, now - constFocusT) : 1000; constFocusT = now;
+  const k = 1 - Math.exp(-dtMs / 180); // weiches Ein-/Ausblenden (~0,2 s), unabhängig von der Bildrate
+  const inner = Math.max(S.fov * 0.06, 3 * DEG), outer = Math.max(S.fov * 0.17, 8 * DEG);
+  const selId = S.selConst || (S.sel && S.sel.type === "const" ? S.sel.id : null);
+  for (const id in CONST_GEO) {
+    const g = CONST_GEO[id];
+    const v = eqToEnu(g.ra, g.sd, g.cd, focusTmp);
+    const ang = Math.acos(Math.max(-1, Math.min(1, v[0] * cam.f[0] + v[1] * cam.f[1] + v[2] * cam.f[2])));
+    const d = ang - g.rad * 0.45; // Abstand Blickmitte → Sternbild-Rand (grob)
+    let target = d <= inner ? 1 : d >= outer ? 0 : 1 - (d - inner) / (outer - inner);
+    target = target * target * (3 - 2 * target);
+    if (id === selId) target = 1;
+    const cur = constFocus[id] || 0;
+    constFocus[id] = cur + (target - cur) * k;
+  }
+}
+
 function project(v, out) {
   const z = v[0] * cam.f[0] + v[1] * cam.f[1] + v[2] * cam.f[2];
   if (z < -0.6) return false;
@@ -946,28 +981,39 @@ function draw() {
     }
     ctx.stroke(); ctx.restore();
   }
-  // Sternbilder (unter dem Horizont schwächer, wie durch Wasser)
+  // Sternbilder (unter dem Horizont schwächer, wie durch Wasser).
+  // Nutzerwunsch 03.10.2026: Linien nur beim Sternbild, auf das die Kamera
+  // schaut (oder knapp daneben), weich ein-/ausgeblendet; feiner, mit Glanz.
   if (S.showConst && starFade > 0.05) {
-    ctx.lineWidth = 0.9;
-    const gap = 5; // Lücke um die Sterne wie bei Stellarium
-    for (const pass of [0, 1]) {
-      ctx.strokeStyle = pass === 0 ? `rgba(140,175,240,${0.36 * starFade})` : `rgba(140,175,240,${0.12 * starFade})`;
-      ctx.beginPath();
-      for (const id in CONST.lines) for (const seg of CONST.lines[id]) {
-        let prev = null, prevUp = true;
-        for (const [ra, dec] of seg) {
-          const v = eqToEnu(ra * DEG, Math.sin(dec * DEG), Math.cos(dec * DEG), tmpV);
-          const up = !S.atmo || v[2] >= 0;
-          const ok = project(v, P) && P.z > -0.3;
-          if (ok && prev && (up && prevUp) === (pass === 0)) {
-            const dx = P.x - prev.x, dy = P.y - prev.y, L = Math.hypot(dx, dy);
-            if (L > gap * 2.5) { const ux = dx / L * gap, uy = dy / L * gap; ctx.moveTo(prev.x + ux, prev.y + uy); ctx.lineTo(P.x - ux, P.y - uy); }
+    updateConstFocus();
+    const gap = 6; // Lücke um die Sterne wie bei Stellarium
+    ctx.save(); ctx.lineCap = "round";
+    for (const id in CONST.lines) {
+      const wF = constFocus[id] || 0;
+      if (wF < 0.02) continue;
+      for (const pass of [0, 1, 2]) {
+        // 0 = weicher Schein, 1 = feine Linie, 2 = unter dem Horizont (gedämpft)
+        if (pass === 0) { ctx.lineWidth = 4; ctx.strokeStyle = `rgba(110,160,255,${0.1 * wF * starFade})`; }
+        else if (pass === 1) { ctx.lineWidth = 1.15; ctx.strokeStyle = `rgba(175,205,255,${0.62 * wF * starFade})`; }
+        else { ctx.lineWidth = 1; ctx.strokeStyle = `rgba(140,175,240,${0.16 * wF * starFade})`; }
+        ctx.beginPath();
+        for (const seg of CONST.lines[id]) {
+          let prev = null, prevUp = true;
+          for (const [ra, dec] of seg) {
+            const v = eqToEnu(ra * DEG, Math.sin(dec * DEG), Math.cos(dec * DEG), tmpV);
+            const up = !S.atmo || v[2] >= 0;
+            const ok = project(v, P) && P.z > -0.3;
+            if (ok && prev && (up && prevUp) === (pass !== 2)) {
+              const dx = P.x - prev.x, dy = P.y - prev.y, L = Math.hypot(dx, dy);
+              if (L > gap * 2.5) { const ux = dx / L * gap, uy = dy / L * gap; ctx.moveTo(prev.x + ux, prev.y + uy); ctx.lineTo(P.x - ux, P.y - uy); }
+            }
+            prev = ok ? { x: P.x, y: P.y } : null; prevUp = up;
           }
-          prev = ok ? { x: P.x, y: P.y } : null; prevUp = up;
         }
+        ctx.stroke();
       }
-      ctx.stroke();
     }
+    ctx.restore();
   }
   // Sterne
   ctx.globalCompositeOperation = "lighter";
@@ -1130,15 +1176,33 @@ function draw() {
       const v = eqToEnu(c.ra * DEG, Math.sin(c.dec * DEG), Math.cos(c.dec * DEG), tmpV);
       if (S.atmo && v[2] < 0.03) continue;
       if (!project(v, P) || P.x < 0 || P.x > W || P.y < 0 || P.y > H) continue;
+      // Nutzerwunsch 03.10.2026: Name größer und aufwendiger, nur beim
+      // angeschauten Sternbild (gleicher Fokus wie die Linien)
+      const wF = constFocus[id] || 0;
+      if (wF < 0.05) continue;
       const label = (c.n[LANG] || c.n.la).toUpperCase();
-      const w = ctx.measureText(label).width + 8;
-      if (!free(P.x - w / 2, P.y - 7, w, 14)) continue;
-      ctx.fillStyle = `rgba(200,215,255,${0.7 * starFade})`;
-      ctx.letterSpacing = "1.5px";
-      ctx.fillText(label, P.x, P.y);
+      ctx.font = "700 16px " + cssVar("--font-sans");
+      ctx.letterSpacing = "4px";
+      const tw = ctx.measureText(label).width;
+      const lw = tw + 4 * label.length + 56;
+      if (!free(P.x - lw / 2, P.y - 12, lw, 24)) { ctx.letterSpacing = "0px"; continue; }
+      const al = wF * starFade;
+      ctx.save(); ctx.globalAlpha = 1; ctx.globalCompositeOperation = "source-over";
+      // Zierlinien links/rechts mit Rauten
+      const half = tw / 2 + 10;
+      const grad = (x0, x1) => { const g = ctx.createLinearGradient(x0, 0, x1, 0); g.addColorStop(0, `rgba(170,200,255,0)`); g.addColorStop(1, `rgba(170,200,255,${0.55 * al})`); return g; };
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = grad(P.x - half - 26, P.x - half); ctx.beginPath(); ctx.moveTo(P.x - half - 26, P.y); ctx.lineTo(P.x - half, P.y); ctx.stroke();
+      ctx.strokeStyle = grad(P.x + half + 26, P.x + half); ctx.beginPath(); ctx.moveTo(P.x + half + 26, P.y); ctx.lineTo(P.x + half, P.y); ctx.stroke();
+      ctx.fillStyle = `rgba(255,120,100,${0.85 * al})`;
+      for (const sx of [-1, 1]) { const dx = P.x + sx * (half + 1); ctx.beginPath(); ctx.moveTo(dx, P.y - 3); ctx.lineTo(dx + 3, P.y); ctx.lineTo(dx, P.y + 3); ctx.lineTo(dx - 3, P.y); ctx.closePath(); ctx.fill(); }
+      // Schrift mit sanftem Leuchten
+      ctx.shadowColor = `rgba(120,165,255,${0.9 * al})`; ctx.shadowBlur = 12;
+      ctx.fillStyle = `rgba(240,245,255,${al})`;
+      ctx.fillText(label, P.x + 2, P.y);
+      ctx.restore();
       ctx.letterSpacing = "0px";
-      const lw = w + label.length * 1.5;
-      labelHits.push({ x0: P.x - lw / 2, y0: P.y - 9, x1: P.x + lw / 2, y1: P.y + 9, hit: { type: "const", id, ra: c.ra * DEG, dec: c.dec * DEG, name: c.n[LANG] || c.n.la } });
+      labelHits.push({ x0: P.x - lw / 2, y0: P.y - 12, x1: P.x + lw / 2, y1: P.y + 12, hit: { type: "const", id, ra: c.ra * DEG, dec: c.dec * DEG, name: c.n[LANG] || c.n.la } });
     }
   }
   // Auswahl-Ring
