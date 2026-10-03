@@ -31,11 +31,23 @@ export default function ThreeBackground() {
     const mount = mountRef.current;
     if (!mount) return;
 
+    // Nutzerkorrektur 03.10.2026 ("wieso springt der Hintergrund?"): am Handy
+    // ändert sich die Fensterhöhe beim Scrollen, weil die Adressleiste ein-
+    // und ausblendet → die Szene wurde jedes Mal neu skaliert und das Schwarze
+    // Loch sprang. Jetzt: feste Höhe = größte Ansicht (100lvh), und nur bei
+    // echter Größenänderung (Breite oder Drehen) neu berechnen.
+    const probe = document.createElement("div");
+    probe.style.cssText = "position:fixed;top:0;left:0;width:0;height:100lvh;visibility:hidden;pointer-events:none";
+    document.body.appendChild(probe);
+    const viewH = () => Math.max(probe.offsetHeight || 0, window.innerHeight);
+    let viewW = window.innerWidth;
+    let viewHt = viewH();
+
     const scene = new THREE.Scene();
     scene.fog = new THREE.FogExp2(0x030303, 0.045);
     const camera = new THREE.PerspectiveCamera(
       55,
-      window.innerWidth / window.innerHeight,
+      viewW / viewHt,
       0.1,
       100
     );
@@ -43,7 +55,7 @@ export default function ThreeBackground() {
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 3));
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(viewW, viewHt);
     mount.appendChild(renderer.domElement);
 
     // --- Partikelwolke -------------------------------------------------
@@ -323,9 +335,15 @@ export default function ThreeBackground() {
     handleScroll();
 
     function handleResize() {
-      camera.aspect = window.innerWidth / window.innerHeight;
+      const w = window.innerWidth;
+      const h = viewH();
+      // nur Adressleiste ein/aus (gleiche Breite, kleine Höhenänderung) → ignorieren
+      if (w === viewW && Math.abs(h - viewHt) < 200) return;
+      viewW = w;
+      viewHt = h;
+      camera.aspect = w / h;
       camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setSize(w, h);
     }
     window.addEventListener("resize", handleResize);
 
@@ -463,6 +481,7 @@ export default function ThreeBackground() {
       cancelAnimationFrame(animationId);
       window.removeEventListener("pointermove", handlePointerMove);
       window.removeEventListener("resize", handleResize);
+      probe.remove();
       window.removeEventListener("scroll", handleScroll);
       geometry.dispose();
       material.dispose();
@@ -483,7 +502,7 @@ export default function ThreeBackground() {
   return (
     <div
       ref={mountRef}
-      className="pointer-events-none fixed inset-0 h-full w-full"
+      className="pointer-events-none fixed inset-x-0 top-0 h-[100lvh] w-full"
       aria-hidden="true"
     />
   );

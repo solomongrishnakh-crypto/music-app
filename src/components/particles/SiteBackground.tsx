@@ -9,7 +9,7 @@ import ThreeBackground from "./ThreeBackground";
  */
 export default function SiteBackground() {
   return (
-    <div className="fixed inset-0 -z-10 overflow-hidden bg-background">
+    <div className="fixed inset-x-0 top-0 -z-10 h-[100lvh] overflow-hidden bg-background">
       <ThreeBackground />
     </div>
   );
