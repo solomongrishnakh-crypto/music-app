@@ -66,6 +66,7 @@ export default function ContactSection() {
         {/* Nutzerwunsch 03.10.2026: Android-App (TWA, öffnet diese Webseite als
             Vollbild-App) zum Herunterladen anbieten. Keystore bleibt privat. */}
         <a
+          id="app-download"
           href="/download/Centaurian.apk"
           download="Centaurian.apk"
           type="application/vnd.android.package-archive"
