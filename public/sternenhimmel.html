@@ -1902,7 +1902,18 @@ function clampAlt() { S.alt = Math.max(-89 * DEG, Math.min(89.5 * DEG, S.alt)); 
 function dragTo(x0, y0, x1, y1) {
   const a = vecToAltAz(unproject(x0, y0)), b = vecToAltAz(unproject(x1, y1));
   let dAz = a.az - b.az; if (dAz > Math.PI) dAz -= 2 * Math.PI; if (dAz < -Math.PI) dAz += 2 * Math.PI;
-  const dAlt = a.alt - b.alt;
+  let dAlt = a.alt - b.alt;
+  // Nutzerkorrektur 03.10.2026 ("Probleme, die Kamera hochzubekommen"): nahe
+  // Zenit/Nadir ändert "Punkt bleibt unter dem Finger" fast nur die Richtung,
+  // kaum die Höhe → man kam aus dem Blick nach unten nicht mehr heraus.
+  // Dort jetzt linear: Finger hoch/runter = Blick hoch/runter.
+  const w = Math.min(1, Math.max(0, (Math.abs(S.alt) - 40 * DEG) / (25 * DEG)));
+  if (w > 0) {
+    const linAlt = (y1 - y0) / cam.scale;
+    const linAz = (x0 - x1) / cam.scale / Math.max(0.35, Math.cos(S.alt));
+    dAlt = dAlt * (1 - w) + linAlt * w;
+    dAz = dAz * (1 - w) + linAz * w;
+  }
   S.az += dAz; S.alt += dAlt; clampAlt();
   return { dAz, dAlt };
 }
@@ -2231,7 +2242,9 @@ function frame(now) {
   }
   S.az = (S.az + 2 * Math.PI) % (2 * Math.PI);
   const lost = S.atmo && S.alt < -(S.fov * 0.5 + 6 * DEG);
-  if (horizonBtn.hidden === lost) horizonBtn.hidden = !lost || !!anim;
+  // "Zum Horizont"-Knopf nicht mehr nötig (Ziehen funktioniert jetzt auch nach unten/oben)
+  if (!horizonBtn.hidden) horizonBtn.hidden = true;
+  void lost;
   draw();
   requestAnimationFrame(frame);
 }
