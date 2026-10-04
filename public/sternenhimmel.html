@@ -1294,14 +1294,11 @@ function draw() {
     const baseA = ctx.globalAlpha;
     const pxPerDeg = cam.scale * 2 / (1 + P.z) * DEG;
     if (b.id === "sun") {
-      const r = Math.max(9, b.radiusDeg * pxPerDeg);
-      ctx.globalCompositeOperation = "lighter";
-      ctx.globalAlpha = 0.9 * baseA; ctx.drawImage(tinted(255, 236, 200), P.x - r * 6, P.y - r * 6, r * 12, r * 12);
-      ctx.globalAlpha = baseA; ctx.globalCompositeOperation = "source-over";
-      ctx.fillStyle = "#fffaf0"; ctx.beginPath(); ctx.arc(P.x, P.y, r, 0, 6.2832); ctx.fill();
+      const r = sunMoonR(b, pxPerDeg);
+      drawSun(P.x, P.y, r, b, baseA);
       b.pr = r;
     } else if (b.id === "moon") {
-      const r = Math.max(8, b.radiusDeg * pxPerDeg);
+      const r = sunMoonR(b, pxPerDeg);
       drawMoon(P.x, P.y, r, b, sun);
       b.pr = r;
     } else if (b.dwarf) {
@@ -1761,6 +1758,78 @@ function drawPlanetDisc(b, x, y, R, sun, baseA) {
   if (b.id === "saturn") drawSaturnRing(x, y, R, poleAng, sinB, 1);
   b.pr = b.id === "saturn" ? R * 1.6 : R;
 }
+
+// ---------------- Sonne und Mond ----------------
+// Nutzerwunsch 04.10.2026: größer, realistischer, im richtigen Verhältnis.
+// Echte Winkelgröße aus der aktuellen Entfernung (Mond 29,4'–33,5', Sonne
+// 31,5'–32,5'); in der Weitwinkel-Ansicht gleich stark vergrößert wie in
+// Sternen-Apps (bis 4,5×), herangezoomt in echter Größe.
+function sunMoonR(b, pxPerDeg) {
+  const R = b.id === "sun" ? 696000 : 1737.4;
+  const radDeg = Math.asin(Math.min(1, R / b.distKm)) / DEG;
+  const f = S.fov / DEG, k = 1 + 3.5 * Math.max(0, Math.min(1, (f - 8) / 52));
+  return Math.max(10, radDeg * pxPerDeg * k);
+}
+let sunSprite = null, moonSprite = null;
+function makeSunSprite() {
+  const N = 256, c = document.createElement("canvas"); c.width = c.height = N;
+  const x = c.getContext("2d"), img = x.createImageData(N, N), D = img.data;
+  const R = seedRnd("sun"), spots = [];
+  for (let k = 0; k < 4; k++) spots.push([(R() - 0.5) * 1.1, (R() < 0.5 ? -1 : 1) * (0.15 + R() * 0.3), 0.012 + R() * 0.02]);
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+    const u = (i + 0.5) / N * 2 - 1, v = (j + 0.5) / N * 2 - 1, rr = u * u + v * v;
+    if (rr > 1) continue;
+    const mu = Math.sqrt(1 - rr);
+    // Randverdunkelung (wie auf echten Sonnenfotos) + feine Granulation
+    let I = 0.36 + 0.64 * Math.pow(mu, 0.55);
+    I *= 0.94 + 0.06 * fbm(u * 40, v * 40, 3, 3);
+    for (const [sx, sy, sr] of spots) { const d = Math.hypot(u - sx, v - sy); if (d < sr * 2.4) I *= d < sr ? 0.25 : 0.6 + 0.4 * (d - sr) / (sr * 1.4); }
+    const o = (j * N + i) * 4, edge = Math.min(1, (1 - Math.sqrt(rr)) * N * 0.5);
+    D[o] = 255 * Math.min(1, I * 1.05); D[o + 1] = 255 * Math.min(1, I * (0.82 + 0.16 * mu)); D[o + 2] = 255 * Math.min(1, I * (0.55 + 0.38 * mu)); D[o + 3] = 255 * edge;
+  }
+  x.putImageData(img, 0, 0);
+  return c;
+}
+function drawSun(x, y, r, b, baseA) {
+  if (!sunSprite) sunSprite = makeSunSprite();
+  // tief am Horizont: rötlicher (mehr Luft im Weg)
+  const low = S.atmo ? Math.max(0, Math.min(1, 1 - b.alt / DEG / 8)) : 0;
+  ctx.globalCompositeOperation = "lighter";
+  ctx.globalAlpha = 0.85 * baseA; ctx.drawImage(tinted(255, Math.round(232 - 80 * low), Math.round(195 - 120 * low)), x - r * 7, y - r * 7, r * 14, r * 14);
+  ctx.globalAlpha = 0.6 * baseA; ctx.drawImage(tinted(255, 245, 225), x - r * 2.2, y - r * 2.2, r * 4.4, r * 4.4);
+  ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = baseA;
+  ctx.drawImage(sunSprite, x - r, y - r, r * 2, r * 2);
+  if (low > 0) { ctx.globalCompositeOperation = "multiply"; ctx.globalAlpha = low * 0.75 * baseA; ctx.fillStyle = "rgb(255,120,50)"; ctx.beginPath(); ctx.arc(x, y, r, 0, 6.2832); ctx.fill(); ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = baseA; }
+}
+// Mond-Vorderseite: Meere (Maria) an ihren echten Orten (selenografische
+// Länge/Breite, Ost = Mare Crisium rechts), helle Hochländer, Krater Tycho
+// mit Strahlen und Kopernikus.
+const MARIA = [[-17, 33, 0.3, 0.26], [17, 28, 0.17, 0.17], [31, 8, 0.19, 0.17], [59, 17, 0.1, 0.12], [51, -8, 0.14, 0.13], [35, -15, 0.09, 0.09],
+  [-17, -21, 0.16, 0.14], [-55, 15, 0.22, 0.38], [-40, 5, 0.18, 0.2], [-39, -24, 0.08, 0.08], [5, 57, 0.32, 0.06], [4, 13, 0.07, 0.06], [-23, -10, 0.08, 0.07], [60, 0, 0.06, 0.08]];
+function makeMoonSprite() {
+  const N = 256, c = document.createElement("canvas"); c.width = c.height = N;
+  const x = c.getContext("2d"), img = x.createImageData(N, N), D = img.data;
+  const mp = MARIA.map(([lo, la, ax, ay]) => [Math.sin(lo * DEG) * Math.cos(la * DEG), Math.sin(la * DEG), ax, ay]);
+  const ty = [Math.sin(-11 * DEG) * Math.cos(-43 * DEG), Math.sin(-43 * DEG)], co = [Math.sin(-20 * DEG) * Math.cos(10 * DEG), Math.sin(10 * DEG)];
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+    const u = (i + 0.5) / N * 2 - 1, v = -((j + 0.5) / N * 2 - 1), rr = u * u + v * v;
+    if (rr > 1) continue;
+    const n = fbm(u * 5, v * 5, 61, 5), fine = fbm(u * 22, v * 22, 67, 3);
+    let mare = 0;
+    for (const [mx, my, ax, ay] of mp) { const d = Math.pow((u - mx) / ax, 2) + Math.pow((v - my) / ay, 2); mare = Math.max(mare, Math.exp(-Math.pow(d, 1.6) * (0.9 + n * 0.6))); }
+    mare = Math.min(1, mare * (0.8 + n * 0.5));
+    let a = 0.86 - 0.42 * mare + (fine - 0.5) * 0.12;
+    // Tycho-Strahlen und helle Krater
+    const dT = Math.hypot(u - ty[0], v - ty[1]), angT = Math.atan2(v - ty[1], u - ty[0]);
+    a += 0.18 * Math.exp(-dT * 2.2) * Math.pow(Math.max(0, Math.sin(angT * 9 + 1.3)), 6) * (1 - mare * 0.5);
+    a += 0.35 * Math.exp(-Math.pow(dT / 0.035, 2)) + 0.25 * Math.exp(-Math.pow(Math.hypot(u - co[0], v - co[1]) / 0.035, 2));
+    const mu = Math.sqrt(1 - rr), lum = a * (0.78 + 0.22 * mu);
+    const o = (j * N + i) * 4, edge = Math.min(1, (1 - Math.sqrt(rr)) * N * 0.5);
+    D[o] = 255 * Math.min(1, lum * 1.0); D[o + 1] = 255 * Math.min(1, lum * 0.98); D[o + 2] = 255 * Math.min(1, lum * 0.93); D[o + 3] = 255 * edge;
+  }
+  x.putImageData(img, 0, 0);
+  return c;
+}
 function drawMoon(x, y, r, moon, sun) {
   // Phase aus dem Winkel Sonne–Mond; beleuchtete Seite zeigt zur Sonne
   const cosE = Math.sin(moon.dec) * Math.sin(sun.dec) + Math.cos(moon.dec) * Math.cos(sun.dec) * Math.cos(moon.ra - sun.ra);
@@ -1769,27 +1838,31 @@ function drawMoon(x, y, r, moon, sun) {
   let ang = 0;
   if (project(sun.v, P)) ang = Math.atan2(P.y - y, P.x - x);
   else { const sv = sun.v; ang = Math.atan2(-(sv[0] * cam.u[0] + sv[1] * cam.u[1] + sv[2] * cam.u[2]), sv[0] * cam.r[0] + sv[1] * cam.r[1] + sv[2] * cam.r[2]); }
-  ctx.save(); ctx.translate(x, y); ctx.rotate(ang);
-  ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = 0.35;
-  ctx.drawImage(tinted(230, 230, 220), -r * 4, -r * 4, r * 8, r * 8);
-  ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = 1;
-  ctx.fillStyle = "rgba(40,42,50,0.9)"; ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.2832); ctx.fill();
+  if (!moonSprite) moonSprite = makeMoonSprite();
+  // Mond-Nordpol zeigt ungefähr zum Himmelsnordpol
+  const nAng = screenAngleTo(moon, x, y, 0, 89.9 * DEG);
+  const rot = (nAng == null ? -Math.PI / 2 : nAng) + Math.PI / 2;
+  const baseA = ctx.globalAlpha;
+  // Schein um den Mond, stärker bei Vollmond
+  ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = (0.12 + 0.3 * moon.illum) * baseA;
+  ctx.drawImage(tinted(225, 228, 235), x - r * 5, y - r * 5, r * 10, r * 10);
+  ctx.globalCompositeOperation = "source-over";
+  ctx.save(); ctx.translate(x, y);
+  // Nachtseite: schwacher Erdschein (aschgraues Mondlicht)
+  ctx.globalAlpha = 0.9 * baseA; ctx.fillStyle = "rgb(18,20,28)"; ctx.beginPath(); ctx.arc(0, 0, r, 0, 6.2832); ctx.fill();
+  ctx.save(); ctx.rotate(rot); ctx.globalAlpha = 0.13 * baseA; ctx.drawImage(moonSprite, -r, -r, r * 2, r * 2); ctx.restore();
   // beleuchteter Teil: Halbkreis zur Sonne + Ellipse des Terminators
   const k = Math.cos(elong); // 1 = Neumond, -1 = Vollmond
-  ctx.fillStyle = "#ece8dc"; ctx.beginPath();
+  ctx.save(); ctx.rotate(ang);
+  ctx.beginPath();
   ctx.arc(0, 0, r, -Math.PI / 2, Math.PI / 2, false);
-  ctx.ellipse(0, 0, Math.abs(k) * r, r, 0, Math.PI / 2, -Math.PI / 2, k > 0);
-  ctx.fill();
-  // Mare (dunkle Ebenen), grob nach der echten Mondvorderseite angeordnet
-  if (r > 14) {
-    ctx.clip();
-    ctx.rotate(-ang);
-    ctx.fillStyle = "rgba(120,118,112,0.45)";
-    for (const [mx, my, mr] of [[-0.35, -0.35, 0.28], [0.05, -0.45, 0.2], [0.3, -0.2, 0.22], [0.42, 0.1, 0.16], [-0.1, 0.05, 0.18], [-0.45, 0.15, 0.22], [0.15, 0.35, 0.12], [-0.25, -0.05, 0.12]]) {
-      ctx.beginPath(); ctx.arc(mx * r, my * r, mr * r, 0, 6.2832); ctx.fill();
-    }
-  }
+  ctx.ellipse(0, 0, Math.max(0.001, Math.abs(k) * r), r, 0, Math.PI / 2, -Math.PI / 2, k > 0);
+  ctx.clip();
+  ctx.rotate(rot - ang); ctx.globalAlpha = baseA;
+  ctx.drawImage(moonSprite, -r, -r, r * 2, r * 2);
   ctx.restore();
+  ctx.restore();
+  ctx.globalAlpha = baseA;
 }
 
 // Fläche unter dem Horizont als Path2D (Füllregel "evenodd")
