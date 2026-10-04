@@ -407,7 +407,7 @@ const glSky = (() => {
 uniform vec2 uRes; uniform float uDpr, uScale, uLst, uSL, uCL, uDay, uFade, uAtmo, uMW, uTime;
 uniform vec3 uF, uR, uU, uTop, uHor, uWater, uMoon, uSun;
 uniform float uMoonI, uSunI;
-uniform sampler2D uMWTex; uniform float uMWTexOn, uMWGain, uMWBias;
+uniform sampler2D uMWTex; uniform float uMWTexOn, uMWGain, uMWBias, uMWBlur;
 const float DEG = 0.017453292;
 float h3(vec3 p){ p = fract(p * 0.3183099 + vec3(0.71, 0.113, 0.419)); p *= 17.0; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
 float n3(vec3 x){ vec3 i = floor(x), f = fract(x); f = f * f * (3.0 - 2.0 * f);
@@ -436,8 +436,13 @@ vec3 milkyWay(vec3 e){
     // stark herangezoomt: gröbere Bildstufe nehmen, sonst werden die Sterne
     // im Foto zu großen, verschwommenen Flecken (Nutzerhinweis 04.10.2026)
     vec3 t = texture2D(uMWTex, uv, uMWBias).rgb;
+    // Sterne aus dem Foto entfernen (Nutzerwunsch 04.10.2026 "Flecken weg"):
+    // alles, was heller als die weiche Umgebung (~0,7°) ist, wird abgeschnitten.
+    // Gas, Staubbahnen und Sternwolken bleiben, die echten Sterne kommen aus dem Katalog.
+    vec3 tb = texture2D(uMWTex, uv, uMWBlur).rgb;
+    t = min(t, tb);  // 04.10.2026: komplett – kein Foto-Stern bleibt übrig
     vec3 lin = pow(t, vec3(2.2));                 // sRGB → linear
-    lin = max(lin - vec3(0.0018), vec3(0.0));     // Himmelshintergrund des Fotos abziehen
+    lin = max(lin - vec3(0.0028), vec3(0.0));     // Himmelshintergrund des Fotos abziehen
     // sanfte Kompression: schwache Wolken bleiben, der helle Kern brennt nicht
     // mehr weiß aus (Nutzer: "Texte in den hellen Stellen kaum lesbar")
     vec3 x = lin * uMWGain;
@@ -538,7 +543,7 @@ void main(){
   const buf = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, buf);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW);
   const loc = gl.getAttribLocation(prog, "p"); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, 2, gl.FLOAT, false, 0, 0);
-  const U = {}; for (const n of ["uRes", "uDpr", "uScale", "uLst", "uSL", "uCL", "uDay", "uFade", "uAtmo", "uMW", "uTime", "uF", "uR", "uU", "uTop", "uHor", "uWater", "uMoon", "uSun", "uMoonI", "uSunI", "uMWTex", "uMWTexOn", "uMWGain", "uMWBias"]) U[n] = gl.getUniformLocation(prog, n);
+  const U = {}; for (const n of ["uRes", "uDpr", "uScale", "uLst", "uSL", "uCL", "uDay", "uFade", "uAtmo", "uMW", "uTime", "uF", "uR", "uU", "uTop", "uHor", "uWater", "uMoon", "uSun", "uMoonI", "uSunI", "uMWTex", "uMWTexOn", "uMWGain", "uMWBias", "uMWBlur"]) U[n] = gl.getUniformLocation(prog, n);
   // Milchstraßen-Foto (ESO/S. Brunier, CC BY 4.0) direkt vom ESO-CDN
   // (erlaubt fremde Seiten: Access-Control-Allow-Origin *). Erst die kleine
   // Version (~150 KB) für sofortigen Eindruck, danach die scharfe (~4,9 MB) –
@@ -601,6 +606,7 @@ void main(){
         // gleitend auf eine ~0,5°-Stufe wechseln
         const zx = Math.log2(scr / tex), zt = Math.max(0, Math.min(1, (zx - 1) / 2.5));
         gl.uniform1f(U.uMWBias, Math.max(0, (zx + 2.7) * zt));
+        gl.uniform1f(U.uMWBlur, Math.max(0, zx) + 3.5);
         gl.uniform1f(U.uMWGain, 7.0 * Math.max(0.35, Math.min(1, S.fov / DEG / 35)));
       }
       if (mwOn) { gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, mwTex); }
