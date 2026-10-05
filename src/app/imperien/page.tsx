@@ -17,6 +17,14 @@ import {
   preloadEmpiresData,
 } from "@/lib/history/empiresClient";
 import { lookupWikiInBrowser } from "@/lib/history/wikiClientLookup";
+import {
+  PREHIST_COLORS,
+  PREHIST_ERAS,
+  fetchPrehistInfo,
+  prehistActive,
+  prehistBlob,
+  prehistName,
+} from "@/data/prehistory";
 
 const LEAFLET_CSS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
 const LEAFLET_JS_URL = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
@@ -49,6 +57,10 @@ interface SelectedFeature {
   // keinen Sinn (die Suche ist nicht an das aktuell eingestellte Karten-
   // jahr gebunden) und wird in der Info-Box ausgeblendet.
   viaSearch?: boolean;
+  // Urzeit-/Steinzeit-Kultur (Nutzerwunsch 05.10.2026), siehe data/prehistory.ts
+  prehistoric?: boolean;
+  wiki?: string;
+  period?: string;
 }
 
 interface EmpireInfo {
@@ -89,8 +101,10 @@ function isEmpireName(name: string): boolean {
 // formatYear() braucht jetzt die t()-Funktion der aktuellen UI-Sprache.
 function formatYear(year: number | undefined, t: (key: TranslationKey) => string): string {
   if (year === undefined) return "";
+  const abs = Math.abs(year);
+  const absText = abs >= 10000 ? abs.toLocaleString() : String(abs);
   return year < 0
-    ? `${Math.abs(year)} ${t("empiresEraBC")}`
+    ? `${absText} ${t("empiresEraBC")}`
     : `${year} ${t("empiresEraAD")}`;
 }
 
@@ -587,6 +601,11 @@ export default function ImperienPage() {
   // Effekt unten hält das Feld nur synchron, wenn sich sliderYear von
   // AUSSEN ändert (Lineal, Buttons, Abspielen).
   const [yearInputText, setYearInputText] = useState("1200");
+  // Nutzerwunsch 05.10.2026: Urzeit & Steinzeit — eigenes Jahr VOR dem
+  // Beginn der Reichs-Daten (3400 v. Chr.). null = normale Zeitleiste.
+  const [preYear, setPreYear] = useState<number | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const prehistLayerRef = useRef<any>(null);
 
   // Leaflet einmalig per CDN nachladen (CSS + JS)
   useEffect(() => {
@@ -927,6 +946,15 @@ export default function ImperienPage() {
   // sofort gezeichnet.
   useEffect(() => {
     if (!leafletReady || !mapRef.current || !yearRange) return;
+    if (preYear !== null) {
+      // Urzeit: keine Reichsgrenzen (gab es noch nicht)
+      if (geoLayerRef.current) {
+        mapRef.current.removeLayer(geoLayerRef.current);
+        geoLayerRef.current = null;
+      }
+      lastRenderedYearRef.current = null;
+      return;
+    }
     if (lastRenderedYearRef.current === currentYear) return;
 
     let cancelled = false;
@@ -987,7 +1015,69 @@ export default function ImperienPage() {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [leafletReady, yearRange, currentYear]);
+  }, [leafletReady, yearRange, currentYear, preYear]);
+
+  // Zeitleiste bewegt (Lineal, Abspielen, Eingabe) → Urzeit-Ansicht verlassen
+  useEffect(() => {
+    setPreYear(null);
+  }, [sliderYear]);
+
+  // Urzeit-/Steinzeit-Kulturen als weiche, gestrichelte Flächen. In der
+  // Urzeit-Ansicht für das gewählte Urzeit-Jahr, sonst zusätzlich zu den
+  // Reichen alle Kulturen, die im eingestellten Jahr noch bestehen (z. B.
+  // Jōmon bis 300 v. Chr., Stonehenge bis 1500 v. Chr.).
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const L = (window as any).L;
+    if (!leafletReady || !mapRef.current || !L) return;
+    const map = mapRef.current;
+    if (prehistLayerRef.current) {
+      map.removeLayer(prehistLayerRef.current);
+      prehistLayerRef.current = null;
+    }
+    if (!map.getPane("prehistory")) {
+      const pane = map.createPane("prehistory");
+      pane.style.zIndex = "420";
+    }
+    const year = preYear ?? currentYear;
+    const list = prehistActive(year);
+    if (!list.length) return;
+    const group = L.layerGroup();
+    for (const c of list) {
+      const col = PREHIST_COLORS[c.kind];
+      const name = prehistName(c.n, lang);
+      const poly = L.polygon(prehistBlob(c), {
+        pane: "prehistory",
+        color: col,
+        weight: 1.4,
+        dashArray: "5 5",
+        fillColor: col,
+        fillOpacity: preYear !== null ? 0.28 : 0.18,
+        opacity: 0.9,
+      });
+      poly.bindTooltip(name, {
+        // kleine Orte nur beim Antippen/Hover beschriften, sonst überlappen Namen
+        permanent: c.rx >= 3 || c.id === "gobekli" || c.id === "catalhoyuk" || c.id === "stonehenge",
+        direction: "center",
+        className: "empire-label prehist-label",
+        opacity: 0.95,
+      });
+      poly.on("click", () => {
+        setSelected({
+          name,
+          subjectTo: "",
+          isEmpire: false,
+          prehistoric: true,
+          wiki: c.wiki,
+          period: `${formatYear(c.from, t)} – ${formatYear(c.to, t)}`,
+        });
+      });
+      poly.addTo(group);
+    }
+    group.addTo(map);
+    prehistLayerRef.current = group;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [leafletReady, preYear, currentYear, lang]);
 
   // Ausführliche Info (Wikipedia) nachladen, sobald ein Gebiet angeklickt wurde.
   useEffect(() => {
@@ -998,6 +1088,18 @@ export default function ImperienPage() {
     let cancelled = false;
     setInfoLoading(true);
     setInfo(null);
+    if (selected.prehistoric && selected.wiki) {
+      fetchPrehistInfo(selected.wiki, lang)
+        .then((data) => {
+          if (!cancelled) setInfo(data);
+        })
+        .finally(() => {
+          if (!cancelled) setInfoLoading(false);
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
     fetch(
       `/api/empires/info?name=${encodeURIComponent(selected.name)}&lang=${encodeURIComponent(lang)}`
     )
@@ -1193,6 +1295,13 @@ export default function ImperienPage() {
           letter-spacing: 0.06em;
           text-shadow: 0 1px 2px #000, 0 0 6px #000, 0 0 12px #000;
         }
+        .leaflet-tooltip.prehist-label {
+          font-size: 10px;
+          font-style: italic;
+          text-transform: none;
+          letter-spacing: 0.02em;
+          color: #fde7c4;
+        }
         .leaflet-tooltip.empire-label-big {
           font-size: 13px;
           letter-spacing: 0.14em;
@@ -1362,7 +1471,9 @@ export default function ImperienPage() {
                 )}
                 <div className="mt-3">
                   <p className="label-mono text-xs uppercase text-accent">
-                    // {selected.viaSearch
+                    // {selected.prehistoric
+                      ? t("prehistResult")
+                      : selected.viaSearch
                       ? t("empiresResultSearch")
                       : selected.isEmpire
                         ? t("empiresResultGreatEmpire")
@@ -1376,7 +1487,12 @@ export default function ImperienPage() {
                       {t("empiresSubjectTo")} {selected.subjectTo}
                     </p>
                   )}
-                  {!selected.viaSearch && (
+                  {selected.prehistoric && selected.period && (
+                    <p className="mt-1 text-xs text-muted">
+                      {t("prehistPeriod")} {selected.period}
+                    </p>
+                  )}
+                  {!selected.viaSearch && !selected.prehistoric && (
                     <p className="mt-1 text-xs text-muted">
                       {t("empiresYearShown")} {formatYear(currentYear, t)}
                     </p>
@@ -1388,7 +1504,7 @@ export default function ImperienPage() {
                       wird erst nach dem Laden der übrigen Info gezeigt,
                       damit hier nicht schon während des Ladens "unbekannt"
                       aufblitzt. */}
-                  {!infoLoading && info?.found && (
+                  {!infoLoading && info?.found && !selected.prehistoric && (
                     <p className="mt-1 text-xs text-muted">
                       {t("empiresLanguageLabel")}{" "}
                       {info.language
@@ -1481,7 +1597,7 @@ export default function ImperienPage() {
                 </button>
               </form>
               <p className="whitespace-nowrap text-right font-display text-sm font-bold tabular-nums text-accent sm:min-w-[11rem] sm:text-xl">
-                {formatYear(currentYear, t)}
+                {formatYear(preYear ?? currentYear, t)}
               </p>
             </div>
           </div>
@@ -1588,6 +1704,56 @@ export default function ImperienPage() {
             >
               ⚙ {PLAY_SPEED_LABELS[speedStep]}
             </button>
+          </div>
+        </div>
+
+        {/* Urzeit & Steinzeit (Nutzerwunsch 05.10.2026): Sprungmarken vor
+            den ersten Reichen. Ein Tipp zeigt Menschenarten, Steinzeit-
+            Kulturen und frühe Siedlungen dieser Zeit auf der Karte; das
+            Lineal oben bringt einen zurück zu den Reichen. */}
+        <div className="hud-card mt-2 border border-border p-3 sm:p-4">
+          <div className="mb-2 flex items-baseline justify-between gap-2">
+            <p className="label-mono text-xs uppercase text-accent">// {t("prehistTitle")}</p>
+            {preYear !== null && (
+              <button
+                type="button"
+                onClick={() => {
+                  setPreYear(null);
+                  setSliderYear(minYear);
+                }}
+                className="label-mono shrink-0 text-[11px] uppercase text-muted transition-colors hover:text-accent"
+              >
+                {t("prehistBack")} →
+              </button>
+            )}
+          </div>
+          <p className="mb-2 text-[11px] leading-relaxed text-muted">{t("prehistHint")}</p>
+          <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+            {PREHIST_ERAS.map((era) => {
+              const active = preYear === era.year;
+              return (
+                <button
+                  key={era.year}
+                  type="button"
+                  onClick={() => {
+                    setIsPlaying(false);
+                    setPreYear(era.year);
+                    setSelected(null);
+                    mapRef.current?.setView([25, 30], 2);
+                  }}
+                  className={`flex shrink-0 flex-col items-start border px-2.5 py-1.5 text-left transition-colors ${
+                    active
+                      ? "border-accent bg-accent/15 text-foreground"
+                      : "border-border text-muted hover:border-accent hover:text-foreground"
+                  }`}
+                >
+                  <span className="font-display text-[11px] font-bold tabular-nums text-accent">
+                    {formatYear(era.year, t)}
+                  </span>
+                  <span className="max-w-[9.5rem] text-[10px] leading-snug">{prehistName(era.n, lang)}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
