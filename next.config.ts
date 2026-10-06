@@ -42,12 +42,13 @@ const securityHeaders = [
       // 'unsafe-eval' wird nur im Dev-Modus gebraucht (Next.js Hot-Reload
       // nutzt intern eval()) — im Produktivbetrieb (npm run build/start)
       // ist es automatisch draußen, dann ist die Policy strenger.
-      `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ""}https://www.youtube.com https://s.ytimg.com https://unpkg.com`,
+      `script-src 'self' 'unsafe-inline' ${isDev ? "'unsafe-eval' " : ""}https://www.youtube.com https://s.ytimg.com https://unpkg.com https://w.soundcloud.com`,
       "style-src 'self' 'unsafe-inline' https://unpkg.com",
       "img-src 'self' data: https:",
       "media-src 'self'",
       "connect-src 'self' https://www.googleapis.com https://api.spaceflightnewsapi.net https://techcrunch.com https://unpkg.com https://*.wikipedia.org https://geocoding-api.open-meteo.com",
-      "frame-src 'self' https://www.youtube.com",
+      // SoundCloud-Player (Musik im Sternenhimmel, 06.10.2026)
+      "frame-src 'self' https://www.youtube.com https://w.soundcloud.com",
       "font-src 'self' data:",
       "object-src 'none'",
       "base-uri 'self'",

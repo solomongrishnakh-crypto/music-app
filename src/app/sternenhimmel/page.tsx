@@ -73,7 +73,7 @@ export default function SternenhimmelPage() {
       <iframe
         src="/sternenhimmel.html"
         title="Sternenhimmel"
-        allow="geolocation; accelerometer; gyroscope; magnetometer; fullscreen"
+        allow="geolocation; accelerometer; gyroscope; magnetometer; fullscreen; autoplay; encrypted-media"
         className="fixed inset-0 z-[3000] h-[100dvh] w-full border-0 bg-[#06082a]"
       />
     </>
