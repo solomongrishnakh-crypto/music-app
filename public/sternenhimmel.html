@@ -648,6 +648,9 @@ void main(){
 // Himmelsrichtung → Einheitsvektor im Horizontsystem (x = Ost, y = Nord, z = oben)
 function enu(az, alt) { const c = Math.cos(alt); return [Math.sin(az) * c, Math.cos(az) * c, Math.sin(alt)]; }
 let cam = null;
+// Nutzerwunsch 06.10.2026: nicht weiter herauszoomen als die normale
+// Handykamera (1×-Hauptkamera ≈ 72° Bildhöhe im Hochformat) — kein „0,5×“.
+const MAX_FOV = 72 * DEG;
 function setupCamera() {
   const f = enu(S.az, S.alt);
   let r = [Math.cos(S.az), -Math.sin(S.az), 0];
@@ -2637,7 +2640,7 @@ canvas.addEventListener("pointermove", (e) => {
     const [p, q] = [...pointers.values()];
     const d = Math.hypot(p.x - q.x, p.y - q.y);
     moveT = performance.now();
-    S.fov = Math.max(4 * DEG, Math.min(150 * DEG, pinch.fov * pinch.d / Math.max(1, d)));
+    S.fov = Math.max(4 * DEG, Math.min(MAX_FOV, pinch.fov * pinch.d / Math.max(1, d)));
     return;
   }
   if (!drag) return;
@@ -2695,7 +2698,7 @@ canvas.addEventListener("wheel", (e) => {
   e.preventDefault();
   const f = Math.exp(Math.max(-100, Math.min(100, e.deltaY)) * 0.0015);
   moveT = performance.now();
-  S.fov = Math.max(4 * DEG, Math.min(150 * DEG, S.fov * f));
+  S.fov = Math.max(4 * DEG, Math.min(MAX_FOV, S.fov * f));
 }, { passive: false });
 function zoomTo(hit) {
   let v;
@@ -2964,7 +2967,7 @@ function frame(now) {
     if (keys.has("ArrowLeft")) S.az -= r; if (keys.has("ArrowRight")) S.az += r;
     if (keys.has("ArrowUp")) S.alt += r; if (keys.has("ArrowDown")) S.alt -= r;
     if (keys.has("+") || keys.has("=")) S.fov *= Math.exp(-0.002 * dt); if (keys.has("-")) S.fov *= Math.exp(0.002 * dt);
-    S.fov = Math.max(4 * DEG, Math.min(150 * DEG, S.fov)); clampAlt();
+    S.fov = Math.max(4 * DEG, Math.min(MAX_FOV, S.fov)); clampAlt();
   }
   S.az = (S.az + 2 * Math.PI) % (2 * Math.PI);
   const lost = S.atmo && S.alt < -(S.fov * 0.5 + 6 * DEG);
