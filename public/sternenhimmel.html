@@ -112,26 +112,27 @@ button.chip[aria-pressed="true"] { box-shadow: 0 0 14px -5px rgba(255, 90, 77, 0
 #info .live { font-size: 9px; letter-spacing: 0.2em; color: #7fe3a8; display: inline-flex; align-items: center; gap: 5px; }
 #info .live i { width: 6px; height: 6px; border-radius: 50%; background: #7fe3a8; box-shadow: 0 0 8px #7fe3a8; animation: livePulse 1.6s ease-in-out infinite; }
 @keyframes livePulse { 50% { opacity: 0.25; } }
-#info h2 { font-size: 26px; font-weight: 600; letter-spacing: 0.01em; margin: 8px 0 2px; background: linear-gradient(90deg, #ffffff, #b9d4ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+#info h2 { font-size: 26px; font-weight: 600; letter-spacing: 0.01em; margin: 8px 0 2px; color: #f4f8ff; text-shadow: 0 0 18px rgba(120,170,255,0.45); }
 #infoSub { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
 #infoSub:empty { display: none; }
-#infoHero { display: flex; align-items: center; gap: 14px; padding: 10px 12px; margin-bottom: 10px; border: 1px solid rgba(150,190,255,0.14); border-radius: 6px; background: radial-gradient(120% 140% at 0% 50%, rgba(80,140,255,0.12), transparent 60%), rgba(255,255,255,0.02); }
-#infoHero svg { flex: 0 0 auto; width: 66px; height: 66px; }
+#infoHero { display: flex; align-items: center; gap: 12px; padding: 6px 10px; margin-bottom: 10px; border: 1px solid rgba(150,190,255,0.14); border-radius: 6px; background: radial-gradient(120% 140% at 0% 50%, rgba(80,140,255,0.12), transparent 60%), rgba(255,255,255,0.02); }
+#infoHero svg { flex: 0 0 auto; width: 50px; height: 50px; }
 #infoHero .hv { display: grid; grid-template-columns: auto auto; gap: 2px 16px; font-variant-numeric: tabular-nums; }
 #infoHero .hv span { font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--muted); }
-#infoHero .hv b { font-size: 20px; font-weight: 600; color: #fff; }
+#infoHero .hv b { font-size: 17px; font-weight: 600; color: #fff; }
 #infoHero .hv small { grid-column: 1 / -1; font-size: 11px; color: #ffb3a8; }
-#infoList { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-#infoList .t { position: relative; padding: 7px 9px 7px 11px; border-radius: 4px; background: rgba(255,255,255,0.035); border: 1px solid rgba(150,190,255,0.08); min-width: 0; }
+#infoList { display: grid; grid-template-columns: 1fr 1fr 1fr; grid-auto-flow: row dense; gap: 5px; }
+#infoList .t { position: relative; padding: 5px 7px 5px 9px; border-radius: 4px; background: rgba(255,255,255,0.035); border: 1px solid rgba(150,190,255,0.08); min-width: 0; }
 #infoList .t::before { content: ""; position: absolute; left: 0; top: 7px; bottom: 7px; width: 2px; border-radius: 2px; background: linear-gradient(rgba(255,90,77,0.9), rgba(120,200,255,0.7)); }
 #infoList .t.w { grid-column: 1 / -1; }
-#infoList .t span { display: block; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
-#infoList .t b { display: block; font-size: 13.5px; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+#infoList .t.w2 { grid-column: span 2; }
+#infoList .t span { display: block; font-size: 8px; letter-spacing: 0.12em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
+#infoList .t b { display: block; font-size: 12px; line-height: 1.3; font-weight: 500; color: var(--ink); font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
 #infoWiki { margin-top: 12px; padding: 10px 12px; border: 1px solid rgba(150,190,255,0.12); border-radius: 6px; background: rgba(255,255,255,0.02); }
 #infoWiki .wh { display: flex; align-items: center; gap: 8px; }
 #infoWiki .wh::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,90,77,0.6), transparent); }
 #wikiText h4 { margin: 10px 0 4px; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: #9fc4ff; }
-#wikiText.clamp { max-height: 15em; }
+#wikiText.clamp { max-height: 22em; }
 </style>
 
 <canvas id="skygl" aria-hidden="true"></canvas>
@@ -1316,7 +1317,9 @@ function draw() {
     }
   }
   const starFade = S.atmo ? Math.pow(1 - day, 3) : 1; // Linien, Milchstraße, Nebel: erst bei echter Dunkelheit
-  const nightLimit = Math.min(10, 5.8 + 1.7 * Math.log2(70 * DEG / S.fov + 1) - (W * H < 600000 ? 0.4 : 0)) - 1.6 * moonLit - (isMoving() && W * H < 600000 ? 0.7 : 0); // beim Drehen am Handy etwas weniger schwache Sterne // Handy: etwas weniger, damit es flüssig bleibt
+  // Nutzerwunsch 06.10.2026: bei 1× nur die gut sichtbaren Sterne, schwache und
+  // ferne kommen beim Hineinzoomen gleitend dazu (weiche Einblendung, kein Aufblitzen)
+  const nightLimit = Math.min(10, 5.6 + 1.9 * Math.log2(72 * DEG / S.fov) - (W * H < 600000 ? 0.3 : 0)) - 1.6 * moonLit;
   // Tag/Dämmerung: nur die hellsten Sterne bleiben (am Tag ca. 1 mag → gut ein Dutzend)
   const dayK = S.atmo ? day : 0;
   const magLimit = dayK > 0 ? nightLimit + (1.1 - nightLimit) * Math.sqrt(dayK) : nightLimit;
@@ -1415,12 +1418,14 @@ function draw() {
     const b = Math.max(0, (magLimit + 0.5 - mag) / (magLimit + 2));
     let r = 0.9 + Math.pow(b, 1.7) * 5.2 * Math.min(1.6, Math.sqrt(70 * DEG / S.fov));
     let a = Math.min(1, 0.16 + b * 1.35) * Math.max(starFade, starA * Math.min(1, dayK * 4));
+    a *= Math.min(1, (magLimit - mag) / 1.1); // schwächste Sterne weich ein-/ausblenden
     if (under) a *= 0.38; // „durch das Wasser“ gesehen
     else if (S.atmo) {
       // Szintillation: überall leicht, nah am Horizont deutlich und schneller
-      const k = Math.min(0.55, 0.06 + 0.05 * (airX - 1));
+      // 06.10.2026: deutlich sanfter und langsamer — wirkte am Handy wie Blinzeln
+      const k = Math.min(0.25, 0.015 + 0.025 * (airX - 1));
       const ph = i * 12.9898;
-      a *= 1 - k * (0.5 + 0.5 * Math.sin(tw * (4 + (i % 7)) + ph) * Math.sin(tw * (2.3 + (i % 5) * 0.7) + ph * 0.5));
+      a *= 1 - k * (0.5 + 0.5 * Math.sin(tw * (1.6 + (i % 7) * 0.25) + ph));
     }
     if (a < 0.02) continue;
     visStars.push(i); s.x = P.x; s.y = P.y; s.r = r; s.under = under;
@@ -2508,8 +2513,11 @@ function fillInfo() {
   document.getElementById("infoKind").textContent = kind;
   const subEl = document.getElementById("infoSub"), sub = infoSubline(s);
   if (subEl.textContent !== sub) subEl.textContent = sub;
+  // 06.10.2026: nur die wichtigsten Angaben als Kacheln, dafür mehr Text darunter
+  const DROP = new Set(["", "lightTime", "sunDist", "elong", "mass", "rotation", "temp", "raDec", "inConst", "absMag", "luminosity", "radius", "lightSent", "lightAgo", "surface", "issCrew"].map((k) => (k ? tr(k) : "")));
+  rows = rows.filter(([a]) => !DROP.has(a));
   const dl = document.getElementById("infoList");
-  const html = rows.map(([a, b]) => `<div class="t${!a || String(b).length > 22 ? " w" : ""}">${a ? `<span>${a}</span>` : ""}<b>${b}</b></div>`).join("");
+  const html = rows.map(([a, b]) => `<div class="t${String(b).length > 26 ? " w" : String(b).length > 13 ? " w2" : ""}">${a ? `<span>${a}</span>` : ""}<b>${b}</b></div>`).join("");
   if (dl.innerHTML !== html) dl.innerHTML = html;
   loadWiki(s);
 }
@@ -2540,7 +2548,7 @@ async function wikiApi(lang, q) {
 async function wikiLookup(cands, lang) {
   if (!cands.length) return null;
   const extra = lang === "en" ? "" : `&prop=langlinks&lllang=${lang}&lllimit=max`;
-  const base = lang === "en" ? "&prop=extracts&exchars=2600&explaintext=1&exsectionformat=wiki&exlimit=20" : "";
+  const base = lang === "en" ? "&prop=extracts&exchars=4000&explaintext=1&exsectionformat=wiki&exlimit=20" : "";
   const j = await wikiApi("en", `action=query&redirects=1${base}${extra}&titles=${encodeURIComponent(cands.join("|"))}`);
   const q = j.query || {}, pages = q.pages || [];
   const map = (t) => { for (const n of q.normalized || []) if (n.from === t) t = n.to; for (const rd of q.redirects || []) if (rd.from === t) t = rd.to; return t; };
@@ -2550,12 +2558,12 @@ async function wikiLookup(cands, lang) {
     if (lang === "en") return p.extract ? { lang: "en", title: p.title, text: p.extract } : null;
     const ll = p.langlinks && p.langlinks[0];
     if (ll && ll.title) {
-      const k = await wikiApi(lang, `action=query&redirects=1&prop=extracts&exchars=2600&explaintext=1&exsectionformat=wiki&titles=${encodeURIComponent(ll.title)}`);
+      const k = await wikiApi(lang, `action=query&redirects=1&prop=extracts&exchars=4000&explaintext=1&exsectionformat=wiki&titles=${encodeURIComponent(ll.title)}`);
       const lp = k.query && k.query.pages && k.query.pages[0];
       if (lp && lp.extract) return { lang, title: lp.title, text: lp.extract };
     }
     // kein Artikel in dieser Sprache → englischer Text
-    const e = await wikiApi("en", `action=query&prop=extracts&exchars=2600&explaintext=1&exsectionformat=wiki&titles=${encodeURIComponent(p.title)}`);
+    const e = await wikiApi("en", `action=query&prop=extracts&exchars=4000&explaintext=1&exsectionformat=wiki&titles=${encodeURIComponent(p.title)}`);
     const ep = e.query && e.query.pages && e.query.pages[0];
     return ep && ep.extract ? { lang: "en", title: ep.title, text: ep.extract, enOnly: true } : null;
   }
@@ -2587,7 +2595,7 @@ function loadWiki(s) {
       if (pending === "#skip") continue;
       if (pending) { const el = document.createElement("h4"); el.textContent = pending; txt.appendChild(el); pending = null; }
       const el = document.createElement("p"); el.textContent = ln.replace(/\s*…$|\.\.\.$/, " …"); txt.appendChild(el);
-      if (++n >= 14) break;
+      if (++n >= 22) break;
     }
     if (res.enOnly && tr("wikiEnOnly")) { const el = document.createElement("p"); el.style.opacity = ".6"; el.textContent = tr("wikiEnOnly"); txt.appendChild(el); }
     const long = res.text.length > 420;
