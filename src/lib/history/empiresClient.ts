@@ -23,7 +23,34 @@
  * alte Version aus.
  */
 
-const DATA_URL = "/data/empires-v1.json";
+// v2 (05.10.2026, Nutzerhinweis "Grenzen sehen nicht realistisch aus"):
+// doppelt so viele Grenzpunkte wie v1 (Cliopatria v0.21, Douglas-Peucker
+// 0,1° statt grob vereinfacht), dafür kompakt gespeichert: jeder Ring als
+// Differenzen ganzer Zahlen in 0,01°-Schritten (gleich große Datei).
+const DATA_URL = "/data/empires-v2.json";
+
+/** Ring aus Differenz-Ganzzahlen (0,01°) zurück in [lng, lat]-Paare. */
+export function decodeRing(d: number[]): number[][] {
+  const out: number[][] = [];
+  let x = 0;
+  let y = 0;
+  for (let i = 0; i + 1 < d.length; i += 2) {
+    x += d[i];
+    y += d[i + 1];
+    out.push([x / 100, y / 100]);
+  }
+  if (out.length) out.push(out[0]);
+  return out;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function decodeGeometry(g: any): any {
+  if (!Array.isArray(g)) return g; // schon GeoJSON
+  const polys = (g as number[][][]).map((p) => p.map(decodeRing));
+  return polys.length === 1
+    ? { type: "Polygon", coordinates: polys[0] }
+    : { type: "MultiPolygon", coordinates: polys };
+}
 
 interface RawEmpireEntry {
   n: string; // Name
@@ -143,6 +170,7 @@ export async function getEmpiresForYear(year: number): Promise<EmpireFeatureColl
       typeof e.n === "string" &&
       e.n.trim().length > 0
     ) {
+      if (Array.isArray(e.g)) e.g = decodeGeometry(e.g); // einmalig, dann im Speicher
       features.push({
         type: "Feature",
         properties: { NAME: e.n, SUBJECTO: "" },

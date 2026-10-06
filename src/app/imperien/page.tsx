@@ -17,6 +17,7 @@ import {
   preloadEmpiresData,
 } from "@/lib/history/empiresClient";
 import { lookupWikiInBrowser } from "@/lib/history/wikiClientLookup";
+import { decodeRing } from "@/lib/history/empiresClient";
 import {
   PREHIST_COLORS,
   PREHIST_ERAS,
@@ -218,14 +219,14 @@ function smoothGeometry(geometry: any): any {
   if (geometry.type === "Polygon") {
     return {
       ...geometry,
-      coordinates: geometry.coordinates.map((ring: number[][]) => chaikinSmooth(ring)),
+      coordinates: geometry.coordinates.map((ring: number[][]) => chaikinSmooth(ring, 1)),
     };
   }
   if (geometry.type === "MultiPolygon") {
     return {
       ...geometry,
       coordinates: geometry.coordinates.map((poly: number[][][]) =>
-        poly.map((ring) => chaikinSmooth(ring))
+        poly.map((ring) => chaikinSmooth(ring, 1))
       ),
     };
   }
@@ -518,6 +519,56 @@ function geometryLabelPoint(geometry: any): [number, number] | null {
  * (im Entwicklungs-Sandbox-Netz war der npm-Registry-Zugriff blockiert;
  * ausserdem spart das ein zusaetzliches Build-Dependency).
  */
+// Nutzerhinweis 05.10.2026 ("Grenzen sehen nicht realistisch aus"): Flächen,
+// Grenzlinien und Urzeit-Gebiete werden an der echten Küstenlinie
+// abgeschnitten (Natural Earth 1:10 Mio., gemeinfrei) — nichts ragt mehr
+// ins Meer, die Küsten passen genau zum Satellitenbild. Technik: das Land
+// wird als unsichtbarer Pfad in dieselbe SVG-Ebene gelegt und in ein
+// <clipPath> verschoben; Leaflet aktualisiert ihn beim Zoomen/Verschieben
+// selbst weiter.
+let landRingsPromise: Promise<number[][][]> | null = null;
+function loadLandRings(): Promise<number[][][]> {
+  if (!landRingsPromise) {
+    landRingsPromise = fetch("/data/land-10m.json")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((rings: number[][]) =>
+        rings.map((d) => decodeRing(d).map(([lng, lat]) => [lat, lng]))
+      )
+      .catch(() => {
+        landRingsPromise = null;
+        return [];
+      });
+  }
+  return landRingsPromise;
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function applyLandClip(L: any, map: any, renderer: any, id: string) {
+  loadLandRings().then((rings) => {
+    if (!rings.length || !renderer) return;
+    const land = L.polygon(
+      rings.map((ring) => [ring]),
+      { renderer, interactive: false, stroke: false, fill: true, fillOpacity: 0, smoothFactor: 0.6 }
+    ).addTo(map);
+    const svg: SVGSVGElement | undefined = renderer._container;
+    const root: SVGGElement | undefined = renderer._rootGroup;
+    const path: SVGPathElement | undefined = land._path;
+    if (!svg || !root || !path) return;
+    const NS = "http://www.w3.org/2000/svg";
+    let defs = svg.querySelector("defs");
+    if (!defs) {
+      defs = document.createElementNS(NS, "defs");
+      svg.insertBefore(defs, svg.firstChild);
+    }
+    const clip = document.createElementNS(NS, "clipPath");
+    clip.setAttribute("id", id);
+    clip.setAttribute("clipPathUnits", "userSpaceOnUse");
+    path.setAttribute("clip-rule", "evenodd");
+    clip.appendChild(path);
+    defs.appendChild(clip);
+    root.setAttribute("clip-path", `url(#${id})`);
+  });
+}
+
 export default function ImperienPage() {
   const { t, lang } = useLanguage();
   const mapContainerRef = useRef<HTMLDivElement>(null);
@@ -529,6 +580,8 @@ export default function ImperienPage() {
   const fillRendererRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const borderRendererRef = useRef<any>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const prehistRendererRef = useRef<any>(null);
   const rulerRef = useRef<HTMLDivElement>(null);
   const rulerDragRef = useRef<{ startX: number; startYear: number; moved: boolean } | null>(
     null
@@ -674,6 +727,12 @@ export default function ImperienPage() {
     borderPane.style.pointerEvents = "none";
     fillRendererRef.current = L.svg({ pane: "territoryFill", padding: 0.5 });
     borderRendererRef.current = L.svg({ pane: "territoryBorder", padding: 0.5 });
+    const prehistPane = map.createPane("prehistory");
+    prehistPane.style.zIndex = "420";
+    prehistRendererRef.current = L.svg({ pane: "prehistory", padding: 0.5 });
+    applyLandClip(L, map, fillRendererRef.current, "land-clip-fill");
+    applyLandClip(L, map, borderRendererRef.current, "land-clip-border");
+    applyLandClip(L, map, prehistRendererRef.current, "land-clip-prehist");
 
     mapRef.current = map;
 
@@ -845,7 +904,10 @@ export default function ImperienPage() {
         // Volle Deckkraft INNERHALB der Flächen-Ebene; die Ebene selbst ist
         // halbtransparent (siehe createPane("territoryFill")). Keine Linie
         // hier — die Grenzen kommen aus borderLayer.
-        return { stroke: false, fillColor: c, fillOpacity: 1 };
+        // Kontur in Flächenfarbe (4 px) lässt jedes Gebiet ein Stück über
+        // seinen Rand wachsen: schließt Lücken zwischen Gebiet und Küste —
+        // das Meer schneidet danach der Küsten-Clip sauber ab (05.10.2026).
+        return { stroke: true, color: c, weight: 4, opacity: 1, fillColor: c, fillOpacity: 1 };
       },
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       onEachFeature: (feature: any, lyr: any) => {
@@ -1035,10 +1097,6 @@ export default function ImperienPage() {
       map.removeLayer(prehistLayerRef.current);
       prehistLayerRef.current = null;
     }
-    if (!map.getPane("prehistory")) {
-      const pane = map.createPane("prehistory");
-      pane.style.zIndex = "420";
-    }
     const year = preYear ?? currentYear;
     const list = prehistActive(year);
     if (!list.length) return;
@@ -1048,6 +1106,7 @@ export default function ImperienPage() {
       const name = prehistName(c.n, lang);
       const poly = L.polygon(prehistBlob(c), {
         pane: "prehistory",
+        renderer: prehistRendererRef.current ?? undefined,
         color: col,
         weight: 1.4,
         dashArray: "5 5",
