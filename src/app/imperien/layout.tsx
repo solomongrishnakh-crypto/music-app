@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { EMPIRES_KEYWORDS } from "@/lib/seoKeywords";
+import { hreflang } from "@/lib/seoI18n";
 
 // Eigene Suchmaschinen-Angaben für /imperien (Client-Seite → metadata hier).
 // Nutzerwunsch 30.09.2026: Seite soll z.B. bei "Weltgeschichte Karte"
@@ -14,7 +15,7 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   keywords: EMPIRES_KEYWORDS,
-  alternates: { canonical: "/imperien" },
+  alternates: { canonical: "/imperien", languages: hreflang("/imperien") },
   openGraph: {
     type: "website",
     siteName: "Centaurian",

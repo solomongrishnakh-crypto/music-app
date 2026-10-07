@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { SKY_KEYWORDS } from "@/lib/seoKeywords";
+import { hreflang } from "@/lib/seoI18n";
 
 /**
  * Sternenhimmel (Nutzerwunsch 01.10.2026: "wie Star Walk 2").
@@ -18,9 +19,16 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   keywords: SKY_KEYWORDS,
-  alternates: { canonical: "/sternenhimmel" },
-  openGraph: { url: "/sternenhimmel", title: `${TITLE} | CENTAURIAN`, description: DESCRIPTION },
-  twitter: { title: `${TITLE} | CENTAURIAN`, description: DESCRIPTION },
+  alternates: { canonical: "/sternenhimmel", languages: hreflang("/sternenhimmel") },
+  openGraph: {
+    type: "website",
+    siteName: "Centaurian",
+    url: "/sternenhimmel",
+    title: `${TITLE} | CENTAURIAN`,
+    description: DESCRIPTION,
+    images: [{ url: "/og/sternenhimmel.jpg", width: 1200, height: 630, alt: TITLE }],
+  },
+  twitter: { card: "summary_large_image", title: `${TITLE} | CENTAURIAN`, description: DESCRIPTION, images: ["/og/sternenhimmel.jpg"] },
 };
 
 const JSON_LD = {

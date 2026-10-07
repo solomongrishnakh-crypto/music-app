@@ -114,7 +114,7 @@ const PREPARED = CONSTELLATIONS.map((c) => {
 });
 
 export default function SkyPreviewCard({ label, title }: { label: string; title: string }) {
-  const { lang } = useLanguage();
+  const { lang, localePath } = useLanguage();
   const wrapRef = useRef<HTMLAnchorElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [idx, setIdx] = useState(0);
@@ -276,7 +276,7 @@ export default function SkyPreviewCard({ label, title }: { label: string; title:
   return (
     <Link
       ref={wrapRef}
-      href="/sternenhimmel"
+      href={localePath("/sternenhimmel")}
       className="hud-card group relative block h-52 w-full overflow-hidden sm:h-64"
     >
       <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 h-full w-full" />

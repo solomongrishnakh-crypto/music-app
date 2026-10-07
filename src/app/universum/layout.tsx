@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { UNIVERSE_KEYWORDS } from "@/lib/seoKeywords";
+import { hreflang } from "@/lib/seoI18n";
 
 // Eigene Suchmaschinen-Angaben für /universum (die Seite selbst ist eine
 // Client-Komponente und kann deshalb kein metadata exportieren).
@@ -15,9 +16,16 @@ export const metadata: Metadata = {
   title: TITLE,
   description: DESCRIPTION,
   keywords: UNIVERSE_KEYWORDS,
-  alternates: { canonical: "/universum" },
-  openGraph: { url: "/universum", title: `${TITLE} | CENTAURIAN`, description: DESCRIPTION },
-  twitter: { title: `${TITLE} | CENTAURIAN`, description: DESCRIPTION },
+  alternates: { canonical: "/universum", languages: hreflang("/universum") },
+  openGraph: {
+    type: "website",
+    siteName: "Centaurian",
+    url: "/universum",
+    title: `${TITLE} | CENTAURIAN`,
+    description: DESCRIPTION,
+    images: [{ url: "/branding/og-image.jpg", width: 1200, height: 630, alt: "Centaurian" }],
+  },
+  twitter: { card: "summary_large_image", title: `${TITLE} | CENTAURIAN`, description: DESCRIPTION, images: ["/branding/og-image.jpg"] },
 };
 
 // Strukturierte Daten: interaktive Lern-Anwendung zu Sonnensystem & Kosmos

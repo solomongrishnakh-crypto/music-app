@@ -1383,7 +1383,7 @@ function FactThumbnail({ src, alt }: { src: string; alt: string }) {
 export default function UniversumPage() {
   const [selectedFact, setSelectedFact] = useState<number | null>(null);
   const [showSolarSystem, setShowSolarSystem] = useState(false);
-  const { t, lang } = useLanguage();
+  const { t, lang, localePath } = useLanguage();
 
   return (
     <main className="relative min-h-screen">
@@ -1392,7 +1392,7 @@ export default function UniversumPage() {
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-20 pt-10 sm:px-8 sm:pt-14">
         <div className="mb-8 flex items-center justify-between">
           <Link
-            href="/"
+            href={localePath("/")}
             className="label-mono inline-flex w-fit items-center gap-2 text-xs uppercase text-muted transition-colors hover:text-accent"
           >
             ← {t("back")}

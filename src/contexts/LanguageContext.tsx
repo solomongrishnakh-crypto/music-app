@@ -36,6 +36,11 @@ interface LanguageContextValue {
   setLang: (lang: Lang) => void;
   /** Übersetzt einen bekannten UI-Textbaustein (Menüs, Buttons, Labels). */
   t: (key: TranslationKey) => string;
+  /**
+   * Interne Adresse in der aktuellen Sprach-URL: auf /en/... wird aus
+   * "/imperien" → "/en/imperien"; auf den deutschen Seiten bleibt sie gleich.
+   */
+  localePath: (path: string) => string;
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
@@ -74,36 +79,78 @@ function detectInitialLang(): Lang {
  * Englisch vollständig, weitere Sprachen fallen bis zur Übersetzung auf
  * Englisch zurück statt gemischt/leer zu bleiben.
  */
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [lang, setLangState] = useState<Lang>("de");
+/**
+ * Nutzerwunsch 07.10.2026 ("fokus liegt an internationale zuschauer"): jede
+ * Seite gibt es zusätzlich unter einer eigenen Sprach-Adresse (/en, /es, …).
+ * Dort steht die Sprache fest (forcedLang) — schon im Server-HTML, damit
+ * Google die Seite in dieser Sprache sieht. Ein Sprachwechsel springt dann
+ * zur passenden Adresse der anderen Sprache (Deutsch = ohne Präfix).
+ */
+export function LanguageProvider({
+  children,
+  forcedLang,
+}: {
+  children: React.ReactNode;
+  forcedLang?: Lang;
+}) {
+  const [lang, setLangState] = useState<Lang>(forcedLang ?? "de");
   const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setLangState(detectInitialLang());
+    if (forcedLang) {
+      document.documentElement.dataset.forcedLang = forcedLang;
+    } else {
+      setLangState(detectInitialLang());
+    }
     setHydrated(true);
-  }, []);
+    return () => {
+      if (forcedLang) delete document.documentElement.dataset.forcedLang;
+    };
+  }, [forcedLang]);
 
   useEffect(() => {
     if (!hydrated || typeof document === "undefined") return;
+    // Auf Sprach-Adressen bestimmt der innere (feste) Provider die Sprache
+    if (!forcedLang && document.documentElement.dataset.forcedLang) return;
     document.documentElement.lang = lang;
     document.documentElement.dir = RTL_LANGS.includes(lang) ? "rtl" : "ltr";
-  }, [lang, hydrated]);
+  }, [lang, hydrated, forcedLang]);
 
-  const setLang = useCallback((next: Lang) => {
-    setLangState(next);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, next);
-    } catch {
-      // ignorieren — Sprache gilt dann nur für die aktuelle Sitzung
-    }
-  }, []);
+  const setLang = useCallback(
+    (next: Lang) => {
+      try {
+        window.localStorage.setItem(STORAGE_KEY, next);
+      } catch {
+        // ignorieren — Sprache gilt dann nur für die aktuelle Sitzung
+      }
+      if (forcedLang) {
+        if (next === forcedLang) return;
+        const { pathname, search, hash } = window.location;
+        const base = pathname.replace(new RegExp(`^/${forcedLang}(?=/|$)`), "") || "/";
+        const target = next === "de" ? base : `/${next}${base === "/" ? "" : base}`;
+        window.location.assign(target + search + hash);
+        return;
+      }
+      setLangState(next);
+    },
+    [forcedLang]
+  );
+
+  const localePath = useCallback(
+    (path: string) => {
+      if (!forcedLang || forcedLang === "de") return path;
+      if (!path.startsWith("/") || path.startsWith("//")) return path;
+      return path === "/" ? `/${forcedLang}` : `/${forcedLang}${path}`;
+    },
+    [forcedLang]
+  );
 
   const t = useCallback(
     (key: TranslationKey) => TRANSLATIONS[key]?.[lang] ?? TRANSLATIONS[key]?.en ?? TRANSLATIONS[key]?.de ?? key,
     [lang]
   );
 
-  const value = useMemo(() => ({ lang, setLang, t }), [lang, setLang, t]);
+  const value = useMemo(() => ({ lang, setLang, t, localePath }), [lang, setLang, t, localePath]);
 
   return <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>;
 }

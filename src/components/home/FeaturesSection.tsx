@@ -17,7 +17,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
  * text und details"): alle sichtbaren Texte hier laufen jetzt über t().
  */
 export default function FeaturesSection() {
-  const { t } = useLanguage();
+  const { t, localePath } = useLanguage();
 
   const FEATURES = [
     { index: "01", title: t("featureMusicTitle"), text: t("featureMusicText") },
@@ -30,8 +30,8 @@ export default function FeaturesSection() {
   // großen Karten — jede führt direkt zu ihrem Bereich.
   const CARDS = [
     { ...FEATURES[0], href: "#musik", cta: t("navMusic"), visual: "eq" as const },
-    { ...FEATURES[1], href: "/universum", cta: t("discoverCta"), visual: "stars" as const },
-    { ...FEATURES[2], href: "/imperien", cta: t("viewMapCta"), visual: "clock" as const },
+    { ...FEATURES[1], href: localePath("/universum"), cta: t("discoverCta"), visual: "stars" as const },
+    { ...FEATURES[2], href: localePath("/imperien"), cta: t("viewMapCta"), visual: "clock" as const },
   ];
 
   return (

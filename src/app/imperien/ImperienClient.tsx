@@ -603,7 +603,7 @@ function applyLandClip(L: any, map: any, renderer: any, id: string) {
 }
 
 export default function ImperienClient() {
-  const { t, lang } = useLanguage();
+  const { t, lang, localePath } = useLanguage();
   const mapContainerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
@@ -1143,7 +1143,7 @@ export default function ImperienClient() {
   }, [currentYear]);
 
   async function handleShare() {
-    const url = `${window.location.origin}/imperien?jahr=${currentYear}`;
+    const url = `${window.location.origin}${window.location.pathname}?jahr=${currentYear}`;
     const title = `${t("empiresShareTitle")} ${formatYear(currentYear, t)} | CENTAURIAN`;
     if (typeof navigator.share === "function") {
       try {
@@ -1489,7 +1489,7 @@ export default function ImperienClient() {
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-20 pt-10 sm:px-8 sm:pt-14">
         <div className="mb-8 flex items-center justify-between">
           <Link
-            href="/"
+            href={localePath("/")}
             className="label-mono inline-flex w-fit items-center gap-2 text-xs uppercase text-muted transition-colors hover:text-accent"
           >
             ← {t("back")}
@@ -1664,7 +1664,7 @@ export default function ImperienClient() {
                       Vorgänger/Nachfolger) — Nutzerwunsch 07.10.2026 */}
                   {!selected.prehistoric && (REICH_SLUGS as Record<string, string>)[selected.name] && (
                     <Link
-                      href={`/imperien/reich/${(REICH_SLUGS as Record<string, string>)[selected.name]}`}
+                      href={localePath(`/imperien/reich/${(REICH_SLUGS as Record<string, string>)[selected.name]}`)}
                       className="label-mono mt-2 inline-flex items-center gap-1 text-xs uppercase text-accent hover:underline"
                     >
                       ▤ {t("empiresOwnPage")}
@@ -1939,7 +1939,7 @@ export default function ImperienClient() {
           </div>
           <TopEmpiresGrid />
           <Link
-            href="/imperien/reiche"
+            href={localePath("/imperien/reiche")}
             className="label-mono mt-8 inline-block border border-border px-4 py-2.5 text-xs uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent"
           >
             {t("empiresAllEmpires")} →

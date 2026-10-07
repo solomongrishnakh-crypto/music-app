@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import ImperienClient from "./ImperienClient";
 import { EMPIRES_KEYWORDS } from "@/lib/seoKeywords";
+import { hreflang } from "@/lib/seoI18n";
 
 const DESCRIPTION =
   "Interaktive Weltgeschichte-Karte: alle Reiche, Imperien und Grenzen von 3400 v. Chr. bis heute, Jahr für Jahr auf einer Zeitleiste. Kostenlos, mit Infos zu jedem Reich. World history map with empires and borders.";
@@ -70,7 +71,7 @@ export async function generateMetadata({ searchParams }: Props): Promise<Metadat
     title,
     description,
     // Suchmaschinen sollen nur EINE Kartenseite führen, nicht 5000 Jahres-Varianten
-    alternates: { canonical: "/imperien" },
+    alternates: { canonical: "/imperien", languages: hreflang("/imperien") },
     openGraph: {
       type: "website",
       siteName: "Centaurian",

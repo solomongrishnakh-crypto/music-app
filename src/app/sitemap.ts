@@ -1,26 +1,34 @@
 import type { MetadataRoute } from "next";
 import { REICHE_INDEX } from "@/lib/history/reiche";
+import { ALL_LANGS, BASE_URL, hreflang } from "@/lib/seoI18n";
 
 /**
- * sitemap.xml — Liste aller Seiten für Google & Co., damit sie gefunden
- * und schneller aufgenommen werden. Neue Seiten hier ergänzen.
+ * sitemap.xml — alle Seiten in allen 13 Sprachen (Deutsch ohne Präfix,
+ * sonst /en/…, /es/… usw.), jeweils mit Verweis auf die anderen
+ * Sprachversionen (hreflang). Nutzerwunsch 07.10.2026: internationale Besucher.
  */
-const BASE = "https://centaurian.vercel.app";
+type Entry = MetadataRoute.Sitemap[number];
+
+function withLangs(path: string, priority: number, changeFrequency: Entry["changeFrequency"]): Entry[] {
+  const now = new Date();
+  const languages: Record<string, string> = {};
+  for (const [k, v] of Object.entries(hreflang(path))) languages[k] = BASE_URL + v;
+  return ALL_LANGS.map((l) => ({
+    url: BASE_URL + (l === "de" ? path : path === "/" ? `/${l}` : `/${l}${path}`),
+    lastModified: now,
+    changeFrequency,
+    priority: l === "de" || l === "en" ? priority : Math.max(0.3, priority - 0.1),
+    alternates: { languages },
+  }));
+}
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date();
   return [
-    { url: BASE + "/", lastModified: now, changeFrequency: "weekly", priority: 1 },
-    { url: BASE + "/universum", lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: BASE + "/sternenhimmel", lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: BASE + "/imperien", lastModified: now, changeFrequency: "monthly", priority: 0.8 },
-    { url: BASE + "/imperien/reiche", lastModified: now, changeFrequency: "monthly", priority: 0.7 },
-    // eine Seite pro Reich (Nutzerwunsch 07.10.2026: mehr Besucher über Google)
-    ...REICHE_INDEX.map((r) => ({
-      url: `${BASE}/imperien/reich/${r.slug}`,
-      lastModified: now,
-      changeFrequency: "yearly" as const,
-      priority: 0.6,
-    })),
+    ...withLangs("/", 1, "weekly"),
+    ...withLangs("/universum", 0.8, "monthly"),
+    ...withLangs("/sternenhimmel", 0.8, "monthly"),
+    ...withLangs("/imperien", 0.8, "monthly"),
+    ...withLangs("/imperien/reiche", 0.7, "monthly"),
+    ...REICHE_INDEX.flatMap((r) => withLangs(`/imperien/reich/${r.slug}`, 0.6, "yearly")),
   ];
 }

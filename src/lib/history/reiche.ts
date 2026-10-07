@@ -1,6 +1,5 @@
-import { readFile } from "fs/promises";
-import path from "path";
 import INDEX from "@/data/reiche/index.json";
+import ALLE from "@/data/reiche/alle.json";
 
 /**
  * Daten für die Einzelseiten /imperien/reich/[slug] (Nutzerwunsch 07.10.2026:
@@ -41,17 +40,13 @@ export interface Reich extends ReichIndexEntry {
 
 export const REICHE_INDEX = INDEX as unknown as ReichIndexEntry[];
 
-// Alle Reich-Daten liegen in EINER Datei (ca. 15 MB, nur beim Build gelesen
-// und danach im Speicher behalten — nicht im Browser-Bundle).
-let allePromise: Promise<Record<string, Reich>> | null = null;
+// Alle Reich-Daten liegen in EINER Datei (ca. 15 MB). Sie wird fest in den
+// Server-Code eingebunden (nicht ins Browser-Bundle) — so funktionieren auch
+// die Sprachversionen, die erst beim ersten Aufruf erzeugt werden.
+const ALLE_MAP = ALLE as unknown as Record<string, Reich>;
 
 export async function loadReich(slug: string): Promise<Reich | null> {
-  if (!REICHE_INDEX.some((r) => r.slug === slug)) return null;
-  if (!allePromise) {
-    const file = path.join(process.cwd(), "src", "data", "reiche", "alle.json");
-    allePromise = readFile(file, "utf8").then((txt) => JSON.parse(txt) as Record<string, Reich>);
-  }
-  return (await allePromise)[slug] ?? null;
+  return ALLE_MAP[slug] ?? null;
 }
 
 export function reichName(r: { de: string | null; en?: string; n?: string }): string {
