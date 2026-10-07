@@ -156,16 +156,6 @@ function getStableColor(name: string): string {
   return color;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function assignDistinctColors(features: any[]): Map<string, string> {
-  const map = new Map<string, string>();
-  for (const f of features) {
-    const name: string = f.properties?.NAME ?? "";
-    map.set(name, getStableColor(name));
-  }
-  return map;
-}
-
 // Chaikin-Corner-Cutting: rundet die Ecken eines Koordinatenrings ab, statt
 // die scharfen Originalknicke der Geodaten 1:1 zu zeichnen (Nutzerwunsch
 // 18.09.2026: "die grenzen sollen nicht kantig sein"). Ein Durchlauf ersetzt
@@ -519,6 +509,48 @@ function geometryLabelPoint(geometry: any): [number, number] | null {
  * (im Entwicklungs-Sandbox-Netz war der npm-Registry-Zugriff blockiert;
  * ausserdem spart das ein zusaetzliches Build-Dependency).
  */
+// Nutzerhinweis 07.10.2026 ("wieso ist es so laggy" beim Ziehen der
+// Zeitleiste): Glätten, Fläche, Namens-Mittelpunkt und Leaflet-Koordinaten
+// wurden bisher bei JEDEM Jahr für JEDES Gebiet neu berechnet (die Fläche
+// sogar mehrfach pro Gebiet im Sortier-Vergleich). Die Geometrie-Objekte
+// aus empiresClient bleiben über alle Jahre dieselben → einmal rechnen,
+// danach aus dem Speicher.
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const smoothCache = new WeakMap<object, any>();
+const areaCache = new WeakMap<object, number>();
+const labelPointCache = new WeakMap<object, [number, number] | null>();
+const latLngCache = new WeakMap<object, any>();
+function cachedSmooth(g: any): any {
+  let s = smoothCache.get(g);
+  if (s === undefined) {
+    s = smoothGeometry(g);
+    smoothCache.set(g, s);
+  }
+  return s;
+}
+function cachedArea(g: any): number {
+  let a = areaCache.get(g);
+  if (a === undefined) {
+    a = polygonArea(g);
+    areaCache.set(g, a);
+  }
+  return a;
+}
+function cachedLabelPoint(g: any): [number, number] | null {
+  if (!labelPointCache.has(g)) labelPointCache.set(g, geometryLabelPoint(cachedSmooth(g)));
+  return labelPointCache.get(g) ?? null;
+}
+function cachedLatLngs(L: any, g: any): any {
+  let ll = latLngCache.get(g);
+  if (ll === undefined) {
+    const s = cachedSmooth(g);
+    ll = L.GeoJSON.coordsToLatLngs(s.coordinates, s.type === "MultiPolygon" ? 2 : 1);
+    latLngCache.set(g, ll);
+  }
+  return ll;
+}
+/* eslint-enable @typescript-eslint/no-explicit-any */
+
 // Nutzerhinweis 05.10.2026 ("Grenzen sehen nicht realistisch aus"): Flächen,
 // Grenzlinien und Urzeit-Gebiete werden an der echten Küstenlinie
 // abgeschnitten (Natural Earth 1:10 Mio., gemeinfrei) — nichts ragt mehr
@@ -574,8 +606,11 @@ export default function ImperienPage() {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const mapRef = useRef<any>(null);
+  // Gezeichnete Gebiete bleiben über Jahre hinweg bestehen (Schlüssel =
+  // Geometrie-Objekt); pro Jahr werden nur verschwundene entfernt und neue
+  // hinzugefügt statt alles neu aufzubauen (Nutzerhinweis 07.10.2026: laggy).
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const geoLayerRef = useRef<any>(null);
+  const territoryRef = useRef<{ fill: any; border: any; entries: Map<object, any> } | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const fillRendererRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -659,6 +694,7 @@ export default function ImperienPage() {
   const [preYear, setPreYear] = useState<number | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const prehistLayerRef = useRef<any>(null);
+  const prehistKeyRef = useRef("");
 
   // Leaflet einmalig per CDN nachladen (CSS + JS)
   useEffect(() => {
@@ -793,47 +829,30 @@ export default function ImperienPage() {
   function renderBordersGeojson(geojson: any) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const L = (window as any).L;
-    if (!mapRef.current || !L) return;
-    if (geoLayerRef.current) {
-      mapRef.current.removeLayer(geoLayerRef.current);
+    const map = mapRef.current;
+    if (!map || !L) return;
+    if (!territoryRef.current) {
+      territoryRef.current = {
+        fill: L.layerGroup().addTo(map),
+        border: L.layerGroup().addTo(map),
+        entries: new Map(),
+      };
     }
+    const terr = territoryRef.current;
 
-    // Jedes benannte Gebiet wird gezeichnet — nicht nur die, deren Name
-    // Wörter wie "Empire"/"Khanate" enthält (Nutzerkorrektur 18.09.2026:
-    // "es soll nicht alles um großen mächte gehen, es soll alle imperiums
-    // da sein"). Gebiete werden nach Bounding-Box-Fläche sortiert
-    // gezeichnet (große zuerst/unten, kleine zuletzt/oben), damit ein
-    // kleines eingeschlossenes Gebiet nicht komplett von einem großen
-    // Nachbarn verdeckt wird. JEDES benannte Gebiet bekommt außerdem eine
-    // dauerhafte Beschriftung (Nutzerkorrektur 20.09.2026: "manche
-    // imperien haben kein name auf territorium").
+    // Jedes benannte Gebiet wird gezeichnet (Nutzerkorrektur 18.09.2026: "es
+    // soll alle imperiums da sein"), große zuerst/unten, kleine zuletzt/oben,
+    // damit eingeschlossene Gebiete nicht verdeckt werden.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const features: any[] = Array.isArray(geojson.features) ? geojson.features : [];
-    const namedFeatures = features
-      .filter((f) => (f?.properties?.NAME ?? "").trim().length > 0)
-      .map((f) => ({ ...f, geometry: smoothGeometry(f.geometry) }));
-    const sortedFeatures = [...namedFeatures].sort(
-      (a, b) => polygonArea(b.geometry) - polygonArea(a.geometry)
-    );
-    const sortedGeojson = { ...geojson, features: sortedFeatures };
+    const sortedFeatures = features
+      .filter((f) => f?.geometry && (f?.properties?.NAME ?? "").trim().length > 0)
+      .sort((a, b) => cachedArea(b.geometry) - cachedArea(a.geometry));
 
-    // Nutzerkorrektur 20.09.2026 (x2): "es ist zu dicht ... kleine imperien
-    // name nicht angezeigt wird bis du mehr reinzoomst" — der erste Versuch
-    // (fester Pixel-Flächen-Schwellwert über die Bounding-Box) hat bei
-    // vielen kleinen, aber lang gestreckten Gebieten (schmale Grafschaften
-    // etc.) immer noch viel zu großzügig Beschriftungen erlaubt, weil eine
-    // Bounding-Box deren Fläche stark überschätzt. Jetzt stattdessen: nur
-    // eine feste RANGLISTEN-Anzahl der (nach echter Fläche) größten Gebiete
-    // bekommt beim aktuellen Zoomstand eine dauerhafte Beschriftung — das
-    // Limit wächst mit dem Zoom, sodass beim Reinzoomen nach und nach mehr
-    // (auch kleinere) Namen sichtbar werden, ganz ohne die Karte neu zu
-    // laden (siehe "zoomend"-Listener oben).
-    // Nutzerkorrektur 20.09.2026: "ab diese zoomgröße soll andere
-    // imperienname auch sichbar sein ich muss nicht richtig reinzoomen
-    // damit man namen sieht" — die Limits waren zu knapp bemessen, man
-    // musste stark reinzoomen, bis kleinere (aber immer noch gut sichtbare)
-    // Gebiete überhaupt einen Namen bekamen. Deutlich großzügiger.
-    const zoom = mapRef.current.getZoom?.() ?? 2;
+    // Nur eine mit dem Zoom wachsende Anzahl der (nach echter Fläche)
+    // größten Gebiete bekommt eine feste Beschriftung (Nutzerkorrekturen
+    // 20.09.2026: "zu dicht" / "namen sollen früher sichtbar sein").
+    const zoom = map.getZoom?.() ?? 2;
     let labelLimit: number;
     if (zoom <= 2) labelLimit = 20;
     else if (zoom === 3) labelLimit = 35;
@@ -844,31 +863,13 @@ export default function ImperienPage() {
     const permanentLabelNames = new Set(
       sortedFeatures.slice(0, labelLimit).map((f) => f.properties?.NAME)
     );
-
-    // Farben pro Gebiet: feste, namensbasierte Farbe statt Graphenfärbung
-    // (Nutzerkorrektur 20.09.2026, siehe getStableColor/assignDistinctColors
-    // oben — Farben dürfen sich nicht mehr je nach Jahr/Nachbarn ändern).
-    const colorByName = assignDistinctColors(sortedFeatures);
-
     // Beschriftungsgröße wie im Atlas: die größten Reiche etwas größer.
     const bigLabelNames = new Set(sortedFeatures.slice(0, 6).map((f) => f.properties?.NAME));
 
-    // Sammel-Umriss und Kern tragen seit empiresClient.normalizeEmpireName
-    // denselben Namen — nur das jeweils GRÖSSTE Teil bekommt die feste
-    // Beschriftung, sonst stünde "Kingdom of France" doppelt da.
-    const labeledNames = new Set<string>();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const permanentTooltips: { lyr: any; name: string; point: [number, number] | null }[] = [];
-
-    // Grenzlinien: eigene, nicht klickbare Ebene über den Flächen.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const borderByIndex: any[] = [];
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    function borderStyle(feature: any) {
-      const name: string = feature?.properties?.NAME ?? "";
-      const isMajor = permanentLabelNames.has(name);
+    // Feste, namensbasierte Farben (Nutzerkorrektur 20.09.2026).
+    function borderStyle(name: string, isMajor: boolean) {
       return {
-        color: colorByName.get(name) ?? "hsl(0, 0%, 50%)",
+        color: getStableColor(name),
         weight: isMajor ? 1.4 : 0.7,
         opacity: isMajor ? 0.95 : 0.75,
         fill: false,
@@ -876,98 +877,128 @@ export default function ImperienPage() {
         lineCap: "round",
       };
     }
-    const borderLayer = L.geoJSON(sortedGeojson, {
-      renderer: borderRendererRef.current ?? undefined,
-      pane: "territoryBorder",
-      interactive: false,
-      smoothFactor: 1.1,
-      style: borderStyle,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      onEachFeature: (_feature: any, lyr: any) => {
-        borderByIndex.push(lyr);
-      },
-    });
-
-    let featureIndex = 0;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const fillLayer = L.geoJSON(sortedGeojson, {
-      renderer: fillRendererRef.current ?? undefined,
-      pane: "territoryFill",
-      // Leaflet vereinfacht/rundet Linien beim Zeichnen zusätzlich zur
-      // eigenen Chaikin-Glättung oben — niedrigerer Wert = weniger
-      // Vereinfachung = feinere Grenzen (Nutzerwunsch 20.09.2026).
-      smoothFactor: 1.1,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      style: (feature: any) => {
-        const name: string = feature?.properties?.NAME ?? "";
-        const c = colorByName.get(name) ?? "hsl(0, 0%, 50%)";
+    function setLabel(e: any, permanent: boolean, className: string) {
+      e.fill.unbindTooltip();
+      e.fill.bindTooltip(e.name, { permanent, direction: "center", className, opacity: 0.95 });
+      if (e.point) e.fill.getTooltip?.()?.setLatLng?.(L.latLng(e.point[1], e.point[0]));
+      e.labeled = permanent;
+      e.labelClass = className;
+    }
+
+    const seen = new Set<object>();
+    const labeledNames = new Set<string>();
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const wantLabel: any[] = [];
+    let added = false;
+
+    for (const feature of sortedFeatures) {
+      const key = feature.geometry as object;
+      const name: string = feature.properties.NAME;
+      seen.add(key);
+      const isMajor = permanentLabelNames.has(name);
+      // Sammel-Umriss und Kern tragen denselben Namen — nur das GRÖSSTE
+      // Teil bekommt die feste Beschriftung, sonst stünde der Name doppelt.
+      const wants = isMajor && !labeledNames.has(name);
+      if (wants) labeledNames.add(name);
+      const labelClass = bigLabelNames.has(name) ? "empire-label empire-label-big" : "empire-label";
+
+      let e = terr.entries.get(key);
+      if (e && e.name !== name) {
+        terr.fill.removeLayer(e.fill);
+        terr.border.removeLayer(e.border);
+        terr.entries.delete(key);
+        e = undefined;
+      }
+      if (!e) {
+        const latlngs = cachedLatLngs(L, feature.geometry);
+        const c = getStableColor(name);
         // Volle Deckkraft INNERHALB der Flächen-Ebene; die Ebene selbst ist
-        // halbtransparent (siehe createPane("territoryFill")). Keine Linie
-        // hier — die Grenzen kommen aus borderLayer.
-        // Kontur in Flächenfarbe (4 px) lässt jedes Gebiet ein Stück über
-        // seinen Rand wachsen: schließt Lücken zwischen Gebiet und Küste —
-        // das Meer schneidet danach der Küsten-Clip sauber ab (05.10.2026).
-        return { stroke: true, color: c, weight: 4, opacity: 1, fillColor: c, fillOpacity: 1 };
-      },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      onEachFeature: (feature: any, lyr: any) => {
-        const index = featureIndex++;
-        const name: string = feature?.properties?.NAME ?? "";
-        const subjectTo: string = feature?.properties?.SUBJECTO ?? "";
-        if (!name) return;
-
-        const wantsLabel = permanentLabelNames.has(name) && !labeledNames.has(name);
-        if (wantsLabel) labeledNames.add(name);
-        const labelPoint = geometryLabelPoint(feature.geometry);
-        lyr.bindTooltip(name, {
-          permanent: wantsLabel,
-          direction: "center",
-          className: bigLabelNames.has(name) ? "empire-label empire-label-big" : "empire-label",
-          opacity: 0.95,
+        // halbtransparent. Kontur in Flächenfarbe (4 px) schließt Lücken zur
+        // Küste — das Meer schneidet der Küsten-Clip ab (05.10.2026).
+        const fill = L.polygon(latlngs, {
+          renderer: fillRendererRef.current ?? undefined,
+          pane: "territoryFill",
+          smoothFactor: 1.1,
+          stroke: true,
+          color: c,
+          weight: 4,
+          opacity: 1,
+          fillColor: c,
+          fillOpacity: 1,
         });
-        // Nutzerkorrektur 20.09.2026: Name in die echte Mitte der Fläche
-        // ("Pole of Inaccessibility", siehe geometryLabelPoint). Gesetzt bei
-        // JEDEM Öffnen — Leaflet setzt die Position beim Einblenden sonst
-        // auf den Schwerpunkt des ERSTEN Teilstücks zurück (29.09.2026 im
-        // Test gefunden: "Old Kingdom of Norway" stand dadurch bei Irland).
-        if (labelPoint) {
-          const labelLatLng = L.latLng(labelPoint[1], labelPoint[0]);
+        const border = L.polygon(latlngs, {
+          renderer: borderRendererRef.current ?? undefined,
+          pane: "territoryBorder",
+          interactive: false,
+          smoothFactor: 1.1,
+          ...borderStyle(name, isMajor),
+        });
+        const point = cachedLabelPoint(feature.geometry);
+        const subjectTo: string = feature.properties?.SUBJECTO ?? "";
+        e = { fill, border, name, isMajor, labeled: false, labelClass: "", point };
+        const entry = e;
+        // Name in die echte Mitte der Fläche ("Pole of Inaccessibility") —
+        // bei JEDEM Öffnen gesetzt, Leaflet springt sonst zum ersten Teilstück.
+        if (point) {
+          const labelLatLng = L.latLng(point[1], point[0]);
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          lyr.on("tooltipopen", (e: any) => e.tooltip?.setLatLng?.(labelLatLng));
-          lyr.getTooltip?.()?.setLatLng?.(labelLatLng);
+          fill.on("tooltipopen", (ev: any) => ev.tooltip?.setLatLng?.(labelLatLng));
         }
-        if (wantsLabel) permanentTooltips.push({ lyr, name, point: labelPoint });
-
-        lyr.on({
-          mouseover: () => {
-            const border = borderByIndex[index];
-            border?.setStyle({ weight: 2.6, opacity: 1, color: "#ffffff" });
-          },
-          mouseout: () => {
-            const border = borderByIndex[index];
-            border?.setStyle(borderStyle(feature));
-          },
-          click: () => {
-            setSelected({ name, subjectTo, isEmpire: isEmpireName(name) });
-          },
+        fill.on({
+          mouseover: () => entry.border.setStyle({ weight: 2.6, opacity: 1, color: "#ffffff" }),
+          mouseout: () => entry.border.setStyle(borderStyle(entry.name, entry.isMajor)),
+          click: () => setSelected({ name, subjectTo, isEmpire: isEmpireName(name) }),
         });
-      },
+        setLabel(e, wants, labelClass);
+        terr.fill.addLayer(fill);
+        terr.border.addLayer(border);
+        terr.entries.set(key, e);
+        added = true;
+      } else {
+        if (e.isMajor !== isMajor) {
+          e.isMajor = isMajor;
+          e.border.setStyle(borderStyle(name, isMajor));
+        }
+        if (e.labeled !== wants || (wants && e.labelClass !== labelClass)) {
+          setLabel(e, wants, labelClass);
+        }
+      }
+      if (wants) wantLabel.push(e);
+    }
+
+    // Gebiete, die es im neuen Jahr nicht mehr gibt, entfernen.
+    for (const [key, e] of terr.entries) {
+      if (seen.has(key)) continue;
+      terr.fill.removeLayer(e.fill);
+      terr.border.removeLayer(e.border);
+      terr.entries.delete(key);
+    }
+
+    // Neue Gebiete hängen zunächst ganz oben — Zeichenreihenfolge (groß
+    // unten, klein oben) nur dann wiederherstellen, wenn etwas dazukam.
+    if (added) {
+      for (const feature of sortedFeatures) {
+        const e = terr.entries.get(feature.geometry);
+        if (!e) continue;
+        e.fill.bringToFront();
+        e.border.bringToFront();
+      }
+    }
+
+    // Nutzerkorrektur 29.09.2026: überlappende Namen — nach Wichtigkeit
+    // durchgehen; überschneidet sich ein Name mit einem bereits platzierten,
+    // wird er nur beim Antippen gezeigt. Erst ALLE Positionen lesen, dann
+    // ändern (sonst rechnet der Browser das Layout pro Name neu).
+    const rects = wantLabel.map((e) => {
+      const el: HTMLElement | undefined = e.fill.getTooltip?.()?.getElement?.();
+      return el ? el.getBoundingClientRect() : null;
     });
-
-    // Zuerst Flächen, dann Grenzen (Reihenfolge = Zeichenreihenfolge in den
-    // jeweiligen Ebenen: große Gebiete unten, kleine/verschachtelte oben).
-    const layer = L.layerGroup([fillLayer, borderLayer]).addTo(mapRef.current);
-
-    // Nutzerkorrektur 29.09.2026: Beschriftungen überlappten sich
-    // ("BYZANTINE EMHAMDANID EMIRATE"). Die festen Namen werden nach
-    // Wichtigkeit (Fläche) durchgegangen; überschneidet sich ein Name mit
-    // einem bereits platzierten, wird er statt fest nur beim Hover gezeigt.
     const placedRects: DOMRect[] = [];
-    for (const { lyr, name, point } of permanentTooltips) {
-      const el: HTMLElement | undefined = lyr.getTooltip?.()?.getElement?.();
-      if (!el) continue;
-      const r = el.getBoundingClientRect();
-      const pad = 3;
+    const pad = 3;
+    wantLabel.forEach((e, i) => {
+      const r = rects[i];
+      if (!r) return;
       const collides = placedRects.some(
         (p) =>
           r.left - pad < p.right &&
@@ -975,19 +1006,10 @@ export default function ImperienPage() {
           r.top - pad < p.bottom &&
           r.bottom + pad > p.top
       );
-      if (!collides) {
-        placedRects.push(r);
-        continue;
-      }
-      const className = lyr.getTooltip?.()?.options?.className ?? "empire-label";
-      lyr.unbindTooltip();
-      lyr.bindTooltip(name, { permanent: false, direction: "center", className, opacity: 0.95 });
-      if (point) lyr.getTooltip?.()?.setLatLng?.(L.latLng(point[1], point[0]));
-      // (der "tooltipopen"-Handler von oben bleibt bestehen und setzt die
-      // Position auch beim Hover auf die Flächenmitte)
-    }
+      if (!collides) placedRects.push(r);
+      else setLabel(e, false, e.labelClass);
+    });
 
-    geoLayerRef.current = layer;
     setErrorMessage(null);
     setHasRenderedBorders(true);
   }
@@ -1010,9 +1032,10 @@ export default function ImperienPage() {
     if (!leafletReady || !mapRef.current || !yearRange) return;
     if (preYear !== null) {
       // Urzeit: keine Reichsgrenzen (gab es noch nicht)
-      if (geoLayerRef.current) {
-        mapRef.current.removeLayer(geoLayerRef.current);
-        geoLayerRef.current = null;
+      if (territoryRef.current) {
+        territoryRef.current.fill.clearLayers();
+        territoryRef.current.border.clearLayers();
+        territoryRef.current.entries.clear();
       }
       lastRenderedYearRef.current = null;
       return;
@@ -1079,6 +1102,18 @@ export default function ImperienPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leafletReady, yearRange, currentYear, preYear]);
 
+  // Während man das Lineal zieht, pausiert der animierte 3D-Hintergrund —
+  // Handy-Grafikchip und Prozessor bleiben frei für die Karte
+  // (Nutzerhinweis 07.10.2026: "wieso ist es so laggy").
+  useEffect(() => {
+    const el = document.documentElement;
+    if (isDraggingRuler) el.dataset.bgpause = "1";
+    else delete el.dataset.bgpause;
+    return () => {
+      delete el.dataset.bgpause;
+    };
+  }, [isDraggingRuler]);
+
   // Zeitleiste bewegt (Lineal, Abspielen, Eingabe) → Urzeit-Ansicht verlassen
   useEffect(() => {
     setPreYear(null);
@@ -1093,12 +1128,17 @@ export default function ImperienPage() {
     const L = (window as any).L;
     if (!leafletReady || !mapRef.current || !L) return;
     const map = mapRef.current;
+    const year = preYear ?? currentYear;
+    const list = prehistActive(year);
+    // Beim Ziehen der Zeitleiste nur neu aufbauen, wenn sich die Menge der
+    // Kulturen wirklich ändert (Nutzerhinweis 07.10.2026: laggy).
+    const key = `${preYear !== null}|${lang}|${list.map((c) => c.id).join(",")}`;
+    if (key === prehistKeyRef.current && (prehistLayerRef.current || !list.length)) return;
+    prehistKeyRef.current = key;
     if (prehistLayerRef.current) {
       map.removeLayer(prehistLayerRef.current);
       prehistLayerRef.current = null;
     }
-    const year = preYear ?? currentYear;
-    const list = prehistActive(year);
     if (!list.length) return;
     const group = L.layerGroup();
     for (const c of list) {
