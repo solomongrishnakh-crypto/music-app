@@ -1486,6 +1486,26 @@ export default function UniversumPage() {
 
         <SpaceNewsSection />
 
+        {/* Wissensseiten (Nutzerwunsch 07.10.2026: auch Sonnensystem, Maschine
+            und Sternbilder sollen bei Google gefunden werden) */}
+        <nav className="mt-12 flex flex-wrap gap-3 border-t border-border pt-8">
+          {(
+            [
+              ["/sonnensystem", t("linkAllPlanets")],
+              ["/maschine-der-ewigkeit", t("linkMachine")],
+              ["/sternbilder", t("linkConstellations")],
+            ] as const
+          ).map(([href, label]) => (
+            <Link
+              key={href}
+              href={localePath(href)}
+              className="label-mono border border-border px-4 py-2.5 text-xs uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent"
+            >
+              {label} →
+            </Link>
+          ))}
+        </nav>
+
         {selectedFact !== null && (
           <DetailModal
             eyebrow={t("universeInNumbers")}

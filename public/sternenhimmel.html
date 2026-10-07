@@ -3256,5 +3256,14 @@ function playSel(h) { if (h) fxT0 = performance.now(); if (h) sfx(h.type === "st
   });
 })();
 
+// Sprungziel aus der Webseite: /sternbilder/orion verlinkt auf ?c=Ori →
+// Sternbild auswählen und hinschwenken (Nutzerwunsch 07.10.2026)
+(() => {
+  const id = new URLSearchParams(location.search).get("c");
+  const c = id && CONST.names[id];
+  if (!c) return;
+  const h = { type: "const", id, ra: c.ra * DEG, dec: c.dec * DEG, name: c.n[LANG] || c.n.la };
+  setTimeout(() => { S.selConst = id; S.sel = h; document.getElementById("info").hidden = false; fillInfo(); zoomTo({ type: "star", ra: h.ra, dec: h.dec, wide: true }); }, 700);
+})();
 requestAnimationFrame(frame);
 </script>

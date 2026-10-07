@@ -1,6 +1,8 @@
 import type { MetadataRoute } from "next";
 import { REICHE_INDEX } from "@/lib/history/reiche";
 import { ALL_LANGS, BASE_URL, hreflang } from "@/lib/seoI18n";
+import { SPACE_BODIES } from "@/components/space/bodies";
+import { CONSTELLATIONS } from "@/components/space/ConstView";
 
 /**
  * sitemap.xml — alle Seiten in allen 13 Sprachen (Deutsch ohne Präfix,
@@ -30,5 +32,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...withLangs("/imperien", 0.8, "monthly"),
     ...withLangs("/imperien/reiche", 0.7, "monthly"),
     ...REICHE_INDEX.flatMap((r) => withLangs(`/imperien/reich/${r.slug}`, 0.6, "yearly")),
+    ...withLangs("/sonnensystem", 0.7, "monthly"),
+    ...SPACE_BODIES.flatMap((b) => withLangs(`/sonnensystem/${b.id}`, 0.6, "monthly")),
+    ...withLangs("/maschine-der-ewigkeit", 0.7, "yearly"),
+    ...withLangs("/sternbilder", 0.7, "monthly"),
+    ...CONSTELLATIONS.flatMap((c) => withLangs(`/sternbilder/${c.slug}`, 0.6, "yearly")),
   ];
 }

@@ -56,7 +56,16 @@ const JSON_LD = {
   isPartOf: { "@type": "WebSite", name: "Centaurian", url: "https://centaurian.vercel.app" },
 };
 
-export default function SternenhimmelPage() {
+type Props = { searchParams: Promise<{ c?: string | string[] }> };
+
+/** ?c=Ori (Link von einer Sternbild-Seite) → an die Ansicht weitergeben */
+function constParam(raw: string | string[] | undefined): string {
+  const v = Array.isArray(raw) ? raw[0] : raw;
+  return v && /^[A-Za-z]{3}$/.test(v) ? `?c=${v}` : "";
+}
+
+export default async function SternenhimmelPage({ searchParams }: Props) {
+  const c = constParam((await searchParams).c);
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
@@ -79,7 +88,7 @@ export default function SternenhimmelPage() {
         </ul>
       </section>
       <iframe
-        src="/sternenhimmel.html"
+        src={`/sternenhimmel.html${c}`}
         title="Sternenhimmel"
         allow="geolocation; accelerometer; gyroscope; magnetometer; fullscreen; autoplay; encrypted-media"
         className="fixed inset-0 z-[3000] h-[100dvh] w-full border-0 bg-[#06082a]"

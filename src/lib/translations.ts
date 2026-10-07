@@ -581,6 +581,18 @@ const TRANSLATIONS_SOURCE = {
     ar: "الفترة (تقريبًا):",
     el: "Περίοδος (περίπου):",
   },
+  linkAllPlanets: {
+    de: "Alle Planeten & Fakten", en: "All planets & facts", hi: "सभी ग्रह और तथ्य", zh: "所有行星与资料", ko: "모든 행성과 정보", ja: "すべての惑星とデータ",
+    es: "Todos los planetas y datos", fr: "Toutes les planètes et infos", tr: "Tüm gezegenler ve bilgiler", ru: "Все планеты и факты", pt: "Todos os planetas e fatos", ar: "كل الكواكب وحقائقها", el: "Όλοι οι πλανήτες και στοιχεία",
+  },
+  linkMachine: {
+    de: "Maschine der Ewigkeit erklärt", en: "The eternity machine explained", hi: "अनंत काल की मशीन समझें", zh: "永恒机器详解", ko: "영원의 기계 설명", ja: "永遠のマシンの解説",
+    es: "La máquina de la eternidad explicada", fr: "La machine de l'éternité expliquée", tr: "Sonsuzluk makinesi nasıl çalışır", ru: "Как работает машина вечности", pt: "A máquina da eternidade explicada", ar: "شرح آلة الأبدية", el: "Η μηχανή της αιωνιότητας εξηγείται",
+  },
+  linkConstellations: {
+    de: "Alle 88 Sternbilder", en: "All 88 constellations", hi: "सभी 88 तारामंडल", zh: "全部88个星座", ko: "88개 별자리 전체", ja: "全88星座",
+    es: "Las 88 constelaciones", fr: "Les 88 constellations", tr: "88 takımyıldızın tamamı", ru: "Все 88 созвездий", pt: "As 88 constelações", ar: "الكوكبات الـ88", el: "Και οι 88 αστερισμοί",
+  },
   empiresOwnPage: {
     de: "Seite zu diesem Reich", en: "Page about this empire", hi: "इस साम्राज्य का पेज", zh: "该帝国的专页", ko: "이 제국 페이지", ja: "この帝国のページ",
     es: "Página de este imperio", fr: "Page de cet empire", tr: "Bu imparatorluğun sayfası", ru: "Страница этой державы", pt: "Página deste império", ar: "صفحة هذه الإمبراطورية", el: "Σελίδα αυτής της αυτοκρατορίας",
