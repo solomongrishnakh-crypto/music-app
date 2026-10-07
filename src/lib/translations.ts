@@ -581,6 +581,26 @@ const TRANSLATIONS_SOURCE = {
     ar: "الفترة (تقريبًا):",
     el: "Περίοδος (περίπου):",
   },
+  empiresOwnPage: {
+    de: "Seite zu diesem Reich", en: "Page about this empire", hi: "इस साम्राज्य का पेज", zh: "该帝国的专页", ko: "이 제국 페이지", ja: "この帝国のページ",
+    es: "Página de este imperio", fr: "Page de cet empire", tr: "Bu imparatorluğun sayfası", ru: "Страница этой державы", pt: "Página deste império", ar: "صفحة هذه الإمبراطورية", el: "Σελίδα αυτής της αυτοκρατορίας",
+  },
+  empiresAllEmpires: {
+    de: "Alle Reiche von A–Z", en: "All empires A–Z", hi: "सभी साम्राज्य A–Z", zh: "所有帝国一览", ko: "모든 제국 목록", ja: "すべての帝国一覧",
+    es: "Todos los imperios A–Z", fr: "Tous les empires de A à Z", tr: "Tüm imparatorluklar A–Z", ru: "Все державы от А до Я", pt: "Todos os impérios A–Z", ar: "كل الإمبراطوريات", el: "Όλες οι αυτοκρατορίες Α–Ω",
+  },
+  empiresShare: {
+    de: "Teilen", en: "Share", hi: "साझा करें", zh: "分享", ko: "공유", ja: "共有",
+    es: "Compartir", fr: "Partager", tr: "Paylaş", ru: "Поделиться", pt: "Compartilhar", ar: "مشاركة", el: "Κοινοποίηση",
+  },
+  empiresLinkCopied: {
+    de: "Link kopiert", en: "Link copied", hi: "लिंक कॉपी हुआ", zh: "链接已复制", ko: "링크 복사됨", ja: "リンクをコピーしました",
+    es: "Enlace copiado", fr: "Lien copié", tr: "Bağlantı kopyalandı", ru: "Ссылка скопирована", pt: "Link copiado", ar: "تم نسخ الرابط", el: "Ο σύνδεσμος αντιγράφηκε",
+  },
+  empiresShareTitle: {
+    de: "Die Welt im Jahr", en: "The world in", hi: "दुनिया, वर्ष", zh: "世界地图：", ko: "세계 지도:", ja: "世界地図：",
+    es: "El mundo en el año", fr: "Le monde en", tr: "Dünya, yıl", ru: "Мир в", pt: "O mundo no ano", ar: "العالم في عام", el: "Ο κόσμος το",
+  },
   empiresEraBC: {
     de: "v. Chr.", en: "BC", hi: "ईसा पूर्व", zh: "公元前", ko: "기원전", ja: "紀元前",
     es: "a. C.", fr: "av. J.-C.", tr: "MÖ", ru: "до н. э.", pt: "a.C.", ar: "ق.م.", el: "π.Χ.",

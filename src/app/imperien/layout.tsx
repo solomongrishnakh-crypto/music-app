@@ -15,35 +15,24 @@ export const metadata: Metadata = {
   description: DESCRIPTION,
   keywords: EMPIRES_KEYWORDS,
   alternates: { canonical: "/imperien" },
-  openGraph: { url: "/imperien", title: `${TITLE} | CENTAURIAN`, description: DESCRIPTION },
-  twitter: { title: `${TITLE} | CENTAURIAN`, description: DESCRIPTION },
-};
-
-// Strukturierte Daten: Google versteht die Seite als interaktive Karte/
-// Web-Anwendung zum Thema Weltgeschichte.
-const JSON_LD = {
-  "@context": "https://schema.org",
-  keywords: EMPIRES_KEYWORDS.join(", "),
-  "@type": "WebApplication",
-  name: "Weltgeschichte Karte — Centaurian",
-  alternateName: ["Interaktive historische Weltkarte", "World History Map"],
-  url: "https://centaurian.vercel.app/imperien",
-  description: DESCRIPTION,
-  applicationCategory: "EducationalApplication",
-  operatingSystem: "Web",
-  inLanguage: ["de", "en", "es", "fr", "tr", "ru", "pt", "ar", "el", "hi", "zh", "ko", "ja"],
-  isAccessibleForFree: true,
-  offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
-  about: ["Weltgeschichte", "Historische Karte", "Imperien", "Historische Grenzen"],
-  temporalCoverage: "-3400/2024",
-  isPartOf: { "@type": "WebSite", name: "Centaurian", url: "https://centaurian.vercel.app" },
+  openGraph: {
+    type: "website",
+    siteName: "Centaurian",
+    url: "/imperien",
+    title: `${TITLE} | CENTAURIAN`,
+    description: DESCRIPTION,
+    images: [{ url: "/og/imperien/1200.jpg", width: 1200, height: 630, alt: "Weltkarte der Reiche um 1200 n. Chr." }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `${TITLE} | CENTAURIAN`,
+    description: DESCRIPTION,
+    images: ["/og/imperien/1200.jpg"],
+  },
 };
 
 export default function ImperienLayout({ children }: { children: React.ReactNode }) {
   return (
-    <>
-      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
-      {children}
-    </>
+    <>{children}</>
   );
 }
