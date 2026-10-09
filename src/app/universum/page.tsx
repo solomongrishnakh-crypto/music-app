@@ -1444,6 +1444,12 @@ export default function UniversumPage() {
         <div className="hud-card flex flex-col items-center overflow-hidden p-3">
           <Gear3D className="h-60 w-full sm:h-72" />
           <p className="mt-2 max-w-md text-center text-[10px] leading-snug text-muted">{t("gearCaption")}</p>
+          <Link
+            href={localePath("/maschine-der-ewigkeit")}
+            className="label-mono mt-3 inline-block border border-border px-3 py-1.5 text-[10px] uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent"
+          >
+            {t("linkMachine")} →
+          </Link>
         </div>
         </section>
 

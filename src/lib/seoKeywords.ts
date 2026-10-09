@@ -43,6 +43,10 @@ export const SKY_KEYWORDS = [
 ];
 
 export const UNIVERSE_KEYWORDS = [
+  // Zahnrad-Suchen (Nutzerwunsch 09.10.2026: "wenn jemand sucht, dass ein Rad das andere langsamer bewegt")
+  "Zahnrad Untersetzung", "Zahnräder langsamer machen", "langsamstes Zahnrad der Welt", "Übersetzungsverhältnis Zahnrad",
+  "gear reduction", "gear train", "slowest gear in the world", "gear that turns once in billions of years", "machine with concrete",
+  "reducción de engranajes", "engrenage démultiplication", "dişli redüksiyonu", "понижающая передача шестерни", "齿轮减速", "歯車 減速",
   "Sonnensystem live", "interaktives Sonnensystem", "Sonnensystem 3D", "Planeten aktuelle Position",
   "Sonnensystem Maßstab", "Abstand Planeten zur Erde", "Maschine der Ewigkeit", "Zahnrad Maschine",
   "Zahnrad 13,8 Milliarden Jahre", "Alter des Universums", "Universum Fakten", "Weltraum News",

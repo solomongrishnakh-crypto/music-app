@@ -3,6 +3,8 @@ import Link from "next/link";
 import type { Lang } from "@/contexts/LanguageContext";
 import { AXLE_COUNT, gearPeriodSeconds } from "@/components/universe/machineTime";
 import { spaceTexts, type SpaceTexts } from "@/lib/spaceText";
+import { machineTexts } from "@/lib/machineText";
+import GearCalculator from "./GearCalculator";
 import { BASE_URL, OG_LOCALE, hreflang, langPath } from "@/lib/seoI18n";
 
 /**
@@ -34,6 +36,7 @@ export function machineMetadata(lang: Lang): Metadata {
   return {
     title: { absolute: `${T.machineTitle} | CENTAURIAN` },
     description: T.machineDesc,
+    keywords: machineTexts(lang).keywords,
     alternates: { canonical: url, languages: hreflang("/maschine-der-ewigkeit") },
     openGraph: {
       type: "article",
@@ -42,22 +45,34 @@ export function machineMetadata(lang: Lang): Metadata {
       url,
       title: T.machineTitle,
       description: T.machineDesc,
-      images: [{ url: "/branding/og-image.jpg", width: 1200, height: 630, alt: "Centaurian" }],
+      images: [{ url: "/og/maschine.jpg", width: 1200, height: 630, alt: T.machineH1 }],
     },
+    twitter: { card: "summary_large_image", title: T.machineTitle, description: T.machineDesc, images: ["/og/maschine.jpg"] },
   };
 }
 
 export default function MachineView({ lang }: { lang: Lang }) {
   const T = spaceTexts(lang);
   const rows = Array.from({ length: AXLE_COUNT }, (_, i) => ({ n: i + 1, sec: gearPeriodSeconds(i) }));
+  const M = machineTexts(lang);
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "WebPage",
-    name: T.machineTitle,
-    description: T.machineDesc,
-    url: BASE_URL + langPath("/maschine-der-ewigkeit", lang),
-    inLanguage: lang,
-    isPartOf: { "@type": "WebSite", name: "Centaurian", url: BASE_URL },
+    "@graph": [
+      {
+        "@type": "WebPage",
+        name: T.machineTitle,
+        description: T.machineDesc,
+        url: BASE_URL + langPath("/maschine-der-ewigkeit", lang),
+        inLanguage: lang,
+        keywords: M.keywords.join(", "),
+        image: BASE_URL + "/og/maschine.jpg",
+        isPartOf: { "@type": "WebSite", name: "Centaurian", url: BASE_URL },
+      },
+      {
+        "@type": "FAQPage",
+        mainEntity: M.faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
+      },
+    ],
   };
   return (
     <main lang={lang} dir={lang === "ar" ? "rtl" : "ltr"} className="mx-auto max-w-3xl px-4 pb-16 pt-6 sm:px-6">
@@ -79,6 +94,30 @@ export default function MachineView({ lang }: { lang: Lang }) {
         <p className="hud-card mt-4 border border-accent/60 p-3 text-sm text-foreground">{T.machineFact}</p>
       </section>
       <section className="mt-10">
+        <h2 className="font-display text-lg font-bold text-foreground sm:text-xl">{M.h2Reduction}</h2>
+        <p className="mt-3 leading-relaxed text-foreground/90">{M.pReduction}</p>
+        <p className="label-mono mt-3 border-s-2 border-accent ps-3 text-sm text-foreground">{M.formula}</p>
+      </section>
+      <section className="mt-10">
+        <h2 className="font-display text-lg font-bold text-foreground sm:text-xl">{M.h2Calc}</h2>
+        <p className="mt-3 text-sm text-muted">{M.pCalc}</p>
+        <GearCalculator
+          locale={NUM_LOCALE[lang]}
+          labels={{
+            first: M.calcFirst,
+            ratio: M.calcRatio,
+            gears: M.calcGears,
+            last: M.calcLast,
+            total: M.calcTotal,
+            ageOfUniverse: M.calcAgeOfUniverse,
+            units: {
+              sec: T.sec, min: T.min, hours: T.hours, days: T.days, years: T.years,
+              thousandYears: T.thousandYears, millionYears: T.millionYears, billionYears: T.billionYears,
+            },
+          }}
+        />
+      </section>
+      <section className="mt-10">
         <h2 className="font-display text-lg font-bold text-foreground sm:text-xl">{T.machineTable}</h2>
         <table className="mt-4 w-full text-sm">
           <thead>
@@ -96,6 +135,22 @@ export default function MachineView({ lang }: { lang: Lang }) {
             ))}
           </tbody>
         </table>
+      </section>
+      <section className="mt-10">
+        <h2 className="font-display text-lg font-bold text-foreground sm:text-xl">{M.h2Similar}</h2>
+        <p className="mt-3 leading-relaxed text-foreground/90">{M.pGanson}</p>
+        <p className="mt-3 leading-relaxed text-foreground/90">{M.pLongNow}</p>
+      </section>
+      <section className="mt-10">
+        <h2 className="font-display text-lg font-bold text-foreground sm:text-xl">{M.h2Faq}</h2>
+        <div className="mt-3 space-y-3">
+          {M.faq.map(([q, a]) => (
+            <details key={q} className="hud-card border border-border p-3" open>
+              <summary className="cursor-pointer text-sm font-semibold text-foreground">{q}</summary>
+              <p className="mt-2 text-sm leading-relaxed text-foreground/85">{a}</p>
+            </details>
+          ))}
+        </div>
       </section>
     </main>
   );

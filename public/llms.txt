@@ -12,6 +12,12 @@ Diese Datei beschreibt alle Werkzeuge der Webseite für KI-Assistenten und Suchm
 - [Universum / Universe](https://centaurian.vercel.app/universum): Sonnensystem live in 3D, Maschine der Ewigkeit, Universum in Zahlen, Weltraum-News.
 - [Sternenhimmel / Night sky](https://centaurian.vercel.app/sternenhimmel): interaktive Sternkarte live für den eigenen Ort.
 - [Imperien / Empires](https://centaurian.vercel.app/imperien): interaktive Weltgeschichte-Karte mit allen Reichen von 3400 v. Chr. bis heute.
+- [Maschine der Ewigkeit / Eternity machine](https://centaurian.vercel.app/en/maschine-der-ewigkeit): a chain of 23 gears, each 6× slower than the one before (gear reduction 60:10 teeth); the first turns in 3.3 seconds, the last once every 13.797 billion years (the age of the universe). Includes a gear ratio calculator, the formula, a table of all gear periods and a comparison with Arthur Ganson's "Machine with Concrete".
+- [Sonnensystem / Solar system](https://centaurian.vercel.app/en/sonnensystem): a page for the Sun, every planet, the dwarf planets and Voyager 1 with facts and the live distance from Earth.
+- [Sternbilder / Constellations](https://centaurian.vercel.app/en/sternbilder): all 88 constellations with a star map, brightest stars, best month to see them and visibility by latitude.
+- [Alle Reiche / List of empires](https://centaurian.vercel.app/en/imperien/reiche): 300 historical empires, each with a map of its greatest extent, area, dates, predecessors and successors.
+
+All pages exist in 13 languages: German without prefix, others under /en, /es, /fr, /pt, /tr, /ru, /el, /ar, /hi, /zh, /ja, /ko (e.g. https://centaurian.vercel.app/es/sternbilder/orion).
 
 ## Musik (Startseite)
 

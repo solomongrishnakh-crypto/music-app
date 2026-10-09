@@ -1,12 +1,12 @@
 "use client";
 
+import Link from "next/link";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const CONTACTS = [
   {
     label: "Telegram",
-    handle: "@Perseus641",
     href: "https://t.me/Perseus641",
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -16,7 +16,6 @@ const CONTACTS = [
   },
   {
     label: "X",
-    handle: "@capone_835",
     href: "https://x.com/capone_835",
     icon: (
       <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -27,43 +26,57 @@ const CONTACTS = [
 ];
 
 /**
- * Abschließender Kontakt-Bereich ganz unten auf der Seite — Logo plus
- * sichtbarer Name/Handle, öffnet Telegram bzw. X in einem neuen Tab.
- * 28.09.2026: vorher nur Logos ohne Text → Suchmaschinen und KI-Suchen
- * fanden keine Kontaktdaten. Jetzt steht der Handle als echter Text da.
+ * Abschließender Kontakt-Bereich ganz unten auf der Seite — öffnet Telegram
+ * bzw. X in einem neuen Tab. Nutzerwunsch 09.10.2026: Benutzernamen nicht
+ * mehr anzeigen, nur noch das App-Logo (für Screenreader bleibt der
+ * App-Name als unsichtbare Beschriftung erhalten).
  */
 export default function ContactSection() {
-  const { t } = useLanguage();
+  const { t, localePath } = useLanguage();
   return (
     <footer className="mx-auto mb-4 mt-16 w-full max-w-5xl sm:mt-24">
       <SectionHeading index="04" label={t("contactsLabel")} />
       {/* Nutzerwunsch 03.10.2026: Kontakte futuristischer — Kacheln mit
           Sechseck-Symbol, Status-Punkt und Scan-Licht beim Antippen */}
-      <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 sm:gap-3">
+      <div className="flex justify-center gap-4">
         {CONTACTS.map((contact) => (
           <a
             key={contact.label}
             href={contact.href}
             target="_blank"
             rel="noopener noreferrer me"
-            title={contact.label + " " + contact.handle}
-            className="hud-card contact-card group relative flex items-center gap-3.5 overflow-hidden p-3 pr-4"
+            aria-label={contact.label}
+            title={contact.label}
+            className="hud-card contact-card group relative flex h-16 w-16 items-center justify-center overflow-hidden"
           >
             <span className="contact-ico">
-              <span className="h-5 w-5">{contact.icon}</span>
+              <span className="h-6 w-6">{contact.icon}</span>
             </span>
-            <span className="flex min-w-0 flex-col">
-              <span className="label-mono flex items-center gap-1.5 text-[10px] text-accent">
-                <span className="contact-dot" aria-hidden="true" />
-                {contact.label}
-              </span>
-              <span className="truncate text-sm font-semibold text-foreground">{contact.handle}</span>
-            </span>
-            <span className="feat-go ml-auto" aria-hidden="true">↗</span>
             <span className="contact-scan" aria-hidden="true" />
           </a>
         ))}
       </div>
+
+      {/* Nutzerwunsch 09.10.2026 (mehr Besucher): Wissensseiten direkt von der
+          Startseite verlinkt — hilft Besuchern und Suchmaschinen */}
+      <nav className="mt-6 flex flex-wrap justify-center gap-2">
+        {(
+          [
+            ["/sternbilder", t("linkConstellations")],
+            ["/sonnensystem", t("linkAllPlanets")],
+            ["/maschine-der-ewigkeit", t("linkMachine")],
+            ["/imperien/reiche", t("empiresAllEmpires")],
+          ] as const
+        ).map(([href, label]) => (
+          <Link
+            key={href}
+            href={localePath(href)}
+            className="label-mono border border-border px-3 py-2 text-[10px] uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent"
+          >
+            {label} →
+          </Link>
+        ))}
+      </nav>
 
       {/* Fußzeile: Info + Copyright (Nutzerwunsch 02.10.2026 "richtig sortieren" —
           vorher schwebten diese Texte fest in den Bildschirmecken) */}

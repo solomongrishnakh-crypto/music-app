@@ -11,9 +11,9 @@ import { hreflang } from "@/lib/seoI18n";
  * füllend eingebettet; diese Datei liefert Titel/Beschreibung für Google.
  * "allow" erlaubt Standort und Lagesensor (Handy in den Himmel halten).
  */
-const TITLE = "Sternenhimmel live — welche Sterne siehst du gerade?";
+const TITLE = "Sternenhimmel live – wo stehen Sterne & Planeten gerade?";
 const DESCRIPTION =
-  "Interaktive Sternkarte für deinen Ort: 108.000 echte Sterne in Teleskop-Farben, Sternbilder, Planeten, Mond und Milchstraße — live oder zu jeder Uhrzeit. Handy in den Himmel halten (Gyro), Sterne antippen und Entfernung, Typ, Temperatur und Wissen dazu sehen. Night sky map, star finder.";
+  "Halte dein Handy in den Himmel und sieh sofort, welcher Stern oder Planet das ist – live für deinen Ort, am Handy oder PC. Kostenlos, ohne App: 108.000 Sterne, Mond, ISS.";
 
 export const metadata: Metadata = {
   title: TITLE,
