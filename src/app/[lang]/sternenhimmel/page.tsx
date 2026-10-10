@@ -1,3 +1,4 @@
+import { skyTodayTexts } from "@/lib/skyTodayText";
 import type { Metadata } from "next";
 import { BASE_URL, OG_LOCALE, PAGE_SEO, hreflang, isPrefixedLang, langPath } from "@/lib/seoI18n";
 
@@ -5,7 +6,7 @@ import { BASE_URL, OG_LOCALE, PAGE_SEO, hreflang, isPrefixedLang, langPath } fro
  * Sternenhimmel in einer anderen Sprache: dieselbe Ansicht
  * (public/sternenhimmel.html), aber mit fester Sprache über ?lang=.
  */
-type Props = { params: Promise<{ lang: string }>; searchParams: Promise<{ c?: string | string[] }> };
+type Props = { params: Promise<{ lang: string }>; searchParams: Promise<{ c?: string | string[]; p?: string | string[] }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params;
@@ -31,9 +32,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function LangSternenhimmel({ params, searchParams }: Props) {
   const { lang } = await params;
-  const cRaw = (await searchParams).c;
-  const cv = Array.isArray(cRaw) ? cRaw[0] : cRaw;
-  const c = cv && /^[A-Za-z]{3}$/.test(cv) ? `&c=${cv}` : "";
+  const sp = await searchParams;
+  const cv = Array.isArray(sp.c) ? sp.c[0] : sp.c;
+  const pv = Array.isArray(sp.p) ? sp.p[0] : sp.p;
+  const c = (cv && /^[A-Za-z]{3}$/.test(cv) ? `&c=${cv}` : "")
+    + (pv && /^(mercury|venus|mars|jupiter|saturn|uranus|neptune|moon)$/.test(pv) ? `&p=${pv}` : "");
   const l = isPrefixedLang(lang) ? lang : "en";
   const seo = PAGE_SEO.sternenhimmel[l];
   const jsonLd = {
@@ -54,6 +57,9 @@ export default async function LangSternenhimmel({ params, searchParams }: Props)
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <h1 className="sr-only">{seo.title}</h1>
       <p className="sr-only">{seo.description}</p>
+      <p className="sr-only">
+        <a href={langPath("/himmel-heute", l)}>{skyTodayTexts(l).title}</a>
+      </p>
       <iframe
         src={`/sternenhimmel.html?lang=${l}${c}`}
         title={seo.title}

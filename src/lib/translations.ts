@@ -589,6 +589,10 @@ const TRANSLATIONS_SOURCE = {
     de: "Maschine der Ewigkeit erklärt", en: "The eternity machine explained", hi: "अनंत काल की मशीन समझें", zh: "永恒机器详解", ko: "영원의 기계 설명", ja: "永遠のマシンの解説",
     es: "La máquina de la eternidad explicada", fr: "La machine de l'éternité expliquée", tr: "Sonsuzluk makinesi nasıl çalışır", ru: "Как работает машина вечности", pt: "A máquina da eternidade explicada", ar: "شرح آلة الأبدية", el: "Η μηχανή της αιωνιότητας εξηγείται",
   },
+  linkSkyToday: {
+    de: "Himmel heute", en: "Sky tonight", hi: "आज रात का आसमान", zh: "今晚星空", ko: "오늘 밤 하늘", ja: "今夜の空",
+    es: "El cielo esta noche", fr: "Le ciel ce soir", tr: "Bu gece gökyüzü", ru: "Небо сегодня", pt: "O céu hoje à noite", ar: "السماء الليلة", el: "Ο ουρανός απόψε",
+  },
   linkConstellations: {
     de: "Alle 88 Sternbilder", en: "All 88 constellations", hi: "सभी 88 तारामंडल", zh: "全部88个星座", ko: "88개 별자리 전체", ja: "全88星座",
     es: "Las 88 constelaciones", fr: "Les 88 constellations", tr: "88 takımyıldızın tamamı", ru: "Все 88 созвездий", pt: "As 88 constelações", ar: "الكوكبات الـ88", el: "Και οι 88 αστερισμοί",

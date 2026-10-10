@@ -29,6 +29,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...withLangs("/", 1, "weekly"),
     ...withLangs("/universum", 0.8, "monthly"),
     ...withLangs("/sternenhimmel", 0.8, "monthly"),
+    ...withLangs("/himmel-heute", 0.8, "daily"),
     ...withLangs("/imperien", 0.8, "monthly"),
     ...withLangs("/imperien/reiche", 0.7, "monthly"),
     ...REICHE_INDEX.flatMap((r) => withLangs(`/imperien/reich/${r.slug}`, 0.6, "yearly")),

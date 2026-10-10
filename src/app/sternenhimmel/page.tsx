@@ -56,7 +56,7 @@ const JSON_LD = {
   isPartOf: { "@type": "WebSite", name: "Centaurian", url: "https://centaurian.vercel.app" },
 };
 
-type Props = { searchParams: Promise<{ c?: string | string[] }> };
+type Props = { searchParams: Promise<{ c?: string | string[]; p?: string | string[] }> };
 
 /** ?c=Ori (Link von einer Sternbild-Seite) → an die Ansicht weitergeben */
 function constParam(raw: string | string[] | undefined): string {
@@ -64,8 +64,17 @@ function constParam(raw: string | string[] | undefined): string {
   return v && /^[A-Za-z]{3}$/.test(v) ? `?c=${v}` : "";
 }
 
+/** ?p=jupiter (Link von „Himmel heute“) → Planet auswählen */
+const PLANET_PARAM = /^(mercury|venus|mars|jupiter|saturn|uranus|neptune|moon)$/;
+function planetParam(raw: string | string[] | undefined, sep: string): string {
+  const v = Array.isArray(raw) ? raw[0] : raw;
+  return v && PLANET_PARAM.test(v) ? `${sep}p=${v}` : "";
+}
+
 export default async function SternenhimmelPage({ searchParams }: Props) {
-  const c = constParam((await searchParams).c);
+  const sp = await searchParams;
+  const c0 = constParam(sp.c);
+  const c = c0 + planetParam(sp.p, c0 ? "&" : "?");
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
@@ -86,6 +95,9 @@ export default async function SternenhimmelPage({ searchParams }: Props) {
           <li>Suche nach Sternen, Planeten und Sternbildern, weltweite Ortswahl und Zeitreise.</li>
           <li>In 13 Sprachen verfügbar, ohne Anmeldung und ohne App-Installation.</li>
         </ul>
+        <p>
+          <a href="/himmel-heute">Himmel heute: welche Planeten man heute Nacht sieht, Mondphase und nächste Ereignisse</a>
+        </p>
       </section>
       <iframe
         src={`/sternenhimmel.html${c}`}

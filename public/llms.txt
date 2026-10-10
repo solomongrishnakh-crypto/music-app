@@ -11,6 +11,7 @@ Diese Datei beschreibt alle Werkzeuge der Webseite für KI-Assistenten und Suchm
 - [Startseite / Home](https://centaurian.vercel.app/): Musik-Suche und Wiedergabe, KI-News, Übersicht aller Bereiche, Kontakt.
 - [Universum / Universe](https://centaurian.vercel.app/universum): Sonnensystem live in 3D, Maschine der Ewigkeit, Universum in Zahlen, Weltraum-News.
 - [Sternenhimmel / Night sky](https://centaurian.vercel.app/sternenhimmel): interaktive Sternkarte live für den eigenen Ort.
+- [Himmel heute / Sky tonight](https://centaurian.vercel.app/en/himmel-heute): which planets are visible tonight, today's Moon phase, next full moon, meteor showers and eclipses – recalculated every hour, with rise/set times for the visitor's location (13 languages).
 - [Imperien / Empires](https://centaurian.vercel.app/imperien): interaktive Weltgeschichte-Karte mit allen Reichen von 3400 v. Chr. bis heute.
 - [Maschine der Ewigkeit / Eternity machine](https://centaurian.vercel.app/en/maschine-der-ewigkeit): a chain of 23 gears, each 6× slower than the one before (gear reduction 60:10 teeth); the first turns in 3.3 seconds, the last once every 13.797 billion years (the age of the universe). Includes a gear ratio calculator, the formula, a table of all gear periods and a comparison with Arthur Ganson's "Machine with Concrete".
 - [Sonnensystem / Solar system](https://centaurian.vercel.app/en/sonnensystem): a page for the Sun, every planet, the dwarf planets and Voyager 1 with facts and the live distance from Earth.

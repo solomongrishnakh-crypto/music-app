@@ -3265,5 +3265,15 @@ function playSel(h) { if (h) fxT0 = performance.now(); if (h) sfx(h.type === "st
   const h = { type: "const", id, ra: c.ra * DEG, dec: c.dec * DEG, name: c.n[LANG] || c.n.la };
   setTimeout(() => { S.selConst = id; S.sel = h; document.getElementById("info").hidden = false; fillInfo(); zoomTo({ type: "star", ra: h.ra, dec: h.dec, wide: true }); }, 700);
 })();
+// Sprungziel von „Himmel heute“: ?p=jupiter → Planet auswählen und
+// hinschwenken (Nutzerwunsch 09.10.2026)
+(() => {
+  const id = new URLSearchParams(location.search).get("p");
+  if (!id || !/^(mercury|venus|mars|jupiter|saturn|uranus|neptune|moon)$/.test(id)) return;
+  setTimeout(() => {
+    if (!bodies.some((b) => b.id === id)) return;
+    S.sel = { type: "body", id }; document.getElementById("info").hidden = false; fillInfo(); zoomTo({ type: "body", id });
+  }, 800);
+})();
 requestAnimationFrame(frame);
 </script>

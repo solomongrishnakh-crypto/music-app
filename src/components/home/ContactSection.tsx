@@ -62,6 +62,7 @@ export default function ContactSection() {
       <nav className="mt-6 flex flex-wrap justify-center gap-2">
         {(
           [
+            ["/himmel-heute", t("linkSkyToday")],
             ["/sternbilder", t("linkConstellations")],
             ["/sonnensystem", t("linkAllPlanets")],
             ["/maschine-der-ewigkeit", t("linkMachine")],
