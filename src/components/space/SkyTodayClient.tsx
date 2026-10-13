@@ -131,7 +131,7 @@ export default function SkyTodayClient({ lang, locale, serverNow, T, planetNames
     );
   };
   const pctFmt = (x: number) => Math.round(x * 100);
-  const magFmt = (m: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 1, minimumFractionDigits: 1 }).format(m);
+  const magFmt = (m: number) => new Intl.NumberFormat(locale, { maximumFractionDigits: 1, minimumFractionDigits: 1 }).format(Math.round(m * 10) / 10 || 0);
 
   // ---- Zeiten für den eigenen Ort ----
   const [pos, setPos] = useState<{ lat: number; lon: number } | null>(null);
