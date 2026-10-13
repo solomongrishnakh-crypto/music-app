@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { SKY_KEYWORDS } from "@/lib/seoKeywords";
 import { hreflang } from "@/lib/seoI18n";
 
@@ -96,7 +97,7 @@ export default async function SternenhimmelPage({ searchParams }: Props) {
           <li>In 13 Sprachen verfügbar, ohne Anmeldung und ohne App-Installation.</li>
         </ul>
         <p>
-          <a href="/himmel-heute">Himmel heute: welche Planeten man heute Nacht sieht, Mondphase und nächste Ereignisse</a>
+          <Link href="/himmel-heute">Himmel heute: welche Planeten man heute Nacht sieht, Mondphase und nächste Ereignisse</Link>
         </p>
       </section>
       <iframe

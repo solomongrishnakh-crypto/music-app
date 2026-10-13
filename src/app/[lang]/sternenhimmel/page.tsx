@@ -1,5 +1,6 @@
 import { skyTodayTexts } from "@/lib/skyTodayText";
 import type { Metadata } from "next";
+import Link from "next/link";
 import { BASE_URL, OG_LOCALE, PAGE_SEO, hreflang, isPrefixedLang, langPath } from "@/lib/seoI18n";
 
 /**
@@ -58,7 +59,7 @@ export default async function LangSternenhimmel({ params, searchParams }: Props)
       <h1 className="sr-only">{seo.title}</h1>
       <p className="sr-only">{seo.description}</p>
       <p className="sr-only">
-        <a href={langPath("/himmel-heute", l)}>{skyTodayTexts(l).title}</a>
+        <Link href={langPath("/himmel-heute", l)}>{skyTodayTexts(l).title}</Link>
       </p>
       <iframe
         src={`/sternenhimmel.html?lang=${l}${c}`}

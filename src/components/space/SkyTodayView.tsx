@@ -99,12 +99,12 @@ export default function SkyTodayView({ lang }: { lang: Lang }) {
       </nav>
       <h1 className="font-display text-2xl font-bold text-foreground sm:text-4xl">{T.title}</h1>
       <p className="mt-3 max-w-2xl leading-relaxed text-foreground/90">{T.intro}</p>
-      <a
+      <Link
         href={skyHref}
         className="mt-5 inline-block border border-accent px-4 py-2.5 text-sm uppercase tracking-wide text-accent transition-colors hover:bg-accent hover:text-black"
       >
         ▶ {T.liveCta}
-      </a>
+      </Link>
 
       <SkyTodayClient
         lang={lang}
@@ -130,7 +130,7 @@ export default function SkyTodayView({ lang }: { lang: Lang }) {
       </section>
 
       <nav className="mt-10 flex flex-wrap gap-2">
-        <a href={skyHref} className="border border-accent px-3 py-2 text-xs uppercase tracking-wide text-accent hover:bg-accent hover:text-black">▶ {T.liveCta}</a>
+        <Link href={skyHref} className="border border-accent px-3 py-2 text-xs uppercase tracking-wide text-accent hover:bg-accent hover:text-black">▶ {T.liveCta}</Link>
         <Link href={langPath("/sternbilder", lang)} className="border border-border px-3 py-2 text-xs uppercase tracking-wide text-foreground hover:border-accent hover:text-accent">{localize(TRANSLATIONS.linkConstellations as unknown as Record<Lang, string>, lang)}</Link>
         <Link href={langPath("/sonnensystem", lang)} className="border border-border px-3 py-2 text-xs uppercase tracking-wide text-foreground hover:border-accent hover:text-accent">{localize(TRANSLATIONS.linkAllPlanets as unknown as Record<Lang, string>, lang)}</Link>
       </nav>
