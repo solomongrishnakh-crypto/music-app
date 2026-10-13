@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import ShareButton from "./ShareButton";
 import type { Lang } from "@/contexts/LanguageContext";
 import { localize } from "@/lib/i18n";
 import { BASE_URL, OG_LOCALE, hreflang, langPath } from "@/lib/seoI18n";
@@ -105,6 +106,7 @@ export default function SkyTodayView({ lang }: { lang: Lang }) {
       >
         ▶ {T.liveCta}
       </Link>
+      <ShareButton lang={lang} title={T.title} />
 
       <SkyTodayClient
         lang={lang}
