@@ -207,7 +207,7 @@ export default function SkyTodayClient({ lang, locale, serverNow, T, planetNames
                 {fill(T.brightness, { m: magFmt(p.mag) })}
               </p>
               {p.st !== "stNone" && (
-                <a href={`${skyHref}?p=${p.id}`} className="mt-2 inline-block text-xs uppercase tracking-wide text-accent hover:underline">▶ {T.showSky}</a>
+                <Link href={`${skyHref}?p=${p.id}`} className="mt-2 inline-block text-xs uppercase tracking-wide text-accent hover:underline">▶ {T.showSky}</Link>
               )}
             </li>
           ))}
