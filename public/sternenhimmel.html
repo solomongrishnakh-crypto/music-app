@@ -3188,7 +3188,7 @@ function playSel(h) { if (h) fxT0 = performance.now(); if (h) sfx(h.type === "st
   try { on = localStorage.getItem("sky-music") !== "off"; } catch {}
   window.soundOn = () => on;
   btn.setAttribute("aria-pressed", String(on));
-  let fadeT = null;
+  let fadeT = null, duck = false; window.duckMusic = (d) => { duck = !!d; try { if (phase === "sc" && sc) sc.setVolume(d ? 8 : 50); else if (!audio.paused) fade(d ? 0.06 : 0.5); } catch (e) {} };
   const fade = (to, done) => { if (duck && to > 0.06) to = 0.06;
     clearInterval(fadeT);
     fadeT = setInterval(() => {
