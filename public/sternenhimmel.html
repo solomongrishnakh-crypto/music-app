@@ -3189,7 +3189,7 @@ function playSel(h) { if (h) fxT0 = performance.now(); if (h) sfx(h.type === "st
   window.soundOn = () => on;
   btn.setAttribute("aria-pressed", String(on));
   let fadeT = null;
-  const fade = (to, done) => {
+  const fade = (to, done) => { if (duck && to > 0.06) to = 0.06;
     clearInterval(fadeT);
     fadeT = setInterval(() => {
       const v = audio.volume + (to > audio.volume ? 0.05 : -0.05);
