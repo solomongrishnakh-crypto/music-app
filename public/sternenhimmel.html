@@ -419,9 +419,9 @@ const S = {
 };
 const canvas = document.getElementById("sky");
 const ctx = canvas.getContext("2d");
-let W = 0, H = 0, DPR = 1;
+let W = 0, H = 0, DPR = 1, Q = 1;
 function resize() {
-  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  DPR = Math.min(window.devicePixelRatio || 1, 2) * Q;
   W = canvas.clientWidth; H = canvas.clientHeight;
   canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
 }
@@ -641,7 +641,7 @@ void main(){
   // geringere Auflösung genügt (der Schleier ist weich) und schont Handys
   let gDpr = 1;
   function resize() {
-    gDpr = Math.min(window.devicePixelRatio || 1, 1.25) * (W * H > 900000 ? 0.75 : W * H < 600000 ? 0.62 : 0.85);
+    gDpr = Math.min(window.devicePixelRatio || 1, 1.25) * (W * H > 900000 ? 0.75 : W * H < 600000 ? 0.62 : 0.85) * Q;
     glCanvas.width = Math.max(1, Math.round(W * gDpr)); glCanvas.height = Math.max(1, Math.round(H * gDpr));
     gl.viewport(0, 0, glCanvas.width, glCanvas.height);
   }
@@ -2185,7 +2185,7 @@ function drawGround(day) {
   let pa = q(0, 0), pb = q(0, hillH(0)), pm = q(0, -hillH(0) * 0.9);
   for (let a = step; a <= 360 + 1e-9; a += step) {
     const h = hillH(a), ca = q(a, 0), cb = q(a, h), cm = q(a, -h * 0.9);
-    if (pa && pb && ca && cb && Math.abs(ca[0] - pa[0]) < W && (h > 0 || pb[1] !== pa[1])) {
+    if (pa && pb && ca && cb && Math.abs(ca[0] - pa[0]) < W && !(ca[0] < -200 && pa[0] < -200) && !(ca[0] > W + 200 && pa[0] > W + 200) && (h > 0 || pb[1] !== pa[1])) {
       shore.moveTo(pa[0], pa[1] + 0.6); shore.lineTo(ca[0], ca[1] + 0.6); shore.lineTo(cb[0], cb[1]); shore.lineTo(pb[0], pb[1]); shore.closePath();
       if (pm && cm) { mirror.moveTo(pa[0], pa[1]); mirror.lineTo(ca[0], ca[1]); mirror.lineTo(cm[0], cm[1]); mirror.lineTo(pm[0], pm[1]); mirror.closePath(); }
     }
@@ -3062,7 +3062,11 @@ qEl.oninput = () => {
 // ---------------- Schleife ----------------
 let last = performance.now();
 let frameDt = 16;
+     let perfAcc = 0, perfN = 0, perfGood = 0, perfSkip = 45, Qcap = 1, lastRaise = 0;
+     function applyQ() { resize(); if (glSky) glSky.resize(); }
+     function adaptQuality(raw) { if (document.hidden || raw > 2000) { perfAcc = 0; perfN = 0; return; } if (perfSkip > 0) { perfSkip--; return; } perfAcc += Math.min(raw, 120); perfN++; if (perfN < 30) return; const avg = perfAcc / perfN; perfAcc = 0; perfN = 0; const nw = performance.now(); if (avg > 26 && Q > 0.55) { Q = Math.max(0.55, Q * 0.8); perfGood = 0; perfSkip = 15; if (nw - lastRaise < 20000) Qcap = Q; applyQ(); } else if (avg < 17.5 && Q < Qcap) { if (++perfGood >= 8) { Q = Math.min(Qcap, Q / 0.8); perfGood = 0; perfSkip = 15; lastRaise = nw; applyQ(); } } else perfGood = 0; }
 function frame(now) {
+     adaptQuality(now - last);
   const dt = Math.min(60, now - last); last = now; frameDt = dt;
   if (anim) {
     const t = Math.min(1, (now - anim.t0) / 900), e = t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
