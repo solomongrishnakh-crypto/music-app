@@ -11,6 +11,7 @@ import UniverseAgeTicker from "@/components/universe/UniverseAgeTicker";
 import Gear3D from "@/components/universe/Gear3D";
 import SolarSystemModal from "@/components/universe/SolarSystemModal";
 import SkyPreviewCard from "@/components/universe/SkyPreviewCard";
+import SizeComparison from "@/components/universe/SizeComparison";
 import SectionHeading from "@/components/ui/SectionHeading";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -1438,9 +1439,12 @@ export default function UniversumPage() {
           </div>
         </section>
 
+        {/* Nutzerwunsch 14.10.2026: Größenvergleich vom Neutronenstern bis zum Universum */}
+        <SizeComparison index="02" />
+
         {/* Nutzerwunsch 03.10.2026: Maschine der Ewigkeit über "Universum in Zahlen" */}
         <section className="mb-10">
-          <SectionHeading index="02" label={t("gearLabel")} />
+          <SectionHeading index="03" label={t("gearLabel")} />
         <div className="hud-card flex flex-col items-center overflow-hidden p-3">
           <Gear3D className="h-60 w-full sm:h-72" />
           <p className="mt-2 max-w-md text-center text-[10px] leading-snug text-muted">{t("gearCaption")}</p>
@@ -1454,7 +1458,7 @@ export default function UniversumPage() {
         </section>
 
         <section className="mb-6">
-          <SectionHeading index="03" label={t("universeInNumbers")} />
+          <SectionHeading index="04" label={t("universeInNumbers")} />
         <UniverseAgeTicker />
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {UNIVERSE_FACTS.map((fact, i) => {
