@@ -180,3 +180,71 @@ export async function getEmpiresForYear(year: number): Promise<EmpireFeatureColl
   }
   return { type: "FeatureCollection", features };
 }
+
+/**
+ * Zeitspanne je Reichsname (frühestes Von-Jahr, spätestes Bis-Jahr) plus ein
+ * Jahr in der Mitte des längsten Abschnitts — für die Reichs-Suche
+ * (Nutzerwunsch 15.10.2026: gesuchte Reiche auf der Karte anzeigen).
+ */
+export interface EmpireSpan {
+  from: number;
+  to: number;
+  mid: number;
+}
+let cachedSpansPromise: Promise<Map<string, EmpireSpan>> | null = null;
+
+export function getEmpireSpans(): Promise<Map<string, EmpireSpan>> {
+  if (!cachedSpansPromise) {
+    cachedSpansPromise = loadEntries().then((entries) => {
+      const out = new Map<string, EmpireSpan>();
+      const longest = new Map<string, number>();
+      for (const e of entries) {
+        if (typeof e.n !== "string" || typeof e.f !== "number" || typeof e.t !== "number") continue;
+        const n = e.n.trim();
+        if (!n) continue;
+        const cur = out.get(n);
+        const len = e.t - e.f;
+        if (!cur) {
+          out.set(n, { from: e.f, to: e.t, mid: Math.round((e.f + e.t) / 2) });
+          longest.set(n, len);
+        } else {
+          cur.from = Math.min(cur.from, e.f);
+          cur.to = Math.max(cur.to, e.t);
+          if (len > (longest.get(n) ?? -1)) {
+            longest.set(n, len);
+            cur.mid = Math.round((e.f + e.t) / 2);
+          }
+        }
+      }
+      return out;
+    });
+    cachedSpansPromise.catch(() => {
+      cachedSpansPromise = null;
+    });
+  }
+  return cachedSpansPromise;
+}
+
+/** Grenzrahmen [süd, west, nord, ost] der Gebiete mit diesen Namen in einem Jahr. */
+export async function getBoundsForNames(
+  names: Set<string>,
+  year: number
+): Promise<[number, number, number, number] | null> {
+  const fc = await getEmpiresForYear(year);
+  let s = 90, w = 180, n = -90, e = -180, any = false;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const walk = (c: any) => {
+    if (typeof c[0] === "number") {
+      const lng = c[0], lat = c[1];
+      if (lat < s) s = lat;
+      if (lat > n) n = lat;
+      if (lng < w) w = lng;
+      if (lng > e) e = lng;
+      any = true;
+    } else for (const x of c) walk(x);
+  };
+  for (const f of fc.features) {
+    if (names.has(f.properties.NAME) && f.geometry?.coordinates) walk(f.geometry.coordinates);
+  }
+  return any ? [s, w, n, e] : null;
+}
