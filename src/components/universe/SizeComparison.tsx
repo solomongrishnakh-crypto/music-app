@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLanguage, type Lang } from "@/contexts/LanguageContext";
 import { findBody } from "@/components/space/bodies";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { cachedCanvas, saturnRingCanvas, surfaceCanvas } from "@/components/universe/planetTextures";
+import { cachedCanvas, earthCloudsCanvas, saturnRingCanvas, surfaceCanvas } from "@/components/universe/planetTextures";
+import { ANIM, ATMO, ROT_SPEED, buildRot, drawBH, drawPulsar, drawStarGlow, makeStarTex, pickSize, renderRot, starLook, texFromCanvas, type Rot } from "./sizeFx";
+import { UI2 } from "./sizeText";
+import SizePicker, { type PickItem } from "./SizePicker";
 
 /**
  * Größenvergleich im Universum (Nutzerwunsch 14.10.2026): echte Durchmesser
@@ -25,7 +28,7 @@ interface Obj {
   approx?: boolean;
   ring?: boolean;
   tex?: string; // Oberflächenkarte (equirektangular) für die Kugel
-  photo?: [string, number]; // echtes Foto + wie viele Durchmesser die Bildbreite zeigt
+  photo?: [string, number, number[]?]; // echtes Foto, Bildbreite in Durchmessern, optional Ausschnitt [x, y, Breite, Winkel, Achsenverhältnis]
 }
 
 const N = (de: string, en: string, es: string, fr: string, pt: string, tr: string, ru: string, el: string, ar: string, hi: string, zh: string, ja: string, ko: string): Names =>
@@ -60,7 +63,7 @@ const OBJECTS: Obj[] = [
   { id: "orion", d: 2.27e14, kind: "nebula", color: "#ff7fb0", approx: true, photo: ["thumb/f/f3/Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg/960px-Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg", 1.05], name: N("Orionnebel", "Orion Nebula", "Nebulosa de Orión", "Nébuleuse d'Orion", "Nebulosa de Órion", "Orion Bulutsusu", "Туманность Ориона", "Νεφέλωμα του Ωρίωνα", "سديم الجبار", "ओरायन नीहारिका", "猎户座大星云", "オリオン大星雲", "오리온 대성운") },
   { id: "lmc", d: 3.0e17, kind: "galaxy", color: "#cfd8ff", approx: true, photo: ["9/94/Large.mc.arp.750pix.jpg", 1.7], name: N("Große Magellansche Wolke", "Large Magellanic Cloud", "Gran Nube de Magallanes", "Grand Nuage de Magellan", "Grande Nuvem de Magalhães", "Büyük Macellan Bulutu", "Большое Магелланово Облако", "Μεγάλο Νέφος του Μαγγελάνου", "سحابة ماجلان الكبرى", "बड़ा मैगेलैनिक बादल", "大麦哲伦云", "大マゼラン雲", "대마젤란은하") },
   { id: "milkyway", d: 9.46e17, kind: "galaxy", color: "#ffe2b0", approx: true, photo: ["thumb/8/82/Milky_Way_Galaxy.jpg/960px-Milky_Way_Galaxy.jpg", 1.1], name: N("Milchstraße", "Milky Way", "Vía Láctea", "Voie lactée", "Via Láctea", "Samanyolu", "Млечный Путь", "Γαλαξίας", "درب التبانة", "आकाशगंगा (मिल्की वे)", "银河系", "天の川銀河", "우리은하") },
-  { id: "andromeda", d: 2.08e18, kind: "galaxy", color: "#ffd9c0", approx: true, photo: ["thumb/9/98/Andromeda_Galaxy_%28with_h-alpha%29.jpg/960px-Andromeda_Galaxy_%28with_h-alpha%29.jpg", 1.08], name: N("Andromeda-Galaxie", "Andromeda Galaxy", "Galaxia de Andrómeda", "Galaxie d'Andromède", "Galáxia de Andrômeda", "Andromeda Galaksisi", "Галактика Андромеды", "Γαλαξίας της Ανδρομέδας", "مجرة المرأة المسلسلة", "एंड्रोमेडा आकाशगंगा", "仙女座星系", "アンドロメダ銀河", "안드로메다은하") },
+  { id: "andromeda", d: 2.08e18, kind: "galaxy", color: "#ffd9c0", approx: true, photo: ["thumb/9/98/Andromeda_Galaxy_%28with_h-alpha%29.jpg/960px-Andromeda_Galaxy_%28with_h-alpha%29.jpg", 1.16, [0.49, 0.5, 0.36, 0.54, 0.4]], name: N("Andromeda-Galaxie", "Andromeda Galaxy", "Galaxia de Andrómeda", "Galaxie d'Andromède", "Galáxia de Andrômeda", "Andromeda Galaksisi", "Галактика Андромеды", "Γαλαξίας της Ανδρομέδας", "مجرة المرأة المسلسلة", "एंड्रोमेडा आकाशगंगा", "仙女座星系", "アンドロメダ銀河", "안드로메다은하") },
   { id: "ic1101", d: 3.8e19, kind: "galaxy", color: "#ffe8c8", approx: true, photo: ["4/46/IC_1101.jpg", 2.6], name: "IC 1101" },
   { id: "laniakea", d: 4.9e21, kind: "cluster", color: "#9fb8ff", approx: true, name: N("Laniakea-Superhaufen", "Laniakea Supercluster", "Supercúmulo Laniakea", "Superamas Laniakea", "Superaglomerado Laniakea", "Laniakea Üstkümesi", "Сверхскопление Ланиакея", "Υπερσμήνος Laniakea", "عنقود لانياكيا الفائق", "लानियाकेआ महागुच्छ", "拉尼亚凯亚超星系团", "ラニアケア超銀河団", "라니아케아 초은하단") },
   { id: "universe", d: 8.8e23, kind: "universe", color: "#6d8cff", approx: true, photo: ["thumb/e/e7/Observable_universe_logarithmic_illustration.png/960px-Observable_universe_logarithmic_illustration.png", 1.03], name: N("Beobachtbares Universum", "Observable universe", "Universo observable", "Univers observable", "Universo observável", "Gözlemlenebilir evren", "Наблюдаемая Вселенная", "Παρατηρήσιμο σύμπαν", "الكون المرئي", "अवलोकनीय ब्रह्मांड", "可观测宇宙", "観測可能な宇宙", "관측 가능한 우주") },
@@ -102,7 +105,6 @@ const UI: Record<Lang, UiText> = {
 
 const LY_KM = 9.461e12;
 const IMG_BASE = "https://upload.wikimedia.org/wikipedia/commons/";
-const SUN_PHOTO = "thumb/8/83/The_Sun_in_white_light.jpg/960px-The_Sun_in_white_light.jpg";
 const SPHERE = (k: Kind) => k === "planet" || k === "moon" || k === "dwarf" || k === "star" || k === "ns" || k === "bh";
 
 function objName(o: Obj, lang: Lang): string {
@@ -217,44 +219,37 @@ function sphereSprite(img: CanvasImageSource, o: Obj): HTMLCanvasElement {
   return c;
 }
 
-/** Stern aus dem echten Sonnenfoto (Randverdunkelung), eingefärbt nach Sternfarbe. */
-function starSprite(img: HTMLImageElement, o: Obj): HTMLCanvasElement {
-  const S = 360, c = document.createElement("canvas");
-  c.width = c.height = S;
-  const g = c.getContext("2d")!;
-  g.save();
-  g.beginPath(); g.arc(S / 2, S / 2, S / 2, 0, Math.PI * 2); g.clip();
-  const f = 1.2; // Sonnenscheibe ≈ 83 % der Bildbreite
-  g.drawImage(img, S / 2 - (S * f) / 2, S / 2 - (S * f) / 2, S * f, S * f);
-  g.globalCompositeOperation = "multiply";
-  g.fillStyle = o.id === "sun" ? "#ffd27a" : o.color;
-  g.fillRect(0, 0, S, S);
-  g.globalCompositeOperation = "screen";
-  const hot = g.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S / 2);
-  hot.addColorStop(0, "rgba(255,250,235,0.55)");
-  hot.addColorStop(0.7, "rgba(255,240,210,0.12)");
-  hot.addColorStop(1, "rgba(0,0,0,0)");
-  g.fillStyle = hot;
-  g.fillRect(0, 0, S, S);
-  g.restore();
-  return c;
-}
-
-/** Foto (Galaxie, Nebel, Universum): schwarzer Hintergrund wird durchsichtig, Ränder weich. */
-function photoSprite(img: HTMLImageElement): HTMLCanvasElement {
+/** Foto (Galaxie, Nebel, Universum): Hintergrund wird durchsichtig, Ränder weich; optional Ausschnitt mit Ellipsenmaske. */
+function photoSprite(img: HTMLImageElement, crop?: number[]): HTMLCanvasElement {
   const S = 640, c = document.createElement("canvas");
   c.width = c.height = S;
   const g = c.getContext("2d")!;
-  const sc = S / img.naturalWidth, h = img.naturalHeight * sc;
-  g.drawImage(img, 0, (S - h) / 2, S, h);
+  if (crop) {
+    const sw = crop[2] * 2 * img.naturalWidth;
+    g.drawImage(img, crop[0] * img.naturalWidth - sw / 2, crop[1] * img.naturalHeight - sw / 2, sw, sw, 0, 0, S, S);
+  } else {
+    const sc = S / img.naturalWidth, h = img.naturalHeight * sc;
+    g.drawImage(img, 0, (S - h) / 2, S, h);
+  }
   const data = g.getImageData(0, 0, S, S), d = data.data;
+  const ca = crop ? Math.cos(crop[3]) : 1, sa = crop ? Math.sin(crop[3]) : 0;
   for (let y = 0; y < S; y++) {
     for (let x = 0; x < S; x++) {
       const i = (y * S + x) * 4;
       const m = Math.max(d[i], d[i + 1], d[i + 2]);
-      const rr = Math.hypot(x - S / 2, y - S / 2) / (S / 2);
-      const edge = rr < 0.82 ? 1 : Math.max(0, 1 - (rr - 0.82) / 0.18);
-      d[i + 3] = Math.min(255, m * 1.6) * edge;
+      let edge: number, al: number;
+      if (crop) {
+        const px = (x / S - 0.5), py = (y / S - 0.5);
+        const u = px * ca + py * sa, w = -px * sa + py * ca;
+        const e = Math.hypot(u / 0.46, w / (0.46 * crop[4]));
+        edge = e < 0.78 ? 1 : Math.max(0, 1 - (e - 0.78) / 0.22);
+        al = Math.max(0, Math.min(255, (m - 26) * 2.1));
+      } else {
+        const rr = Math.hypot(x - S / 2, y - S / 2) / (S / 2);
+        edge = rr < 0.82 ? 1 : Math.max(0, 1 - (rr - 0.82) / 0.18);
+        al = Math.min(255, m * 1.6);
+      }
+      d[i + 3] = al * edge;
     }
   }
   g.putImageData(data, 0, 0);
@@ -291,24 +286,39 @@ function getRing(): HTMLCanvasElement | null {
   }
   return ringSprite;
 }
-let sunImg: Promise<HTMLImageElement> | null = null;
 const pending = new Set<string>();
+const rots = new Map<string, Rot>();
+
+/** Drehende Kugel anlegen (Planeten/Monde aus Karte, Sterne aus selbst berechneter Oberfläche). */
+function ensureRot(o: Obj, texSrc?: CanvasImageSource) {
+  if (rots.has(o.id)) return;
+  try {
+    if (o.kind === "star") {
+      const sp = o.id === "sun" ? ROT_SPEED.sun : 0.03 + (o.id.length % 4) * 0.008;
+      rots.set(o.id, buildRot(makeStarTex(o.id === "sun" ? "#ffd27a" : o.color, starLook(o.id), o.id.length * 31 + 7), { star: true, limb: starLook(o.id).limb, speed: sp }));
+    } else if (texSrc) {
+      const clouds = o.id === "earth" ? texFromCanvas(cachedCanvas("earth-clouds", earthCloudsCanvas)) : undefined;
+      rots.set(o.id, buildRot(texFromCanvas(texSrc), { speed: ROT_SPEED[o.id] ?? 0.05, atmo: ATMO[o.id], clouds, pluto: o.id === "pluto" }));
+    }
+  } catch {
+    /* ohne Drehung weiter */
+  }
+}
 
 function requestSprite(o: Obj, onReady: () => void) {
+  if (o.kind === "star") { ensureRot(o); return; }
   if (sprites.has(o.id) || pending.has(o.id)) return;
   let job: Promise<HTMLCanvasElement> | null = null;
-  if (o.tex) job = loadImg(o.tex).then((im) => sphereSprite(im, o));
-  else if (o.photo) job = loadImg(o.photo[0]).then((im) => photoSprite(im));
-  else if (o.kind === "star") {
-    if (!sunImg) sunImg = loadImg(SUN_PHOTO);
-    job = sunImg.then((im) => starSprite(im, o));
-  }
+  if (o.tex) job = loadImg(o.tex).then((im) => { rots.delete(o.id); ensureRot(o, im); return sphereSprite(im, o); });
+  else if (o.photo) job = loadImg(o.photo[0]).then((im) => photoSprite(im, o.photo ? o.photo[2] : undefined));
   if (!job) return;
   // Sofort: dieselben Oberflächen wie in der 3D-Ansicht des Sonnensystems;
   // sobald die echte Karte geladen ist, wird sie ersetzt.
   if (o.tex && PROC.has(o.id)) {
     try {
-      sprites.set(o.id, sphereSprite(cachedCanvas("surface-" + o.id, () => surfaceCanvas(o.id, o.color)), o));
+      const sc = cachedCanvas("surface-" + o.id, () => surfaceCanvas(o.id, o.color));
+      sprites.set(o.id, sphereSprite(sc, o));
+      ensureRot(o, sc);
     } catch {
       /* ohne Vorschau weiter */
     }
@@ -338,48 +348,9 @@ function drawRing(g: CanvasRenderingContext2D, x: number, y: number, r: number, 
   g.restore();
 }
 
-function drawBlackHole(g: CanvasRenderingContext2D, x: number, y: number, r: number, c: string) {
-  // Scheibe und Leuchten nur als schmaler Rand: gezeigt wird die Größe des Ereignishorizonts.
-  const dOut = r + Math.min(r * 0.9, 55), dIn = r + Math.min(r * 0.25, 14);
-  const go = dOut + Math.min(r * 0.3, 25);
-  const glow = g.createRadialGradient(x, y, r, x, y, go);
-  glow.addColorStop(0, rgba(c, 0.35));
-  glow.addColorStop(1, rgba(c, 0));
-  g.fillStyle = glow;
-  g.beginPath(); g.arc(x, y, go, 0, Math.PI * 2); g.fill();
-  const disk = (front: boolean) => {
-    g.save();
-    g.translate(x, y);
-    g.rotate(-0.12);
-    g.scale(1, 0.26);
-    const gr = g.createRadialGradient(0, 0, dIn, 0, 0, dOut);
-    gr.addColorStop(0, "rgba(255,240,200,0.95)");
-    gr.addColorStop(0.3, rgba(c, 0.85));
-    gr.addColorStop(1, rgba(c, 0));
-    g.fillStyle = gr;
-    g.beginPath();
-    if (front) g.arc(0, 0, dOut, 0, Math.PI); else g.arc(0, 0, dOut, Math.PI, Math.PI * 2);
-    g.arc(0, 0, dIn, front ? Math.PI : Math.PI * 2, front ? 0 : Math.PI, true);
-    g.closePath();
-    g.fill();
-    g.restore();
-  };
-  disk(false);
-  // Gravitationslinse: Licht der Scheibe hinter dem Loch erscheint als Bogen oben
-  g.strokeStyle = rgba(c, 0.7);
-  g.lineWidth = Math.max(1, Math.min(r * 0.22, 12));
-  g.beginPath(); g.arc(x, y, dIn + g.lineWidth / 2, Math.PI * 1.05, Math.PI * 1.95); g.stroke();
-  g.fillStyle = "#000";
-  g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
-  g.strokeStyle = "rgba(255,235,200,0.9)";
-  g.lineWidth = Math.max(0.8, r * 0.05);
-  g.beginPath(); g.arc(x, y, r * 1.04, 0, Math.PI * 2); g.stroke();
-  disk(true);
-}
-
 function drawObj(g: CanvasRenderingContext2D, o: Obj, x: number, y: number, r: number, W: number, H: number) {
   // Riesige Objekte, die den ganzen Bildschirm füllen: nur den sichtbaren Rand als Fläche zeichnen.
-  if (r > 4e5) {
+  if (r > 3e4) {
     const left = x - r;
     const soft = o.kind === "galaxy" || o.kind === "cluster" || o.kind === "universe" || o.kind === "nebula";
     const grad = g.createLinearGradient(left, 0, left + W * 0.6, 0);
@@ -395,7 +366,8 @@ function drawObj(g: CanvasRenderingContext2D, o: Obj, x: number, y: number, r: n
   }
   const c = o.color;
   const sp = sprites.get(o.id);
-  if (o.kind === "bh") { drawBlackHole(g, x, y, r, c); return; }
+  if (o.kind === "bh") { drawBH(g, x, y, r); return; }
+  if (o.kind === "ns") { drawPulsar(g, x, y, r); return; }
   if (o.kind === "orbit") {
     g.strokeStyle = rgba(c, 0.7);
     g.lineWidth = 1.2;
@@ -459,23 +431,18 @@ function drawObj(g: CanvasRenderingContext2D, o: Obj, x: number, y: number, r: n
     g.restore();
     return;
   }
-  // Leuchten um Sterne und Neutronenstern
-  if (o.kind === "star" || o.kind === "ns") {
-    const gr = r + Math.min(r * 0.7, 45);
-    const glow = g.createRadialGradient(x, y, r * 0.9, x, y, gr);
-    glow.addColorStop(0, rgba(c, 0.5));
-    glow.addColorStop(1, rgba(c, 0));
-    g.fillStyle = glow;
-    g.beginPath(); g.arc(x, y, gr, 0, Math.PI * 2); g.fill();
-  }
+  if (o.kind === "star") drawStarGlow(g, x, y, r, c, o.id);
   if (o.ring) drawRing(g, x, y, r, c, false);
-  if (sp) {
+  const rot = rots.get(o.id);
+  if (rot) {
+    g.drawImage(renderRot(rot, ANIM.reduce ? 0.6 : ANIM.t * rot.speed, pickSize(r * 2 * ANIM.D)), x - r, y - r, r * 2, r * 2);
+  } else if (sp) {
     g.drawImage(sp, x - r, y - r, r * 2, r * 2);
   } else {
     const body = g.createRadialGradient(x - r * 0.35, y - r * 0.35, r * 0.05, x, y, r);
-    body.addColorStop(0, o.kind === "star" || o.kind === "ns" ? "#fffaf0" : "#ffffff");
+    body.addColorStop(0, o.kind === "star" ? "#fffaf0" : "#ffffff");
     body.addColorStop(0.2, c);
-    body.addColorStop(1, o.kind === "star" || o.kind === "ns" ? rgba(c, 0.9) : "#0b0b0b");
+    body.addColorStop(1, o.kind === "star" ? rgba(c, 0.9) : "#0b0b0b");
     g.fillStyle = body;
     g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.fill();
   }
@@ -484,9 +451,19 @@ function drawObj(g: CanvasRenderingContext2D, o: Obj, x: number, y: number, r: n
 
 type Mode = "zoom" | "cmp";
 
+interface CmpView {
+  anchor: 0 | 1;
+  xa: number; // Bildschirmposition (px) der Mitte des Ankerobjekts
+  yc: number; // Bildschirmhöhe (px) der Objektmitten
+  z: number; // Zoom relativ zur Gesamtansicht
+}
+
+const normS = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
 export default function SizeComparison({ index }: { index: string }) {
   const { lang } = useLanguage();
   const ui = UI[lang] ?? UI.en;
+  const ui2 = UI2[lang] ?? UI2.en;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const START = OBJECTS.findIndex((o) => o.id === "earth");
@@ -497,14 +474,22 @@ export default function SizeComparison({ index }: { index: string }) {
   const [mode, setMode] = useState<Mode>("zoom");
   const [cmpA, setCmpA] = useState(OBJECTS.findIndex((o) => o.id === "sun"));
   const [cmpB, setCmpB] = useState(OBJECTS.findIndex((o) => o.id === "st218"));
+  const [pick, setPick] = useState<0 | 1 | null>(null);
+  const [zs, setZs] = useState(0);
+  const [zx, setZx] = useState(1);
   const langRef = useRef(lang);
   const modeRef = useRef<Mode>("zoom");
   const cmpRef = useRef<[number, number]>([cmpA, cmpB]);
   const dirty = useRef(true);
+  const view = useRef<CmpView>({ anchor: 0, xa: 0, yc: 0, z: 1 });
+  const fit = useRef({ zmax: 12, kfit: 1, delta: 0, W: 0, H: 0, sx: -1, sy: 0 });
+  const resetView = useRef(true);
+  const api = useRef({ zoomBy: (_f: number) => {}, setZ: (_s: number) => {}, reset: () => {} });
   useEffect(() => {
     langRef.current = lang;
     modeRef.current = mode;
     cmpRef.current = [cmpA, cmpB];
+    resetView.current = true;
     dirty.current = true;
   }, [lang, mode, cmpA, cmpB]);
 
@@ -513,7 +498,8 @@ export default function SizeComparison({ index }: { index: string }) {
     if (!cvs || !wrap) return;
     const g = cvs.getContext("2d");
     if (!g) return;
-    let raf = 0, W = 0, H = 0, D = 1, lastShown = -1, visible = true;
+    let raf = 0, W = 0, H = 0, D = 1, lastShown = -1, visible = true, lastDraw = 0, lastZs = -1;
+    ANIM.reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     dirty.current = true;
     const last = OBJECTS.length - 1;
     const ready = () => { dirty.current = true; };
@@ -523,6 +509,8 @@ export default function SizeComparison({ index }: { index: string }) {
       D = Math.min(2, window.devicePixelRatio || 1);
       W = r.width; H = r.height;
       cvs.width = Math.round(W * D); cvs.height = Math.round(H * D);
+      fit.current.W = W; fit.current.H = H;
+      resetView.current = true;
       dirty.current = true;
     };
     resize();
@@ -540,19 +528,39 @@ export default function SizeComparison({ index }: { index: string }) {
       g.fillText(text, x, y);
     };
 
+    const scaleText = (km: number) => {
+      const l = langRef.current, u = UI[l] ?? UI.en;
+      return km < 1e12 ? fmtFull(km, l) + " km" : fmtFull(km / LY_KM, l) + " " + u.ly;
+    };
+
     const drawCompare = () => {
       const [ia, ib] = cmpRef.current;
       const A = OBJECTS[ia], B = OBJECTS[ib], lng = langRef.current;
-      const big = Math.max(A.d, B.d), gapPx = W * 0.06;
-      const k = Math.min((H * 0.78) / big, (W * 0.88 - gapPx) / (A.d + B.d));
-      const ra = (A.d * k) / 2, rb = (B.d * k) / 2;
-      const total = ra * 2 + rb * 2 + gapPx, x0 = (W - total) / 2, cy = H * 0.47;
-      const xa = x0 + ra, xb = x0 + ra * 2 + gapPx + rb;
+      const dA = A.d, dB = B.d, gap = 0.08 * (dA + dB), Wd = dA + gap + dB;
+      const big = Math.max(dA, dB), small = Math.min(dA, dB);
+      const kfit = Math.min((H * 0.78) / big, (W * 0.9) / Wd);
+      const cA = dA / 2, cB = dA + gap + dB / 2, delta = cB - cA;
+      const v = view.current;
+      const zmax = Math.max(12, Math.min(1e24, (W * 4) / (small * kfit)));
+      fit.current.zmax = zmax; fit.current.kfit = kfit; fit.current.delta = delta;
+      if (resetView.current) { v.z = 1; v.anchor = 0; resetView.current = false; }
+      if (v.z <= 1.0000001) { v.z = 1; v.anchor = 0; v.xa = W / 2 + (cA - Wd / 2) * kfit; v.yc = H * 0.47; }
+      v.z = Math.min(v.z, zmax);
+      const k = kfit * v.z;
+      const xA = v.anchor === 0 ? v.xa : v.xa - delta * k;
+      const xB = v.anchor === 0 ? v.xa + delta * k : v.xa;
+      // Anker = das Objekt, das der Bildmitte näher ist (hält die Rechnung auch bei extremem Zoom genau)
+      const near: 0 | 1 = Math.abs(xA - W / 2) <= Math.abs(xB - W / 2) ? 0 : 1;
+      if (near !== v.anchor) { v.anchor = near; v.xa = near === 0 ? xA : xB; }
+      const cy = v.yc, ra = (dA * k) / 2, rb = (dB * k) / 2;
+      fit.current.sx = dA <= dB ? xA : xB; fit.current.sy = cy;
       requestSprite(A, ready); requestSprite(B, ready);
       const taken: [number, number, number][] = [];
       g.textAlign = "center";
       g.textBaseline = "top";
-      ([[A, xa, ra], [B, xb, rb]] as [Obj, number, number][]).forEach(([o, x, r]) => {
+      ([[A, xA, ra], [B, xB, rb]] as [Obj, number, number][]).forEach(([o, x, r]) => {
+        const ext = r * (o.ring ? 2.3 : o.photo ? o.photo[1] : 1) + 80;
+        if (x + ext < 0 || x - ext > W) return;
         if (r >= 0.5) drawObj(g, o, x, cy, r, W, H);
         else {
           // Zu klein für den Bildschirm: Markierung statt Punkt
@@ -562,16 +570,60 @@ export default function SizeComparison({ index }: { index: string }) {
           g.fillStyle = "#ff5a4d";
           g.fillRect(x - 0.5, cy - 0.5, 1, 1);
         }
-        label(objName(o, lng), x, Math.min(H - 16, cy + Math.max(r, 8) + 8), true, taken);
+        const lx = Math.max(60, Math.min(W - 60, x));
+        label(objName(o, lng), lx, Math.max(8, Math.min(H - 50, cy + Math.max(r, 8) + 8)), true, taken);
       });
+      // Maßstab (echte Länge)
+      const want = (W * 0.26) / k, p10 = Math.pow(10, Math.floor(Math.log10(want))), m = want / p10;
+      const nice = (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p10, px = nice * k, by = H - 12;
+      g.strokeStyle = "rgba(242,242,240,0.85)";
+      g.lineWidth = 1.5;
+      g.beginPath();
+      g.moveTo(12, by - 4); g.lineTo(12, by); g.lineTo(12 + px, by); g.lineTo(12 + px, by - 4);
+      g.stroke();
+      g.font = "400 10px ui-monospace, monospace";
+      g.textAlign = "left";
+      g.textBaseline = "bottom";
+      g.fillStyle = "rgba(242,242,240,0.9)";
+      g.fillText(scaleText(nice), 12, by - 6);
+      g.textAlign = "center";
+      g.textBaseline = "top";
+      const zn = Math.log(v.z) / Math.log(zmax);
+      if (Math.abs(zn - lastZs) > 0.002) { lastZs = zn; setZs(zn); setZx(v.z); }
     };
 
-    const frame = () => {
+    const zoomAt = (px: number, py: number, f: number) => {
+      const v = view.current, fi = fit.current;
+      const nz = Math.max(1, Math.min(fi.zmax, v.z * f));
+      if (nz === v.z) return;
+      const k = fi.kfit * v.z;
+      const xA = v.anchor === 0 ? v.xa : v.xa - fi.delta * k;
+      const xB = v.anchor === 0 ? v.xa + fi.delta * k : v.xa;
+      const near: 0 | 1 = Math.abs(xA - px) <= Math.abs(xB - px) ? 0 : 1;
+      if (near !== v.anchor) { v.anchor = near; v.xa = near === 0 ? xA : xB; }
+      const ratio = nz / v.z;
+      v.xa = px + (v.xa - px) * ratio;
+      v.yc = py + (v.yc - py) * ratio;
+      v.z = nz;
+      dirty.current = true;
+    };
+    api.current = {
+      // Regler/Tasten zoomen auf das kleinere Objekt (wenn sichtbar), sonst auf die Bildmitte
+      zoomBy: (f) => { const fi = fit.current, onS = fi.sx > 0 && fi.sx < W; zoomAt(onS ? fi.sx : W / 2, onS ? fi.sy : H / 2, f); },
+      setZ: (s) => { const fi = fit.current, onS = fi.sx > 0 && fi.sx < W; zoomAt(onS ? fi.sx : W / 2, onS ? fi.sy : H / 2, Math.exp(s * Math.log(fi.zmax)) / view.current.z); },
+      reset: () => { resetView.current = true; view.current.z = 1; dirty.current = true; },
+    };
+
+    const frame = (now: number) => {
       raf = requestAnimationFrame(frame);
+      if (!visible || W === 0) return;
       const diff = target.current - cur.current;
       const moving = modeRef.current === "zoom" && Math.abs(diff) >= 0.0005;
-      if (!visible || W === 0 || (!moving && !dirty.current)) return;
+      if (!moving && !dirty.current && (ANIM.reduce || now - lastDraw < 30)) return;
+      lastDraw = now;
       dirty.current = false;
+      ANIM.t = now / 1000;
+      ANIM.D = D;
       g.setTransform(D, 0, 0, D, 0, 0);
       g.clearRect(0, 0, W, H);
       if (modeRef.current === "cmp") { drawCompare(); return; }
@@ -583,7 +635,7 @@ export default function SizeComparison({ index }: { index: string }) {
       const gap = W * 0.08;
       const rs = OBJECTS.map((o) => (o.d * k) / 2);
       const xs: number[] = [];
-      const lr = rs.map((r, i) => r * (OBJECTS[i].ring ? 2.3 : 1)); // Saturn: Ringe brauchen Platz
+      const lr = rs.map((r, i) => r * (OBJECTS[i].ring || OBJECTS[i].kind === "bh" ? 2.3 : 1)); // Ringe/Scheiben brauchen Platz
       lr.forEach((r, i) => { xs.push(i === 0 ? 0 : xs[i - 1] + lr[i - 1] + gap + r); });
       const fx = xs[i0] * (1 - f) + xs[i1] * f;
       const off = W / 2 - fx, cy = H * 0.46;
@@ -592,7 +644,7 @@ export default function SizeComparison({ index }: { index: string }) {
       const labels: { x: number; y: number; text: string; main: boolean }[] = [];
       for (let i = 0; i <= last; i++) {
         const o = OBJECTS[i], r = rs[i], x = xs[i] + off;
-        const ext = r * (o.ring ? 2.3 : o.photo ? o.photo[1] : 1) + 90;
+        const ext = r * (o.ring || o.kind === "bh" ? 2.3 : o.photo ? o.photo[1] : 1) + 90;
         if (r < 0.4 || x + ext < 0 || x - ext > W) continue;
         if (r > 1.5) requestSprite(o, ready);
         drawObj(g, o, x, cy, Math.max(r, 0.8), W, H);
@@ -613,22 +665,51 @@ export default function SizeComparison({ index }: { index: string }) {
     raf = requestAnimationFrame(frame);
 
     let drag: { x: number; t: number } | null = null;
+    const ptrs = new Map<number, { x: number; y: number }>();
+    let pinch = 0;
+    const lp = (e: { clientX: number; clientY: number }) => {
+      const r = cvs.getBoundingClientRect();
+      return { x: e.clientX - r.left, y: e.clientY - r.top };
+    };
     const down = (e: PointerEvent) => {
-      if (modeRef.current !== "zoom") return;
-      drag = { x: e.clientX, t: target.current };
+      if (modeRef.current === "zoom") {
+        drag = { x: e.clientX, t: target.current };
+        cvs.setPointerCapture(e.pointerId);
+        return;
+      }
+      ptrs.set(e.pointerId, lp(e));
       cvs.setPointerCapture(e.pointerId);
+      if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = Math.hypot(a.x - b.x, a.y - b.y); }
     };
     const move = (e: PointerEvent) => {
-      if (!drag) return;
-      const v = Math.max(0, Math.min(last, drag.t - (e.clientX - drag.x) / (W * 0.35)));
-      target.current = v; setSlider(v);
+      if (modeRef.current === "zoom") {
+        if (!drag) return;
+        const v = Math.max(0, Math.min(last, drag.t - (e.clientX - drag.x) / (W * 0.35)));
+        target.current = v; setSlider(v);
+        return;
+      }
+      const p = ptrs.get(e.pointerId);
+      if (!p) return;
+      const n = lp(e);
+      if (ptrs.size === 1 && view.current.z > 1) { view.current.xa += n.x - p.x; view.current.yc += n.y - p.y; }
+      ptrs.set(e.pointerId, n);
+      if (ptrs.size === 2) {
+        const [a, b] = [...ptrs.values()], dist = Math.hypot(a.x - b.x, a.y - b.y);
+        if (pinch > 0) zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, dist / pinch);
+        pinch = dist;
+      }
+      dirty.current = true;
     };
-    const up = () => { drag = null; };
+    const up = (e: PointerEvent) => { drag = null; ptrs.delete(e.pointerId); pinch = 0; };
     const wheel = (e: WheelEvent) => {
-      if (modeRef.current !== "zoom") return;
       e.preventDefault();
-      const v = Math.max(0, Math.min(last, target.current + e.deltaY * 0.0025));
-      target.current = v; setSlider(v);
+      if (modeRef.current === "zoom") {
+        const v = Math.max(0, Math.min(last, target.current + e.deltaY * 0.0025));
+        target.current = v; setSlider(v);
+        return;
+      }
+      const p = lp(e);
+      zoomAt(p.x, p.y, Math.exp(-e.deltaY * 0.0016));
     };
     cvs.addEventListener("pointerdown", down);
     cvs.addEventListener("pointermove", move);
@@ -651,6 +732,16 @@ export default function SizeComparison({ index }: { index: string }) {
     target.current = c; setSlider(c);
   };
 
+  const pickItems = useMemo<PickItem[]>(
+    () => OBJECTS.map((x, i) => ({
+      i,
+      label: objName(x, lang),
+      sub: ui.kinds[x.kind],
+      hay: normS(objName(x, lang) + " " + objName(x, "en") + " " + objName(x, "de") + " " + x.id + " " + ui.kinds[x.kind]),
+    })),
+    [lang, ui],
+  );
+
   const o = OBJECTS[shown];
   const prev = shown > 0 ? OBJECTS[shown - 1] : null;
   const ratioText = prev ? ui.ratio.replace("{n}", fmt(o.d / prev.d, lang)).replace("{x}", objName(prev, lang)) : "";
@@ -661,7 +752,7 @@ export default function SizeComparison({ index }: { index: string }) {
   const cmpRatio = big.d / small.d;
   const cmpText = objName(big, lang) + ": " + ui.ratio.replace("{n}", fmt(cmpRatio, lang)).replace("{x}", objName(small, lang));
   const volText = SPHERE(big.kind) && SPHERE(small.kind) && cmpRatio > 1.05 ? ui.vol.replace("{n}", cmpRatio ** 3 < 1e6 ? fmtFull(cmpRatio ** 3, lang) : fmtLong(cmpRatio ** 3, lang)).replace("{x}", objName(small, lang)) : "";
-  const tinyText = mode === "cmp" && cmpRatio > 600 ? ui.tiny.replace("{x}", objName(small, lang)) : "";
+  const tinyText = mode === "cmp" && cmpRatio > 600 && zx < 3 ? ui.tiny.replace("{x}", objName(small, lang)) : "";
 
   const tab = (m: Mode, label: string) => (
     <button
@@ -673,17 +764,18 @@ export default function SizeComparison({ index }: { index: string }) {
       {label}
     </button>
   );
-  const select = (val: number, set: (n: number) => void) => (
-    <select
-      value={val}
-      onChange={(e) => set(parseInt(e.target.value, 10))}
-      className="w-0 min-w-0 flex-1 border border-border bg-background px-2 py-1.5 text-xs text-foreground"
+  const pickBtn = (n: 0 | 1, val: number) => (
+    <button
+      type="button"
+      onClick={() => setPick(pick === n ? null : n)}
+      aria-expanded={pick === n}
+      className={"flex w-0 min-w-0 flex-1 items-center justify-between gap-1 border bg-background px-2 py-1.5 text-left text-xs text-foreground " + (pick === n ? "border-accent" : "border-border")}
     >
-      {OBJECTS.map((x, i) => (
-        <option key={x.id} value={i}>{objName(x, lang)}</option>
-      ))}
-    </select>
+      <span className="truncate">{objName(OBJECTS[val], lang)}</span>
+      <span aria-hidden="true" className="text-muted">⌕</span>
+    </button>
   );
+  const sbtn = "h-8 w-8 shrink-0 border border-border text-foreground transition-colors hover:border-accent hover:text-accent";
 
   return (
     <section className="mb-10">
@@ -693,8 +785,8 @@ export default function SizeComparison({ index }: { index: string }) {
         {tab("zoom", ui.zoom)}
         {tab("cmp", ui.compare)}
       </div>
-      <div ref={wrapRef} className="relative h-64 w-full touch-pan-y select-none sm:h-80">
-        <canvas ref={canvasRef} className={"absolute inset-0 h-full w-full " + (mode === "zoom" ? "cursor-grab active:cursor-grabbing" : "")} />
+      <div ref={wrapRef} className={"relative h-64 w-full select-none sm:h-80 " + (mode === "cmp" ? "touch-none" : "touch-pan-y")}>
+        <canvas ref={canvasRef} className={"absolute inset-0 h-full w-full " + (mode === "zoom" ? "cursor-grab active:cursor-grabbing" : "cursor-move")} />
       </div>
       {mode === "zoom" ? (
         <>
@@ -728,9 +820,35 @@ export default function SizeComparison({ index }: { index: string }) {
       ) : (
         <div className="mt-2">
           <div className="flex items-center gap-2">
-            {select(cmpA, setCmpA)}
+            {pickBtn(0, cmpA)}
             <span className="text-xs text-muted">vs</span>
-            {select(cmpB, setCmpB)}
+            {pickBtn(1, cmpB)}
+          </div>
+          {pick !== null && (
+            <SizePicker
+              items={pickItems}
+              current={pick === 0 ? cmpA : cmpB}
+              placeholder={ui2.search}
+              none={ui2.none}
+              onClose={() => setPick(null)}
+              onPick={(i) => { if (pick === 0) setCmpA(i); else setCmpB(i); setPick(null); }}
+            />
+          )}
+          <div className="mt-2 flex items-center gap-2">
+            <span className="label-mono shrink-0 text-[10px] uppercase text-muted">{ui2.zoomL} ×{fmt(zx, lang)}</span>
+            <button type="button" className={sbtn} aria-label="−" onClick={() => api.current.zoomBy(1 / 1.8)}>−</button>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.001}
+              value={zs}
+              onChange={(e) => { const s = parseFloat(e.target.value); setZs(s); api.current.setZ(s); }}
+              className="w-0 min-w-0 flex-1 accent-[#ff5a4d]"
+              aria-label={ui2.zoomL}
+            />
+            <button type="button" className={sbtn} aria-label="+" onClick={() => api.current.zoomBy(1.8)}>+</button>
+            <button type="button" className="h-8 shrink-0 border border-border px-2 text-[10px] uppercase text-foreground transition-colors hover:border-accent hover:text-accent" onClick={() => api.current.reset()}>{ui2.reset}</button>
           </div>
           <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
             {[A, B].map((x, i) => {
@@ -748,6 +866,7 @@ export default function SizeComparison({ index }: { index: string }) {
           {cmpRatio > 1.0001 && <p className="mt-2 text-xs text-foreground">{cmpText}</p>}
           {volText && <p className="mt-0.5 text-[11px] text-muted">{volText}</p>}
           {tinyText && <p className="mt-0.5 text-[11px] text-accent">{tinyText}</p>}
+          <p className="mt-1 text-[10px] leading-snug text-muted">{ui2.zoomHint}</p>
         </div>
       )}
       <p className="mt-1 text-[10px] leading-snug text-muted/70">{ui.note}</p>
