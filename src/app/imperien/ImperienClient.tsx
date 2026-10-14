@@ -1676,7 +1676,7 @@ export default function ImperienClient() {
                 {st.found.replace("{n}", String(hits.length))}
               </p>
               <p className="mt-1 text-[11px] text-muted">{st.hint}</p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
+              <div className="mt-2 flex max-h-40 flex-wrap gap-1.5 overflow-y-auto pr-1">
                 {hits.map((h) => (
                   <span key={h.name} className="inline-flex">
                     <button
