@@ -8,7 +8,11 @@ import CompactSongList from "@/components/search/CompactSongList";
 import FavoritesModal from "@/components/search/FavoritesModal";
 import NowPlayingHero from "@/components/player/NowPlayingHero";
 import FeaturesSection from "@/components/home/FeaturesSection";
-import AiNewsSection from "@/components/home/AiNewsSection";
+import SpaceNewsSection from "@/components/home/SpaceNewsSection";
+import TopEmpiresGrid from "@/components/home/TopEmpiresGrid";
+import CosmosResults from "@/components/search/CosmosResults";
+import { searchCosmos, type CosmosHit } from "@/lib/cosmosSearch";
+import { homeText } from "@/lib/homeText";
 import ContactSection from "@/components/home/ContactSection";
 import AboutSiteSection from "@/components/home/AboutSiteSection";
 import TypedWordmark from "@/components/ui/TypedWordmark";
@@ -27,11 +31,14 @@ import { useLanguage } from "@/contexts/LanguageContext";
  */
 export default function Home() {
   const player = usePlayer();
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
+  const ht = homeText(lang);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Song[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [cosmos, setCosmos] = useState<CosmosHit[]>([]);
+  const [musicAsked, setMusicAsked] = useState(false);
   const [showHero, setShowHero] = useState(false);
   const [showAllFavorites, setShowAllFavorites] = useState(false);
   const requestIdRef = useRef(0);
@@ -54,18 +61,13 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showHero]);
 
-  async function handleSearch(q: string) {
-    setQuery(q);
-    if (!q.trim()) {
-      setResults([]);
-      setErrorMessage(null);
-      return;
-    }
-
-    const requestId = ++requestIdRef.current;
+  // Suche: zuerst Planeten, Sterne, Sternbilder und Imperien (sofort, lokal).
+  // Musik wird nur gesucht, wenn nichts Kosmisches passt oder der Nutzer den
+  // kleinen "Auch nach Musik suchen"-Knopf drückt (Nutzerwunsch 14.10.2026:
+  // Musik nur noch ein kleiner Teil).
+  async function fetchSongs(q: string, requestId: number) {
     setIsLoading(true);
     setErrorMessage(null);
-
     try {
       const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
       const data = await res.json();
@@ -86,6 +88,42 @@ export default function Home() {
     } finally {
       if (requestId === requestIdRef.current) setIsLoading(false);
     }
+  }
+
+  async function handleSearch(q: string) {
+    setQuery(q);
+    setMusicAsked(false);
+    if (!q.trim()) {
+      requestIdRef.current++;
+      setResults([]);
+      setCosmos([]);
+      setErrorMessage(null);
+      setIsLoading(false);
+      return;
+    }
+
+    const requestId = ++requestIdRef.current;
+    setIsLoading(true);
+    let hits: CosmosHit[] = [];
+    try {
+      hits = await searchCosmos(q, lang);
+    } catch {
+      hits = [];
+    }
+    if (requestId !== requestIdRef.current) return;
+    setCosmos(hits);
+    if (hits.length === 0) {
+      await fetchSongs(q, requestId);
+    } else {
+      setResults([]);
+      setErrorMessage(null);
+      setIsLoading(false);
+    }
+  }
+
+  function handleAskMusic() {
+    setMusicAsked(true);
+    fetchSongs(query, ++requestIdRef.current);
   }
 
   function handlePlay(song: Song) {
@@ -139,13 +177,13 @@ export default function Home() {
               <TypedWordmark speed={90} />
             </h1>
             <p className="mx-auto mt-3 max-w-xl text-xs text-muted sm:text-sm">
-              // {t("homeSubtitle")}
+              // {ht.subtitle}
             </p>
           </header>
         )}
 
         <div className="mx-auto w-full max-w-2xl">
-          <SearchBar onSearch={handleSearch} placeholder={t("searchPlaceholder")} />
+          <SearchBar onSearch={handleSearch} placeholder={ht.placeholder} ariaLabel={ht.aria} />
         </div>
 
         {!showHero && (
@@ -203,7 +241,20 @@ export default function Home() {
           />
         )}
 
-        {query.trim() && (
+        {query.trim() && <CosmosResults hits={cosmos} />}
+
+        {query.trim() && cosmos.length > 0 && !musicAsked && (
+          <div className="mx-auto mt-4 flex justify-center">
+            <button
+              onClick={handleAskMusic}
+              className="border border-border px-3 py-1.5 text-[11px] uppercase tracking-wide text-muted transition-colors hover:border-accent hover:text-accent"
+            >
+              {ht.musicBtn}
+            </button>
+          </div>
+        )}
+
+        {query.trim() && (cosmos.length === 0 || musicAsked) && (
           <SearchResults
             songs={results}
             query={query}
@@ -219,7 +270,8 @@ export default function Home() {
         {!query.trim() && !showHero && (
           <>
             <FeaturesSection />
-            <AiNewsSection />
+            <TopEmpiresGrid />
+            <SpaceNewsSection />
             <AboutSiteSection />
             <div id="kontakte" className="scroll-mt-24">
               <ContactSection />
