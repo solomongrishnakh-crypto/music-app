@@ -4,7 +4,6 @@ import Link from "next/link";
 import type { FormEvent, KeyboardEvent, PointerEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import SiteBackground from "@/components/particles/SiteBackground";
-import TopEmpiresGrid from "@/components/home/TopEmpiresGrid";
 import REICH_SLUGS from "@/data/reiche/slugs.json";
 import Spinner from "@/components/ui/Spinner";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
@@ -1595,7 +1594,7 @@ export default function ImperienClient() {
                   title={t("close")}
                   className="absolute right-2 top-2 z-10 border border-border bg-background px-2.5 py-1 text-sm text-muted transition-colors hover:border-accent hover:text-accent"
                 >
-                  × Schließen
+                  × {t("close")}
                 </button>
                 {info?.thumbnail && (
                   // Querformat-Box bleibt (Nutzerkorrektur 18.09.2026: "bei
@@ -1928,16 +1927,10 @@ export default function ImperienClient() {
           </div>
         </div>
 
-        {/* Nutzerwunsch 19.09.2026: "nimm diese box mit großen imperien
-            füge es in die seite unten wo karte ist" — dieselbe "01-04"-Box
-            wie auf der Startseite, hier unterhalb der Karte/Zeitleiste. */}
+        {/* Nutzerwunsch 14.10.2026: Die deutsche "01-04"-Imperien-Box ist
+            entfernt (steht schon in der Karte); nur der Link zur
+            Reichs-Liste bleibt. */}
         <div className="mt-16 border-t border-border pt-10">
-          <div className="mb-8">
-            <p className="label-mono text-xs uppercase text-muted">
-              // Größte Imperien der Geschichte
-            </p>
-          </div>
-          <TopEmpiresGrid />
           <Link
             href={localePath("/imperien/reiche")}
             className="label-mono mt-8 inline-block border border-border px-4 py-2.5 text-xs uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent"
