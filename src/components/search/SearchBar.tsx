@@ -6,9 +6,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 interface SearchBarProps {
   onSearch: (query: string) => void;
   placeholder?: string;
+  ariaLabel?: string;
 }
 
-export default function SearchBar({ onSearch, placeholder }: SearchBarProps) {
+export default function SearchBar({ onSearch, placeholder, ariaLabel }: SearchBarProps) {
   const { t } = useLanguage();
   const [value, setValue] = useState("");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(
@@ -55,7 +56,7 @@ export default function SearchBar({ onSearch, placeholder }: SearchBarProps) {
           onChange={(e) => setValue(e.target.value)}
           placeholder={placeholder ?? t("searchPlaceholder")}
           className="w-full bg-transparent text-base text-foreground placeholder:text-muted focus:outline-none sm:text-lg"
-          aria-label={t("searchAriaLabel")}
+          aria-label={ariaLabel ?? t("searchAriaLabel")}
         />
         {value && (
           <button
