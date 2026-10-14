@@ -353,17 +353,30 @@ export default function ThreeBackground() {
 
     let animationId: number;
     let lastFrame = performance.now();
+    let lastRender = 0;
     let elapsed = 0;
 
     function animate() {
       // Vollbild-Sonnensystem offen → Hintergrund verdeckt, nicht rendern (Nutzer: "es laggt")
       const ds = document.documentElement.dataset;
-      if (ds.overlay === "1" || ds.bgpause === "1") {
+      if (ds.overlay === "1") {
         lastFrame = performance.now();
         animationId = requestAnimationFrame(animate);
         return;
       }
-      elapsed += 0.006;
+      // Effizienz (Nutzerwunsch 14.10.2026: Hintergrund friert auf der
+      // Geschichts-Seite ein): statt komplett zu stoppen läuft er beim
+      // Ziehen des Lineals mit ca. 15 Bildern/s weiter, am Handy sonst mit
+      // ca. 35 — bewegt sich also immer, braucht aber deutlich weniger Leistung.
+      const nowT = performance.now();
+      const gap = nowT - lastRender;
+      const minGap = ds.bgpause === "1" ? 66 : smallScreen ? 28 : 0;
+      if (gap < minGap) {
+        animationId = requestAnimationFrame(animate);
+        return;
+      }
+      lastRender = nowT;
+      elapsed += 0.006 * Math.min(6, Math.max(1, gap / 16.7));
 
       // Energieströme: gleichmäßig weiter auf zufälligem Weg, nie Pause
       const now = performance.now();
