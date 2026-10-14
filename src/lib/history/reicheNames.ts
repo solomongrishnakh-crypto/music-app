@@ -131,3 +131,8 @@ export function reichNameL(en: string, lang: Lang, de: string | null): string {
   if (!row) return en;
   return row[ORDER.indexOf(lang)] ?? en;
 }
+
+/** Alle bekannten Übersetzungen eines Reichsnamens (für die Suche). */
+export function reichAllNames(en: string): string[] {
+  return N[en] ?? [];
+}
