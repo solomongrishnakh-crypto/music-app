@@ -9,7 +9,6 @@ import FavoritesModal from "@/components/search/FavoritesModal";
 import NowPlayingHero from "@/components/player/NowPlayingHero";
 import FeaturesSection from "@/components/home/FeaturesSection";
 import SpaceNewsSection from "@/components/home/SpaceNewsSection";
-import TopEmpiresGrid from "@/components/home/TopEmpiresGrid";
 import CosmosResults from "@/components/search/CosmosResults";
 import { searchCosmos, type CosmosHit } from "@/lib/cosmosSearch";
 import { homeText } from "@/lib/homeText";
@@ -270,7 +269,6 @@ export default function Home() {
         {!query.trim() && !showHero && (
           <>
             <FeaturesSection />
-            <TopEmpiresGrid />
             <SpaceNewsSection />
             <AboutSiteSection />
             <div id="kontakte" className="scroll-mt-24">
