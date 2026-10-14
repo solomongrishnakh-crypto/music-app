@@ -10,8 +10,11 @@ import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { TranslationKey } from "@/lib/translations";
 import { translateLanguageValue } from "@/lib/languageNameTranslations";
+import { searchEmpires, type EmpireHit } from "@/lib/history/empireSearch";
+import { SEARCH_TEXT } from "@/lib/history/empireSearchText";
 import {
   getAllEmpireNames,
+  getBoundsForNames,
   getEmpiresForYear,
   getEmpiresYearRange,
   preloadEmpiresData,
@@ -139,6 +142,21 @@ const COLOR_PALETTE = (() => {
 // berechnet + in diesem Cache gemerkt) und behält sie für die gesamte
 // Sitzung, unabhängig vom Jahr oder von Nachbarn.
 const stableColorByName = new Map<string, string>();
+
+// Schwache Geräte (Handy/Touch, kleiner Bildschirm, wenig Kerne): leichtere
+// Karte — Canvas statt SVG, keine Küsten-Beschneidung, ungeglättete Linien,
+// weniger feste Beschriftungen (Nutzerhinweis 15.10.2026: zu laggy).
+let liteCache: boolean | null = null;
+function isLite(): boolean {
+  if (liteCache === null) {
+    liteCache =
+      typeof window !== "undefined" &&
+      (window.matchMedia("(pointer: coarse)").matches ||
+        window.innerWidth < 820 ||
+        (navigator.hardwareConcurrency ?? 8) <= 4);
+  }
+  return liteCache;
+}
 
 function hashString(str: string): number {
   let hash = 0;
@@ -523,7 +541,7 @@ const latLngCache = new WeakMap<object, any>();
 function cachedSmooth(g: any): any {
   let s = smoothCache.get(g);
   if (s === undefined) {
-    s = smoothGeometry(g);
+    s = isLite() ? g : smoothGeometry(g);
     smoothCache.set(g, s);
   }
   return s;
@@ -617,6 +635,11 @@ export default function ImperienClient() {
   const borderRendererRef = useRef<any>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const prehistRendererRef = useRef<any>(null);
+  // Gesuchte Reiche (Nutzerwunsch 15.10.2026): nur diese bleiben auf der Karte
+  // voll sichtbar, alle anderen werden abgeblendet.
+  const highlightRef = useRef<Set<string> | null>(null);
+  // true, solange Lineal gezogen oder abgespielt wird (Hintergrund gedrosselt)
+  const pauseWantedRef = useRef(false);
   const rulerRef = useRef<HTMLDivElement>(null);
   const rulerDragRef = useRef<{ startX: number; startYear: number; moved: boolean } | null>(
     null
@@ -672,11 +695,74 @@ export default function ImperienClient() {
     };
   }, []);
 
-  function handleSearchSubmit(e: FormEvent<HTMLFormElement>) {
+  const st = SEARCH_TEXT[lang] ?? SEARCH_TEXT.en;
+  const [hits, setHits] = useState<EmpireHit[] | null>(null);
+  const [activeHit, setActiveHit] = useState<string | null>(null);
+
+  // Hervorhebung neu zeichnen (ohne Jahreswechsel).
+  function refreshHighlight() {
+    const y = lastRenderedYearRef.current;
+    const cached = y !== null ? bordersCacheRef.current.get(y) : null;
+    if (cached) renderBordersGeojsonRef.current(cached);
+  }
+
+  // Karte auf ein gesuchtes Reich setzen: passendes Jahr, Ausschnitt, alle
+  // Treffer hervorgehoben.
+  async function focusHit(h: EmpireHit, all: EmpireHit[]) {
+    setActiveHit(h.name);
+    highlightRef.current = new Set(all.map((x) => x.name));
+    setIsPlaying(false);
+    setPreYear(null);
+    const y = clampYear(h.year);
+    let bounds: [number, number, number, number] | null = null;
+    try {
+      bounds = await getBoundsForNames(new Set([h.name]), y);
+    } catch {
+      bounds = null;
+    }
+    if (y === Math.round(sliderYear)) refreshHighlight();
+    else setSliderYear(y);
+    const map = mapRef.current;
+    if (map && bounds) {
+      map.fitBounds(
+        [
+          [bounds[0], bounds[1]],
+          [bounds[2], bounds[3]],
+        ],
+        { maxZoom: 5, padding: [20, 20], animate: !isLite() }
+      );
+    }
+  }
+
+  function clearSearch() {
+    setHits(null);
+    setActiveHit(null);
+    highlightRef.current = null;
+    refreshHighlight();
+  }
+
+  async function handleSearchSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const query = searchQuery.trim();
     if (!query) return;
-    setSelected({ name: query, subjectTo: "", isEmpire: true, viaSearch: true });
+    let found: EmpireHit[] = [];
+    try {
+      found = await searchEmpires(query, lang);
+    } catch {
+      found = [];
+    }
+    if (found.length === 0) {
+      // Nichts im Kartendatensatz (z. B. ein Herrscher): Wikipedia-Info wie bisher
+      setHits([]);
+      setActiveHit(null);
+      highlightRef.current = null;
+      refreshHighlight();
+      setSelected({ name: query, subjectTo: "", isEmpire: true, viaSearch: true });
+      return;
+    }
+    setHits(found);
+    setSelected(null);
+    void focusHit(found[0], found);
   }
 
   const [isPlaying, setIsPlaying] = useState(false);
@@ -739,6 +825,8 @@ export default function ImperienClient() {
       minZoom: 1,
       maxZoom: 7,
       worldCopyJump: true,
+      fadeAnimation: false,
+      markerZoomAnimation: false,
     });
 
     L.tileLayer(TILE_URL, {
@@ -761,14 +849,21 @@ export default function ImperienClient() {
     const borderPane = map.createPane("territoryBorder");
     borderPane.style.zIndex = "410";
     borderPane.style.pointerEvents = "none";
-    fillRendererRef.current = L.svg({ pane: "territoryFill", padding: 0.5 });
-    borderRendererRef.current = L.svg({ pane: "territoryBorder", padding: 0.5 });
+    // Schwache Geräte: Canvas statt SVG und keine Küsten-Beschneidung
+    // (der riesige Clip-Pfad war der Hauptgrund fürs Ruckeln am Handy).
+    const lite = isLite();
+    const mkRenderer = (pane: string) =>
+      lite ? L.canvas({ pane, padding: 0.3 }) : L.svg({ pane, padding: 0.5 });
+    fillRendererRef.current = mkRenderer("territoryFill");
+    borderRendererRef.current = mkRenderer("territoryBorder");
     const prehistPane = map.createPane("prehistory");
     prehistPane.style.zIndex = "420";
-    prehistRendererRef.current = L.svg({ pane: "prehistory", padding: 0.5 });
-    applyLandClip(L, map, fillRendererRef.current, "land-clip-fill");
-    applyLandClip(L, map, borderRendererRef.current, "land-clip-border");
-    applyLandClip(L, map, prehistRendererRef.current, "land-clip-prehist");
+    prehistRendererRef.current = mkRenderer("prehistory");
+    if (!lite) {
+      applyLandClip(L, map, fillRendererRef.current, "land-clip-fill");
+      applyLandClip(L, map, borderRendererRef.current, "land-clip-border");
+      applyLandClip(L, map, prehistRendererRef.current, "land-clip-prehist");
+    }
 
     mapRef.current = map;
 
@@ -778,6 +873,15 @@ export default function ImperienClient() {
     // die Größenschwelle für dauerhafte Beschriftungen (siehe
     // renderBordersGeojson) den neuen Zoomstand berücksichtigt. Kein
     // Netzwerk-Request nötig, das Jahr bleibt ja gleich.
+    // Beim Bewegen der Karte läuft der 3D-Hintergrund gedrosselt weiter
+    // (nicht eingefroren), danach wieder voll.
+    const docEl = document.documentElement;
+    map.on("movestart zoomstart", () => {
+      docEl.dataset.bgpause = "1";
+    });
+    map.on("moveend zoomend", () => {
+      if (!pauseWantedRef.current) delete docEl.dataset.bgpause;
+    });
     map.on("zoomend", () => {
       const year = lastRenderedYearRef.current;
       if (year === null) return;
@@ -854,12 +958,14 @@ export default function ImperienClient() {
     // 20.09.2026: "zu dicht" / "namen sollen früher sichtbar sein").
     const zoom = map.getZoom?.() ?? 2;
     let labelLimit: number;
-    if (zoom <= 2) labelLimit = 20;
-    else if (zoom === 3) labelLimit = 35;
-    else if (zoom === 4) labelLimit = 60;
-    else if (zoom === 5) labelLimit = 100;
-    else if (zoom === 6) labelLimit = 150;
-    else labelLimit = Infinity;
+    const lite = isLite();
+    if (zoom <= 2) labelLimit = lite ? 12 : 20;
+    else if (zoom === 3) labelLimit = lite ? 22 : 35;
+    else if (zoom === 4) labelLimit = lite ? 38 : 60;
+    else if (zoom === 5) labelLimit = lite ? 64 : 100;
+    else if (zoom === 6) labelLimit = lite ? 100 : 150;
+    else labelLimit = lite ? 160 : Infinity;
+    const hl = highlightRef.current;
     const permanentLabelNames = new Set(
       sortedFeatures.slice(0, labelLimit).map((f) => f.properties?.NAME)
     );
@@ -867,7 +973,8 @@ export default function ImperienClient() {
     const bigLabelNames = new Set(sortedFeatures.slice(0, 6).map((f) => f.properties?.NAME));
 
     // Feste, namensbasierte Farben (Nutzerkorrektur 20.09.2026).
-    function borderStyle(name: string, isMajor: boolean) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function borderStyle(name: string, isMajor: boolean): any {
       return {
         color: getStableColor(name),
         weight: isMajor ? 1.4 : 0.7,
@@ -876,6 +983,13 @@ export default function ImperienClient() {
         lineJoin: "round",
         lineCap: "round",
       };
+    }
+    // Mit Reichs-Suche: nicht gesuchte Gebiete werden abgeblendet.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    function bs(name: string, isMajor: boolean): any {
+      const h = highlightRef.current;
+      const st = borderStyle(name, isMajor);
+      return h && !h.has(name) ? { ...st, opacity: 0.12 } : st;
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function setLabel(e: any, permanent: boolean, className: string) {
@@ -896,12 +1010,12 @@ export default function ImperienClient() {
       const key = feature.geometry as object;
       const name: string = feature.properties.NAME;
       seen.add(key);
-      const isMajor = permanentLabelNames.has(name);
+      const isMajor = hl ? hl.has(name) : permanentLabelNames.has(name);
       // Sammel-Umriss und Kern tragen denselben Namen — nur das GRÖSSTE
       // Teil bekommt die feste Beschriftung, sonst stünde der Name doppelt.
       const wants = isMajor && !labeledNames.has(name);
       if (wants) labeledNames.add(name);
-      const labelClass = bigLabelNames.has(name) ? "empire-label empire-label-big" : "empire-label";
+      const labelClass = (hl ? hl.has(name) : bigLabelNames.has(name)) ? "empire-label empire-label-big" : "empire-label";
 
       let e = terr.entries.get(key);
       if (e && e.name !== name) {
@@ -919,24 +1033,24 @@ export default function ImperienClient() {
         const fill = L.polygon(latlngs, {
           renderer: fillRendererRef.current ?? undefined,
           pane: "territoryFill",
-          smoothFactor: 1.1,
+          smoothFactor: isLite() ? 1.8 : 1.1,
           stroke: true,
           color: c,
           weight: 4,
-          opacity: 1,
+          opacity: hl && !hl.has(name) ? 0.16 : 1,
           fillColor: c,
-          fillOpacity: 1,
+          fillOpacity: hl && !hl.has(name) ? 0.16 : 1,
         });
         const border = L.polygon(latlngs, {
           renderer: borderRendererRef.current ?? undefined,
           pane: "territoryBorder",
           interactive: false,
-          smoothFactor: 1.1,
-          ...borderStyle(name, isMajor),
+          smoothFactor: isLite() ? 1.8 : 1.1,
+          ...bs(name, isMajor),
         });
         const point = cachedLabelPoint(feature.geometry);
         const subjectTo: string = feature.properties?.SUBJECTO ?? "";
-        e = { fill, border, name, isMajor, labeled: false, labelClass: "", point };
+        e = { fill, border, name, isMajor, labeled: false, labelClass: "", point, styleKey: `${!hl || hl.has(name)}|${isMajor}` };
         const entry = e;
         // Name in die echte Mitte der Fläche ("Pole of Inaccessibility") —
         // bei JEDEM Öffnen gesetzt, Leaflet springt sonst zum ersten Teilstück.
@@ -947,7 +1061,7 @@ export default function ImperienClient() {
         }
         fill.on({
           mouseover: () => entry.border.setStyle({ weight: 2.6, opacity: 1, color: "#ffffff" }),
-          mouseout: () => entry.border.setStyle(borderStyle(entry.name, entry.isMajor)),
+          mouseout: () => entry.border.setStyle(bs(entry.name, entry.isMajor)),
           click: () => setSelected({ name, subjectTo, isEmpire: isEmpireName(name) }),
         });
         setLabel(e, wants, labelClass);
@@ -956,9 +1070,13 @@ export default function ImperienClient() {
         terr.entries.set(key, e);
         added = true;
       } else {
-        if (e.isMajor !== isMajor) {
-          e.isMajor = isMajor;
-          e.border.setStyle(borderStyle(name, isMajor));
+        e.isMajor = isMajor;
+        const sk = `${!hl || hl.has(name)}|${isMajor}`;
+        if (e.styleKey !== sk) {
+          e.styleKey = sk;
+          const on = !hl || hl.has(name);
+          e.fill.setStyle({ fillOpacity: on ? 1 : 0.16, opacity: on ? 1 : 0.16 });
+          e.border.setStyle(bs(name, isMajor));
         }
         if (e.labeled !== wants || (wants && e.labelClass !== labelClass)) {
           setLabel(e, wants, labelClass);
@@ -1107,12 +1225,13 @@ export default function ImperienClient() {
   // (Nutzerhinweis 07.10.2026: "wieso ist es so laggy").
   useEffect(() => {
     const el = document.documentElement;
-    if (isDraggingRuler) el.dataset.bgpause = "1";
+    pauseWantedRef.current = isDraggingRuler || isPlaying;
+    if (pauseWantedRef.current) el.dataset.bgpause = "1";
     else delete el.dataset.bgpause;
     return () => {
       delete el.dataset.bgpause;
     };
-  }, [isDraggingRuler]);
+  }, [isDraggingRuler, isPlaying]);
 
   // Teilen-Links (Nutzerwunsch 07.10.2026: mehr Besucher): /imperien?jahr=1200
   // öffnet die Karte direkt in diesem Jahr. Die Adresszeile folgt dem
@@ -1550,6 +1669,50 @@ export default function ImperienClient() {
               {t("empiresSearchButton")}
             </button>
           </form>
+
+          {hits && hits.length > 0 && (
+            <div className="mt-3 max-w-3xl">
+              <p className="label-mono text-[11px] uppercase tracking-wide text-accent">
+                {st.found.replace("{n}", String(hits.length))}
+              </p>
+              <p className="mt-1 text-[11px] text-muted">{st.hint}</p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {hits.map((h) => (
+                  <span key={h.name} className="inline-flex">
+                    <button
+                      type="button"
+                      onClick={() => void focusHit(h, hits)}
+                      className={
+                        "border px-2 py-1 text-left text-[11px] transition-colors hover:border-accent " +
+                        (activeHit === h.name ? "border-accent text-accent" : "border-border text-foreground")
+                      }
+                    >
+                      <span className="font-semibold">{h.label}</span>
+                      <span className="ml-1.5 text-[10px] text-muted">
+                        {formatYear(h.from, t)} – {formatYear(h.to, t)}
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={st.info}
+                      title={st.info}
+                      onClick={() => setSelected({ name: h.name, subjectTo: "", isEmpire: true, viaSearch: true })}
+                      className="border border-l-0 border-border px-2 py-1 text-[11px] text-muted transition-colors hover:border-accent hover:text-accent"
+                    >
+                      i
+                    </button>
+                  </span>
+                ))}
+              </div>
+              <button
+                type="button"
+                onClick={clearSearch}
+                className="label-mono mt-2 text-[10px] uppercase text-muted underline decoration-dotted hover:text-accent"
+              >
+                {st.clear}
+              </button>
+            </div>
+          )}
         </header>
 
         {errorMessage && (
