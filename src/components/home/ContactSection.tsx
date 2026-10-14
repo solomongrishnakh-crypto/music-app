@@ -35,7 +35,7 @@ export default function ContactSection() {
   const { t, localePath } = useLanguage();
   return (
     <footer className="mx-auto mb-4 mt-16 w-full max-w-5xl sm:mt-24">
-      <SectionHeading index="04" label={t("contactsLabel")} />
+      <SectionHeading index="05" label={t("contactsLabel")} />
       {/* Nutzerwunsch 03.10.2026: Kontakte futuristischer — Kacheln mit
           Sechseck-Symbol, Status-Punkt und Scan-Licht beim Antippen */}
       <div className="flex justify-center gap-4">
