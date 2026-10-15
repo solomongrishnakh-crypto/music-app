@@ -5,7 +5,6 @@ import dynamic from "next/dynamic";
 import type { ReactNode } from "react";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { useLanguage } from "@/contexts/LanguageContext";
-import SpaceFacts from "@/components/home/SpaceFacts";
 import { useInView } from "@/hooks/useInView";
 import { SIZE_PAGE } from "@/lib/sizePageText";
 
@@ -57,7 +56,6 @@ export default function HomeUniverse() {
           </div>
         </section>
       </Lazy>
-      <SpaceFacts index="04" />
     </div>
   );
 }
