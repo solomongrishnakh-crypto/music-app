@@ -29,7 +29,7 @@ function Lazy({ height, children }: { height: string; children: ReactNode }) {
 export default function HomeUniverse() {
   const { t, localePath } = useLanguage();
   return (
-    <div className="mx-auto mt-10 w-full max-w-5xl sm:mt-14">
+    <div className="mx-auto mt-10 w-full max-w-6xl sm:mt-14">
       <Lazy height="26rem">
         <SizeComparison index="02" />
       </Lazy>
