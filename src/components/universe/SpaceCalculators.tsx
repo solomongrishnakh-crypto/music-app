@@ -434,9 +434,9 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                 )}
               </div>
               <p className="label-mono mt-2 text-[10px] uppercase tracking-wider text-muted">
-                {destName(d)} · {localize(TRAVEL_TX.dist, lang)} <span className="tabular-nums text-accent">≈ {fmtKm(d.km, lang)}</span>
+                {destName(d)} · {localize(TRAVEL_TX.dist, lang)} <span className="tabular-nums text-accent">≈ {d.km >= 1e15 ? "" : fmtKm(d.km, lang)}</span>
                 {d.km >= LY_KM / 2 && (
-                  <span className="normal-case"> ({nf(lang, { notation: "compact", compactDisplay: "long", maximumFractionDigits: d.km / LY_KM < 10 ? 2 : 1 }, d.km / LY_KM)} {localize(SEARCH_TX.ly, lang)})</span>
+                  <span className={"normal-case" + (d.km >= 1e15 ? " tabular-nums text-accent" : "")}> {d.km >= 1e15 ? "" : "("}{nf(lang, { notation: "compact", compactDisplay: "long", maximumFractionDigits: d.km / LY_KM < 10 ? 2 : 1 }, d.km / LY_KM)} {localize(SEARCH_TX.ly, lang)}{d.km >= 1e15 ? "" : ")"}</span>
                 )}
               </p>
 
