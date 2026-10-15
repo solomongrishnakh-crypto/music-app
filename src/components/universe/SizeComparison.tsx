@@ -621,6 +621,44 @@ interface CmpView {
 
 const normS = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 
+/**
+ * Durchmesser-Tabelle als echter Text (Nutzerwunsch 15.10.2026: bei Google
+ * gefunden werden) — das Canvas selbst ist für Suchmaschinen unlesbar. Wird
+ * auf der Seite /groessenvergleich auf dem Server mitgerendert.
+ */
+export function SizeTable({ ids, labels }: { ids: string[]; labels: { obj: string; diam: string; ratio: string } }) {
+  const { lang } = useLanguage();
+  const rows = ids.map((id) => OBJECTS.find((o) => o.id === id)).filter((o): o is Obj => !!o);
+  const earth = OBJECTS.find((o) => o.id === "earth")?.d ?? 12742;
+  const nf = (n: number) => {
+    try {
+      return new Intl.NumberFormat(lang, { maximumSignificantDigits: 3 }).format(n);
+    } catch {
+      return String(n);
+    }
+  };
+  return (
+    <table className="mt-4 w-full text-sm">
+      <thead>
+        <tr className="label-mono border-b border-border text-start text-[10px] uppercase text-muted">
+          <th className="py-2 pe-3 text-start">{labels.obj}</th>
+          <th className="py-2 pe-3 text-start">{labels.diam}</th>
+          <th className="py-2 text-start">{labels.ratio}</th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((o) => (
+          <tr key={o.id} className="border-b border-border/50">
+            <td className="py-1.5 pe-3 text-foreground">{objName(o, lang)}</td>
+            <td className="py-1.5 pe-3 text-foreground/90">{o.approx ? "≈ " : ""}{fmtFull(o.d, lang)} km</td>
+            <td className="py-1.5 text-muted">{o.id === "earth" ? "1×" : `${nf(o.d / earth)}×`}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 export default function SizeComparison({ index }: { index: string }) {
   const { lang } = useLanguage();
   const ui = UI[lang] ?? UI.en;
