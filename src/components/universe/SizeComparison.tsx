@@ -817,7 +817,17 @@ export default function SizeComparison({ index }: { index: string }) {
       }
     };
 
+    // Regler und +/− zoomen weich zum Ziel statt sprunghaft (Nutzer 15.10.2026: "springt nach Zoom").
+    // zT = Zielzoom (0 = keine Animation), zPx/zPy = Zoompunkt.
+    let zT = 0, zPx = 0, zPy = 0;
     const drawCompare = () => {
+      if (zT > 0) {
+        const z0 = view.current.z, d = Math.log(zT) - Math.log(z0);
+        const done = Math.abs(d) < 0.004;
+        zoomAt(zPx, zPy, (done ? zT : Math.exp(Math.log(z0) + d * 0.2)) / z0);
+        if (done || view.current.z === z0) { zT = 0; lastZs = -1; }
+        dirty.current = true;
+      }
       const [ia, ib] = cmpRef.current;
       const A = OBJECTS[ia], B = OBJECTS[ib], lng = langRef.current;
       const dA = A.d, dB = B.d, gap = 0.08 * (dA + dB), Wd = dA + gap + dB;
@@ -939,7 +949,7 @@ export default function SizeComparison({ index }: { index: string }) {
       g.textAlign = "center";
       g.textBaseline = "top";
       const zn = Math.log(v.z) / Math.log(zmax);
-      if (Math.abs(zn - lastZs) > 0.002) { lastZs = zn; setZs(zn); setZx(v.z); }
+      if (Math.abs(zn - lastZs) > 0.002) { lastZs = zn; if (zT === 0) setZs(zn); setZx(v.z); }
     };
 
     const zoomAt = (px: number, py: number, f: number) => {
@@ -961,9 +971,17 @@ export default function SizeComparison({ index }: { index: string }) {
       // Regler/Tasten zoomen auf das kleinere Objekt (wenn sichtbar), sonst auf die Bildmitte
       // Der Zoompunkt folgt dem kleineren Objekt, bleibt aber am Bildschirm "geklemmt" statt
       // zwischen Objekt und Bildmitte umzuschalten (das ließ die Ansicht springen, Nutzer 15.10.2026).
-      zoomBy: (f) => { const fi = fit.current; zoomAt(Math.max(W * 0.1, Math.min(W * 0.9, fi.sx)), Math.max(H * 0.1, Math.min(H * 0.9, fi.sy)), f); },
-      setZ: (s) => { const fi = fit.current; zoomAt(Math.max(W * 0.1, Math.min(W * 0.9, fi.sx)), Math.max(H * 0.1, Math.min(H * 0.9, fi.sy)), Math.exp(s * Math.log(fi.zmax)) / view.current.z); },
-      reset: () => { resetView.current = true; view.current.z = 1; dirty.current = true; },
+      zoomBy: (f) => {
+        const fi = fit.current;
+        zPx = Math.max(W * 0.1, Math.min(W * 0.9, fi.sx)); zPy = Math.max(H * 0.1, Math.min(H * 0.9, fi.sy));
+        zT = Math.max(1, Math.min(fi.zmax, (zT || view.current.z) * f)); dirty.current = true;
+      },
+      setZ: (s) => {
+        const fi = fit.current;
+        zPx = Math.max(W * 0.1, Math.min(W * 0.9, fi.sx)); zPy = Math.max(H * 0.1, Math.min(H * 0.9, fi.sy));
+        zT = Math.max(1, Math.min(fi.zmax, Math.exp(s * Math.log(fi.zmax)))); dirty.current = true;
+      },
+      reset: () => { zT = 0; resetView.current = true; view.current.z = 1; dirty.current = true; },
     };
 
     const frame = (now: number) => {
@@ -1130,6 +1148,7 @@ export default function SizeComparison({ index }: { index: string }) {
       ptrs.set(e.pointerId, n);
       if (ptrs.size === 2) {
         const [a, b] = [...ptrs.values()], dist = Math.hypot(a.x - b.x, a.y - b.y);
+        zT = 0;
         if (pinch > 0) zoomAt((a.x + b.x) / 2, (a.y + b.y) / 2, dist / pinch);
         pinch = dist;
       }
@@ -1145,6 +1164,7 @@ export default function SizeComparison({ index }: { index: string }) {
         return;
       }
       const p = lp(e);
+      zT = 0;
       zoomAt(p.x, p.y, Math.exp(-e.deltaY * 0.0016));
     };
     cvs.addEventListener("pointerdown", down);
@@ -1285,7 +1305,7 @@ export default function SizeComparison({ index }: { index: string }) {
               onPick={(i) => { if (pick === 0) setCmpA(i); else setCmpB(i); setPick(null); }}
             />
           )}
-          <div className="mt-2 flex items-center gap-2">
+          <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className="label-mono shrink-0 text-[10px] uppercase text-muted">{ui2.zoomL} ×{fmt(zx, lang)}</span>
             <button type="button" className={sbtn} aria-label="−" onClick={() => api.current.zoomBy(1 / 1.8)}>−</button>
             <input
@@ -1295,7 +1315,7 @@ export default function SizeComparison({ index }: { index: string }) {
               step={0.001}
               value={zs}
               onChange={(e) => { const s = parseFloat(e.target.value); setZs(s); api.current.setZ(s); }}
-              className="w-0 min-w-0 flex-1 accent-[#ff5a4d]"
+              className="order-last h-7 w-full min-w-0 basis-full accent-[#ff5a4d] sm:order-none sm:h-auto sm:w-0 sm:flex-1 sm:basis-0"
               aria-label={ui2.zoomL}
             />
             <button type="button" className={sbtn} aria-label="+" onClick={() => api.current.zoomBy(1.8)}>+</button>
