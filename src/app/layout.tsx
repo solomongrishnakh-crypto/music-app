@@ -3,6 +3,7 @@ import { JetBrains_Mono, Orbitron } from "next/font/google";
 import "./globals.css";
 import { PlayerProvider } from "@/contexts/PlayerContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import LangRedirect from "@/components/LangRedirect";
 import PersistentPlayerBar from "@/components/player/PersistentPlayerBar";
 import { HOME_KEYWORDS } from "@/lib/seoKeywords";
 import Script from "next/script";
@@ -128,6 +129,7 @@ export default function RootLayout({
             abbrechen wenn ich die karte oder was anderes ... öffne"). */}
         <LanguageProvider>
           <PlayerProvider>
+            <LangRedirect />
             {children}
             <PersistentPlayerBar />
           </PlayerProvider>
