@@ -211,6 +211,14 @@ export const JOURNEY_TX = {
     de: "Zurücksetzen", en: "Reset", hi: "रीसेट", zh: "重置", ko: "초기화", ja: "リセット",
     es: "Reiniciar", fr: "Réinitialiser", tr: "Sıfırla", ru: "Сбросить", pt: "Reiniciar", ar: "إعادة ضبط", el: "Επαναφορά",
   } as Tx,
+  duration: {
+    de: "Gesamtdauer", en: "Total duration", hi: "कुल अवधि", zh: "总时长", ko: "총 소요 시간", ja: "所要時間",
+    es: "Duración total", fr: "Durée totale", tr: "Toplam süre", ru: "Общее время", pt: "Duração total", ar: "المدة الكلية", el: "Συνολική διάρκεια",
+  } as Tx,
+  arrival: {
+    de: "Ankunft", en: "Arrival", hi: "आगमन", zh: "到达时间", ko: "도착", ja: "到着",
+    es: "Llegada", fr: "Arrivée", tr: "Varış", ru: "Прибытие", pt: "Chegada", ar: "الوصول", el: "Άφιξη",
+  } as Tx,
   custom: {
     de: "Eigene Geschwindigkeit", en: "Custom speed", hi: "अपनी गति", zh: "自定义速度", ko: "직접 입력한 속도", ja: "好きな速度",
     es: "Velocidad propia", fr: "Vitesse personnalisée", tr: "Özel hız", ru: "Своя скорость", pt: "Velocidade própria", ar: "سرعة مخصصة", el: "Δική σου ταχύτητα",
