@@ -762,21 +762,83 @@ export default function SizeComparison({ index }: { index: string }) {
       const taken: [number, number, number][] = [];
       g.textAlign = "center";
       g.textBaseline = "top";
+      // Verhältnis Durchmesser und Volumen (nur Zahlen/Symbole, damit es in allen Sprachen stimmt)
+      const sup = (n: number) => String(n).replace(/[-0-9]/g, (c) => "⁻⁰¹²³⁴⁵⁶⁷⁸⁹"["-0123456789".indexOf(c)]);
+      const ratioTxt = (x: number) => {
+        if (x < 1e6) return new Intl.NumberFormat(lng).format(x < 10 ? Math.round(x * 10) / 10 : Math.round(x));
+        const e = Math.floor(Math.log10(x));
+        return new Intl.NumberFormat(lng, { maximumFractionDigits: 1 }).format(x / Math.pow(10, e)) + "×10" + sup(e);
+      };
+      const ratio = big / small;
       ([[A, xA, ra], [B, xB, rb]] as [Obj, number, number][]).forEach(([o, x, r]) => {
         const ext = r * (o.ring ? 2.3 : o.photo ? o.photo[1] : 1) + 80;
         if (x + ext < 0 || x - ext > W) return;
         if (r >= 0.5) drawObj(g, o, x, cy, r, W, H);
-        else {
-          // Zu klein für den Bildschirm: Markierung statt Punkt
-          g.strokeStyle = "#ff5a4d";
-          g.lineWidth = 1.2;
-          g.beginPath(); g.arc(x, cy, 6, 0, Math.PI * 2); g.stroke();
+        const tiny = r < 4;
+        if (tiny) {
+          // Zu klein für den Bildschirm: kleines Fadenkreuz mit Hinweislinie. Die Markierung hat
+          // absichtlich immer dieselbe Größe und sagt nichts über die echte Größe.
+          const pulse = 0.55 + 0.45 * Math.sin(ANIM.t * 3);
+          g.strokeStyle = "rgba(255,90,77," + (0.55 + 0.4 * pulse).toFixed(2) + ")";
+          g.lineWidth = 1;
+          const c = 5, l = 3;
+          g.beginPath();
+          g.moveTo(x - c, cy - c + l); g.lineTo(x - c, cy - c); g.lineTo(x - c + l, cy - c);
+          g.moveTo(x + c - l, cy - c); g.lineTo(x + c, cy - c); g.lineTo(x + c, cy - c + l);
+          g.moveTo(x + c, cy + c - l); g.lineTo(x + c, cy + c); g.lineTo(x + c - l, cy + c);
+          g.moveTo(x - c + l, cy + c); g.lineTo(x - c, cy + c); g.lineTo(x - c, cy + c - l);
+          g.stroke();
           g.fillStyle = "#ff5a4d";
-          g.fillRect(x - 0.5, cy - 0.5, 1, 1);
+          g.fillRect(x - 0.75, cy - 0.75, 1.5, 1.5);
         }
         const lx = Math.max(60, Math.min(W - 60, x));
-        label(objName(o, lng), lx, Math.max(8, Math.min(H - 50, cy + Math.max(r, 8) + 8)), true, taken);
+        const ly = Math.max(8, Math.min(H - 50, cy + (tiny ? 12 : Math.max(r, 8) + 8)));
+        label(objName(o, lng), lx, ly, true, taken);
+        if (tiny && ratio > 1) {
+          g.font = "400 10px ui-monospace, monospace";
+          g.fillStyle = "#ff8a7d";
+          g.fillText("1 : " + ratioTxt(ratio), lx, ly + 14);
+        } else if (!tiny) {
+          // Durchmesserlinie mit Endmarken über dem Objekt
+          const y = Math.max(14, cy - r - 12), x0 = Math.max(10, x - r), x1 = Math.min(W - 10, x + r);
+          if (x1 - x0 > 60 && r > 20) {
+            g.strokeStyle = "rgba(255,138,125,0.7)";
+            g.lineWidth = 1;
+            g.setLineDash([3, 3]);
+            g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke();
+            g.setLineDash([]);
+            g.beginPath();
+            if (x - r >= 10) { g.moveTo(x0, y - 4); g.lineTo(x0, y + 4); }
+            if (x + r <= W - 10) { g.moveTo(x1, y - 4); g.lineTo(x1, y + 4); }
+            g.stroke();
+            g.font = "400 10px ui-monospace, monospace";
+            g.textBaseline = "bottom";
+            g.fillStyle = "rgba(255,170,160,0.95)";
+            g.fillText("⌀ " + scaleText(o.d), Math.max(60, Math.min(W - 60, (x0 + x1) / 2)), y - 3);
+            g.textBaseline = "top";
+          }
+        }
       });
+      // Verhältnis-Anzeige oben links: Durchmesser und Volumen (3D)
+      if (ratio > 1.001) {
+        const txt = "⌀ 1 : " + ratioTxt(ratio) + "   3D 1 : " + ratioTxt(Math.pow(ratio, 3));
+        g.font = "600 10px ui-monospace, monospace";
+        const tw = g.measureText(txt).width, bx = 10, by0 = 10, bw = Math.min(W - 20, tw + 16), bh = 22;
+        g.fillStyle = "rgba(10,6,8,0.62)";
+        g.fillRect(bx, by0, bw, bh);
+        g.strokeStyle = "rgba(255,90,77,0.8)";
+        g.lineWidth = 1;
+        g.beginPath();
+        g.moveTo(bx, by0 + 6); g.lineTo(bx, by0); g.lineTo(bx + 6, by0);
+        g.moveTo(bx + bw - 6, by0 + bh); g.lineTo(bx + bw, by0 + bh); g.lineTo(bx + bw, by0 + bh - 6);
+        g.stroke();
+        g.textAlign = "left";
+        g.textBaseline = "middle";
+        g.fillStyle = "#ffd0c8";
+        g.fillText(txt, bx + 8, by0 + bh / 2 + 0.5);
+        g.textAlign = "center";
+        g.textBaseline = "top";
+      }
       // Maßstab (echte Länge)
       const want = (W * 0.26) / k, p10 = Math.pow(10, Math.floor(Math.log10(want))), m = want / p10;
       const nice = (m < 1.5 ? 1 : m < 3.5 ? 2 : m < 7.5 ? 5 : 10) * p10, px = nice * k, by = H - 12;
