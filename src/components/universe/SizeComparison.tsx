@@ -960,9 +960,12 @@ export default function SizeComparison({ index }: { index: string }) {
       for (let i = 0; i <= last; i++) {
         const o = OBJECTS[i], r = rs[i];
         const sl = slot.get(i), tx = xs[i] + off;
-        const parked = sl !== undefined && tx < sl.sx;
-        const x = sl !== undefined && parked ? sl.sx : tx;
-        const al = sl !== undefined ? stepA[sl.j] + (1 - stepA[sl.j]) * Math.max(0, Math.min(1, 1 - (sl.sx - tx) / 60)) : 1;
+        // Kleine Vorgänger gleiten beim Schrumpfen (8 → 5,5 px) an ihren Parkplatz links und
+        // erscheinen nie zwischen dem linken Rand und dem Objekt im Fokus (Nutzer 15.10.2026).
+        const bl = i < fo ? Math.max(0, Math.min(1, (8 - r) / 2.5)) : 0;
+        const parked = sl !== undefined && bl > 0.5;
+        const x = sl !== undefined ? tx + (sl.sx - tx) * bl : tx;
+        const al = sl !== undefined ? 1 - (1 - stepA[sl.j]) * bl : 1 - bl;
         const ext = r * (o.ring || o.kind === "bh" ? 2.3 : spanF(o) || 1) + 90;
         if (al <= 0.02 || (sl === undefined && (r < 0.4 || x + ext < 0 || x - ext > W))) continue;
         if (r > 1.5) requestSprite(o, ready);
