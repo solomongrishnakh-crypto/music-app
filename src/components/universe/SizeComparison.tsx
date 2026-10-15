@@ -61,12 +61,12 @@ const OBJECTS: Obj[] = [
   { id: "m87", d: 38000000000, kind: "bh", color: "#ff9a4d", approx: true, name: "M87*" },
   { id: "ton618", d: 240000000000, kind: "bh", color: "#ff9a4d", approx: true, name: "TON 618" },
   { id: "orion", d: 2.27e14, kind: "nebula", color: "#ff7fb0", approx: true, photo: ["thumb/f/f3/Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg/960px-Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg", 1.05], name: N("Orionnebel", "Orion Nebula", "Nebulosa de Orión", "Nébuleuse d'Orion", "Nebulosa de Órion", "Orion Bulutsusu", "Туманность Ориона", "Νεφέλωμα του Ωρίωνα", "سديم الجبار", "ओरायन नीहारिका", "猎户座大星云", "オリオン大星雲", "오리온 대성운") },
-  { id: "lmc", d: 3.0e17, kind: "galaxy", color: "#cfd8ff", approx: true, photo: ["9/94/Large.mc.arp.750pix.jpg", 1.7], name: N("Große Magellansche Wolke", "Large Magellanic Cloud", "Gran Nube de Magallanes", "Grand Nuage de Magellan", "Grande Nuvem de Magalhães", "Büyük Macellan Bulutu", "Большое Магелланово Облако", "Μεγάλο Νέφος του Μαγγελάνου", "سحابة ماجلان الكبرى", "बड़ा मैगेलैनिक बादल", "大麦哲伦云", "大マゼラン雲", "대마젤란은하") },
+  { id: "lmc", d: 3.0e17, kind: "galaxy", color: "#cfd8ff", approx: true, photo: ["thumb/9/93/Large_Magellanic_Cloud.jpg/960px-Large_Magellanic_Cloud.jpg", 1.2], name: N("Große Magellansche Wolke", "Large Magellanic Cloud", "Gran Nube de Magallanes", "Grand Nuage de Magellan", "Grande Nuvem de Magalhães", "Büyük Macellan Bulutu", "Большое Магелланово Облако", "Μεγάλο Νέφος του Μαγγελάνου", "سحابة ماجلان الكبرى", "बड़ा मैगेलैनिक बादल", "大麦哲伦云", "大マゼラン雲", "대마젤란은하") },
   { id: "milkyway", d: 9.46e17, kind: "galaxy", color: "#ffe2b0", approx: true, photo: ["thumb/8/82/Milky_Way_Galaxy.jpg/960px-Milky_Way_Galaxy.jpg", 1.1], name: N("Milchstraße", "Milky Way", "Vía Láctea", "Voie lactée", "Via Láctea", "Samanyolu", "Млечный Путь", "Γαλαξίας", "درب التبانة", "आकाशगंगा (मिल्की वे)", "银河系", "天の川銀河", "우리은하") },
   { id: "andromeda", d: 2.08e18, kind: "galaxy", color: "#ffd9c0", approx: true, photo: ["thumb/9/98/Andromeda_Galaxy_%28with_h-alpha%29.jpg/960px-Andromeda_Galaxy_%28with_h-alpha%29.jpg", 1.16, [0.49, 0.5, 0.36, 0.54, 0.4]], name: N("Andromeda-Galaxie", "Andromeda Galaxy", "Galaxia de Andrómeda", "Galaxie d'Andromède", "Galáxia de Andrômeda", "Andromeda Galaksisi", "Галактика Андромеды", "Γαλαξίας της Ανδρομέδας", "مجرة المرأة المسلسلة", "एंड्रोमेडा आकाशगंगा", "仙女座星系", "アンドロメダ銀河", "안드로메다은하") },
   { id: "ic1101", d: 3.8e19, kind: "galaxy", color: "#ffe8c8", approx: true, photo: ["4/46/IC_1101.jpg", 2.6], name: "IC 1101" },
   { id: "laniakea", d: 4.9e21, kind: "cluster", color: "#9fb8ff", approx: true, name: N("Laniakea-Superhaufen", "Laniakea Supercluster", "Supercúmulo Laniakea", "Superamas Laniakea", "Superaglomerado Laniakea", "Laniakea Üstkümesi", "Сверхскопление Ланиакея", "Υπερσμήνος Laniakea", "عنقود لانياكيا الفائق", "लानियाकेआ महागुच्छ", "拉尼亚凯亚超星系团", "ラニアケア超銀河団", "라니아케아 초은하단") },
-  { id: "universe", d: 8.8e23, kind: "universe", color: "#6d8cff", approx: true, photo: ["thumb/e/e7/Observable_universe_logarithmic_illustration.png/960px-Observable_universe_logarithmic_illustration.png", 1.03], name: N("Beobachtbares Universum", "Observable universe", "Universo observable", "Univers observable", "Universo observável", "Gözlemlenebilir evren", "Наблюдаемая Вселенная", "Παρατηρήσιμο σύμπαν", "الكون المرئي", "अवलोकनीय ब्रह्मांड", "可观测宇宙", "観測可能な宇宙", "관측 가능한 우주") },
+  { id: "universe", d: 8.8e23, kind: "universe", color: "#6d8cff", approx: true, photo: ["thumb/6/69/NASA-HS201427a-HubbleUltraDeepField2014-20140603.jpg/960px-NASA-HS201427a-HubbleUltraDeepField2014-20140603.jpg", 1.03], name: N("Beobachtbares Universum", "Observable universe", "Universo observable", "Univers observable", "Universo observável", "Gözlemlenebilir evren", "Наблюдаемая Вселенная", "Παρατηρήσιμο σύμπαν", "الكون المرئي", "अवलोकनीय ब्रह्मांड", "可观测宇宙", "観測可能な宇宙", "관측 가능한 우주") },
 ];
 
 interface UiText {
@@ -220,6 +220,25 @@ function sphereSprite(img: CanvasImageSource, o: Obj): HTMLCanvasElement {
 }
 
 /** Foto (Galaxie, Nebel, Universum): Hintergrund wird durchsichtig, Ränder weich; optional Ausschnitt mit Ellipsenmaske. */
+/**
+ * Beobachtbares Universum (Nutzerwunsch 15.10.2026): Hubble-Tiefenfeld (NASA, gemeinfrei) –
+ * jeder Punkt eine Galaxie – auf einer dunklen Kugel mit warmem Rand (Urknall-Strahlung).
+ */
+function universeDisc(photo: HTMLCanvasElement): HTMLCanvasElement {
+  const S = photo.width, c = document.createElement("canvas");
+  c.width = c.height = S;
+  const g = c.getContext("2d")!;
+  const grad = g.createRadialGradient(S / 2, S / 2, 0, S / 2, S / 2, S * 0.46);
+  grad.addColorStop(0, "rgba(28,38,100,0.55)");
+  grad.addColorStop(0.78, "rgba(52,40,110,0.5)");
+  grad.addColorStop(0.93, "rgba(255,150,90,0.42)");
+  grad.addColorStop(1, "rgba(255,150,90,0)");
+  g.fillStyle = grad;
+  g.beginPath(); g.arc(S / 2, S / 2, S * 0.46, 0, Math.PI * 2); g.fill();
+  g.drawImage(photo, 0, 0);
+  return c;
+}
+
 function photoSprite(img: HTMLImageElement, crop?: number[]): HTMLCanvasElement {
   const S = 640, c = document.createElement("canvas");
   c.width = c.height = S;
@@ -456,7 +475,7 @@ function requestSprite(o: Obj, onReady: () => void) {
   }
   let job: Promise<HTMLCanvasElement> | null = null;
   if (o.tex) job = loadImg(o.tex).then((im) => { rots.delete(o.id); ensureRot(o, im); return sphereSprite(im, o); });
-  else if (o.photo) job = loadImg(o.photo[0]).then((im) => photoSprite(im, o.photo ? o.photo[2] : undefined));
+  else if (o.photo) job = loadImg(o.photo[0]).then((im) => { const c = photoSprite(im, o.photo ? o.photo[2] : undefined); return o.kind === "universe" ? universeDisc(c) : c; });
   if (!job) return;
   // Sofort: dieselben Oberflächen wie in der 3D-Ansicht des Sonnensystems;
   // sobald die echte Karte geladen ist, wird sie ersetzt.
