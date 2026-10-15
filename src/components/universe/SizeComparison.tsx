@@ -989,8 +989,8 @@ export default function SizeComparison({ index }: { index: string }) {
       const slot = new Map<number, { sx: number; j: number }>();
       for (let i = fo - 1, j = 0; i >= 0 && j < 6; i--) {
         if (rs[i] >= 8) continue; // große Objekte laufen wie bisher aus dem Bild
-        const sx = Math.min(lim, 106) - j * 18;
-        if (sx < 10) break;
+        const sx = Math.min(lim, 46) - j * 8;
+        if (sx < 6) break;
         slot.set(i, { sx, j });
         j++;
       }
