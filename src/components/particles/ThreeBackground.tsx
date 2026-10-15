@@ -27,9 +27,9 @@ import { createCellNetwork } from "./cellNetwork";
 export default function ThreeBackground() {
   const mountRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
+  const init = (): (() => void) | undefined => {
     const mount = mountRef.current;
-    if (!mount) return;
+    if (!mount) return undefined;
 
     // Nutzerkorrektur 03.10.2026 ("wieso springt der Hintergrund?"): am Handy
     // ändert sich die Fensterhöhe beim Scrollen, weil die Adressleiste ein-
@@ -516,6 +516,26 @@ export default function ThreeBackground() {
         mount.removeChild(renderer.domElement);
       }
     };
+  };
+
+  // Start-Ruckeln (Nutzer 15.10.2026): Aufbau von Netz, Partikeln und Shadern
+  // blockierte den ersten Seitenaufbau ~2 s. Jetzt erst nach dem ersten Bild
+  // in einer Leerlaufphase starten – die Seite ist sofort bedienbar.
+  useEffect(() => {
+    let cleanup: (() => void) | undefined;
+    let cancelled = false;
+    const start = () => {
+      if (!cancelled) cleanup = init();
+    };
+    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (h: number) => void };
+    const handle = w.requestIdleCallback ? w.requestIdleCallback(start, { timeout: 1000 }) : window.setTimeout(start, 400);
+    return () => {
+      cancelled = true;
+      if (w.requestIdleCallback && w.cancelIdleCallback) w.cancelIdleCallback(handle);
+      else window.clearTimeout(handle);
+      cleanup?.();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
