@@ -7,6 +7,7 @@ import { useLanguage, type Lang } from "@/contexts/LanguageContext";
 import { localize } from "@/lib/i18n";
 import { bodyPosition, dateToJd } from "@/lib/astro/orbits";
 import { moonPos } from "@/lib/astro/ephemeris";
+import { EXTRA, KIND_TX, LY_KM, SEARCH_TX, normSearch } from "@/lib/deepSky";
 import { JOURNEY2_TX, JOURNEY_TX, PLANET_TX, TOOLS_HEAD, TRAVEL_TX, type Tx } from "@/lib/toolsText";
 
 /**
@@ -30,7 +31,8 @@ const WORLDS: { id: string; g: number; p: number }[] = [
 ];
 
 const LY = 9.4607304725808e12; // km pro Lichtjahr
-const DESTS: { id: string; km: number; name: Tx | string; color: string }[] = [
+type Dest = { id: string; km: number; name: Tx | string; color: string; de?: string; kind?: keyof typeof KIND_TX; alias?: string };
+const DESTS: Dest[] = [
   { id: "moon", km: 384400, name: PLANET_TX.moon, color: "#a9a9a6" },
   { id: "sun", km: 149.6e6, name: "", color: "#ffd166" },
   { id: "mars", km: 54.6e6, name: "", color: "#c1623f" },
@@ -44,6 +46,7 @@ const DESTS: { id: string; km: number; name: Tx | string; color: string }[] = [
   { id: "milky", km: 26700 * LY, name: TRAVEL_TX.milky, color: "#ffe2b0" },
   { id: "andromeda", km: 2.537e6 * LY, name: TRAVEL_TX.andromeda, color: "#ffd9c0" },
 ];
+const ALL_DESTS: Dest[] = [...DESTS, ...EXTRA.map((e) => ({ id: e.id, km: e.km, name: e.name, color: e.color, de: e.de, kind: e.kind, alias: e.alias }))];
 const VEHICLES: { id: string; kmh: number; name: Tx | string }[] = [
   { id: "walk", kmh: 5, name: TRAVEL_TX.walk },
   { id: "car", kmh: 100, name: TRAVEL_TX.car },
@@ -188,11 +191,21 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
   const aOk = Number.isFinite(days) && days >= 0 && days < 365.25 * 130;
 
   const [tick, setTick] = useState(0);
-  const dBase = DESTS.find((x) => x.id === dest) ?? DESTS[0];
+  const dBase = ALL_DESTS.find((x) => x.id === dest) ?? DESTS[0];
   const kmNow = useMemo(() => (tick > 0 ? liveKm(dBase.id, dBase.km) : dBase.km), [tick, dBase.id, dBase.km]);
   const d = { ...dBase, km: kmNow };
-  const destName = (x: (typeof DESTS)[number]) =>
-    typeof x.name === "string" ? (x.name || worldInfo(x.id, lang).name) : localize(x.name, lang);
+  const destName = (x: Dest) =>
+    typeof x.name === "string" ? (lang === "de" && x.de ? x.de : x.name || worldInfo(x.id, lang).name) : localize(x.name, lang);
+  const [q, setQ] = useState("");
+  const hits = useMemo(() => {
+    const k = normSearch(q.trim());
+    if (!k) return [];
+    return ALL_DESTS.filter((x) => {
+      const hay = [destName(x), typeof x.name === "string" ? x.name : "", x.de ?? "", x.alias ?? "", x.kind ? localize(KIND_TX[x.kind], lang) : "", x.kind ? KIND_TX[x.kind].en : ""].map(normSearch).join(" ");
+      return hay.includes(k);
+    }).slice(0, 8);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [q, lang]);
   const tabs: { id: "w" | "t"; label: string }[] = [
     { id: "t", label: localize(TRAVEL_TX.title, lang) },
     { id: "w", label: localize(PLANET_TX.wCol, lang) + " & " + localize(PLANET_TX.aCol, lang) },
@@ -393,8 +406,38 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                   </button>
                 ))}
               </div>
+              <div className="mt-1.5">
+                <input
+                  type="search"
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder={localize(SEARCH_TX.ph, lang)}
+                  aria-label={localize(SEARCH_TX.ph, lang)}
+                  className={INPUT}
+                />
+                {q.trim() !== "" && (
+                  <div className="mt-1.5 flex flex-wrap gap-1.5">
+                    {hits.length === 0 && <span className="text-[10px] text-muted">{localize(SEARCH_TX.none, lang)}</span>}
+                    {hits.map((x) => (
+                      <button
+                        key={x.id}
+                        type="button"
+                        onClick={() => { setDest(x.id); setQ(""); }}
+                        className="flex items-center gap-1.5 border border-white/10 px-2 py-1 text-left text-muted transition-colors hover:border-accent hover:text-foreground"
+                      >
+                        <Thumb id={x.id} size={18} color={x.color} />
+                        <span className="text-[10px] text-foreground">{destName(x)}</span>
+                        {x.kind && <span className="label-mono text-[8px] uppercase">{localize(KIND_TX[x.kind], lang)}</span>}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <p className="label-mono mt-2 text-[10px] uppercase tracking-wider text-muted">
-                {localize(TRAVEL_TX.dist, lang)} <span className="tabular-nums text-accent">≈ {fmtKm(d.km, lang)}</span>
+                {destName(d)} · {localize(TRAVEL_TX.dist, lang)} <span className="tabular-nums text-accent">≈ {fmtKm(d.km, lang)}</span>
+                {d.km >= LY_KM / 2 && (
+                  <span className="normal-case"> ({nf(lang, { notation: "compact", compactDisplay: "long", maximumFractionDigits: d.km / LY_KM < 10 ? 2 : 1 }, d.km / LY_KM)} {localize(SEARCH_TX.ly, lang)})</span>
+                )}
               </p>
 
               <p className={LBL + " mt-4"}>{localize(JOURNEY2_TX.s2, lang)}</p>
