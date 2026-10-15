@@ -148,7 +148,7 @@ const fragmentShader = /* glsl */ `
 
       // Schrittweite: nah am Loch fein, weit weg grob
       float dt = clamp(0.06 * r, 0.03, 1.2);
-      vec3 acc = -1.5 * h2 * pos / pow(r2, 2.5);
+      vec3 acc = -1.5 * h2 * pos / (r2 * r2 * r);
       vec3 nextVel = vel + acc * dt;
       vec3 nextPos = pos + nextVel * dt;
 
