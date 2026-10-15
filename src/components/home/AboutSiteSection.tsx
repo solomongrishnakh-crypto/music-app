@@ -29,7 +29,7 @@ export default function AboutSiteSection() {
   const { t } = useLanguage();
   return (
     <section className="mx-auto mt-16 w-full max-w-6xl sm:mt-24">
-      <SectionHeading index="04" label={t("aboutLabel")} />
+      <SectionHeading index="03" label={t("aboutLabel")} />
       {/* Nutzerwunsch 03.10.2026: Beschreibung verbessert — kurzer Einstieg,
           die vier Bereiche als Liste, Rechtliches als kleine Notiz */}
       <div className="hud-card grid grid-cols-1 overflow-hidden sm:grid-cols-[2fr_3fr]">
