@@ -527,11 +527,11 @@ export default function ThreeBackground() {
     const start = () => {
       if (!cancelled) cleanup = init();
     };
-    const w = window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number; cancelIdleCallback?: (h: number) => void };
-    const handle = w.requestIdleCallback ? w.requestIdleCallback(start, { timeout: 1000 }) : window.setTimeout(start, 400);
+    const hasIdle = typeof window.requestIdleCallback === "function";
+    const handle = hasIdle ? window.requestIdleCallback(start, { timeout: 1000 }) : window.setTimeout(start, 400);
     return () => {
       cancelled = true;
-      if (w.requestIdleCallback && w.cancelIdleCallback) w.cancelIdleCallback(handle);
+      if (hasIdle) window.cancelIdleCallback(handle);
       else window.clearTimeout(handle);
       cleanup?.();
     };
