@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { FormEvent, KeyboardEvent, PointerEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import SiteBackground from "@/components/particles/SiteBackground";
+import CosmicCalendar from "@/components/history/CosmicCalendar";
 import REICH_SLUGS from "@/data/reiche/slugs.json";
 import Spinner from "@/components/ui/Spinner";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
@@ -2107,6 +2108,8 @@ export default function ImperienClient() {
             })}
           </div>
         </div>
+
+        <CosmicCalendar index="01" />
 
         {/* Nutzerwunsch 14.10.2026: Die deutsche "01-04"-Imperien-Box ist
             entfernt (steht schon in der Karte); nur der Link zur
