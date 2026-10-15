@@ -713,14 +713,16 @@ export default function SizeComparison({ index }: { index: string }) {
       // Breite Fenster (PC): Objekt im Fokus kleiner und engere Abstände — so sind
       // viele Nachbarn gleichzeitig sichtbar (Nutzerwunsch 15.10.2026).
       const wide = W > 700;
-      const k = Math.min(W * 0.42, H * (wide ? 0.38 : 0.56)) / focusD; // Pixel pro km
-      const gap = W * (wide ? 0.04 : 0.08);
+      // Handy: Fokus deutlich kleiner und weiter links — links liegen die kleineren,
+      // rechts die größeren Nachbarn, so sind 3–4 Objekte auf einmal zu sehen.
+      const k = Math.min(W * (wide ? 0.42 : 0.25), H * (wide ? 0.38 : 0.42)) / focusD; // Pixel pro km
+      const gap = W * (wide ? 0.04 : 0.05);
       const rs = OBJECTS.map((o) => (o.d * k) / 2);
       const xs: number[] = [];
       const lr = rs.map((r, i) => r * (OBJECTS[i].ring || OBJECTS[i].kind === "bh" ? 2.3 : 1)); // Ringe/Scheiben brauchen Platz
       lr.forEach((r, i) => { xs.push(i === 0 ? 0 : xs[i - 1] + lr[i - 1] + gap + r); });
       const fx = xs[i0] * (1 - f) + xs[i1] * f;
-      const off = W / 2 - fx, cy = H * 0.46;
+      const off = W * (wide ? 0.5 : 0.36) - fx, cy = H * 0.46;
       const lng = langRef.current;
       const focus = Math.round(t);
       const labels: { x: number; y: number; text: string; main: boolean }[] = [];
