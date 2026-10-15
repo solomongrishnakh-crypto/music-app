@@ -82,7 +82,7 @@ export default function SizeView({ lang }: { lang: Lang }) {
         <h2 className="font-display text-lg font-bold text-foreground sm:text-xl">{T.h2Faq}</h2>
         <div className="mt-3 space-y-3">
           {T.faq.map(([q, a]) => (
-            <details key={q} className="hud-card border border-border p-3" open>
+            <details key={q} className="hud-card border border-border p-3">
               <summary className="cursor-pointer text-sm font-semibold text-foreground">{q}</summary>
               <p className="mt-2 text-sm leading-relaxed text-foreground/85">{a}</p>
             </details>
