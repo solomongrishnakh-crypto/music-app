@@ -123,6 +123,8 @@ const CONSTELLATIONS: Constellation[] = [
   },
 ];
 
+const OPEN: LocalizedText = { de: "Öffnen", en: "Open", es: "Abrir", fr: "Ouvrir", pt: "Abrir", tr: "Aç", ru: "Открыть", el: "Άνοιγμα", ar: "افتح", hi: "खोलें", zh: "打开", ja: "開く", ko: "열기" };
+
 const HOLD = 6500; // ms pro Sternbild
 const DEG = Math.PI / 180;
 
@@ -167,7 +169,6 @@ export default function SkyPreviewCard({ label, title }: { label: string; title:
   const wrapRef = useRef<HTMLAnchorElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [idx, setIdx] = useState(0);
-  const [clock, setClock] = useState("");
   const idxRef = useRef(0);
 
   useEffect(() => {
@@ -197,7 +198,7 @@ export default function SkyPreviewCard({ label, title }: { label: string; title:
     io.observe(wrap);
 
     const t0 = performance.now();
-    let raf = 0, lastClock = "";
+    let raf = 0;
 
     function drawFrame(now: number) {
       if (!ctx) return;
@@ -230,18 +231,21 @@ export default function SkyPreviewCard({ label, title }: { label: string; title:
       for (let a = 0; a < 12; a++) { ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(a * Math.PI / 6) * W * 2, Math.sin(a * Math.PI / 6) * W * 2); ctx.stroke(); }
       ctx.restore();
 
-      // Hintergrundsterne
+      // Hintergrundsterne — leuchten kurz auf, wenn der Radarstrahl über sie streicht (15.10.2026)
+      const sweep = reduce ? -0.8 : t * 0.9;
       for (const s of bg) {
         const tw = reduce ? 0.7 : 0.55 + 0.45 * Math.sin(t * s.w + s.p);
-        ctx.globalAlpha = tw * (0.35 + s.s * 0.45);
+        const sx = s.x * W, sy = s.y * H;
+        const dA = (((sweep - Math.atan2(sy - cy, sx - cx)) % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+        const hit = reduce ? 0 : Math.max(0, 1 - dA / 0.7);
+        ctx.globalAlpha = Math.min(1, tw * (0.35 + s.s * 0.45) + hit * 0.7);
         ctx.fillStyle = s.c > 0.85 ? "#ffd9b0" : s.c < 0.15 ? "#b9c8ff" : "#ffffff";
-        ctx.beginPath(); ctx.arc(s.x * W, s.y * H, s.s, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(sx, sy, s.s + hit * 0.9, 0, Math.PI * 2); ctx.fill();
       }
       ctx.globalAlpha = 1;
 
       // Scan-Ring mit Lichtkegel und Gradskala
       const R = size * 0.78;
-      const sweep = reduce ? -0.8 : t * 0.9;
       ctx.save(); ctx.translate(cx, cy);
       ctx.strokeStyle = "rgba(255,90,77,0.35)"; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.stroke();
@@ -250,9 +254,23 @@ export default function SkyPreviewCard({ label, title }: { label: string; title:
         ctx.strokeStyle = a % 6 === 0 ? "rgba(255,90,77,0.55)" : "rgba(255,90,77,0.22)";
         ctx.beginPath(); ctx.moveTo(Math.cos(ang) * R, Math.sin(ang) * R); ctx.lineTo(Math.cos(ang) * (R - L), Math.sin(ang) * (R - L)); ctx.stroke();
       }
-      const cone = ctx.createRadialGradient(0, 0, 0, 0, 0, R);
-      cone.addColorStop(0, "rgba(255,90,77,0)"); cone.addColorStop(1, "rgba(255,90,77,0.10)");
-      ctx.fillStyle = cone; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, R, sweep - 0.5, sweep); ctx.closePath(); ctx.fill();
+      // Gradzahlen innen am Ring (sprachneutral)
+      ctx.fillStyle = "rgba(255,110,95,0.7)"; ctx.font = "500 8px ui-monospace, SFMono-Regular, Menlo, monospace";
+      ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      [["0°", -Math.PI / 2], ["90°", 0], ["180°", Math.PI / 2], ["270°", Math.PI]].forEach(([txt, a]) => {
+        ctx.fillText(txt as string, Math.cos(a as number) * (R - 16), Math.sin(a as number) * (R - 16));
+      });
+      ctx.textAlign = "start";
+      // Radarstrahl mit nachleuchtendem Fächer
+      const cone = (ctx as CanvasRenderingContext2D & { createConicGradient?: (a: number, x: number, y: number) => CanvasGradient }).createConicGradient?.(sweep - 0.9, 0, 0);
+      if (cone) {
+        cone.addColorStop(0, "rgba(255,90,77,0)"); cone.addColorStop(0.143, "rgba(255,90,77,0.24)"); cone.addColorStop(0.1435, "rgba(255,90,77,0)"); cone.addColorStop(1, "rgba(255,90,77,0)");
+        ctx.fillStyle = cone; ctx.beginPath(); ctx.arc(0, 0, R, 0, Math.PI * 2); ctx.fill();
+      } else {
+        const rc = ctx.createRadialGradient(0, 0, 0, 0, 0, R);
+        rc.addColorStop(0, "rgba(255,90,77,0)"); rc.addColorStop(1, "rgba(255,90,77,0.12)");
+        ctx.fillStyle = rc; ctx.beginPath(); ctx.moveTo(0, 0); ctx.arc(0, 0, R, sweep - 0.6, sweep); ctx.closePath(); ctx.fill();
+      }
       ctx.strokeStyle = "rgba(255,120,105,0.6)"; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(Math.cos(sweep) * R, Math.sin(sweep) * R); ctx.stroke();
       ctx.restore();
 
@@ -284,7 +302,7 @@ export default function SkyPreviewCard({ label, title }: { label: string; title:
         halo.addColorStop(0, `rgba(200,215,255,${0.5 * fade})`); halo.addColorStop(1, "rgba(200,215,255,0)");
         ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(p.x, p.y, r * 5, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = `rgba(255,255,255,${fade})`; ctx.beginPath(); ctx.arc(p.x, p.y, r * pulse, 0, Math.PI * 2); ctx.fill();
-        if (s.n && !narrow) {
+        if (s.n && (!narrow || s.m < 1.7)) {
           ctx.fillStyle = `rgba(210,220,255,${0.75 * fade * Math.min(1, Math.max(0, (k - 0.3) / 0.1))})`;
           ctx.fillText(s.n, p.x + r + 6, p.y);
         }
@@ -298,11 +316,6 @@ export default function SkyPreviewCard({ label, title }: { label: string; title:
         const a0 = q * Math.PI / 2 + Math.PI / 4;
         ctx.beginPath(); ctx.arc(bp.x, bp.y, rr, a0 - 0.35, a0 + 0.35); ctx.stroke();
       }
-
-      // Uhr nur sekündlich in den React-State
-      const d = new Date();
-      const s = d.toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit", second: "2-digit" });
-      if (s !== lastClock) { lastClock = s; setClock(s); }
     }
 
     function loop() {
@@ -329,6 +342,8 @@ export default function SkyPreviewCard({ label, title }: { label: string; title:
       className="hud-card group relative block h-52 w-full overflow-hidden sm:h-64"
     >
       <canvas ref={canvasRef} aria-hidden="true" className="absolute inset-0 h-full w-full" />
+      {/* Glas-Schicht: Glanz, Scanlinien, Lichtstreif (Variante A, 15.10.2026) */}
+      <span aria-hidden="true" className="sky-glass" />
 
       {/* HUD-Ecken */}
       <span aria-hidden="true" className="pointer-events-none absolute left-2 top-2 h-4 w-4 border-l border-t border-accent/70" />
@@ -343,7 +358,7 @@ export default function SkyPreviewCard({ label, title }: { label: string; title:
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-60 motion-reduce:animate-none" />
             <span className="relative inline-flex h-2 w-2 rounded-full bg-accent" />
           </span>
-          LIVE <span className="tabular-nums text-foreground/50">{clock}</span>
+          LIVE
         </span>
         <span className="tabular-nums text-foreground/50">
           RA {fmtRa(P.ra)} · DEC {fmtDec(P.dec)}
@@ -359,8 +374,8 @@ export default function SkyPreviewCard({ label, title }: { label: string; title:
       <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent p-4 pt-10">
         <p className="label-mono text-xs uppercase text-accent">{label}</p>
         <p className="mt-1 flex max-w-xl items-center gap-2 text-sm font-semibold text-foreground">
-          {title}
-          <span className="transition-transform group-hover:translate-x-1">↗</span>
+          <span className="min-w-0 flex-1">{title}</span>
+          <span className="sky-cta shrink-0">{localize(OPEN, lang)} ↗</span>
         </p>
       </div>
     </Link>
