@@ -38,7 +38,7 @@ const JSON_LD = {
   "@type": "WebApplication",
   name: "Sternenhimmel live — Centaurian",
   alternateName: ["Sternkarte", "Night Sky Map", "Star Finder"],
-  url: "https://centaurian.vercel.app/sternenhimmel",
+  url: "https://centaurianspace.com/sternenhimmel",
   description: DESCRIPTION,
   applicationCategory: "EducationalApplication",
   operatingSystem: "Web",
@@ -54,7 +54,7 @@ const JSON_LD = {
     "Infos und Wikipedia-Wissen beim Antippen",
     "13 Sprachen",
   ],
-  isPartOf: { "@type": "WebSite", name: "Centaurian", url: "https://centaurian.vercel.app" },
+  isPartOf: { "@type": "WebSite", name: "Centaurian", url: "https://centaurianspace.com" },
 };
 
 type Props = { searchParams: Promise<{ c?: string | string[]; p?: string | string[] }> };
