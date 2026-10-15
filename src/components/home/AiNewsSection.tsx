@@ -122,7 +122,7 @@ export default function AiNewsSection() {
   }
 
   return (
-    <div id="ai-news" className="mx-auto mt-14 w-full max-w-5xl scroll-mt-24 sm:mt-20">
+    <div id="ai-news" className="mx-auto mt-14 w-full max-w-6xl scroll-mt-24 sm:mt-20">
       <SectionHeading index="02" label={t("navAiNews")} />
 
       <button
