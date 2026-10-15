@@ -8,6 +8,7 @@ import SmallClock from "@/components/ui/SmallClock";
 import SectionHeading from "@/components/ui/SectionHeading";
 import SkyPreviewCard from "@/components/universe/SkyPreviewCard";
 import { homeText } from "@/lib/homeText";
+import { SIZE_PAGE } from "@/lib/sizePageText";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
@@ -21,12 +22,15 @@ import { useLanguage } from "@/contexts/LanguageContext";
 export default function FeaturesSection() {
   const { t, localePath, lang } = useLanguage();
   const ht = homeText(lang);
+  const sz = SIZE_PAGE[lang] ?? SIZE_PAGE.en;
 
   // Nutzerwunsch 14.10.2026: Schwerpunkt Universum + Geschichte — zwei große
   // Karten; Musik ist nur noch eine kleine Zeile darunter.
   const CARDS = [
     { index: "01", title: t("featureUniverseTitle"), text: t("featureUniverseText"), href: localePath("/universum"), cta: t("discoverCta"), visual: "stars" as const },
     { index: "02", title: t("featureHistoryTitle"), text: t("featureHistoryText"), href: localePath("/imperien"), cta: t("viewMapCta"), visual: "clock" as const },
+    // Nutzerwunsch 15.10.2026 (Startseite aufräumen): Größenvergleich als dritte Karte statt großem Widget
+    { index: "03", title: sz.cardTitle, text: sz.card, href: localePath("/groessenvergleich"), cta: sz.link, visual: "size" as const },
   ];
 
   return (
@@ -38,7 +42,7 @@ export default function FeaturesSection() {
 
       {/* Nutzerwunsch 03.10.2026: "Boxen kleiner, kompakter und moderner" —
           am Handy flache Zeilen (Symbol · Titel · Pfeil), am PC drei Kacheln */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 sm:gap-4">
         {CARDS.map((c) => (
           <Link
             key={c.index}
@@ -48,6 +52,13 @@ export default function FeaturesSection() {
             {c.visual === "stars" && <TwinkleStars count={10} className="opacity-60" />}
             <span className="feat-ico relative">
               {c.visual === "clock" && <SmallClock className="!h-8 !w-8 sm:!h-8 sm:!w-8" />}
+              {c.visual === "size" && (
+                <svg viewBox="0 0 24 24" className="h-5 w-5 text-accent" fill="none" stroke="currentColor" strokeWidth={1.4} aria-hidden="true">
+                  <circle cx="5" cy="15" r="1.6" />
+                  <circle cx="10.5" cy="13.5" r="3.1" />
+                  <circle cx="18" cy="11" r="5.3" />
+                </svg>
+              )}
               {c.visual === "stars" && (
                 <svg viewBox="0 0 24 24" className="h-5 w-5 text-accent" fill="none" stroke="currentColor" strokeWidth={1.4} aria-hidden="true">
                   <circle cx="12" cy="12" r="3.2" />
