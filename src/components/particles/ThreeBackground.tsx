@@ -53,12 +53,12 @@ export default function ThreeBackground() {
     );
     camera.position.z = 9;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: Math.min(window.innerWidth, window.innerHeight) >= 820, alpha: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     // Handy: höchstens 1,5-fache Pixeldichte statt bis zu 3-fach — weiche
     // Partikel sehen gleich aus, aber nur ein Viertel der Pixel muss jedes
     // Bild neu berechnet werden (Nutzerhinweis 07.10.2026: "laggy").
     const smallScreen = Math.min(window.innerWidth, window.innerHeight) < 820;
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, smallScreen ? 1.25 : 2));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, smallScreen ? 1.5 : 2));
     renderer.setSize(viewW, viewHt);
     mount.appendChild(renderer.domElement);
 
