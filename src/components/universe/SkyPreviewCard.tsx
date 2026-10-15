@@ -72,6 +72,55 @@ const CONSTELLATIONS: Constellation[] = [
     ],
     lines: [[0, 1], [1, 2], [4, 1], [1, 3]],
   },
+  // Nutzerwunsch 15.10.2026: 7 statt 4 Sternbilder (Löwe, Skorpion, Zwillinge; J2000-Positionen)
+  {
+    name: { de: "Löwe", en: "Leo", hi: "सिंह", zh: "狮子座", ko: "사자자리", ja: "しし座", es: "Leo", fr: "Lion", tr: "Aslan", ru: "Лев", pt: "Leão", ar: "الأسد", el: "Λέων" },
+    stars: [
+      { n: "Regulus", ra: 10.139, dec: 11.97, m: 1.4 },
+      { ra: 10.122, dec: 16.76, m: 3.5 },
+      { n: "Algieba", ra: 10.333, dec: 19.84, m: 2.0 },
+      { ra: 10.278, dec: 23.42, m: 3.4 },
+      { ra: 9.879, dec: 26.01, m: 3.9 },
+      { ra: 9.764, dec: 23.77, m: 3.0 },
+      { n: "Zosma", ra: 11.235, dec: 20.52, m: 2.6 },
+      { ra: 11.237, dec: 15.43, m: 3.3 },
+      { n: "Denebola", ra: 11.818, dec: 14.57, m: 2.1 },
+    ],
+    lines: [[0, 1], [1, 2], [2, 3], [3, 4], [4, 5], [0, 7], [7, 8], [8, 6], [6, 2]],
+  },
+  {
+    name: { de: "Skorpion", en: "Scorpius", hi: "वृश्चिक", zh: "天蝎座", ko: "전갈자리", ja: "さそり座", es: "Escorpio", fr: "Scorpion", tr: "Akrep", ru: "Скорпион", pt: "Escorpião", ar: "العقرب", el: "Σκορπιός" },
+    stars: [
+      { n: "Antares", ra: 16.49, dec: -26.43, m: 1.0 },
+      { ra: 16.091, dec: -19.81, m: 2.6 },
+      { ra: 16.006, dec: -22.62, m: 2.3 },
+      { ra: 15.981, dec: -26.11, m: 2.9 },
+      { ra: 16.353, dec: -25.59, m: 2.9 },
+      { ra: 16.598, dec: -28.22, m: 2.8 },
+      { ra: 16.836, dec: -34.29, m: 2.3 },
+      { ra: 16.864, dec: -38.05, m: 3.0 },
+      { ra: 16.91, dec: -42.36, m: 3.6 },
+      { ra: 17.203, dec: -43.24, m: 3.3 },
+      { n: "Sargas", ra: 17.622, dec: -43.0, m: 1.9 },
+      { ra: 17.793, dec: -40.13, m: 3.0 },
+      { ra: 17.708, dec: -39.03, m: 2.4 },
+      { n: "Shaula", ra: 17.56, dec: -37.1, m: 1.6 },
+    ],
+    lines: [[3, 2], [2, 1], [2, 4], [4, 0], [0, 5], [5, 6], [6, 7], [7, 8], [8, 9], [9, 10], [10, 11], [11, 12], [12, 13]],
+  },
+  {
+    name: { de: "Zwillinge", en: "Gemini", hi: "मिथुन", zh: "双子座", ko: "쌍둥이자리", ja: "ふたご座", es: "Géminis", fr: "Gémeaux", tr: "İkizler", ru: "Близнецы", pt: "Gêmeos", ar: "الجوزاء", el: "Δίδυμοι" },
+    stars: [
+      { n: "Castor", ra: 7.577, dec: 31.89, m: 1.6 },
+      { n: "Pollux", ra: 7.755, dec: 28.03, m: 1.1 },
+      { ra: 6.732, dec: 25.13, m: 3.0 },
+      { ra: 6.383, dec: 22.51, m: 2.9 },
+      { ra: 7.335, dec: 21.98, m: 3.5 },
+      { n: "Alhena", ra: 6.629, dec: 16.4, m: 1.9 },
+      { ra: 6.248, dec: 22.51, m: 3.3 },
+    ],
+    lines: [[0, 2], [2, 3], [3, 6], [1, 4], [4, 5], [0, 1]],
+  },
 ];
 
 const HOLD = 6500; // ms pro Sternbild
