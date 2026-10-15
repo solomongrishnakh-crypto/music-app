@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { findBody } from "@/components/space/bodies";
 import { useLanguage, type Lang } from "@/contexts/LanguageContext";
 import { localize } from "@/lib/i18n";
+import { bodyPosition, dateToJd } from "@/lib/astro/orbits";
+import { moonPos } from "@/lib/astro/ephemeris";
 import { JOURNEY_TX, PLANET_TX, TOOLS_HEAD, TRAVEL_TX, type Tx } from "@/lib/toolsText";
 
 /**
@@ -103,7 +105,20 @@ function Thumb({ id, size, color }: { id: string; size: number; color: string })
 }
 
 const C_KMH = 299792.458 * 3600;
-const SHOW_S = 20; // Gemeinsamer Maßstab: Licht erreicht das Ziel nach ca. 20 s Anzeigezeit (nie langsamer als Echtzeit)
+const KM_AU = 149597870.7;
+// Aktueller Abstand Erde → Ziel aus den Bahndaten (wie im 3D-Sonnensystem); Sterne und Galaxien bleiben fest
+function liveKm(id: string, fixed: number): number {
+  try {
+    const jd = dateToJd(new Date());
+    if (id === "moon") return moonPos(jd).distKm;
+    const e = bodyPosition("earth", jd);
+    const b = id === "sun" ? ([0, 0, 0] as [number, number, number]) : bodyPosition(id, jd);
+    if (!e || !b) return fixed;
+    return Math.hypot(b[0] - e[0], b[1] - e[1], b[2] - e[2]) * KM_AU;
+  } catch {
+    return fixed;
+  }
+}
 
 function fmtKm(km: number, lang: Lang): string {
   const big = km >= 1e9;
@@ -122,7 +137,7 @@ const TILE = "relative overflow-hidden border border-white/10 bg-black/35 px-2.5
 
 export default function SpaceCalculators({ index = "03" }: { index?: string }) {
   const { lang } = useLanguage();
-  const [tab, setTab] = useState<"w" | "t">("w");
+  const [tab, setTab] = useState<"w" | "t">("t");
   const [weight, setWeight] = useState("70");
   const [birth, setBirth] = useState("");
   const [dest, setDest] = useState("mars");
@@ -135,6 +150,7 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
   const base = useRef(0);
   const anchor = useRef(0);
   const lapseRef = useRef(1);
+  const startedRef = useRef(false);
 
   const w = parseFloat(weight.replace(",", "."));
   const wOk = Number.isFinite(w) && w > 0 && w < 1000;
@@ -142,12 +158,15 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
   const days = (Date.now() - bt) / 86400000;
   const aOk = Number.isFinite(days) && days >= 0 && days < 365.25 * 130;
 
-  const d = DESTS.find((x) => x.id === dest) ?? DESTS[0];
+  const [tick, setTick] = useState(0);
+  const dBase = DESTS.find((x) => x.id === dest) ?? DESTS[0];
+  const kmNow = useMemo(() => (tick > 0 ? liveKm(dBase.id, dBase.km) : dBase.km), [tick, dBase.id, dBase.km]);
+  const d = { ...dBase, km: kmNow };
   const destName = (x: (typeof DESTS)[number]) =>
     typeof x.name === "string" ? (x.name || worldInfo(x.id, lang).name) : localize(x.name, lang);
   const tabs: { id: "w" | "t"; label: string }[] = [
-    { id: "w", label: localize(PLANET_TX.wCol, lang) + " & " + localize(PLANET_TX.aCol, lang) },
     { id: "t", label: localize(TRAVEL_TX.title, lang) },
+    { id: "w", label: localize(PLANET_TX.wCol, lang) + " & " + localize(PLANET_TX.aCol, lang) },
   ];
 
   // Geschwindigkeit: Fahrzeug oder eigene Eingabe (höchstens Lichtgeschwindigkeit)
@@ -160,6 +179,15 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
   const traveled = Number.isFinite(speedKms) ? Math.min(d.km, speedKms * simT) : 0;
   const prog = d.km > 0 ? traveled / d.km : 0;
   const arrived = Number.isFinite(totalS) && simT >= totalS;
+
+  // Abstand regelmäßig aktualisieren (nur solange keine Reise läuft oder pausiert ist)
+  useEffect(() => {
+    setTick(1);
+    const t = setInterval(() => {
+      if (!startedRef.current) setTick((n) => n + 1);
+    }, 30000);
+    return () => clearInterval(t);
+  }, []);
 
   // Reise zurücksetzen, wenn Ziel oder Geschwindigkeit wechseln
   useEffect(() => {
@@ -205,7 +233,7 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
       base.current = simT;
     }
     anchor.current = performance.now();
-    lapseRef.current = Math.max(1, d.km / (C_KMH / 3600) / SHOW_S);
+    lapseRef.current = 1; // Echtzeit
     setRun(true);
   }
   function resetTrip() {
@@ -215,7 +243,7 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
   }
   // Ankunftsdatum bei Start jetzt (bei sehr langen Reisen kein Datum)
   const arriveTxt = (() => {
-    if (!Number.isFinite(totalS) || totalS / 31557600 > 7000) return "–";
+    if (tick === 0 || !Number.isFinite(totalS) || totalS / 31557600 > 7000) return "–";
     try {
       const o: Intl.DateTimeFormatOptions = { year: "numeric", month: "long", day: "numeric" };
       if (totalS < 86400) {
@@ -230,6 +258,7 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
 
   const earth = worldInfo("earth", lang);
   const started = run || simT > 0;
+  startedRef.current = started;
 
   return (
     <section className="mb-10">
