@@ -151,6 +151,7 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
   const anchor = useRef(0);
   const lapseRef = useRef(1);
   const startedRef = useRef(false);
+  const pendingGo = useRef(false);
 
   const w = parseFloat(weight.replace(",", "."));
   const wOk = Number.isFinite(w) && w > 0 && w < 1000;
@@ -194,6 +195,12 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
     setRun(false);
     setSimT(0);
     base.current = 0;
+    if (pendingGo.current) {
+      pendingGo.current = false;
+      anchor.current = performance.now();
+      lapseRef.current = 1;
+      setRun(true);
+    }
   }, [dest, sel, speedKmh]);
 
   // Live-Animation der Reise
@@ -235,6 +242,20 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
     anchor.current = performance.now();
     lapseRef.current = 1; // Echtzeit
     setRun(true);
+  }
+  // "Los": Reise sofort mit der eingegebenen Geschwindigkeit starten
+  function goCustom() {
+    if (!Number.isFinite(custKmh)) return;
+    if (sel === "custom") {
+      base.current = 0;
+      setSimT(0);
+      anchor.current = performance.now();
+      lapseRef.current = 1;
+      setRun(true);
+    } else {
+      pendingGo.current = true;
+      setSel("custom");
+    }
   }
   function resetTrip() {
     setRun(false);
@@ -379,7 +400,7 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                   onClick={() => setSel("custom")}
                 >
                   <span className="label-mono block truncate text-[10px] uppercase tracking-wide text-muted">{localize(JOURNEY_TX.custom, lang)}</span>
-                  <div className="mt-1 flex items-center gap-1.5">
+                  <div className="mt-1 flex flex-wrap items-center gap-1.5">
                     <input
                       className="h-7 w-24 min-w-0 border border-white/15 bg-black/40 px-2 text-xs tabular-nums text-foreground outline-none focus:border-accent"
                       type="number"
@@ -388,6 +409,9 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                       step="any"
                       value={cust}
                       onFocus={() => setSel("custom")}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") goCustom();
+                      }}
                       onChange={(e) => {
                         setCust(e.target.value);
                         setSel("custom");
@@ -410,6 +434,14 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                         {u === "kmh" ? "km/h" : u === "kms" ? "km/s" : "% c"}
                       </button>
                     ))}
+                    <button
+                      type="button"
+                      onClick={goCustom}
+                      disabled={!Number.isFinite(custKmh)}
+                      className="label-mono ml-auto h-7 border border-accent bg-accent/20 px-3 text-[10px] uppercase tracking-wider text-foreground transition-colors hover:bg-accent/35 disabled:opacity-40"
+                    >
+                      ▶ {localize(JOURNEY_TX.go, lang)}
+                    </button>
                   </div>
                   <p className="font-display mt-1 truncate text-base font-bold leading-tight tabular-nums text-accent">
                     {Number.isFinite(custKmh) ? fmtDur((d.km / custKmh) * 3600, lang) : "–"}
