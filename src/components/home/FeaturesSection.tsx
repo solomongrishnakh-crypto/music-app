@@ -8,6 +8,7 @@ import SectionHeading from "@/components/ui/SectionHeading";
 import SkyPreviewCard from "@/components/universe/SkyPreviewCard";
 import { homeText } from "@/lib/homeText";
 import { SIZE_PAGE } from "@/lib/sizePageText";
+import { TOOLS_PAGE } from "@/lib/toolsPageText";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
@@ -97,6 +98,15 @@ export default function FeaturesSection() {
       <div className="mt-3 sm:mt-4">
         <SkyPreviewCard label={t("skyLinkLabel")} title={t("skyLinkTitle")} />
       </div>
+
+      <p className="mt-4 text-center">
+        <Link
+          href={localePath("/weltraum-rechner")}
+          className="label-mono inline-block border border-border px-3 py-1.5 text-[10px] uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent"
+        >
+          {(TOOLS_PAGE[lang] ?? TOOLS_PAGE.en).link} →
+        </Link>
+      </p>
 
       <p className="mt-6 text-center text-[11px] leading-snug text-muted/80">{ht.musicChip}</p>
     </section>
