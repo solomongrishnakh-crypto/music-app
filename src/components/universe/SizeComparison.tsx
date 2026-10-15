@@ -6,7 +6,7 @@ import { findBody } from "@/components/space/bodies";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { cachedCanvas, earthCloudsCanvas, saturnRingCanvas, surfaceCanvas } from "@/components/universe/planetTextures";
 import { ANIM, ATMO, ROT_SPEED, buildRot, drawBH, drawPulsar, drawStarGlow, makeStarTex, pickSize, renderRot, starLook, texFromCanvas, type Rot } from "./sizeFx";
-import { UI2 } from "./sizeText";
+import { UI2, UI3 } from "./sizeText";
 import SizePicker, { type PickItem } from "./SizePicker";
 
 /**
@@ -464,7 +464,7 @@ function drawObj(g: CanvasRenderingContext2D, o: Obj, x: number, y: number, r: n
   if (o.ring) drawRing(g, x, y, r, c, true);
 }
 
-type Mode = "zoom" | "cmp";
+type Mode = "zoom" | "cmp" | "all";
 
 interface CmpView {
   anchor: 0 | 1;
@@ -479,6 +479,7 @@ export default function SizeComparison({ index }: { index: string }) {
   const { lang } = useLanguage();
   const ui = UI[lang] ?? UI.en;
   const ui2 = UI2[lang] ?? UI2.en;
+  const ui3 = UI3[lang] ?? UI3.en;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
   const START = OBJECTS.findIndex((o) => o.id === "earth");
@@ -519,6 +520,8 @@ export default function SizeComparison({ index }: { index: string }) {
     cmpRef.current = [cmpA, cmpB];
     resetView.current = true;
     dirty.current = true;
+    // Übersicht setzt die Höhe selbst (alle Objekte untereinander) — sonst zurück
+    if (mode !== "all" && wrapRef.current) wrapRef.current.style.height = "";
   }, [lang, mode, cmpA, cmpB]);
 
   useEffect(() => {
@@ -559,6 +562,51 @@ export default function SizeComparison({ index }: { index: string }) {
     const scaleText = (km: number) => {
       const l = langRef.current, u = UI[l] ?? UI.en;
       return km < 1e12 ? fmtFull(km, l) + " km" : fmtFull(km / LY_KM, l) + " " + u.ly;
+    };
+
+    // Übersicht: alle Objekte als Raster, Größen stark gestaucht (Reihenfolge stimmt)
+    const allGeo = { cols: 3, cw: 100, ch: 120 };
+    const drawAll = () => {
+      const cols = W < 420 ? 3 : W < 720 ? 4 : 6;
+      const cw = W / cols;
+      const ch = Math.round(Math.min(136, cw * 1.15));
+      const rows = Math.ceil(OBJECTS.length / cols);
+      allGeo.cols = cols; allGeo.cw = cw; allGeo.ch = ch;
+      const needH = rows * ch;
+      if (Math.abs(H - needH) > 1) wrap.style.height = needH + "px"; // ResizeObserver zeichnet neu
+      const lo = Math.log(OBJECTS[0].d), hi = Math.log(OBJECTS[last].d);
+      const rMax = Math.min(cw * 0.42, ch * 0.34), rMin = 3.5;
+      const lng = langRef.current;
+      for (let i = 0; i <= last; i++) {
+        const o = OBJECTS[i];
+        const col = i % cols, row = Math.floor(i / cols);
+        const x0 = col * cw, y0 = row * ch, cx = x0 + cw / 2, cy = y0 + ch * 0.4;
+        const t = 0.5 * ((Math.log(o.d) - lo) / (hi - lo)) + 0.5 * (i / last);
+        let r = rMin + (rMax - rMin) * t;
+        if (o.ring || o.kind === "bh") r *= 0.5; // Ringe/Scheiben brauchen Platz
+        if (r > 1.5) requestSprite(o, ready);
+        g.save();
+        g.beginPath();
+        g.rect(x0 + 1, y0 + 1, cw - 2, ch - 2);
+        g.clip();
+        drawObj(g, o, cx, cy, Math.max(r, 1.2), W, H);
+        g.restore();
+        g.strokeStyle = "rgba(255,255,255,0.06)";
+        g.lineWidth = 1;
+        g.strokeRect(x0 + 0.5, y0 + 0.5, cw - 1, ch - 1);
+        g.textAlign = "center";
+        g.textBaseline = "top";
+        let name = objName(o, lng);
+        g.font = "600 10px ui-monospace, monospace";
+        while (name.length > 3 && g.measureText(name).width > cw - 8) name = name.slice(0, -2) + "…";
+        g.fillStyle = "#f2f2f0";
+        g.fillText(name, cx, y0 + ch * 0.74);
+        let sz = scaleText(o.d);
+        g.font = "400 9px ui-monospace, monospace";
+        while (sz.length > 3 && g.measureText(sz).width > cw - 6) sz = sz.slice(0, -2) + "…";
+        g.fillStyle = "rgba(242,242,240,0.55)";
+        g.fillText(sz, cx, y0 + ch * 0.74 + 14);
+      }
     };
 
     const drawCompare = () => {
@@ -648,12 +696,15 @@ export default function SizeComparison({ index }: { index: string }) {
       const diff = target.current - cur.current;
       const moving = modeRef.current === "zoom" && Math.abs(diff) >= 0.0005;
       if (!moving && !dirty.current && (ANIM.reduce || now - lastDraw < 30)) return;
+      // Übersicht: viele Kugeln gleichzeitig — nur gemächlich neu zeichnen (Akku, Ruckeln)
+      if (modeRef.current === "all" && !dirty.current && now - lastDraw < 140) return;
       lastDraw = now;
       dirty.current = false;
       ANIM.t = now / 1000;
       ANIM.D = D;
       g.setTransform(D, 0, 0, D, 0, 0);
       g.clearRect(0, 0, W, H);
+      if (modeRef.current === "all") { drawAll(); return; }
       if (modeRef.current === "cmp") { drawCompare(); return; }
       cur.current += Math.abs(diff) < 0.0005 ? diff : diff * 0.14;
       const t = Math.max(0, Math.min(last, cur.current));
@@ -700,6 +751,7 @@ export default function SizeComparison({ index }: { index: string }) {
       return { x: e.clientX - r.left, y: e.clientY - r.top };
     };
     const down = (e: PointerEvent) => {
+      if (modeRef.current === "all") return;
       if (modeRef.current === "zoom") {
         drag = { x: e.clientX, t: target.current };
         cvs.setPointerCapture(e.pointerId);
@@ -710,6 +762,7 @@ export default function SizeComparison({ index }: { index: string }) {
       if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = Math.hypot(a.x - b.x, a.y - b.y); }
     };
     const move = (e: PointerEvent) => {
+      if (modeRef.current === "all") return;
       if (modeRef.current === "zoom") {
         if (!drag) return;
         const v = Math.max(0, Math.min(last, drag.t - (e.clientX - drag.x) / (W * 0.35)));
@@ -730,6 +783,7 @@ export default function SizeComparison({ index }: { index: string }) {
     };
     const up = (e: PointerEvent) => { drag = null; ptrs.delete(e.pointerId); pinch = 0; };
     const wheel = (e: WheelEvent) => {
+      if (modeRef.current === "all") return; // Seite normal scrollen lassen
       e.preventDefault();
       if (modeRef.current === "zoom") {
         const v = Math.max(0, Math.min(last, target.current + e.deltaY * 0.0025));
@@ -744,7 +798,19 @@ export default function SizeComparison({ index }: { index: string }) {
     cvs.addEventListener("pointerup", up);
     cvs.addEventListener("pointercancel", up);
     cvs.addEventListener("wheel", wheel, { passive: false });
+    // Antippen eines Objekts in der Übersicht öffnet die maßstabsgetreue Reise
+    const tap = (e: MouseEvent) => {
+      if (modeRef.current !== "all") return;
+      const p = lp(e);
+      const i = Math.floor(p.y / allGeo.ch) * allGeo.cols + Math.floor(p.x / allGeo.cw);
+      if (i < 0 || i > last) return;
+      target.current = i; cur.current = i;
+      setSlider(i); setShown(i); lastShown = i;
+      setMode("zoom");
+    };
+    cvs.addEventListener("click", tap);
     return () => {
+      cvs.removeEventListener("click", tap);
       cancelAnimationFrame(raf);
       ro.disconnect(); io.disconnect();
       cvs.removeEventListener("pointerdown", down);
@@ -812,9 +878,10 @@ export default function SizeComparison({ index }: { index: string }) {
       <div className="mb-2 flex gap-2">
         {tab("zoom", ui.zoom)}
         {tab("cmp", ui.compare)}
+        {tab("all", ui3.all)}
       </div>
       <div ref={wrapRef} className={"relative h-64 w-full select-none sm:h-80 " + (mode === "cmp" ? "touch-none" : "touch-pan-y")}>
-        <canvas ref={canvasRef} className={"absolute inset-0 h-full w-full " + (mode === "zoom" ? "cursor-grab active:cursor-grabbing" : "cursor-move")} />
+        <canvas ref={canvasRef} className={"absolute inset-0 h-full w-full " + (mode === "zoom" ? "cursor-grab active:cursor-grabbing" : mode === "all" ? "cursor-pointer" : "cursor-move")} />
       </div>
       {mode === "zoom" ? (
         <>
@@ -845,6 +912,8 @@ export default function SizeComparison({ index }: { index: string }) {
           />
           <p className="mt-2 text-[10px] leading-snug text-muted">{ui.hint}</p>
         </>
+      ) : mode === "all" ? (
+        <p className="mt-2 text-[11px] leading-snug text-muted">{ui3.allHint}</p>
       ) : (
         <div className="mt-2">
           <div className="flex items-center gap-2">
