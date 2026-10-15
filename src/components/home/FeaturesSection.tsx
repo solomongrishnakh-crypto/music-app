@@ -4,7 +4,6 @@ import Link from "next/link";
 import UniverseTypewriter from "./UniverseTypewriter";
 import AppDownloadPill from "./AppDownloadPill";
 import TwinkleStars from "@/components/ui/TwinkleStars";
-import SmallClock from "@/components/ui/SmallClock";
 import SectionHeading from "@/components/ui/SectionHeading";
 import SkyPreviewCard from "@/components/universe/SkyPreviewCard";
 import { homeText } from "@/lib/homeText";
@@ -28,7 +27,7 @@ export default function FeaturesSection() {
   // Karten; Musik ist nur noch eine kleine Zeile darunter.
   const CARDS = [
     { index: "01", title: t("featureUniverseTitle"), text: t("featureUniverseText"), href: localePath("/universum"), cta: t("discoverCta"), visual: "stars" as const },
-    { index: "02", title: t("featureHistoryTitle"), text: t("featureHistoryText"), href: localePath("/imperien"), cta: t("viewMapCta"), visual: "clock" as const },
+    { index: "02", title: t("featureHistoryTitle"), text: t("featureHistoryText"), href: localePath("/imperien"), cta: t("viewMapCta"), visual: "history" as const },
     // Nutzerwunsch 15.10.2026 (Startseite aufräumen): Größenvergleich als dritte Karte statt großem Widget
     { index: "03", title: sz.cardTitle, text: sz.card, href: localePath("/groessenvergleich"), cta: sz.link, visual: "size" as const },
   ];
@@ -50,8 +49,24 @@ export default function FeaturesSection() {
             className="hud-card feat-card group relative flex items-center gap-4 overflow-hidden p-4 sm:flex-col sm:items-start sm:gap-4 sm:p-6"
           >
             {c.visual === "stars" && <TwinkleStars count={10} className="opacity-60" />}
+            {c.visual === "history" && (
+              <>
+                {/* Weltkarte mit echten Reichen aus unseren Daten (Rom 117, Mongolen 1260,
+                    Achämeniden −500, Inka 1527) + Zeitleiste mit wanderndem Jahr-Marker */}
+                <span aria-hidden="true" className="hist-map" />
+                <span aria-hidden="true" className="hist-ruler"><span className="hist-mark" /></span>
+              </>
+            )}
             <span className="feat-ico relative">
-              {c.visual === "clock" && <SmallClock className="!h-8 !w-8 sm:!h-8 sm:!w-8" />}
+              {c.visual === "history" && (
+                // Schriftrolle statt Uhr (Nutzerwunsch 15.10.2026: "so man weiß, es geht um Geschichte")
+                <svg viewBox="0 0 24 24" className="h-5 w-5 text-accent" fill="none" stroke="currentColor" strokeWidth={1.4} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M6 4h11.5A2.5 2.5 0 0 1 20 6.5V7h-3.5" />
+                  <path d="M16.5 6.5V17a3 3 0 0 1-3 3H6.5A2.5 2.5 0 0 1 4 17.5V17h9.5" />
+                  <path d="M6 4a2 2 0 0 0-2 2v11" />
+                  <path d="M8 9h5.5M8 12h5.5M8 15h3.5" />
+                </svg>
+              )}
               {c.visual === "size" && (
                 <svg viewBox="0 0 24 24" className="h-5 w-5 text-accent" fill="none" stroke="currentColor" strokeWidth={1.4} aria-hidden="true">
                   <circle cx="5" cy="15" r="1.6" />
