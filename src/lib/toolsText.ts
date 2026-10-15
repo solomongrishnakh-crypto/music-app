@@ -252,3 +252,50 @@ export const JOURNEY_TX = {
     es: "Velocidad", fr: "Vitesse", tr: "Hız", ru: "Скорость", pt: "Velocidade", ar: "السرعة", el: "Ταχύτητα",
   } as Tx,
 };
+
+// Schritte & weitere Reiseziele (Nutzerwunsch 16.10.2026: Reiserechner einfacher, mehr Ziele)
+export const JOURNEY2_TX = {
+  s1: {
+    de: "Wohin?", en: "Where to?", hi: "कहाँ जाना है?", zh: "去哪里？", ko: "어디로?", ja: "どこへ？",
+    es: "¿A dónde?", fr: "Où aller ?", tr: "Nereye?", ru: "Куда?", pt: "Para onde?", ar: "إلى أين؟", el: "Πού;",
+  } as Tx,
+  s2: {
+    de: "Wie schnell?", en: "How fast?", hi: "कितनी तेज़?", zh: "多快？", ko: "얼마나 빠르게?", ja: "どのくらいの速さ？",
+    es: "¿A qué velocidad?", fr: "À quelle vitesse ?", tr: "Ne kadar hızlı?", ru: "Как быстро?", pt: "Qual velocidade?", ar: "بأي سرعة؟", el: "Πόσο γρήγορα;",
+  } as Tx,
+  s3: {
+    de: "Deine Reise", en: "Your journey", hi: "आपकी यात्रा", zh: "你的旅程", ko: "나의 여행", ja: "あなたの旅",
+    es: "Tu viaje", fr: "Ton voyage", tr: "Yolculuğun", ru: "Твой полёт", pt: "Sua viagem", ar: "رحلتك", el: "Το ταξίδι σου",
+  } as Tx,
+  sirius: {
+    de: "Sirius", en: "Sirius", hi: "व्याध (सिरियस)", zh: "天狼星", ko: "시리우스", ja: "シリウス",
+    es: "Sirio", fr: "Sirius", tr: "Sirius", ru: "Сириус", pt: "Sirius", ar: "الشعرى اليمانية", el: "Σείριος",
+  } as Tx,
+  betel: {
+    de: "Beteigeuze", en: "Betelgeuse", hi: "आर्द्रा (बेटेलगेस)", zh: "参宿四", ko: "베텔게우스", ja: "ベテルギウス",
+    es: "Betelgeuse", fr: "Bételgeuse", tr: "Betelgeuse", ru: "Бетельгейзе", pt: "Betelgeuse", ar: "منكب الجوزاء", el: "Μπετελγκέζ",
+  } as Tx,
+  neutron: {
+    de: "Neutronenstern", en: "Neutron star", hi: "न्यूट्रॉन तारा", zh: "中子星", ko: "중성자별", ja: "中性子星",
+    es: "Estrella de neutrones", fr: "Étoile à neutrons", tr: "Nötron yıldızı", ru: "Нейтронная звезда", pt: "Estrela de nêutrons", ar: "نجم نيوتروني", el: "Αστέρας νετρονίων",
+  } as Tx,
+  bh: {
+    de: "Schwarzes Loch", en: "Black hole", hi: "ब्लैक होल", zh: "黑洞", ko: "블랙홀", ja: "ブラックホール",
+    es: "Agujero negro", fr: "Trou noir", tr: "Kara delik", ru: "Чёрная дыра", pt: "Buraco negro", ar: "ثقب أسود", el: "Μαύρη τρύπα",
+  } as Tx,
+  approx: {
+    de: "Sterne, Neutronenstern und Schwarzes Loch: gerundete Entfernungen der nächsten bekannten Beispiele (Sirius, PSR J0437, Gaia BH1).",
+    en: "Stars, neutron star and black hole: rounded distances of the nearest known examples (Sirius, PSR J0437, Gaia BH1).",
+    hi: "तारे, न्यूट्रॉन तारा और ब्लैक होल: निकटतम ज्ञात उदाहरणों की मोटी दूरी (सिरियस, PSR J0437, Gaia BH1)।",
+    zh: "恒星、中子星和黑洞：取最近已知例子的大致距离（天狼星、PSR J0437、Gaia BH1）。",
+    ko: "별, 중성자별, 블랙홀: 가장 가까운 알려진 사례(시리우스, PSR J0437, Gaia BH1)의 대략적인 거리입니다.",
+    ja: "恒星・中性子星・ブラックホール：最も近い既知の例（シリウス、PSR J0437、Gaia BH1）のおおよその距離です。",
+    es: "Estrellas, estrella de neutrones y agujero negro: distancias redondeadas de los ejemplos conocidos más cercanos (Sirio, PSR J0437, Gaia BH1).",
+    fr: "Étoiles, étoile à neutrons et trou noir : distances arrondies des exemples connus les plus proches (Sirius, PSR J0437, Gaia BH1).",
+    tr: "Yıldızlar, nötron yıldızı ve kara delik: bilinen en yakın örneklerin yuvarlanmış uzaklıkları (Sirius, PSR J0437, Gaia BH1).",
+    ru: "Звёзды, нейтронная звезда и чёрная дыра: округлённые расстояния до ближайших известных примеров (Сириус, PSR J0437, Gaia BH1).",
+    pt: "Estrelas, estrela de nêutrons e buraco negro: distâncias arredondadas dos exemplos conhecidos mais próximos (Sirius, PSR J0437, Gaia BH1).",
+    ar: "النجوم والنجم النيوتروني والثقب الأسود: مسافات تقريبية لأقرب الأمثلة المعروفة (الشعرى، PSR J0437، Gaia BH1).",
+    el: "Αστέρες, αστέρας νετρονίων και μαύρη τρύπα: στρογγυλεμένες αποστάσεις των κοντινότερων γνωστών παραδειγμάτων (Σείριος, PSR J0437, Gaia BH1).",
+  } as Tx,
+};
