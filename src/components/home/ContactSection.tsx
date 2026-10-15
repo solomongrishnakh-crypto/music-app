@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import SectionHeading from "@/components/ui/SectionHeading";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const CONTACTS = [
@@ -31,14 +30,13 @@ const CONTACTS = [
  * mehr anzeigen, nur noch das App-Logo (für Screenreader bleibt der
  * App-Name als unsichtbare Beschriftung erhalten).
  */
-export default function ContactSection() {
-  const { t, localePath } = useLanguage();
+/**
+ * Kontakt-Kacheln (Telegram, X). Seit 15.10.2026 sitzen sie in der Box
+ * "Über die Seite" (Nutzerwunsch: Startseite kompakter, Über + Kontakt zusammen).
+ */
+export function ContactIcons({ className = "" }: { className?: string }) {
   return (
-    <footer className="mx-auto mb-4 mt-16 w-full max-w-6xl sm:mt-24">
-      <SectionHeading index="04" label={t("contactsLabel")} />
-      {/* Nutzerwunsch 03.10.2026: Kontakte futuristischer — Kacheln mit
-          Sechseck-Symbol, Status-Punkt und Scan-Licht beim Antippen */}
-      <div className="flex justify-center gap-4">
+      <div className={"flex gap-4 " + className}>
         {CONTACTS.map((contact) => (
           <a
             key={contact.label}
@@ -56,7 +54,13 @@ export default function ContactSection() {
           </a>
         ))}
       </div>
+  );
+}
 
+export default function ContactSection() {
+  const { t, localePath } = useLanguage();
+  return (
+    <footer className="mx-auto mb-4 mt-8 w-full max-w-6xl sm:mt-10">
       {/* Nutzerwunsch 09.10.2026 (mehr Besucher): Wissensseiten direkt von der
           Startseite verlinkt — hilft Besuchern und Suchmaschinen */}
       <nav className="mt-6 flex flex-wrap justify-center gap-2">
