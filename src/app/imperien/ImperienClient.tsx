@@ -638,6 +638,7 @@ export default function ImperienClient() {
   // Gesuchte Reiche (Nutzerwunsch 15.10.2026): nur diese bleiben auf der Karte
   // voll sichtbar, alle anderen werden abgeblendet.
   const highlightRef = useRef<Set<string> | null>(null);
+  const blinkPendingRef = useRef(false);
   // true, solange Lineal gezogen oder abgespielt wird (Hintergrund gedrosselt)
   const pauseWantedRef = useRef(false);
   const rulerRef = useRef<HTMLDivElement>(null);
@@ -711,6 +712,7 @@ export default function ImperienClient() {
   async function focusHit(h: EmpireHit, all: EmpireHit[]) {
     setActiveHit(h.name);
     highlightRef.current = new Set(all.map((x) => x.name));
+    blinkPendingRef.current = true;
     setIsPlaying(false);
     setPreYear(null);
     const y = clampYear(h.year);
@@ -989,7 +991,7 @@ export default function ImperienClient() {
     function bs(name: string, isMajor: boolean): any {
       const h = highlightRef.current;
       const st = borderStyle(name, isMajor);
-      return h && !h.has(name) ? { ...st, opacity: 0.12 } : st;
+      return h && !h.has(name) ? { ...st, opacity: 0.55 } : st;
     }
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function setLabel(e: any, permanent: boolean, className: string) {
@@ -1010,7 +1012,7 @@ export default function ImperienClient() {
       const key = feature.geometry as object;
       const name: string = feature.properties.NAME;
       seen.add(key);
-      const isMajor = hl ? hl.has(name) : permanentLabelNames.has(name);
+      const isMajor = hl ? hl.has(name) || permanentLabelNames.has(name) : permanentLabelNames.has(name);
       // Sammel-Umriss und Kern tragen denselben Namen — nur das GRÖSSTE
       // Teil bekommt die feste Beschriftung, sonst stünde der Name doppelt.
       const wants = isMajor && !labeledNames.has(name);
@@ -1037,9 +1039,9 @@ export default function ImperienClient() {
           stroke: true,
           color: c,
           weight: 4,
-          opacity: hl && !hl.has(name) ? 0.16 : 1,
+          opacity: hl && !hl.has(name) ? 0.5 : 1,
           fillColor: c,
-          fillOpacity: hl && !hl.has(name) ? 0.16 : 1,
+          fillOpacity: hl && !hl.has(name) ? 0.5 : 1,
         });
         const border = L.polygon(latlngs, {
           renderer: borderRendererRef.current ?? undefined,
@@ -1075,7 +1077,7 @@ export default function ImperienClient() {
         if (e.styleKey !== sk) {
           e.styleKey = sk;
           const on = !hl || hl.has(name);
-          e.fill.setStyle({ fillOpacity: on ? 1 : 0.16, opacity: on ? 1 : 0.16 });
+          e.fill.setStyle({ fillOpacity: on ? 1 : 0.5, opacity: on ? 1 : 0.5 });
           e.border.setStyle(bs(name, isMajor));
         }
         if (e.labeled !== wants || (wants && e.labelClass !== labelClass)) {
@@ -1130,6 +1132,22 @@ export default function ImperienClient() {
 
     setErrorMessage(null);
     setHasRenderedBorders(true);
+
+    // Nutzerwunsch 15.10.2026: gesuchte Reiche blinken zweimal leicht, alle
+    // anderen bleiben sichtbar.
+    if (blinkPendingRef.current && hl) {
+      blinkPendingRef.current = false;
+      const targets = [...terr.entries.values()].filter((x) => hl.has(x.name));
+      const steps = [0.2, 1, 0.2, 1];
+      steps.forEach((o, i) => {
+        window.setTimeout(() => {
+          for (const x of targets) {
+            x.fill.setStyle({ fillOpacity: o, opacity: o });
+            x.border.setStyle({ weight: o < 1 ? 3 : x.isMajor ? 1.4 : 0.7, color: o < 1 ? "#ffffff" : getStableColor(x.name) });
+          }
+        }, 250 + i * 330);
+      });
+    }
   }
   renderBordersGeojsonRef.current = renderBordersGeojson;
 
