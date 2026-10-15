@@ -770,11 +770,13 @@ export default function SizeComparison({ index }: { index: string }) {
         return new Intl.NumberFormat(lng, { maximumFractionDigits: 1 }).format(x / Math.pow(10, e)) + "×10" + sup(e);
       };
       const ratio = big / small;
+      const after: (() => void)[] = []; // Markierungen und Namen kommen über beide Objekte
       ([[A, xA, ra], [B, xB, rb]] as [Obj, number, number][]).forEach(([o, x, r]) => {
         const ext = r * (o.ring ? 2.3 : o.photo ? o.photo[1] : 1) + 80;
         if (x + ext < 0 || x - ext > W) return;
         if (r >= 0.5) drawObj(g, o, x, cy, r, W, H);
         const tiny = r < 4;
+        after.push(() => {
         if (tiny) {
           // Zu klein für den Bildschirm: kleines Fadenkreuz mit Hinweislinie. Die Markierung hat
           // absichtlich immer dieselbe Größe und sagt nichts über die echte Größe.
@@ -818,12 +820,14 @@ export default function SizeComparison({ index }: { index: string }) {
             g.textBaseline = "top";
           }
         }
+        });
       });
-      // Verhältnis-Anzeige oben links: Durchmesser und Volumen (3D)
+      after.forEach((fn) => fn());
+      // Verhältnis-Anzeige unten rechts: Durchmesser und Volumen (3D)
       if (ratio > 1.001) {
         const txt = "⌀ 1 : " + ratioTxt(ratio) + "   3D 1 : " + ratioTxt(Math.pow(ratio, 3));
         g.font = "600 10px ui-monospace, monospace";
-        const tw = g.measureText(txt).width, bx = 10, by0 = 10, bw = Math.min(W - 20, tw + 16), bh = 22;
+        const tw = g.measureText(txt).width, bw = Math.min(W - 20, tw + 16), bh = 22, bx = W - bw - 10, by0 = H - 12 - bh;
         g.fillStyle = "rgba(10,6,8,0.62)";
         g.fillRect(bx, by0, bw, bh);
         g.strokeStyle = "rgba(255,90,77,0.8)";
