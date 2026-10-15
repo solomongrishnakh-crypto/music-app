@@ -22,7 +22,6 @@
  */
 "use client";
 
-import SmokePortrait from "@/components/home/SmokePortrait";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -35,7 +34,9 @@ export default function AboutSiteSection() {
           die vier Bereiche als Liste, Rechtliches als kleine Notiz */}
       <div className="hud-card grid grid-cols-1 overflow-hidden sm:grid-cols-[2fr_3fr]">
         <div className="relative h-56 overflow-hidden bg-black sm:h-auto sm:min-h-[22rem]">
-          <SmokePortrait src="/branding/about-portrait.jpg" alt="Centaurian — visuelle Identität" />
+          {/* Nutzerwunsch 15.10.2026: statt des Partikel-Porträts das Centaurian-Logo (statisch, spart Leistung) */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/branding/logo.jpg" alt="Centaurian" className="absolute inset-0 h-full w-full object-contain" loading="lazy" decoding="async" />
         </div>
         <div className="flex flex-col justify-center gap-4 p-5 sm:p-7">
           <p className="text-sm leading-relaxed text-foreground/90">{t("aboutLead")}</p>
