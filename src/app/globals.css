@@ -507,3 +507,58 @@ html[data-overlay="1"] .hud-btn {
       rgb(8, 7, 12) !important;
   }
 }
+
+
+/* ===== Startseiten-Karten futuristisch + gläsern (Nutzerwunsch 15.10.2026) =====
+   Glas-Eindruck ohne backdrop-filter (der bremste am Handy): Glanzkante oben,
+   schräger Glas-Schimmer, roter Lichtschein, feine Scanlinien und ein
+   langsamer Lichtstreif, der über die Karte wandert (nur transform → billig). */
+.hud-card.feat-card {
+  background:
+    linear-gradient(155deg, rgba(255, 255, 255, 0.14) 0%, rgba(255, 255, 255, 0.04) 26%, rgba(255, 255, 255, 0) 52%),
+    radial-gradient(85% 70% at 100% 0%, rgba(255, 90, 77, 0.18), rgba(255, 90, 77, 0) 62%),
+    radial-gradient(70% 60% at 0% 115%, rgba(140, 160, 255, 0.09), rgba(140, 160, 255, 0) 60%),
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.022) 0 1px, rgba(255, 255, 255, 0) 1px 3px),
+    linear-gradient(180deg, rgb(20, 17, 26), rgb(9, 8, 13)) !important;
+  outline: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.28),
+    inset 0 0 0 1px rgba(255, 90, 77, 0.05),
+    inset 0 -22px 32px -26px rgba(255, 90, 77, 0.55),
+    0 18px 40px -24px rgba(0, 0, 0, 0.95);
+  transition: transform 0.25s ease, outline-color 0.25s ease, box-shadow 0.25s ease;
+}
+.hud-card.feat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0.09) 48%, rgba(255, 140, 120, 0.12) 52%, rgba(255, 255, 255, 0) 62%);
+  transform: translateX(-130%);
+  animation: featSweep 8s ease-in-out infinite;
+}
+.feat-card:nth-child(2)::before { animation-delay: 1.6s; }
+.feat-card:nth-child(3)::before { animation-delay: 3.2s; }
+@keyframes featSweep {
+  0%, 72% { transform: translateX(-130%); }
+  100% { transform: translateX(130%); }
+}
+a.hud-card.feat-card:hover {
+  transform: translateY(-2px);
+  outline-color: rgba(var(--hud-accent), 0.55);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -22px 32px -22px rgba(255, 90, 77, 0.7),
+    0 0 32px -10px rgba(var(--hud-accent), 0.55),
+    0 18px 40px -24px rgba(0, 0, 0, 0.95);
+}
+.feat-card .feat-ico {
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0) 55%),
+    radial-gradient(circle at 50% 40%, rgba(var(--hud-accent), 0.26), rgba(var(--hud-accent), 0.04) 70%);
+  box-shadow: 0 0 18px -6px rgba(var(--hud-accent), 0.6);
+}
+@media (prefers-reduced-motion: reduce) {
+  .hud-card.feat-card::before { animation: none; display: none; }
+}
