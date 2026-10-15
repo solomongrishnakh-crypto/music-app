@@ -160,8 +160,7 @@ function worldInfo(id: string, lang: Lang): { name: string; color: string } {
 
 const INPUT =
   "h-9 w-full border border-white/15 bg-black/40 px-2.5 text-xs text-foreground outline-none transition-colors focus:border-accent";
-const STEP = "label-mono flex items-center gap-2 text-[11px] uppercase tracking-wider text-foreground";
-const BADGE = "inline-flex h-5 w-5 items-center justify-center border border-accent bg-accent/15 text-[10px] text-accent";
+const LBL = "label-mono text-[10px] uppercase tracking-wider text-muted";
 const TILE = "relative overflow-hidden border border-white/10 bg-black/35 px-2.5 pb-2.5 pt-2";
 
 export default function SpaceCalculators({ index = "03" }: { index?: string }) {
@@ -295,7 +294,7 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
   const arriveTxt = (() => {
     if (tick === 0 || !Number.isFinite(totalS) || totalS / 31557600 > 7000) return "–";
     try {
-      const o: Intl.DateTimeFormatOptions = { year: "numeric", month: "long", day: "numeric" };
+      const o: Intl.DateTimeFormatOptions = { year: "numeric", month: "short", day: "numeric" };
       if (totalS < 86400) {
         o.hour = "2-digit";
         o.minute = "2-digit";
@@ -376,11 +375,8 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
             </div>
           ) : (
             <div>
-              <p className={STEP}>
-                <span className={BADGE}>1</span>
-                {localize(JOURNEY2_TX.s1, lang)}
-              </p>
-              <div className="mt-2 flex flex-wrap gap-1.5">
+              <p className={LBL}>{localize(JOURNEY2_TX.s1, lang)}</p>
+              <div className="mt-1.5 grid grid-cols-4 gap-1.5 sm:grid-cols-6">
                 {DESTS.map((x) => (
                   <button
                     key={x.id}
@@ -388,12 +384,12 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                     onClick={() => setDest(x.id)}
                     aria-pressed={dest === x.id}
                     className={
-                      "label-mono flex items-center gap-1.5 border py-1 pl-1.5 pr-2.5 text-[10px] uppercase tracking-wide transition-colors " +
-                      (dest === x.id ? "border-accent bg-accent/15 text-foreground" : "border-white/15 text-muted hover:border-accent hover:text-foreground")
+                      "flex flex-col items-center gap-1 border px-1 py-1.5 transition-colors " +
+                      (dest === x.id ? "border-accent bg-accent/15 text-foreground" : "border-white/10 text-muted hover:border-accent hover:text-foreground")
                     }
                   >
-                    <Thumb id={x.id} size={22} color={x.color} />
-                    {destName(x)}
+                    <Thumb id={x.id} size={30} color={x.color} />
+                    <span className="label-mono w-full break-words text-center text-[8px] uppercase leading-tight tracking-wide">{destName(x)}</span>
                   </button>
                 ))}
               </div>
@@ -401,11 +397,8 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                 {localize(TRAVEL_TX.dist, lang)} <span className="tabular-nums text-accent">≈ {fmtKm(d.km, lang)}</span>
               </p>
 
-              <p className={STEP + " mt-5"}>
-                <span className={BADGE}>2</span>
-                {localize(JOURNEY2_TX.s2, lang)}
-              </p>
-              <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
+              <p className={LBL + " mt-4"}>{localize(JOURNEY2_TX.s2, lang)}</p>
+              <div className="mt-1.5 grid grid-cols-3 gap-1.5">
                 {VEHICLES.map((v) => {
                   const sec = (d.km / v.kmh) * 3600;
                   const on = sel === v.id;
@@ -417,19 +410,16 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                       aria-pressed={on}
                       className={TILE + " text-left transition-colors " + (on ? "border-accent bg-accent/10" : "hover:border-white/30")}
                     >
-                      <span className="label-mono block truncate text-[10px] uppercase tracking-wide text-muted">{typeof v.name === "string" ? v.name : localize(v.name, lang)}</span>
-                      <span className="block text-[9px] tabular-nums text-muted/70">
-                        {nf(lang, { notation: v.kmh >= 1e7 ? "compact" : "standard", compactDisplay: "short", maximumFractionDigits: 1 }, v.kmh)} km/h
-                      </span>
-                      <p className="font-display mt-1 break-words text-base font-bold leading-tight tabular-nums text-accent">{fmtDur(sec, lang)}</p>
+                      <span className="label-mono block truncate text-[9px] uppercase tracking-wide text-muted">{typeof v.name === "string" ? v.name : localize(v.name, lang)}</span>
+                      <p className="font-display mt-0.5 break-words text-sm font-bold leading-tight tabular-nums text-accent">{fmtDur(sec, lang)}</p>
                     </button>
                   );
                 })}
                 <div
-                  className={TILE + " col-span-2 transition-colors " + (sel === "custom" ? "border-accent bg-accent/10" : "")}
+                  className={TILE + " col-span-3 transition-colors " + (sel === "custom" ? "border-accent bg-accent/10" : "")}
                   onClick={() => setSel("custom")}
                 >
-                  <span className="label-mono block truncate text-[10px] uppercase tracking-wide text-muted">{localize(JOURNEY_TX.custom, lang)}</span>
+                  <span className="label-mono block truncate text-[9px] uppercase tracking-wide text-muted">{localize(JOURNEY_TX.custom, lang)}</span>
                   <div className="mt-1 flex flex-wrap items-center gap-1.5">
                     <input
                       className="h-7 w-24 min-w-0 border border-white/15 bg-black/40 px-2 text-xs tabular-nums text-foreground outline-none focus:border-accent"
@@ -473,25 +463,18 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                       ▶ {localize(JOURNEY_TX.go, lang)}
                     </button>
                   </div>
-                  <p className="font-display mt-1 break-words text-base font-bold leading-tight tabular-nums text-accent">
-                    {Number.isFinite(custKmh) ? fmtDur((d.km / custKmh) * 3600, lang) : "–"}
-                  </p>
                 </div>
               </div>
 
-              <p className={STEP + " mt-5"}>
-                <span className={BADGE}>3</span>
-                {localize(JOURNEY2_TX.s3, lang)}
-              </p>
-              <div className={"mt-2 border bg-black/40 p-3 transition-colors " + (arrived ? "border-accent" : "border-white/10")}>
-                <div className="grid grid-cols-2 gap-x-3 gap-y-2">
+              <div className={"mt-4 border bg-black/40 p-3 transition-colors " + (arrived ? "border-accent" : "border-white/10")}>
+                <div className="grid grid-cols-2 gap-x-3">
                   <div>
                     <span className="label-mono block text-[9px] uppercase tracking-wider text-muted">{localize(JOURNEY_TX.duration, lang)}</span>
-                    <span className="font-display block break-words text-lg font-bold leading-tight tabular-nums text-accent">{Number.isFinite(totalS) ? fmtDur(totalS, lang) : "–"}</span>
+                    <span className="font-display block break-words text-base font-bold leading-tight tabular-nums text-accent">{Number.isFinite(totalS) ? fmtDur(totalS, lang) : "–"}</span>
                   </div>
                   <div>
                     <span className="label-mono block text-[9px] uppercase tracking-wider text-muted">{localize(JOURNEY_TX.arrival, lang)}</span>
-                    <span className="font-display block break-words text-lg font-bold leading-tight tabular-nums text-accent">{arriveTxt}</span>
+                    <span className="font-display block break-words text-base font-bold leading-tight tabular-nums text-accent">{arriveTxt}</span>
                   </div>
                 </div>
 
@@ -528,17 +511,6 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
 
                 </div>
 
-                <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5">
-                  <div>
-                    <span className="label-mono block text-[9px] uppercase tracking-wider text-muted">{localize(JOURNEY_TX.traveled, lang)}</span>
-                    <span className="block text-xs font-bold tabular-nums text-foreground">{fmtKm(traveled, lang)}</span>
-                  </div>
-                  <div>
-                    <span className="label-mono block text-[9px] uppercase tracking-wider text-muted">{localize(JOURNEY_TX.elapsed, lang)}</span>
-                    <span className="block text-xs font-bold tabular-nums text-foreground">{fmtDur(simT, lang)}</span>
-                  </div>
-                </div>
-
                 <div className="mt-3 flex flex-wrap items-center gap-1.5">
                   <button
                     type="button"
@@ -565,9 +537,6 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                   )}
                 </div>
               </div>
-              <p className="mt-2 text-[9px] leading-relaxed text-muted">
-                {localize(TRAVEL_TX.note, lang)} {localize(JOURNEY2_TX.approx, lang)}
-              </p>
             </div>
           )}
         </div>
