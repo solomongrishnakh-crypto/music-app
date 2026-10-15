@@ -219,6 +219,10 @@ export const JOURNEY_TX = {
     de: "Ankunft", en: "Arrival", hi: "आगमन", zh: "到达时间", ko: "도착", ja: "到着",
     es: "Llegada", fr: "Arrivée", tr: "Varış", ru: "Прибытие", pt: "Chegada", ar: "الوصول", el: "Άφιξη",
   } as Tx,
+  go: {
+    de: "Los", en: "Go", hi: "चलो", zh: "出发", ko: "출발", ja: "出発",
+    es: "¡Ya!", fr: "Partir", tr: "Başla", ru: "Поехали", pt: "Partir", ar: "انطلق", el: "Πάμε",
+  } as Tx,
   custom: {
     de: "Eigene Geschwindigkeit", en: "Custom speed", hi: "अपनी गति", zh: "自定义速度", ko: "직접 입력한 속도", ja: "好きな速度",
     es: "Velocidad propia", fr: "Vitesse personnalisée", tr: "Özel hız", ru: "Своя скорость", pt: "Velocidade própria", ar: "سرعة مخصصة", el: "Δική σου ταχύτητα",
