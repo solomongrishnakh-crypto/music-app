@@ -23,13 +23,14 @@
 "use client";
 
 import SectionHeading from "@/components/ui/SectionHeading";
+import { ContactIcons } from "@/components/home/ContactSection";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function AboutSiteSection() {
   const { t } = useLanguage();
   return (
     <section className="mx-auto mt-16 w-full max-w-6xl sm:mt-24">
-      <SectionHeading index="03" label={t("aboutLabel")} />
+      <SectionHeading index="02" label={t("aboutLabel")} />
       {/* Nutzerwunsch 03.10.2026: Beschreibung verbessert — kurzer Einstieg,
           die vier Bereiche als Liste, Rechtliches als kleine Notiz */}
       <div className="hud-card grid grid-cols-1 overflow-hidden sm:grid-cols-[2fr_3fr]">
@@ -61,6 +62,10 @@ export default function AboutSiteSection() {
             </svg>
             <span>{t("aboutLegal")}</span>
           </p>
+          <div className="flex items-center gap-4 border-t border-border pt-3">
+            <span className="label-mono text-[10px] uppercase tracking-wide text-muted">{t("contactsLabel")}</span>
+            <ContactIcons />
+          </div>
         </div>
       </div>
     </section>
