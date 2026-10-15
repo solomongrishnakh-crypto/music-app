@@ -1030,9 +1030,16 @@ export default function SizeComparison({ index }: { index: string }) {
         slot.set(i, { sx, j });
         j++;
       }
+      // Größenvergleich direkt am Objekt: bei Planeten ab Jupiter-Klasse sitzt die Erde im richtigen
+      // Maßstab vor der Scheibe des Objekts im Fokus (Nutzerwunsch 15.10.2026).
+      const eIdx = OBJECTS.findIndex((o) => o.id === "earth");
+      const fobj = OBJECTS[fo];
+      const refA = fobj.kind === "planet" && fobj.id !== "earth" && rs[eIdx] >= 1.5 && rs[fo] > rs[eIdx] * 3
+        ? Math.max(0, Math.min(1, 1 - Math.abs(t - fo) * 3)) : 0;
       g.font = "400 11px ui-monospace, monospace";
       for (let i = 0; i <= last; i++) {
         const o = OBJECTS[i], r = rs[i];
+        if (i === eIdx && refA > 0.02) continue;
         const sl = slot.get(i), tx = xs[i] + off;
         // Kleine Vorgänger gleiten beim Schrumpfen (8 → 5,5 px) an ihren Parkplatz links und
         // erscheinen nie zwischen dem linken Rand und dem Objekt im Fokus (Nutzer 15.10.2026).
@@ -1062,6 +1069,17 @@ export default function SizeComparison({ index }: { index: string }) {
             labels.push({ x, y: cy + Math.max(r, 6) * (o.kind === "galaxy" && !o.photo ? 0.55 : 1) + 8, text, main: i === focus });
           }
         }
+      }
+      if (refA > 0.02) {
+        const rE = rs[eIdx], ex = xs[fo] + off - rs[fo] * 0.5, ey = cy + rs[fo] * 0.52;
+        g.globalAlpha = refA;
+        drawObj(g, OBJECTS[eIdx], ex, ey, rE, W, H);
+        g.strokeStyle = "rgba(255,255,255,0.55)";
+        g.lineWidth = 1;
+        g.beginPath(); g.arc(ex, ey, rE + 3, 0, Math.PI * 2); g.stroke();
+        g.globalAlpha = 1;
+        const nm = objName(OBJECTS[eIdx], lng);
+        labels.push({ x: ex, y: ey + rE + 7, text: nm, main: false });
       }
       // Beschriftungen ohne Überlappung; das Objekt im Fokus hat Vorrang.
       labels.sort((a, b) => Number(b.main) - Number(a.main));
