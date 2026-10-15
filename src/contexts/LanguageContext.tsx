@@ -138,11 +138,15 @@ export function LanguageProvider({
 
   const localePath = useCallback(
     (path: string) => {
-      if (!forcedLang || forcedLang === "de") return path;
+      // Auf Sprach-Adressen gilt deren Sprache; auf den deutschen Adressen die
+      // gewählte (gespeicherte) Sprache — sonst führen Links in einer anderen
+      // Sprache auf deutsche Seiten (Nutzerkorrektur 15.10.2026).
+      const l = forcedLang ?? (hydrated ? lang : "de");
+      if (l === "de") return path;
       if (!path.startsWith("/") || path.startsWith("//")) return path;
-      return path === "/" ? `/${forcedLang}` : `/${forcedLang}${path}`;
+      return path === "/" ? `/${l}` : `/${l}${path}`;
     },
-    [forcedLang]
+    [forcedLang, hydrated, lang]
   );
 
   const t = useCallback(
