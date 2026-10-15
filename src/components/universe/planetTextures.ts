@@ -136,6 +136,92 @@ function craters(c: HTMLCanvasElement, seed: number, count: number, maxR: number
   }
 }
 
+/**
+ * Krater mit Licht von links oben: dunkler Boden, heller Rand auf der
+ * Lichtseite, Schatten auf der Gegenseite; Breitenverzerrung nahe der Pole
+ * und Wiederholung über die Kartennaht (Ceres).
+ */
+function shadedCraters(c: HTMLCanvasElement, seed: number, count: number, maxR: number, minR: number) {
+  const ctx = c.getContext("2d");
+  if (!ctx) return;
+  const W = c.width;
+  const H = c.height;
+  const r = rng(seed);
+  for (let i = 0; i < count; i++) {
+    const x = r() * W;
+    const y = H * (0.06 + r() * 0.88);
+    const lat = (0.5 - y / H) * Math.PI;
+    const rad = minR + Math.pow(r(), 3) * (maxR - minR);
+    const sx = 1 / Math.max(0.3, Math.cos(lat));
+    for (const dx of [-W, 0, W]) {
+      const cx = x + dx;
+      if (cx + rad * sx < 0 || cx - rad * sx > W) continue;
+      ctx.save();
+      ctx.translate(cx, y);
+      ctx.scale(sx, 1);
+      const gr = ctx.createRadialGradient(0, 0, rad * 0.15, 0, 0, rad);
+      gr.addColorStop(0, "rgba(30,28,26,0.34)");
+      gr.addColorStop(0.7, "rgba(50,47,43,0.20)");
+      gr.addColorStop(1, "rgba(0,0,0,0)");
+      ctx.fillStyle = gr;
+      ctx.beginPath();
+      ctx.arc(0, 0, rad, 0, Math.PI * 2);
+      ctx.fill();
+      // große Krater: dünner, weicher Rand — sonst wirken sie wie Ringe
+      const soft = rad > 12 ? 0.45 : 1;
+      ctx.lineWidth = Math.max(0.6, rad * (rad > 12 ? 0.06 : 0.13));
+      ctx.strokeStyle = `rgba(222,217,207,${0.34 * soft})`;
+      ctx.beginPath();
+      ctx.arc(0, 0, rad * 0.93, Math.PI * 0.75, Math.PI * 1.75);
+      ctx.stroke();
+      ctx.strokeStyle = `rgba(18,16,14,${0.30 * soft})`;
+      ctx.beginPath();
+      ctx.arc(0, 0, rad * 0.93, -Math.PI * 0.25, Math.PI * 0.75);
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+}
+
+/** Occator-Krater (≈ 20° N, 239° O) mit den hellen Salzflecken der Cerealia Facula. */
+function occatorSpots(c: HTMLCanvasElement) {
+  const ctx = c.getContext("2d");
+  if (!ctx) return;
+  const W = c.width;
+  const H = c.height;
+  const x = (239.3 / 360) * W;
+  const y = (0.5 - 19.8 / 180) * H;
+  const sx = 1 / Math.cos((19.8 * Math.PI) / 180);
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.scale(sx, 1);
+  const floor = ctx.createRadialGradient(0, 0, 3, 0, 0, 24);
+  floor.addColorStop(0, "rgba(200,196,188,0.6)");
+  floor.addColorStop(1, "rgba(40,38,35,0)");
+  ctx.fillStyle = floor;
+  ctx.beginPath();
+  ctx.arc(0, 0, 24, 0, Math.PI * 2);
+  ctx.fill();
+  const spots: [number, number, number, number][] = [
+    [0, 0, 8, 1],
+    [9, 4, 3.4, 0.85],
+    [-8, 6, 2.8, 0.75],
+    [4, -9, 2.5, 0.7],
+    [-4, -5, 2, 0.6],
+  ];
+  for (const [dx, dy, rr, a] of spots) {
+    const sg = ctx.createRadialGradient(dx, dy, 0, dx, dy, rr);
+    sg.addColorStop(0, `rgba(252,250,244,${a})`);
+    sg.addColorStop(0.55, `rgba(235,232,224,${a * 0.6})`);
+    sg.addColorStop(1, "rgba(235,232,224,0)");
+    ctx.fillStyle = sg;
+    ctx.beginPath();
+    ctx.arc(dx, dy, rr, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
 /** Oberflächen-Textur eines Körpers (null = einfarbig nach `fallback`). */
 const CANVAS_CACHE = new Map<string, HTMLCanvasElement>();
 /** Einmal berechnen, danach aus dem Speicher (zweites Öffnen sofort). */
@@ -275,12 +361,22 @@ export function surfaceCanvas(id: string, fallback: string): HTMLCanvasElement {
       });
     }
     case "ceres": {
+      // Realistischer als die frühere Falschfarben-Höhenkarte (Nutzerkorrektur
+      // 15.10.2026): Ceres ist sehr dunkel, neutral grau und von Kratern in
+      // allen Größen übersät; nur im Occator-Krater (≈ 20° N) liegen helle
+      // Salzflecken (Cerealia Facula).
       const n = waveNoise(91, 14, 12);
-      const c = paint(256, 128, (u, v) => {
-        const col = mix(hex("#6e6a65"), hex("#9c9790"), 0.5 + n(u, v) * 0.35);
+      const g = waveNoise(137, 12, 46);
+      const c = paint(1024, 512, (u, v) => {
+        const big = n(u, v);
+        const grain = g(u, v);
+        const col = mix(hex("#55534f"), hex("#8c8983"), 0.5 + big * 0.3 + grain * 0.12);
         return [col[0], col[1], col[2]];
       });
-      craters(c, 92, 70, 5);
+      shadedCraters(c, 92, 22, 38, 9);
+      shadedCraters(c, 93, 380, 11, 3);
+      shadedCraters(c, 94, 1800, 3.2, 0.8);
+      occatorSpots(c);
       return c;
     }
     default: {
