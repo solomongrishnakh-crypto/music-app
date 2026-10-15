@@ -329,7 +329,6 @@ export default function ThreeBackground() {
     let lastScrollT = 0;
     let scrollMax = 0;
     let scrollMeasured = -1e9;
-    let dustTick = 0;
 
     function handleScroll() {
       const nowS = performance.now();
@@ -379,15 +378,16 @@ export default function ThreeBackground() {
       // ca. 35 — bewegt sich also immer, braucht aber deutlich weniger Leistung.
       const nowT = performance.now();
       const gap = nowT - lastRender;
-      const scrolling = nowT - lastScrollT < 200;
-      // Handy: ca. 35 Bilder/s (beim Scrollen 25, gibt der GPU Luft); PC: höchstens ca. 72 Bilder/s
-      const minGap = ds.bgpause === "1" ? 66 : smallScreen ? (scrolling ? 40 : 28) : 12;
+      // Nutzer 15.10.2026: "früher super flüssig" — wieder jedes Bild rendern (volle Bildrate des
+      // Displays, z. B. 120 Hz). Die Drosselung auf ca. 35 Bilder/s am Handy (seit 14.10.) wirkte
+      // auf schnellen Handys wie Ruckeln. Nur beim Ziehen des Geschichts-Lineals bleibt sie.
+      const minGap = ds.bgpause === "1" ? 66 : 0;
       if (gap < minGap) {
         animationId = requestAnimationFrame(animate);
         return;
       }
       lastRender = nowT;
-      elapsed += 0.006 * Math.min(6, Math.max(1, gap / 16.7));
+      elapsed += ds.bgpause === "1" ? 0.006 * Math.min(6, Math.max(1, gap / 16.7)) : 0.006;
 
       // Energieströme: gleichmäßig weiter auf zufälligem Weg, nie Pause
       const now = performance.now();
@@ -446,8 +446,6 @@ export default function ThreeBackground() {
       // pro Partikel — wirkt wie funkelnder Sternenstaub statt statischer Punkte.
       const dustPosAttr = dustGeometry.attributes.position as THREE.BufferAttribute;
       const dustColorAttr = dustGeometry.attributes.color as THREE.BufferAttribute;
-      // Staub driftet langsam: nur jedes 2. Bild neu rechnen, beim Scrollen am Handy gar nicht
-      if ((dustTick++ & 1) === 0 && !(scrolling && smallScreen))
       for (let i = 0; i < DUST_COUNT; i++) {
         const t = elapsed * dustSpeed[i] + dustPhase[i];
         const driftX = Math.sin(t) * 0.18;
