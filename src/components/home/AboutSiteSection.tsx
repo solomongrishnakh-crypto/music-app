@@ -29,7 +29,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 export default function AboutSiteSection() {
   const { t } = useLanguage();
   return (
-    <section className="mx-auto mt-16 w-full max-w-5xl sm:mt-24">
+    <section className="mx-auto mt-16 w-full max-w-6xl sm:mt-24">
       <SectionHeading index="05" label={t("aboutLabel")} />
       {/* Nutzerwunsch 03.10.2026: Beschreibung verbessert — kurzer Einstieg,
           die vier Bereiche als Liste, Rechtliches als kleine Notiz */}
