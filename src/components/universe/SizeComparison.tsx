@@ -732,7 +732,7 @@ export default function SizeComparison({ index }: { index: string }) {
     if (!cvs || !wrap) return;
     const g = cvs.getContext("2d");
     if (!g) return;
-    let raf = 0, W = 0, H = 0, D = 1, lastShown = -1, visible = true, lastDraw = 0, lastZs = -1;
+    let raf = 0, W = 0, H = 0, D = 1, lastShown = -1, visible = true, lastDraw = 0, lastZs = -1, parkA = -1;
     ANIM.reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     dirty.current = true;
     const last = OBJECTS.length - 1;
@@ -1005,20 +1005,28 @@ export default function SizeComparison({ index }: { index: string }) {
       const fo = Math.round(t);
       const lim = xs[fo] + off - rs[fo] * (OBJECTS[fo].ring || OBJECTS[fo].kind === "bh" ? 2.3 : 1) - 14;
       const stepA = [1, 0.8, 0.55, 0.35, 0.2, 0.1];
+      // Große Objekte (auch das im Fokus): geparkte Punkte und Namen verschwinden, sobald sie
+      // davor liegen würden (Nutzer 15.10.2026).
+      const blockers: { x: number; e: number }[] = [];
+      let lb = Infinity;
+      for (let i = 0; i <= last; i++) {
+        if (rs[i] < 8) continue;
+        const bx = xs[i] + off, e = rs[i] * (OBJECTS[i].ring || OBJECTS[i].kind === "bh" ? 2.3 : 1) + 4;
+        blockers.push({ x: bx, e });
+        if (bx + e > 0 && bx - e < lb) lb = bx - e;
+      }
+      // Die kleinen Vorgänger laufen als Schweif direkt links vom ersten sichtbaren großen Objekt
+      // aus (keine Lücke bis zum Bildrand, Nutzer 15.10.2026) und gleiten sanft nach.
+      const tgt = Math.min(lim, Math.max(46, lb - 10));
+      parkA = parkA < 0 ? tgt : parkA + (tgt - parkA) * 0.2;
+      const anchor = Math.min(lim, parkA);
       const slot = new Map<number, { sx: number; j: number }>();
       for (let i = fo - 1, j = 0; i >= 0 && j < 6; i--) {
         if (rs[i] >= 8) continue; // große Objekte laufen wie bisher aus dem Bild
-        const sx = Math.min(lim, 46) - j * 8;
+        const sx = anchor - j * 8;
         if (sx < 6) break;
         slot.set(i, { sx, j });
         j++;
-      }
-      // Große Objekte (auch das im Fokus): geparkte Punkte und Namen verschwinden, sobald sie
-      // davor liegen würden – sie sollen nur am freien linken Rand stehen (Nutzer 15.10.2026).
-      const blockers: { x: number; e: number }[] = [];
-      for (let i = 0; i <= last; i++) {
-        if (slot.has(i) || rs[i] < 8) continue;
-        blockers.push({ x: xs[i] + off, e: rs[i] * (OBJECTS[i].ring || OBJECTS[i].kind === "bh" ? 2.3 : 1) + 4 });
       }
       g.font = "400 11px ui-monospace, monospace";
       for (let i = 0; i <= last; i++) {
@@ -1046,7 +1054,7 @@ export default function SizeComparison({ index }: { index: string }) {
           const name = objName(o, lng), text = name.length > 26 ? name.slice(0, 25) + "…" : name;
           if (parked) {
             // Namen am Rand nur, wenn sie nicht in das große Objekt ragen
-            const w = g.measureText(text).width, lx = Math.max(w / 2 + 4, Math.min(x, lim + 6 - w / 2));
+            const w = g.measureText(text).width, lx = Math.max(w / 2 + 4, Math.min(x, Math.min(lim + 6, lb - 6) - w / 2));
             if (!blockers.some((b) => b.x - b.e < lx + w / 2 && b.x + b.e > lx - w / 2)) labels.push({ x: lx, y: cy + 14, text, main: sl !== undefined && sl.j === 0 });
           } else {
             labels.push({ x, y: cy + Math.max(r, 6) * (o.kind === "galaxy" && !o.photo ? 0.55 : 1) + 8, text, main: i === focus });
