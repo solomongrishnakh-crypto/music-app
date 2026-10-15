@@ -1443,9 +1443,11 @@ export default function UniversumPage() {
         {/* Nutzerwunsch 14.10.2026: Größenvergleich vom Neutronenstern bis zum Universum */}
         <SizeComparison index="02" />
 
+        <SpaceCalculators index="03" />
+
         {/* Nutzerwunsch 03.10.2026: Maschine der Ewigkeit über "Universum in Zahlen" */}
         <section className="mb-10">
-          <SectionHeading index="03" label={t("gearLabel")} />
+          <SectionHeading index="04" label={t("gearLabel")} />
         <div className="hud-card flex flex-col items-center overflow-hidden p-3 lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-center lg:gap-x-8 lg:p-5">
           <Gear3D className="h-60 w-full sm:h-72 lg:row-span-2 lg:h-80" />
           <p className="mt-2 max-w-md text-center text-[10px] leading-snug text-muted lg:mt-0 lg:max-w-none lg:self-end lg:text-left lg:text-xs">{t("gearCaption")}</p>
@@ -1459,7 +1461,7 @@ export default function UniversumPage() {
         </section>
 
         <section className="mb-6">
-          <SectionHeading index="04" label={t("universeInNumbers")} />
+          <SectionHeading index="05" label={t("universeInNumbers")} />
         <UniverseAgeTicker />
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {UNIVERSE_FACTS.map((fact, i) => {
@@ -1494,8 +1496,6 @@ export default function UniversumPage() {
           })}
         </div>
         </section>
-
-        <SpaceCalculators index="05" />
 
         <SpaceNewsSection />
 
