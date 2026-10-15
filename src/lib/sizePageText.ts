@@ -24,6 +24,9 @@ export interface SizePageText {
   faq: [string, string][];
   keywords: string[];
   link: string;
+  /** Kurztitel und -text für die Karte auf der Startseite (15.10.2026) */
+  cardTitle: string;
+  card: string;
 }
 
 export const SIZE_PAGE: Record<Lang, SizePageText> = {
@@ -47,6 +50,8 @@ export const SIZE_PAGE: Record<Lang, SizePageText> = {
     ],
     keywords: ["Größenvergleich Planeten", "Größenvergleich Sterne", "Größenvergleich Universum", "Planeten Größe Vergleich", "größter Stern"],
     link: "Alle Details zum Größenvergleich",
+    cardTitle: "Größenvergleich",
+    card: "Planeten und Sterne im echten Maßstab – von der Erde bis zum ganzen Universum.",
   },
   en: {
     title: "Size Comparison: Planets, Stars & the Universe – Interactive",
@@ -68,6 +73,8 @@ export const SIZE_PAGE: Record<Lang, SizePageText> = {
     ],
     keywords: ["planet size comparison", "star size comparison", "universe size comparison", "size of planets", "biggest star"],
     link: "All details of the size comparison",
+    cardTitle: "Size comparison",
+    card: "Planets and stars at true scale – from Earth to the entire universe.",
   },
   es: {
     title: "Comparación de tamaños: planetas, estrellas y universo",
@@ -89,6 +96,8 @@ export const SIZE_PAGE: Record<Lang, SizePageText> = {
     ],
     keywords: ["comparación de tamaños planetas", "comparación de tamaños estrellas", "tamaño del universo", "tamaño de los planetas", "estrella más grande"],
     link: "Todos los detalles de la comparación de tamaños",
+    cardTitle: "Comparación de tamaños",
+    card: "Planetas y estrellas a escala real: de la Tierra a todo el universo.",
   },
   fr: {
     title: "Comparaison de tailles : planètes, étoiles et univers",
@@ -110,6 +119,8 @@ export const SIZE_PAGE: Record<Lang, SizePageText> = {
     ],
     keywords: ["comparaison taille planètes", "comparaison taille étoiles", "taille de l'univers", "taille des planètes", "plus grande étoile"],
     link: "Tous les détails de la comparaison de tailles",
+    cardTitle: "Comparaison des tailles",
+    card: "Planètes et étoiles à l'échelle réelle – de la Terre à l'univers entier.",
   },
   pt: {
     title: "Comparação de tamanhos: planetas, estrelas e universo",
@@ -131,6 +142,8 @@ export const SIZE_PAGE: Record<Lang, SizePageText> = {
     ],
     keywords: ["comparação de tamanho planetas", "comparação de tamanho estrelas", "tamanho do universo", "tamanho dos planetas", "maior estrela"],
     link: "Todos os detalhes da comparação de tamanhos",
+    cardTitle: "Comparação de tamanhos",
+    card: "Planetas e estrelas em escala real – da Terra ao universo inteiro.",
   },
   tr: {
     title: "Boyut Karşılaştırması: Gezegenler, Yıldızlar ve Evren",
@@ -152,6 +165,8 @@ export const SIZE_PAGE: Record<Lang, SizePageText> = {
     ],
     keywords: ["gezegen boyut karşılaştırması", "yıldız boyut karşılaştırması", "evrenin büyüklüğü", "gezegenlerin boyutu", "en büyük yıldız"],
     link: "Boyut karşılaştırmasının tüm ayrıntıları",
+    cardTitle: "Boyut karşılaştırması",
+    card: "Gezegenler ve yıldızlar gerçek ölçekte – Dünya'dan tüm evrene.",
   },
   ru: {
     title: "Сравнение размеров: планеты, звёзды и Вселенная",
@@ -173,6 +188,8 @@ export const SIZE_PAGE: Record<Lang, SizePageText> = {
     ],
     keywords: ["сравнение размеров планет", "сравнение размеров звёзд", "размер Вселенной", "размеры планет", "самая большая звезда"],
     link: "Все подробности сравнения размеров",
+    cardTitle: "Сравнение размеров",
+    card: "Планеты и звёзды в реальном масштабе – от Земли до всей Вселенной.",
   },
   el: {
     title: "Σύγκριση μεγεθών: πλανήτες, αστέρια και σύμπαν",
@@ -194,6 +211,8 @@ export const SIZE_PAGE: Record<Lang, SizePageText> = {
     ],
     keywords: ["σύγκριση μεγεθών πλανητών", "σύγκριση μεγεθών αστεριών", "μέγεθος του σύμπαντος", "μέγεθος πλανητών", "μεγαλύτερο αστέρι"],
     link: "Όλες οι λεπτομέρειες της σύγκρισης μεγεθών",
+    cardTitle: "Σύγκριση μεγεθών",
+    card: "Πλανήτες και αστέρια σε πραγματική κλίμακα – από τη Γη ως όλο το σύμπαν.",
   },
   ar: {
     title: "مقارنة الأحجام: الكواكب والنجوم والكون",
@@ -215,6 +234,8 @@ export const SIZE_PAGE: Record<Lang, SizePageText> = {
     ],
     keywords: ["مقارنة أحجام الكواكب", "مقارنة أحجام النجوم", "حجم الكون", "أحجام الكواكب", "أكبر نجم"],
     link: "كل تفاصيل مقارنة الأحجام",
+    cardTitle: "مقارنة الأحجام",
+    card: "الكواكب والنجوم بمقياسها الحقيقي – من الأرض إلى الكون كله.",
   },
   hi: {
     title: "आकार तुलना: ग्रह, तारे और ब्रह्मांड – इंटरैक्टिव",
@@ -236,6 +257,8 @@ export const SIZE_PAGE: Record<Lang, SizePageText> = {
     ],
     keywords: ["ग्रहों की आकार तुलना", "तारों की आकार तुलना", "ब्रह्मांड का आकार", "ग्रहों का आकार", "सबसे बड़ा तारा"],
     link: "आकार तुलना की पूरी जानकारी",
+    cardTitle: "आकार तुलना",
+    card: "ग्रह और तारे असली पैमाने पर – पृथ्वी से पूरे ब्रह्मांड तक।",
   },
   zh: {
     title: "大小比较：行星、恒星与宇宙（交互式）",
@@ -257,6 +280,8 @@ export const SIZE_PAGE: Record<Lang, SizePageText> = {
     ],
     keywords: ["行星大小比较", "恒星大小比较", "宇宙大小", "行星大小", "最大的恒星"],
     link: "大小比较的全部详情",
+    cardTitle: "大小比较",
+    card: "按真实比例比较行星和恒星——从地球到整个宇宙。",
   },
   ja: {
     title: "大きさ比較：惑星・恒星・宇宙をインタラクティブに",
@@ -278,6 +303,8 @@ export const SIZE_PAGE: Record<Lang, SizePageText> = {
     ],
     keywords: ["惑星 大きさ比較", "恒星 大きさ比較", "宇宙の大きさ", "惑星の大きさ", "最大の恒星"],
     link: "大きさ比較の詳細をすべて見る",
+    cardTitle: "大きさ比較",
+    card: "惑星や恒星を実際の縮尺で比較――地球から宇宙全体まで。",
   },
   ko: {
     title: "크기 비교: 행성, 별, 우주 – 인터랙티브",
@@ -299,5 +326,7 @@ export const SIZE_PAGE: Record<Lang, SizePageText> = {
     ],
     keywords: ["행성 크기 비교", "별 크기 비교", "우주 크기", "행성 크기", "가장 큰 별"],
     link: "크기 비교의 모든 정보 보기",
+    cardTitle: "크기 비교",
+    card: "실제 비율로 보는 행성과 별 – 지구에서 우주 전체까지.",
   },
 };
