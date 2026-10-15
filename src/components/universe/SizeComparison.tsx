@@ -1017,7 +1017,9 @@ export default function SizeComparison({ index }: { index: string }) {
       }
       // Die kleinen Vorgänger laufen als Schweif direkt links vom ersten sichtbaren großen Objekt
       // aus (keine Lücke bis zum Bildrand, Nutzer 15.10.2026) und gleiten sanft nach.
-      const tgt = Math.min(lim, Math.max(46, lb - 10));
+      // Kein Platz links vom ersten sichtbaren großen Objekt -> Schweif ganz ausblenden statt
+      // zwischen zwei große Objekte zu rutschen (Nutzer 15.10.2026, Venus/Erde).
+      const tgt = Math.min(lim, lb - 10);
       parkA = parkA < 0 ? tgt : parkA + (tgt - parkA) * 0.2;
       const anchor = Math.min(lim, parkA);
       const slot = new Map<number, { sx: number; j: number }>();
