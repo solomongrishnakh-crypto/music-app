@@ -8,8 +8,6 @@ import CompactSongList from "@/components/search/CompactSongList";
 import FavoritesModal from "@/components/search/FavoritesModal";
 import NowPlayingHero from "@/components/player/NowPlayingHero";
 import FeaturesSection from "@/components/home/FeaturesSection";
-import SpaceNewsSection from "@/components/home/SpaceNewsSection";
-import HomeUniverse from "@/components/home/HomeUniverse";
 import CosmosResults from "@/components/search/CosmosResults";
 import { searchCosmos, type CosmosHit } from "@/lib/cosmosSearch";
 import { homeText } from "@/lib/homeText";
@@ -269,13 +267,13 @@ export default function Home() {
 
         {!query.trim() && !showHero && (
           <>
+            {/* Nutzerwunsch 15.10.2026 "kompakter, alles durcheinander": Startseite = Wegweiser.
+                Größenvergleich, Maschine, News und Zahlen liegen auf der Universum-Seite. */}
             <FeaturesSection />
-            <HomeUniverse />
-            <SpaceNewsSection />
-            <AboutSiteSection />
             <div id="kontakte" className="scroll-mt-24">
-              <ContactSection />
+              <AboutSiteSection />
             </div>
+            <ContactSection />
           </>
         )}
       </div>
