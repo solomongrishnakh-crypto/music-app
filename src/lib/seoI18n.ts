@@ -9,7 +9,7 @@
  */
 import type { Lang } from "@/contexts/LanguageContext";
 
-export const BASE_URL = "https://centaurian.vercel.app";
+export const BASE_URL = "https://centaurianspace.com";
 
 /** Sprachen mit eigenem URL-Präfix (Deutsch liegt ohne Präfix im Stamm). */
 export const PREFIXED_LANGS = ["en", "es", "fr", "pt", "tr", "ru", "el", "ar", "hi", "zh", "ja", "ko"] as const;
