@@ -256,6 +256,108 @@ function photoSprite(img: HTMLImageElement, crop?: number[]): HTMLCanvasElement 
   return c;
 }
 
+/**
+ * Laniakea (Nutzerkorrektur 15.10.2026): Von Laniakea gibt es kein Foto. Darum
+ * eine schematische Karte nach der bekannten Struktur (Tully et al. 2014):
+ * Galaxienfilamente und -haufen, Strömungslinien zum Großen Attraktor, die
+ * gestrichelte Grenze des Superhaufens und ein roter Punkt für die Milchstraße.
+ */
+function laniakeaSprite(): HTMLCanvasElement {
+  const S = 900, c = document.createElement("canvas");
+  c.width = c.height = S;
+  const g = c.getContext("2d")!;
+  const rnd = seeded(4021);
+  const gauss = () => (rnd() + rnd() + rnd() - 1.5) / 1.5;
+  const cx = S / 2, cy = S / 2;
+  const env = (a: number) => S * 0.37 * (1 + 0.13 * Math.sin(3 * a + 0.7) + 0.08 * Math.sin(5 * a + 2.1) + 0.05 * Math.sin(8 * a + 4));
+  const inside = (x: number, y: number, m: number) => Math.hypot(x - cx, y - cy) < env(Math.atan2(y - cy, x - cx)) * m;
+  const ga = { x: cx + S * 0.06, y: cy + S * 0.04, w: 3 }; // Großer Attraktor
+  const nodes = [ga];
+  for (let k = 0; k < 4000 && nodes.length < 60; k++) {
+    const x = rnd() * S, y = rnd() * S;
+    if (inside(x, y, 0.93)) nodes.push({ x, y, w: 0.6 + rnd() * 1.4 });
+  }
+  const halo = g.createRadialGradient(cx, cy, 0, cx, cy, S * 0.48);
+  halo.addColorStop(0, "rgba(90,110,200,0.22)");
+  halo.addColorStop(0.75, "rgba(60,70,150,0.08)");
+  halo.addColorStop(1, "rgba(40,40,100,0)");
+  g.fillStyle = halo;
+  g.fillRect(0, 0, S, S);
+  // Strömungslinien: alle Galaxien bewegen sich auf den Großen Attraktor zu
+  g.lineWidth = 1;
+  for (let k = 0, n = 0; k < 2000 && n < 70; k++) {
+    let x = rnd() * S, y = rnd() * S;
+    if (!inside(x, y, 1)) continue;
+    n++;
+    g.strokeStyle = "rgba(235,240,255," + (0.05 + rnd() * 0.08).toFixed(3) + ")";
+    g.beginPath();
+    g.moveTo(x, y);
+    for (let st = 0; st < 80; st++) {
+      const dx = ga.x - x, dy = ga.y - y, d = Math.hypot(dx, dy);
+      if (d < 10) break;
+      const sw = 1.6 * (d / S);
+      x += (dx / d) * 6 - (dy / d) * 6 * sw;
+      y += (dy / d) * 6 + (dx / d) * 6 * sw;
+      g.lineTo(x, y);
+    }
+    g.stroke();
+  }
+  const dot = (x: number, y: number, s: number, a: number, warm: boolean) => {
+    g.fillStyle = (warm ? "rgba(255,225,190," : "rgba(205,218,255,") + a.toFixed(3) + ")";
+    g.fillRect(x - s / 2, y - s / 2, s, s);
+  };
+  // Filamente: jeder Haufen ist mit seinen nächsten Nachbarn verbunden
+  for (const n of nodes) {
+    const near = nodes
+      .filter((m) => m !== n)
+      .sort((a, b) => Math.hypot(a.x - n.x, a.y - n.y) - Math.hypot(b.x - n.x, b.y - n.y))
+      .slice(0, 3);
+    for (const m of near) {
+      const len = Math.hypot(m.x - n.x, m.y - n.y);
+      if (len < 1) continue;
+      const bend = (rnd() - 0.5) * len * 0.25, nx = -(m.y - n.y) / len, ny = (m.x - n.x) / len;
+      for (let q = 0, cnt = Math.round(len * 0.9); q < cnt; q++) {
+        const u = rnd(), b = 4 * u * (1 - u) * bend, j = gauss() * 7;
+        const px = n.x + (m.x - n.x) * u + nx * (b + j), py = n.y + (m.y - n.y) * u + ny * (b + j);
+        if (inside(px, py, 1.02)) dot(px, py, rnd() < 0.08 ? 2.2 : 1.3, 0.25 + rnd() * 0.5, rnd() < 0.12);
+      }
+    }
+  }
+  // Galaxienhaufen als helle Knoten
+  for (const n of nodes) {
+    const R = 14 * n.w, gr = g.createRadialGradient(n.x, n.y, 0, n.x, n.y, R);
+    gr.addColorStop(0, "rgba(255,245,230,0.55)");
+    gr.addColorStop(1, "rgba(200,210,255,0)");
+    g.fillStyle = gr;
+    g.beginPath(); g.arc(n.x, n.y, R, 0, Math.PI * 2); g.fill();
+    for (let q = 0; q < 25 * n.w; q++) dot(n.x + gauss() * 8 * n.w, n.y + gauss() * 8 * n.w, 1.6, 0.4 + rnd() * 0.5, rnd() < 0.3);
+  }
+  // Grenze des Superhaufens
+  g.strokeStyle = "rgba(255,160,90,0.6)";
+  g.lineWidth = 2.5;
+  g.setLineDash([10, 7]);
+  g.beginPath();
+  for (let k = 0; k <= 360; k++) {
+    const a = (k / 360) * Math.PI * 2, R = env(a), px = cx + Math.cos(a) * R, py = cy + Math.sin(a) * R;
+    if (k === 0) g.moveTo(px, py); else g.lineTo(px, py);
+  }
+  g.closePath();
+  g.stroke();
+  g.setLineDash([]);
+  // Milchstraße (unsere Galaxie)
+  const mwT = { x: cx - S * 0.18, y: cy + S * 0.14 };
+  const mw = nodes.reduce((best, n) => (Math.hypot(n.x - mwT.x, n.y - mwT.y) < Math.hypot(best.x - mwT.x, best.y - mwT.y) ? n : best), nodes[0]);
+  g.fillStyle = "#ff4d4d";
+  g.beginPath(); g.arc(mw.x, mw.y, 4, 0, Math.PI * 2); g.fill();
+  g.strokeStyle = "rgba(255,77,77,0.7)";
+  g.lineWidth = 1.5;
+  g.beginPath(); g.arc(mw.x, mw.y, 9, 0, Math.PI * 2); g.stroke();
+  return c;
+}
+
+/** Wie weit ein Bild über den echten Durchmesser hinausreicht (0 = kein Bild). */
+const spanF = (o: Obj) => (o.photo ? o.photo[1] : o.id === "laniakea" ? 1.35 : 0);
+
 const sprites = new Map<string, HTMLCanvasElement>();
 const PROC = new Set(["mercury", "venus", "earth", "mars", "jupiter", "saturn", "uranus", "neptune", "pluto", "ceres"]);
 
@@ -323,6 +425,15 @@ function requestSprite(o: Obj, onReady: () => void) {
     }
     return;
   }
+  if (o.id === "laniakea") {
+    try {
+      sprites.set(o.id, laniakeaSprite());
+      onReady();
+    } catch {
+      /* ohne Karte weiter */
+    }
+    return;
+  }
   let job: Promise<HTMLCanvasElement> | null = null;
   if (o.tex) job = loadImg(o.tex).then((im) => { rots.delete(o.id); ensureRot(o, im); return sphereSprite(im, o); });
   else if (o.photo) job = loadImg(o.photo[0]).then((im) => photoSprite(im, o.photo ? o.photo[2] : undefined));
@@ -365,12 +476,24 @@ function drawRing(g: CanvasRenderingContext2D, x: number, y: number, r: number, 
 
 function drawObj(g: CanvasRenderingContext2D, o: Obj, x: number, y: number, r: number, W: number, H: number) {
   // Riesige Objekte, die den ganzen Bildschirm füllen: nur den sichtbaren Rand als Fläche zeichnen.
-  if (r > 3e4 || (o.photo && r * o.photo[1] > W * 3.2)) {
+  if (r > 3e4 || (spanF(o) > 0 && r * spanF(o) > W * 5)) {
     const left = x - r;
+    if (left > W) return;
     const soft = o.kind === "galaxy" || o.kind === "cluster" || o.kind === "universe" || o.kind === "nebula";
+    if (soft) {
+      // Nebel/Galaxien haben keinen harten Rand: weich einblenden statt Rechteck (Nutzerkorrektur 15.10.2026)
+      const e0 = left - W * 0.25;
+      const grad = g.createLinearGradient(e0, 0, left + W * 0.6, 0);
+      grad.addColorStop(0, rgba(o.color, 0));
+      grad.addColorStop(0.35, rgba(o.color, 0.1));
+      grad.addColorStop(1, rgba(o.color, 0.05));
+      g.fillStyle = grad;
+      g.fillRect(Math.max(0, e0), 0, W, H);
+      return;
+    }
     const grad = g.createLinearGradient(left, 0, left + W * 0.6, 0);
-    grad.addColorStop(0, rgba(o.color, soft ? 0.28 : 0.55));
-    grad.addColorStop(1, rgba(o.color, o.kind === "bh" || soft ? 0.04 : 0.18));
+    grad.addColorStop(0, rgba(o.color, 0.55));
+    grad.addColorStop(1, rgba(o.color, o.kind === "bh" ? 0.04 : 0.18));
     g.fillStyle = o.kind === "bh" ? "#000" : grad;
     g.fillRect(Math.max(0, left), 0, W, H);
     if (o.kind === "bh") {
@@ -393,12 +516,12 @@ function drawObj(g: CanvasRenderingContext2D, o: Obj, x: number, y: number, r: n
     g.beginPath(); g.arc(x, y, Math.max(1.5, r * 0.0003), 0, Math.PI * 2); g.fill();
     return;
   }
-  if (sp && o.photo) {
-    const f = o.photo[1], span = r * f;
-    // Zu stark vergrößert wird das Foto unscharf: ausblenden und in den weichen Farbverlauf übergehen.
-    g.globalAlpha = span > W * 1.2 ? Math.max(0, 1 - (span - W * 1.2) / (W * 2)) : 1;
+  if (sp && spanF(o) > 0) {
+    const span = r * spanF(o), a0 = g.globalAlpha;
+    // Zu stark vergrößert wird das Bild unscharf: langsam ausblenden und in den weichen Verlauf übergehen.
+    g.globalAlpha = a0 * (span > W * 1.5 ? Math.max(0, 1 - (span - W * 1.5) / (W * 3.5)) : 1);
     g.drawImage(sp, x - span, y - span, span * 2, span * 2);
-    g.globalAlpha = 1;
+    g.globalAlpha = a0;
     return;
   }
   if (o.kind === "galaxy" || o.kind === "nebula" || o.kind === "cluster" || o.kind === "universe") {
@@ -734,26 +857,37 @@ export default function SizeComparison({ index }: { index: string }) {
       // Kleinere Objekte, die links aus dem Bild laufen würden, bleiben als Punkte am
       // linken Rand stehen und blenden langsam aus, sobald sie neben den größeren
       // kaum noch zu sehen sind (Nutzerwunsch 15.10.2026).
+      // Die Parkplätze liegen am linken Rand, aber nie im Objekt im Fokus oder seinem Nachbarn.
+      const ef = (i: number) => rs[i] * (OBJECTS[i].ring || OBJECTS[i].kind === "bh" ? 2.3 : spanF(OBJECTS[i]) || 1);
+      const lim = Math.min(xs[i0] + off - ef(i0), xs[i1] + off - ef(i1)) - 14;
       const slot = new Map<number, number>();
-      for (let i = Math.min(last, Math.floor(t)), j = 0; i >= 0 && j < 6; i--) {
+      for (let i = i0 - 1, j = 0; i >= 0 && j < 6; i--) {
         if (rs[i] < 0.4) break;
-        if (rs[i] < 8 && xs[i] + off < 100) { slot.set(i, 16 + (5 - j) * 16); j++; }
+        const sx = Math.min(lim, 106) - j * 18;
+        if (sx < 10) break;
+        if (rs[i] < 8 && xs[i] + off < sx) { slot.set(i, sx); j++; }
       }
+      g.font = "400 11px ui-monospace, monospace";
       for (let i = 0; i <= last; i++) {
         const o = OBJECTS[i], r = rs[i];
-        const tx = xs[i] + off, sx = slot.get(i);
-        const pinned = sx !== undefined && tx < sx;
-        const x = pinned && sx !== undefined ? sx : tx;
+        const sx = slot.get(i), pinned = sx !== undefined;
+        const x = sx !== undefined ? sx : xs[i] + off;
         const al = pinned ? Math.max(0, Math.min(1, (r - 0.4) / 1.6)) : 1;
-        const ext = r * (o.ring || o.kind === "bh" ? 2.3 : o.photo ? o.photo[1] : 1) + 90;
+        const ext = r * (o.ring || o.kind === "bh" ? 2.3 : spanF(o) || 1) + 90;
         if (r < 0.4 || al <= 0.02 || (!pinned && (x + ext < 0 || x - ext > W))) continue;
         if (r > 1.5) requestSprite(o, ready);
         g.globalAlpha = al;
         drawObj(g, o, x, cy, Math.max(r, pinned ? 1.6 : 0.8), W, H);
         g.globalAlpha = 1;
         if (r < H * 0.42 && al > 0.45) {
-          const name = objName(o, lng);
-          labels.push({ x: pinned ? Math.max(x, 30) : x, y: cy + Math.max(r, 6) * (o.kind === "galaxy" && !o.photo ? 0.55 : 1) + 8, text: name.length > 26 ? name.slice(0, 25) + "…" : name, main: i === focus });
+          const name = objName(o, lng), text = name.length > 26 ? name.slice(0, 25) + "…" : name;
+          if (pinned) {
+            // Namen am Rand nur, wenn sie nicht in das große Objekt ragen
+            const w = g.measureText(text).width, lx = Math.max(x, w / 2 + 4);
+            if (lx + w / 2 < lim + 10) labels.push({ x: lx, y: cy + 14, text, main: false });
+          } else {
+            labels.push({ x, y: cy + Math.max(r, 6) * (o.kind === "galaxy" && !o.photo ? 0.55 : 1) + 8, text, main: i === focus });
+          }
         }
       }
       // Beschriftungen ohne Überlappung; das Objekt im Fokus hat Vorrang.
