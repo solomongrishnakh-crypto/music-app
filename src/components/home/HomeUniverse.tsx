@@ -7,6 +7,7 @@ import SectionHeading from "@/components/ui/SectionHeading";
 import { useLanguage } from "@/contexts/LanguageContext";
 import SpaceFacts from "@/components/home/SpaceFacts";
 import { useInView } from "@/hooks/useInView";
+import { SIZE_PAGE } from "@/lib/sizePageText";
 
 /**
  * Größenvergleich und Maschine der Ewigkeit auf der Startseite
@@ -27,12 +28,20 @@ function Lazy({ height, children }: { height: string; children: ReactNode }) {
 }
 
 export default function HomeUniverse() {
-  const { t, localePath } = useLanguage();
+  const { t, localePath, lang } = useLanguage();
   return (
     <div className="mx-auto mt-10 w-full max-w-6xl sm:mt-14">
       <Lazy height="26rem">
         <SizeComparison index="02" />
       </Lazy>
+      <p className="mb-10 -mt-6 text-center">
+        <Link
+          href={localePath("/groessenvergleich")}
+          className="label-mono inline-block border border-border px-3 py-1.5 text-[10px] uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent"
+        >
+          {(SIZE_PAGE[lang] ?? SIZE_PAGE.en).link} →
+        </Link>
+      </p>
       <Lazy height="22rem">
         <section className="mb-10">
           <SectionHeading index="03" label={t("gearLabel")} />
