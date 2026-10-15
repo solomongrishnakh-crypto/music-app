@@ -567,7 +567,7 @@ export default function SizeComparison({ index }: { index: string }) {
     // Übersicht: alle Objekte als Raster, Größen stark gestaucht (Reihenfolge stimmt)
     const allGeo = { cols: 3, cw: 100, ch: 120 };
     const drawAll = () => {
-      const cols = W < 420 ? 3 : W < 720 ? 4 : 6;
+      const cols = W < 420 ? 3 : W < 720 ? 4 : W < 1000 ? 6 : 8;
       const cw = W / cols;
       const ch = Math.round(Math.min(136, cw * 1.15));
       const rows = Math.ceil(OBJECTS.length / cols);
@@ -710,8 +710,11 @@ export default function SizeComparison({ index }: { index: string }) {
       const t = Math.max(0, Math.min(last, cur.current));
       const i0 = Math.floor(t), i1 = Math.min(last, i0 + 1), f = t - i0;
       const focusD = Math.exp(Math.log(OBJECTS[i0].d) * (1 - f) + Math.log(OBJECTS[i1].d) * f);
-      const k = Math.min(W * 0.42, H * 0.56) / focusD; // Pixel pro km
-      const gap = W * 0.08;
+      // Breite Fenster (PC): Objekt im Fokus kleiner und engere Abstände — so sind
+      // viele Nachbarn gleichzeitig sichtbar (Nutzerwunsch 15.10.2026).
+      const wide = W > 700;
+      const k = Math.min(W * 0.42, H * (wide ? 0.38 : 0.56)) / focusD; // Pixel pro km
+      const gap = W * (wide ? 0.04 : 0.08);
       const rs = OBJECTS.map((o) => (o.d * k) / 2);
       const xs: number[] = [];
       const lr = rs.map((r, i) => r * (OBJECTS[i].ring || OBJECTS[i].kind === "bh" ? 2.3 : 1)); // Ringe/Scheiben brauchen Platz
