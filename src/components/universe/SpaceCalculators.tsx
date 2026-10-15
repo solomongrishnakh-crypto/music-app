@@ -103,7 +103,7 @@ function Thumb({ id, size, color }: { id: string; size: number; color: string })
 }
 
 const C_KMH = 299792.458 * 3600;
-const SHOW_S = 12; // Reise wird automatisch auf ca. 12 Sekunden Anzeigezeit gerafft
+const SHOW_S = 20; // Gemeinsamer Maßstab: Licht erreicht das Ziel nach ca. 20 s Anzeigezeit (nie langsamer als Echtzeit)
 
 function fmtKm(km: number, lang: Lang): string {
   const big = km >= 1e9;
@@ -205,7 +205,7 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
       base.current = simT;
     }
     anchor.current = performance.now();
-    lapseRef.current = totalS / SHOW_S;
+    lapseRef.current = Math.max(1, d.km / (C_KMH / 3600) / SHOW_S);
     setRun(true);
   }
   function resetTrip() {
