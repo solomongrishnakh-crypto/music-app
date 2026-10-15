@@ -27,7 +27,7 @@ const orbitron = Orbitron({
 // Suche auftauchen). metadataBase macht alle Links/Bilder absolut; der
 // Titel-Template hängt auf Unterseiten " | CENTAURIAN" an.
 export const metadata: Metadata = {
-  metadataBase: new URL("https://centaurian.vercel.app"),
+  metadataBase: new URL("https://centaurianspace.com"),
   title: {
     default: "CENTAURIAN — Musik, Universum & Geschichte",
     template: "%s | CENTAURIAN",
@@ -81,13 +81,13 @@ export default function RootLayout({
               "@type": "WebSite",
               name: "Centaurian",
               keywords: HOME_KEYWORDS.join(", "),
-              url: "https://centaurian.vercel.app",
+              url: "https://centaurianspace.com",
               description: "Songs suchen und direkt hören, das Universum entdecken und die Geschichte großer Imperien erleben.",
               publisher: {
                 "@type": "Organization",
                 name: "Centaurian",
-                url: "https://centaurian.vercel.app",
-                logo: "https://centaurian.vercel.app/branding/logo.jpg",
+                url: "https://centaurianspace.com",
+                logo: "https://centaurianspace.com/branding/logo.jpg",
                 sameAs: ["https://t.me/Perseus641", "https://x.com/capone_835"],
               },
             }),
