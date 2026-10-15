@@ -36,12 +36,12 @@ export default function HomeUniverse() {
       <Lazy height="22rem">
         <section className="mb-10">
           <SectionHeading index="03" label={t("gearLabel")} />
-          <div className="hud-card flex flex-col items-center overflow-hidden p-3">
-            <Gear3D className="h-60 w-full sm:h-72" />
-            <p className="mt-2 max-w-md text-center text-[10px] leading-snug text-muted">{t("gearCaption")}</p>
+          <div className="hud-card flex flex-col items-center overflow-hidden p-3 lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-center lg:gap-x-8 lg:p-5">
+            <Gear3D className="h-60 w-full sm:h-72 lg:row-span-2 lg:h-80" />
+            <p className="mt-2 max-w-md text-center text-[10px] leading-snug text-muted lg:mt-0 lg:max-w-none lg:self-end lg:text-left lg:text-xs">{t("gearCaption")}</p>
             <Link
               href={localePath("/maschine-der-ewigkeit")}
-              className="label-mono mt-3 inline-block border border-border px-3 py-1.5 text-[10px] uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent"
+              className="label-mono mt-3 inline-block lg:self-start lg:justify-self-start border border-border px-3 py-1.5 text-[10px] uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent"
             >
               {t("linkMachine")} →
             </Link>
