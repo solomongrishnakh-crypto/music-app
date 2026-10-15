@@ -7,7 +7,7 @@ import { useLanguage, type Lang } from "@/contexts/LanguageContext";
 import { localize } from "@/lib/i18n";
 import { bodyPosition, dateToJd } from "@/lib/astro/orbits";
 import { moonPos } from "@/lib/astro/ephemeris";
-import { JOURNEY_TX, PLANET_TX, TOOLS_HEAD, TRAVEL_TX, type Tx } from "@/lib/toolsText";
+import { JOURNEY2_TX, JOURNEY_TX, PLANET_TX, TOOLS_HEAD, TRAVEL_TX, type Tx } from "@/lib/toolsText";
 
 /**
  * Weltraum-Rechner (Nutzerwunsch 15.10.2026): Gewicht & Alter auf anderen Welten
@@ -37,6 +37,10 @@ const DESTS: { id: string; km: number; name: Tx | string; color: string }[] = [
   { id: "jupiter", km: 588.5e6, name: "", color: "#c9a27c" },
   { id: "neptune", km: 4.305e9, name: "", color: "#3d5fd6" },
   { id: "proxima", km: 4.2465 * LY, name: "Proxima Centauri", color: "#ff6b3d" },
+  { id: "sirius", km: 8.611 * LY, name: JOURNEY2_TX.sirius, color: "#bcd4ff" },
+  { id: "betel", km: 550 * LY, name: JOURNEY2_TX.betel, color: "#ff7a45" },
+  { id: "neutron", km: 510 * LY, name: JOURNEY2_TX.neutron, color: "#8fd3ff" },
+  { id: "bh", km: 1560 * LY, name: JOURNEY2_TX.bh, color: "#b36bff" },
   { id: "milky", km: 26700 * LY, name: TRAVEL_TX.milky, color: "#ffe2b0" },
   { id: "andromeda", km: 2.537e6 * LY, name: TRAVEL_TX.andromeda, color: "#ffd9c0" },
 ];
@@ -84,13 +88,35 @@ const IMG: Record<string, string> = {
   pluto: cm("Pluto_in_True_Color_-_High-Res.jpg"),
   sun: cm("The_Sun_by_the_Atmospheric_Imaging_Assembly_of_NASA's_Solar_Dynamics_Observatory_-_20100819.jpg"),
   proxima: cm("New_shot_of_Proxima_Centauri,_our_nearest_neighbour.jpg"),
+  sirius: cm("Sirius_A_and_B_Hubble_photo.jpg"),
+  betel: cm("Betelgeuse_captured_by_ALMA.jpg"),
+  bh: cm("Black_hole_-_Messier_87_crop_max_res.jpg"),
   milky: cm("Milky_Way_Galaxy.jpg"),
   andromeda: cm("Andromeda_Galaxy_(with_h-alpha).jpg"),
 };
 
 function Thumb({ id, size, color }: { id: string; size: number; color: string }) {
+  const [bad, setBad] = useState(false);
   const src = IMG[id];
-  if (!src) return <span aria-hidden="true" className="shrink-0 rounded-full" style={{ width: size * 0.4, height: size * 0.4, background: color }} />;
+  if (!src || bad) {
+    const bh = id === "bh";
+    const dia = size * 0.6;
+    return (
+      <span className="flex shrink-0 items-center justify-center" style={{ width: size, height: size }}>
+        <span
+          aria-hidden="true"
+          className="block rounded-full"
+          style={{
+            width: dia,
+            height: dia,
+            background: bh ? "#000" : "radial-gradient(circle at 35% 35%, #ffffff, " + color + " 60%)",
+            border: bh ? "3px solid " + color : undefined,
+            boxShadow: "0 0 " + (bh ? 14 : 10) + "px " + color,
+          }}
+        />
+      </span>
+    );
+  }
   return (
     <img
       src={src}
@@ -98,6 +124,7 @@ function Thumb({ id, size, color }: { id: string; size: number; color: string })
       loading="lazy"
       decoding="async"
       draggable={false}
+      onError={() => setBad(true)}
       className="shrink-0 object-contain"
       style={{ width: size, height: size, filter: "drop-shadow(0 0 6px " + color + ")" }}
     />
@@ -133,6 +160,8 @@ function worldInfo(id: string, lang: Lang): { name: string; color: string } {
 
 const INPUT =
   "h-9 w-full border border-white/15 bg-black/40 px-2.5 text-xs text-foreground outline-none transition-colors focus:border-accent";
+const STEP = "label-mono flex items-center gap-2 text-[11px] uppercase tracking-wider text-foreground";
+const BADGE = "inline-flex h-5 w-5 items-center justify-center border border-accent bg-accent/15 text-[10px] text-accent";
 const TILE = "relative overflow-hidden border border-white/10 bg-black/35 px-2.5 pb-2.5 pt-2";
 
 export default function SpaceCalculators({ index = "03" }: { index?: string }) {
@@ -347,7 +376,11 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
             </div>
           ) : (
             <div>
-              <div className="-mx-1 flex gap-1.5 overflow-x-auto px-1 pb-1">
+              <p className={STEP}>
+                <span className={BADGE}>1</span>
+                {localize(JOURNEY2_TX.s1, lang)}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-1.5">
                 {DESTS.map((x) => (
                   <button
                     key={x.id}
@@ -355,7 +388,7 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                     onClick={() => setDest(x.id)}
                     aria-pressed={dest === x.id}
                     className={
-                      "label-mono flex shrink-0 items-center gap-1.5 border py-1 pl-1.5 pr-2.5 text-[10px] uppercase tracking-wide transition-colors " +
+                      "label-mono flex items-center gap-1.5 border py-1 pl-1.5 pr-2.5 text-[10px] uppercase tracking-wide transition-colors " +
                       (dest === x.id ? "border-accent bg-accent/15 text-foreground" : "border-white/15 text-muted hover:border-accent hover:text-foreground")
                     }
                   >
@@ -368,8 +401,12 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                 {localize(TRAVEL_TX.dist, lang)} <span className="tabular-nums text-accent">≈ {fmtKm(d.km, lang)}</span>
               </p>
 
+              <p className={STEP + " mt-5"}>
+                <span className={BADGE}>2</span>
+                {localize(JOURNEY2_TX.s2, lang)}
+              </p>
               <div className="mt-2 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-                {VEHICLES.map((v, i) => {
+                {VEHICLES.map((v) => {
                   const sec = (d.km / v.kmh) * 3600;
                   const on = sel === v.id;
                   return (
@@ -380,18 +417,11 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                       aria-pressed={on}
                       className={TILE + " text-left transition-colors " + (on ? "border-accent bg-accent/10" : "hover:border-white/30")}
                     >
-                      <div className="flex items-baseline justify-between gap-2">
-                        <span className="label-mono truncate text-[10px] uppercase tracking-wide text-muted">{typeof v.name === "string" ? v.name : localize(v.name, lang)}</span>
-                        <span className="shrink-0 text-[9px] tabular-nums text-muted/70">
-                          {nf(lang, { notation: v.kmh >= 1e7 ? "compact" : "standard", compactDisplay: "short", maximumFractionDigits: 1 }, v.kmh)} km/h
-                        </span>
-                      </div>
-                      <p className="font-display mt-1 truncate text-base font-bold leading-tight tabular-nums text-accent">{fmtDur(sec, lang)}</p>
-                      <span
-                        aria-hidden="true"
-                        className="absolute bottom-0 left-0 h-[2px] bg-accent"
-                        style={{ width: ((i + 1) / VEHICLES.length) * 100 + "%", boxShadow: "0 0 8px rgb(var(--hud-accent))", opacity: 0.8 }}
-                      />
+                      <span className="label-mono block truncate text-[10px] uppercase tracking-wide text-muted">{typeof v.name === "string" ? v.name : localize(v.name, lang)}</span>
+                      <span className="block text-[9px] tabular-nums text-muted/70">
+                        {nf(lang, { notation: v.kmh >= 1e7 ? "compact" : "standard", compactDisplay: "short", maximumFractionDigits: 1 }, v.kmh)} km/h
+                      </span>
+                      <p className="font-display mt-1 break-words text-base font-bold leading-tight tabular-nums text-accent">{fmtDur(sec, lang)}</p>
                     </button>
                   );
                 })}
@@ -443,74 +473,73 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                       ▶ {localize(JOURNEY_TX.go, lang)}
                     </button>
                   </div>
-                  <p className="font-display mt-1 truncate text-base font-bold leading-tight tabular-nums text-accent">
+                  <p className="font-display mt-1 break-words text-base font-bold leading-tight tabular-nums text-accent">
                     {Number.isFinite(custKmh) ? fmtDur((d.km / custKmh) * 3600, lang) : "–"}
                   </p>
                 </div>
               </div>
 
-              {/* Live-Reise */}
-              <div className={"mt-2 border bg-black/40 p-2.5 transition-colors " + (arrived ? "border-accent" : "border-white/10")}>
-                <div className="flex items-center gap-2" dir="ltr">
-                  <div className="flex w-14 shrink-0 flex-col items-center gap-0.5 sm:w-20">
-                    <Thumb id="earth" size={36} color={earth.color} />
-                    <span className="label-mono max-w-full truncate text-[9px] uppercase text-muted">{earth.name}</span>
-                  </div>
-                  <div className="relative h-10 min-w-0 flex-1">
-                    <div
-                      className="absolute left-0 right-0 top-1/2 h-px -translate-y-1/2"
-                      style={{
-                        backgroundImage: "repeating-linear-gradient(90deg, rgba(255,255,255,0.35) 0 6px, rgba(255,255,255,0) 6px 14px)",
-                        backgroundPositionX: run ? -((now / 18) % 14) : 0,
-                      }}
-                    />
-                    <div
-                      className="absolute left-0 top-1/2 h-[2px] -translate-y-1/2 bg-accent"
-                      style={{ width: prog * 100 + "%", boxShadow: "0 0 10px rgb(var(--hud-accent))" }}
-                    />
-                    <div className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: prog * 100 + "%" }}>
-                      <span
-                        className={"block h-3 w-3 rotate-45 bg-accent " + (run ? "animate-pulse" : "")}
-                        style={{ boxShadow: "0 0 14px 3px rgb(var(--hud-accent))" }}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex w-14 shrink-0 flex-col items-center gap-0.5 sm:w-20">
-                    <Thumb id={d.id} size={36} color={d.color} />
-                    <span className="label-mono max-w-full truncate text-[9px] uppercase text-muted">{destName(d)}</span>
-                  </div>
-                </div>
-
-                <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 sm:grid-cols-3">
-                  <div>
-                    <span className="label-mono block text-[9px] uppercase tracking-wider text-muted">{localize(JOURNEY_TX.traveled, lang)}</span>
-                    <span className="block truncate text-xs font-bold tabular-nums text-foreground">{fmtKm(traveled, lang)}</span>
-                  </div>
-                  <div>
-                    <span className="label-mono block text-[9px] uppercase tracking-wider text-muted">{localize(JOURNEY_TX.remaining, lang)}</span>
-                    <span className="block truncate text-xs font-bold tabular-nums text-foreground">{fmtKm(Math.max(0, d.km - traveled), lang)}</span>
-                  </div>
-                  <div>
-                    <span className="label-mono block text-[9px] uppercase tracking-wider text-muted">{localize(JOURNEY_TX.elapsed, lang)}</span>
-                    <span className="block truncate text-xs font-bold tabular-nums text-foreground">{fmtDur(simT, lang)}</span>
-                  </div>
-                  <div>
-                    <span className="label-mono block text-[9px] uppercase tracking-wider text-muted">{localize(JOURNEY_TX.speed, lang)}</span>
-                    <span className="block truncate text-xs font-bold tabular-nums text-accent">
-                      {Number.isFinite(speedKmh) ? nf(lang, { notation: speedKmh >= 1e7 ? "compact" : "standard", compactDisplay: "short", maximumFractionDigits: 1 }, speedKmh) + " km/h" : "–"}
-                    </span>
-                  </div>
+              <p className={STEP + " mt-5"}>
+                <span className={BADGE}>3</span>
+                {localize(JOURNEY2_TX.s3, lang)}
+              </p>
+              <div className={"mt-2 border bg-black/40 p-3 transition-colors " + (arrived ? "border-accent" : "border-white/10")}>
+                <div className="grid grid-cols-2 gap-x-3 gap-y-2">
                   <div>
                     <span className="label-mono block text-[9px] uppercase tracking-wider text-muted">{localize(JOURNEY_TX.duration, lang)}</span>
-                    <span className="block truncate text-xs font-bold tabular-nums text-accent">{Number.isFinite(totalS) ? fmtDur(totalS, lang) : "–"}</span>
+                    <span className="font-display block break-words text-lg font-bold leading-tight tabular-nums text-accent">{Number.isFinite(totalS) ? fmtDur(totalS, lang) : "–"}</span>
                   </div>
                   <div>
                     <span className="label-mono block text-[9px] uppercase tracking-wider text-muted">{localize(JOURNEY_TX.arrival, lang)}</span>
-                    <span className="block truncate text-xs font-bold tabular-nums text-accent">{arriveTxt}</span>
+                    <span className="font-display block break-words text-lg font-bold leading-tight tabular-nums text-accent">{arriveTxt}</span>
                   </div>
                 </div>
 
-                <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+                <div className="mt-3">
+                  <div className="flex items-center gap-2" dir="ltr">
+                    <div className="flex w-14 shrink-0 flex-col items-center gap-0.5 sm:w-20">
+                      <Thumb id="earth" size={36} color={earth.color} />
+                      <span className="label-mono max-w-full truncate text-[9px] uppercase text-muted">{earth.name}</span>
+                    </div>
+                    <div className="relative h-10 min-w-0 flex-1">
+                      <div
+                        className="absolute left-0 right-0 top-1/2 h-px -translate-y-1/2"
+                        style={{
+                          backgroundImage: "repeating-linear-gradient(90deg, rgba(255,255,255,0.35) 0 6px, rgba(255,255,255,0) 6px 14px)",
+                          backgroundPositionX: run ? -((now / 18) % 14) : 0,
+                        }}
+                      />
+                      <div
+                        className="absolute left-0 top-1/2 h-[2px] -translate-y-1/2 bg-accent"
+                        style={{ width: prog * 100 + "%", boxShadow: "0 0 10px rgb(var(--hud-accent))" }}
+                      />
+                      <div className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: prog * 100 + "%" }}>
+                        <span
+                          className={"block h-3 w-3 rotate-45 bg-accent " + (run ? "animate-pulse" : "")}
+                          style={{ boxShadow: "0 0 14px 3px rgb(var(--hud-accent))" }}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex w-14 shrink-0 flex-col items-center gap-0.5 sm:w-20">
+                      <Thumb id={d.id} size={36} color={d.color} />
+                      <span className="label-mono max-w-full truncate text-[9px] uppercase text-muted">{destName(d)}</span>
+                    </div>
+                  </div>
+
+                </div>
+
+                <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-1.5">
+                  <div>
+                    <span className="label-mono block text-[9px] uppercase tracking-wider text-muted">{localize(JOURNEY_TX.traveled, lang)}</span>
+                    <span className="block text-xs font-bold tabular-nums text-foreground">{fmtKm(traveled, lang)}</span>
+                  </div>
+                  <div>
+                    <span className="label-mono block text-[9px] uppercase tracking-wider text-muted">{localize(JOURNEY_TX.elapsed, lang)}</span>
+                    <span className="block text-xs font-bold tabular-nums text-foreground">{fmtDur(simT, lang)}</span>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex flex-wrap items-center gap-1.5">
                   <button
                     type="button"
                     onClick={startStop}
@@ -536,7 +565,9 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                   )}
                 </div>
               </div>
-              <p className="mt-2 text-[9px] leading-relaxed text-muted">{localize(TRAVEL_TX.note, lang)}</p>
+              <p className="mt-2 text-[9px] leading-relaxed text-muted">
+                {localize(TRAVEL_TX.note, lang)} {localize(JOURNEY2_TX.approx, lang)}
+              </p>
             </div>
           )}
         </div>
