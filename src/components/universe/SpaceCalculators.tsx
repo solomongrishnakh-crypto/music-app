@@ -213,6 +213,21 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
     setSimT(0);
     base.current = 0;
   }
+  // Ankunftsdatum bei Start jetzt (bei sehr langen Reisen kein Datum)
+  const arriveTxt = (() => {
+    if (!Number.isFinite(totalS) || totalS / 31557600 > 7000) return "–";
+    try {
+      const o: Intl.DateTimeFormatOptions = { year: "numeric", month: "long", day: "numeric" };
+      if (totalS < 86400) {
+        o.hour = "2-digit";
+        o.minute = "2-digit";
+      }
+      return new Intl.DateTimeFormat(lang, o).format(new Date(Date.now() + totalS * 1000));
+    } catch {
+      return "–";
+    }
+  })();
+
   const earth = worldInfo("earth", lang);
   const started = run || simT > 0;
 
@@ -405,7 +420,7 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                   </div>
                 </div>
 
-                <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 sm:grid-cols-4">
+                <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1.5 sm:grid-cols-3">
                   <div>
                     <span className="label-mono block text-[9px] uppercase tracking-wider text-muted">{localize(JOURNEY_TX.traveled, lang)}</span>
                     <span className="block truncate text-xs font-bold tabular-nums text-foreground">{fmtKm(traveled, lang)}</span>
@@ -423,6 +438,14 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                     <span className="block truncate text-xs font-bold tabular-nums text-accent">
                       {Number.isFinite(speedKmh) ? nf(lang, { notation: speedKmh >= 1e7 ? "compact" : "standard", compactDisplay: "short", maximumFractionDigits: 1 }, speedKmh) + " km/h" : "–"}
                     </span>
+                  </div>
+                  <div>
+                    <span className="label-mono block text-[9px] uppercase tracking-wider text-muted">{localize(JOURNEY_TX.duration, lang)}</span>
+                    <span className="block truncate text-xs font-bold tabular-nums text-accent">{Number.isFinite(totalS) ? fmtDur(totalS, lang) : "–"}</span>
+                  </div>
+                  <div>
+                    <span className="label-mono block text-[9px] uppercase tracking-wider text-muted">{localize(JOURNEY_TX.arrival, lang)}</span>
+                    <span className="block truncate text-xs font-bold tabular-nums text-accent">{arriveTxt}</span>
                   </div>
                 </div>
 
