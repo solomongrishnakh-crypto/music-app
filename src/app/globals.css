@@ -504,6 +504,6 @@ html[data-overlay="1"] .hud-btn {
   .hud-card {
     background:
       linear-gradient(140deg, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0) 50%),
-      rgba(8, 7, 12, 0.92) !important;
+      rgb(8, 7, 12) !important;
   }
 }
