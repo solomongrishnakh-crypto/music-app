@@ -301,7 +301,7 @@ export default function SkyPreviewCard({ label, title }: { label: string; title:
         ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(p.x, p.y, r * 5, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = `rgba(255,255,255,${fade})`; ctx.beginPath(); ctx.arc(p.x, p.y, r * pulse, 0, Math.PI * 2); ctx.fill();
         if (s.n) {
-          ctx.fillStyle = `rgba(210,220,255,${0.75 * fade * Math.min(1, Math.max(0, (k - 0.3) / 0.1))})`;
+          ctx.fillStyle = `rgba(210,220,255,${0.75 * fade * Math.min(1, Math.max(0, (k - 0.5) / 0.08)) /* erst wenn alle Linien gezeichnet sind (15.10.2026) */})`;
           ctx.fillText(s.n, p.x + r + 6, p.y);
         }
       });
