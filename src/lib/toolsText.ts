@@ -196,3 +196,47 @@ export const CAL_EVENTS: { ago: number; n: Tx }[] = [
   { ago: 575, n: { de: "Gutenbergs Buchdruck", en: "Gutenberg's printing press", hi: "गुटेनबर्ग का छापाखाना", zh: "古腾堡印刷术", ko: "구텐베르크의 인쇄술", ja: "グーテンベルクの印刷術", es: "La imprenta de Gutenberg", fr: "L'imprimerie de Gutenberg", tr: "Gutenberg'in matbaası", ru: "Печатный станок Гутенберга", pt: "A prensa de Gutenberg", ar: "مطبعة غوتنبرغ", el: "Το τυπογραφείο του Γουτεμβέργιου" } },
   { ago: 57, n: { de: "Erste Mondlandung", en: "First Moon landing", hi: "पहली चंद्र लैंडिंग", zh: "首次登月", ko: "첫 달 착륙", ja: "初の月面着陸", es: "Primer alunizaje", fr: "Premier alunissage", tr: "İlk Ay'a iniş", ru: "Первая высадка на Луну", pt: "Primeira alunissagem", ar: "أول هبوط على القمر", el: "Η πρώτη προσελήνωση" } },
 ];
+
+/** Live-Reise im Reisezeit-Rechner (Nutzerwunsch 15.10.2026). */
+export const JOURNEY_TX = {
+  start: {
+    de: "Reise starten", en: "Start journey", hi: "यात्रा शुरू करें", zh: "开始旅行", ko: "여행 시작", ja: "旅を始める",
+    es: "Iniciar viaje", fr: "Démarrer le voyage", tr: "Yolculuğu başlat", ru: "Начать полёт", pt: "Iniciar viagem", ar: "ابدأ الرحلة", el: "Έναρξη ταξιδιού",
+  } as Tx,
+  stop: {
+    de: "Stopp", en: "Stop", hi: "रोकें", zh: "停止", ko: "정지", ja: "停止",
+    es: "Detener", fr: "Arrêter", tr: "Durdur", ru: "Стоп", pt: "Parar", ar: "إيقاف", el: "Διακοπή",
+  } as Tx,
+  reset: {
+    de: "Zurücksetzen", en: "Reset", hi: "रीसेट", zh: "重置", ko: "초기화", ja: "リセット",
+    es: "Reiniciar", fr: "Réinitialiser", tr: "Sıfırla", ru: "Сбросить", pt: "Reiniciar", ar: "إعادة ضبط", el: "Επαναφορά",
+  } as Tx,
+  custom: {
+    de: "Eigene Geschwindigkeit", en: "Custom speed", hi: "अपनी गति", zh: "自定义速度", ko: "직접 입력한 속도", ja: "好きな速度",
+    es: "Velocidad propia", fr: "Vitesse personnalisée", tr: "Özel hız", ru: "Своя скорость", pt: "Velocidade própria", ar: "سرعة مخصصة", el: "Δική σου ταχύτητα",
+  } as Tx,
+  traveled: {
+    de: "Zurückgelegt", en: "Travelled", hi: "तय की गई दूरी", zh: "已行进", ko: "이동 거리", ja: "進んだ距離",
+    es: "Recorrido", fr: "Parcouru", tr: "Alınan yol", ru: "Пройдено", pt: "Percorrido", ar: "المسافة المقطوعة", el: "Διανύθηκαν",
+  } as Tx,
+  remaining: {
+    de: "Verbleibend", en: "Remaining", hi: "शेष दूरी", zh: "剩余", ko: "남은 거리", ja: "残り",
+    es: "Restante", fr: "Restant", tr: "Kalan", ru: "Осталось", pt: "Restante", ar: "المتبقي", el: "Απομένουν",
+  } as Tx,
+  elapsed: {
+    de: "Reisezeit", en: "Travel time", hi: "यात्रा का समय", zh: "旅行时间", ko: "경과 시간", ja: "経過時間",
+    es: "Tiempo de viaje", fr: "Durée du trajet", tr: "Yolculuk süresi", ru: "Время в пути", pt: "Tempo de viagem", ar: "زمن الرحلة", el: "Χρόνος ταξιδιού",
+  } as Tx,
+  lapse: {
+    de: "Zeitraffer", en: "Time-lapse", hi: "टाइम-लैप्स", zh: "快进", ko: "배속", ja: "早送り",
+    es: "Aceleración", fr: "Accéléré", tr: "Hızlandırma", ru: "Ускорение", pt: "Aceleração", ar: "تسريع الوقت", el: "Επιτάχυνση",
+  } as Tx,
+  arrived: {
+    de: "Angekommen!", en: "Arrived!", hi: "पहुँच गए!", zh: "已抵达！", ko: "도착!", ja: "到着！",
+    es: "¡Llegaste!", fr: "Arrivé !", tr: "Vardınız!", ru: "Прибыли!", pt: "Chegou!", ar: "وصلت!", el: "Φτάσατε!",
+  } as Tx,
+  speed: {
+    de: "Geschwindigkeit", en: "Speed", hi: "गति", zh: "速度", ko: "속도", ja: "速度",
+    es: "Velocidad", fr: "Vitesse", tr: "Hız", ru: "Скорость", pt: "Velocidade", ar: "السرعة", el: "Ταχύτητα",
+  } as Tx,
+};
