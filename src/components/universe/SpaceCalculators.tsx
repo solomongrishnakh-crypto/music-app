@@ -103,8 +103,7 @@ function Thumb({ id, size, color }: { id: string; size: number; color: string })
 }
 
 const C_KMH = 299792.458 * 3600;
-const LAPSE = [1, 60, 3600, 86400, 31557600];
-const LAPSE_UNIT = ["", "minute", "hour", "day", "year"];
+const SHOW_S = 12; // Reise wird automatisch auf ca. 12 Sekunden Anzeigezeit gerafft
 
 function fmtKm(km: number, lang: Lang): string {
   const big = km >= 1e9;
@@ -130,7 +129,6 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
   const [sel, setSel] = useState("car");
   const [cust, setCust] = useState("1000");
   const [cunit, setCunit] = useState<"kmh" | "kms" | "c">("kmh");
-  const [lapse, setLapse] = useState(0);
   const [run, setRun] = useState(false);
   const [simT, setSimT] = useState(0);
   const [now, setNow] = useState(0);
@@ -207,7 +205,7 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
       base.current = simT;
     }
     anchor.current = performance.now();
-    lapseRef.current = LAPSE[lapse];
+    lapseRef.current = totalS / SHOW_S;
     setRun(true);
   }
   function resetTrip() {
@@ -215,15 +213,6 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
     setSimT(0);
     base.current = 0;
   }
-  function pickLapse(i: number) {
-    base.current = simT;
-    anchor.current = performance.now();
-    lapseRef.current = LAPSE[i];
-    setLapse(i);
-  }
-  const lapseLabel = (i: number) =>
-    i === 0 ? "1×" : nf(lang, { style: "unit", unit: LAPSE_UNIT[i], unitDisplay: "short" }, 1) + "/s";
-
   const earth = worldInfo("earth", lang);
   const started = run || simT > 0;
 
@@ -456,21 +445,6 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                   >
                     ↺
                   </button>
-                  <span className="label-mono ml-1 text-[9px] uppercase tracking-wider text-muted">{localize(JOURNEY_TX.lapse, lang)}</span>
-                  {LAPSE.map((_, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => pickLapse(i)}
-                      aria-pressed={lapse === i}
-                      className={
-                        "label-mono h-8 border px-2 text-[9px] uppercase tabular-nums transition-colors " +
-                        (lapse === i ? "border-accent text-foreground" : "border-white/15 text-muted hover:text-foreground")
-                      }
-                    >
-                      {lapseLabel(i)}
-                    </button>
-                  ))}
                   {arrived && (
                     <span className="font-display ml-auto text-sm font-bold uppercase tracking-wide text-accent" style={{ textShadow: "0 0 12px rgb(var(--hud-accent))" }}>
                       ✔ {localize(JOURNEY_TX.arrived, lang)}
