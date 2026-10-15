@@ -994,6 +994,13 @@ export default function SizeComparison({ index }: { index: string }) {
         slot.set(i, { sx, j });
         j++;
       }
+      // Große Objekte (auch das im Fokus): geparkte Punkte und Namen verschwinden, sobald sie
+      // davor liegen würden – sie sollen nur am freien linken Rand stehen (Nutzer 15.10.2026).
+      const blockers: { x: number; e: number }[] = [];
+      for (let i = 0; i <= last; i++) {
+        if (slot.has(i) || rs[i] < 8) continue;
+        blockers.push({ x: xs[i] + off, e: rs[i] * (OBJECTS[i].ring || OBJECTS[i].kind === "bh" ? 2.3 : 1) + 4 });
+      }
       g.font = "400 11px ui-monospace, monospace";
       for (let i = 0; i <= last; i++) {
         const o = OBJECTS[i], r = rs[i];
@@ -1003,19 +1010,25 @@ export default function SizeComparison({ index }: { index: string }) {
         const bl = i < fo ? Math.max(0, Math.min(1, (8 - r) / 2.5)) : 0;
         const parked = sl !== undefined && bl > 0.5;
         const x = sl !== undefined ? tx + (sl.sx - tx) * bl : tx;
-        const al = sl !== undefined ? 1 - (1 - stepA[sl.j]) * bl : 1 - bl;
+        let vis = 1;
+        if (sl !== undefined) {
+          let hid = 0;
+          for (const b of blockers) hid = Math.max(hid, b.e - Math.abs(b.x - x));
+          vis = Math.max(0, Math.min(1, 1 - hid / 10));
+        }
+        const al = (sl !== undefined ? 1 - (1 - stepA[sl.j]) * bl : 1 - bl) * vis;
         const ext = r * (o.ring || o.kind === "bh" ? 2.3 : spanF(o) || 1) + 90;
         if (al <= 0.02 || (sl === undefined && (r < 0.4 || x + ext < 0 || x - ext > W))) continue;
         if (r > 1.5) requestSprite(o, ready);
         g.globalAlpha = al;
         drawObj(g, o, x, cy, Math.max(r, sl !== undefined ? 1.6 : 0.8), W, H);
         g.globalAlpha = 1;
-        if (r < H * 0.42 && (sl === undefined || sl.j < 2)) {
+        if (r < H * 0.42 && (sl === undefined || (sl.j < 2 && vis > 0.6))) {
           const name = objName(o, lng), text = name.length > 26 ? name.slice(0, 25) + "…" : name;
           if (parked) {
             // Namen am Rand nur, wenn sie nicht in das große Objekt ragen
             const w = g.measureText(text).width, lx = Math.max(w / 2 + 4, Math.min(x, lim + 6 - w / 2));
-            labels.push({ x: lx, y: cy + 14, text, main: sl !== undefined && sl.j === 0 });
+            if (!blockers.some((b) => b.x - b.e < lx + w / 2 && b.x + b.e > lx - w / 2)) labels.push({ x: lx, y: cy + 14, text, main: sl !== undefined && sl.j === 0 });
           } else {
             labels.push({ x, y: cy + Math.max(r, 6) * (o.kind === "galaxy" && !o.photo ? 0.55 : 1) + 8, text, main: i === focus });
           }
