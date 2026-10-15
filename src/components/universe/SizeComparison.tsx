@@ -485,6 +485,19 @@ export default function SizeComparison({ index }: { index: string }) {
   const fit = useRef({ zmax: 12, kfit: 1, delta: 0, W: 0, H: 0, sx: -1, sy: 0 });
   const resetView = useRef(true);
   const api = useRef({ zoomBy: (_f: number) => {}, setZ: (_s: number) => {}, reset: () => {} });
+  // Direktlink aus dem Sternenhimmel (#groessenvergleich): zur Sektion scrollen,
+  // sobald die Seite aufgebaut ist.
+  useEffect(() => {
+    if (typeof window === "undefined" || window.location.hash !== "#groessenvergleich") return;
+    const go = () => document.getElementById("groessenvergleich")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const t1 = window.setTimeout(go, 700);
+    const t2 = window.setTimeout(go, 1800);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, []);
+
   useEffect(() => {
     langRef.current = lang;
     modeRef.current = mode;
@@ -778,7 +791,7 @@ export default function SizeComparison({ index }: { index: string }) {
   const sbtn = "h-8 w-8 shrink-0 border border-border text-foreground transition-colors hover:border-accent hover:text-accent";
 
   return (
-    <section className="mb-10">
+    <section id="groessenvergleich" className="mb-10 scroll-mt-4">
       <SectionHeading index={index} label={ui.title} />
     <div className="hud-card overflow-hidden p-3 sm:p-4">
       <div className="mb-2 flex gap-2">
