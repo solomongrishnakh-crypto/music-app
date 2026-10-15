@@ -956,8 +956,10 @@ export default function SizeComparison({ index }: { index: string }) {
     };
     api.current = {
       // Regler/Tasten zoomen auf das kleinere Objekt (wenn sichtbar), sonst auf die Bildmitte
-      zoomBy: (f) => { const fi = fit.current, onS = fi.sx > 0 && fi.sx < W; zoomAt(onS ? fi.sx : W / 2, onS ? fi.sy : H / 2, f); },
-      setZ: (s) => { const fi = fit.current, onS = fi.sx > 0 && fi.sx < W; zoomAt(onS ? fi.sx : W / 2, onS ? fi.sy : H / 2, Math.exp(s * Math.log(fi.zmax)) / view.current.z); },
+      // Der Zoompunkt folgt dem kleineren Objekt, bleibt aber am Bildschirm "geklemmt" statt
+      // zwischen Objekt und Bildmitte umzuschalten (das ließ die Ansicht springen, Nutzer 15.10.2026).
+      zoomBy: (f) => { const fi = fit.current; zoomAt(Math.max(W * 0.1, Math.min(W * 0.9, fi.sx)), Math.max(H * 0.1, Math.min(H * 0.9, fi.sy)), f); },
+      setZ: (s) => { const fi = fit.current; zoomAt(Math.max(W * 0.1, Math.min(W * 0.9, fi.sx)), Math.max(H * 0.1, Math.min(H * 0.9, fi.sy)), Math.exp(s * Math.log(fi.zmax)) / view.current.z); },
       reset: () => { resetView.current = true; view.current.z = 1; dirty.current = true; },
     };
 
