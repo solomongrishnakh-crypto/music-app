@@ -35,7 +35,7 @@ const JSON_LD = {
   "@type": "WebApplication",
   name: "Sonnensystem live & Maschine der Ewigkeit — Centaurian",
   alternateName: ["Interaktives Sonnensystem", "Maschine der Ewigkeit", "Interactive Solar System", "Eternity Gear Machine"],
-  url: "https://centaurian.vercel.app/universum",
+  url: "https://centaurianspace.com/universum",
   description: DESCRIPTION,
   applicationCategory: "EducationalApplication",
   operatingSystem: "Web",
@@ -43,7 +43,7 @@ const JSON_LD = {
   isAccessibleForFree: true,
   offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
   about: ["Sonnensystem", "Planeten", "Universum", "Astronomie"],
-  isPartOf: { "@type": "WebSite", name: "Centaurian", url: "https://centaurian.vercel.app" },
+  isPartOf: { "@type": "WebSite", name: "Centaurian", url: "https://centaurianspace.com" },
 };
 
 // Fragen & Antworten für Google und KI-Assistenten (Nutzerwunsch 03.10.2026:
