@@ -731,15 +731,29 @@ export default function SizeComparison({ index }: { index: string }) {
       const lng = langRef.current;
       const focus = Math.round(t);
       const labels: { x: number; y: number; text: string; main: boolean }[] = [];
+      // Kleinere Objekte, die links aus dem Bild laufen würden, bleiben als Punkte am
+      // linken Rand stehen und blenden langsam aus, sobald sie neben den größeren
+      // kaum noch zu sehen sind (Nutzerwunsch 15.10.2026).
+      const slot = new Map<number, number>();
+      for (let i = Math.min(last, Math.floor(t)), j = 0; i >= 0 && j < 6; i--) {
+        if (rs[i] < 0.4) break;
+        if (rs[i] < 8 && xs[i] + off < 100) { slot.set(i, 16 + (5 - j) * 16); j++; }
+      }
       for (let i = 0; i <= last; i++) {
-        const o = OBJECTS[i], r = rs[i], x = xs[i] + off;
+        const o = OBJECTS[i], r = rs[i];
+        const tx = xs[i] + off, sx = slot.get(i);
+        const pinned = sx !== undefined && tx < sx;
+        const x = pinned && sx !== undefined ? sx : tx;
+        const al = pinned ? Math.max(0, Math.min(1, (r - 0.4) / 1.6)) : 1;
         const ext = r * (o.ring || o.kind === "bh" ? 2.3 : o.photo ? o.photo[1] : 1) + 90;
-        if (r < 0.4 || x + ext < 0 || x - ext > W) continue;
+        if (r < 0.4 || al <= 0.02 || (!pinned && (x + ext < 0 || x - ext > W))) continue;
         if (r > 1.5) requestSprite(o, ready);
-        drawObj(g, o, x, cy, Math.max(r, 0.8), W, H);
-        if (r >= 0.4 && r < H * 0.42) {
+        g.globalAlpha = al;
+        drawObj(g, o, x, cy, Math.max(r, pinned ? 1.6 : 0.8), W, H);
+        g.globalAlpha = 1;
+        if (r < H * 0.42 && al > 0.45) {
           const name = objName(o, lng);
-          labels.push({ x, y: cy + Math.max(r, 6) * (o.kind === "galaxy" && !o.photo ? 0.55 : 1) + 8, text: name.length > 26 ? name.slice(0, 25) + "…" : name, main: i === focus });
+          labels.push({ x: pinned ? Math.max(x, 30) : x, y: cy + Math.max(r, 6) * (o.kind === "galaxy" && !o.photo ? 0.55 : 1) + 8, text: name.length > 26 ? name.slice(0, 25) + "…" : name, main: i === focus });
         }
       }
       // Beschriftungen ohne Überlappung; das Objekt im Fokus hat Vorrang.
