@@ -14,7 +14,7 @@ const JSON_LD = {
   "@type": "WebApplication",
   name: "Weltgeschichte Karte — Centaurian",
   alternateName: ["Interaktive historische Weltkarte", "World History Map"],
-  url: "https://centaurian.vercel.app/imperien",
+  url: "https://centaurianspace.com/imperien",
   description: DESCRIPTION,
   applicationCategory: "EducationalApplication",
   operatingSystem: "Web",
@@ -23,7 +23,7 @@ const JSON_LD = {
   offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
   about: ["Weltgeschichte", "Historische Karte", "Imperien", "Historische Grenzen"],
   temporalCoverage: "-3400/2024",
-  isPartOf: { "@type": "WebSite", name: "Centaurian", url: "https://centaurian.vercel.app" },
+  isPartOf: { "@type": "WebSite", name: "Centaurian", url: "https://centaurianspace.com" },
 };
 
 
