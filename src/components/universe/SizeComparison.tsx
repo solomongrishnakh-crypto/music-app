@@ -734,6 +734,9 @@ export default function SizeComparison({ index }: { index: string }) {
     if (!g) return;
     let raf = 0, W = 0, H = 0, D = 1, lastShown = -1, visible = true, lastDraw = 0, lastZs = -1, parkA = -1;
     ANIM.reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // Übersicht: Kugeln drehen sich nur auf starken PCs (viele Kerne, kein Touch); sonst stehen sie still
+    // (Nutzerwunsch 15.10.2026, schont Handy-Akku und verhindert Ruckeln).
+    const strongPc = typeof window.matchMedia === "function" && !window.matchMedia("(pointer: coarse)").matches && (navigator.hardwareConcurrency || 4) >= 8;
     dirty.current = true;
     const last = OBJECTS.length - 1;
     const ready = () => { dirty.current = true; };
@@ -970,7 +973,7 @@ export default function SizeComparison({ index }: { index: string }) {
       const moving = modeRef.current === "zoom" && Math.abs(diff) >= 0.0005;
       if (!moving && !dirty.current && (ANIM.reduce || now - lastDraw < 30)) return;
       // Übersicht: viele Kugeln gleichzeitig — nur gemächlich neu zeichnen (Akku, Ruckeln)
-      if (modeRef.current === "all" && !dirty.current && now - lastDraw < 140) return;
+      if (modeRef.current === "all" && !dirty.current && (!strongPc || now - lastDraw < 140)) return;
       lastDraw = now;
       dirty.current = false;
       ANIM.t = now / 1000;
