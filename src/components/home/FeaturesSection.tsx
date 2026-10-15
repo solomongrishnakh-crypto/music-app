@@ -47,7 +47,7 @@ export default function FeaturesSection() {
           <Link
             key={c.index}
             href={c.href}
-            className="hud-card group relative flex items-center gap-4 overflow-hidden p-4 sm:flex-col sm:items-start sm:gap-4 sm:p-6"
+            className="hud-card feat-card group relative flex items-center gap-4 overflow-hidden p-4 sm:flex-col sm:items-start sm:gap-4 sm:p-6"
           >
             {c.visual === "stars" && <TwinkleStars count={10} className="opacity-60" />}
             <span className="feat-ico relative">
