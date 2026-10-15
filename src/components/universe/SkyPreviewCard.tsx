@@ -289,6 +289,14 @@ export default function SkyPreviewCard({ label, title }: { label: string; title:
       });
       ctx.shadowBlur = 0;
 
+      // Sternname erscheint, sobald die Linie den Stern erreicht (Nutzerwunsch 15.10.2026):
+      // Startstern beim Linienbeginn, Zielstern wenn die Linie bei ihm ankommt.
+      const reach = c.stars.map(() => 1);
+      c.lines.forEach(([a, b], i) => {
+        const start = 0.06 + (i / nL) * 0.38;
+        reach[a] = Math.min(reach[a], start);
+        reach[b] = Math.min(reach[b], start + 0.06);
+      });
       // Sterne mit Leuchthof + Namen
       ctx.font = `500 ${narrow ? 9 : 10}px ui-monospace, SFMono-Regular, Menlo, monospace`;
       ctx.textBaseline = "middle";
@@ -301,7 +309,7 @@ export default function SkyPreviewCard({ label, title }: { label: string; title:
         ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(p.x, p.y, r * 5, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = `rgba(255,255,255,${fade})`; ctx.beginPath(); ctx.arc(p.x, p.y, r * pulse, 0, Math.PI * 2); ctx.fill();
         if (s.n) {
-          ctx.fillStyle = `rgba(210,220,255,${0.75 * fade * Math.min(1, Math.max(0, (k - 0.5) / 0.08)) /* erst wenn alle Linien gezeichnet sind (15.10.2026) */})`;
+          ctx.fillStyle = `rgba(210,220,255,${0.75 * fade * Math.min(1, Math.max(0, (k - reach[i]) / 0.04))})`;
           ctx.fillText(s.n, p.x + r + 6, p.y);
         }
       });
