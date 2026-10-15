@@ -305,9 +305,24 @@ function ensureRot(o: Obj, texSrc?: CanvasImageSource) {
   }
 }
 
+// Körper, deren echte Karte nur eine Falschfarben-Höhenkarte ist: hier gilt
+// immer die realistische eigene Oberfläche (Ceres, Nutzerkorrektur 15.10.2026).
+const PROC_ONLY = new Set(["ceres"]);
+
 function requestSprite(o: Obj, onReady: () => void) {
   if (o.kind === "star") { ensureRot(o); return; }
   if (sprites.has(o.id) || pending.has(o.id)) return;
+  if (PROC_ONLY.has(o.id)) {
+    try {
+      const sc = cachedCanvas("surface-" + o.id, () => surfaceCanvas(o.id, o.color));
+      sprites.set(o.id, sphereSprite(sc, o));
+      ensureRot(o, sc);
+      onReady();
+    } catch {
+      /* ohne Vorschau weiter */
+    }
+    return;
+  }
   let job: Promise<HTMLCanvasElement> | null = null;
   if (o.tex) job = loadImg(o.tex).then((im) => { rots.delete(o.id); ensureRot(o, im); return sphereSprite(im, o); });
   else if (o.photo) job = loadImg(o.photo[0]).then((im) => photoSprite(im, o.photo ? o.photo[2] : undefined));
