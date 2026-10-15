@@ -365,7 +365,7 @@ function drawRing(g: CanvasRenderingContext2D, x: number, y: number, r: number, 
 
 function drawObj(g: CanvasRenderingContext2D, o: Obj, x: number, y: number, r: number, W: number, H: number) {
   // Riesige Objekte, die den ganzen Bildschirm füllen: nur den sichtbaren Rand als Fläche zeichnen.
-  if (r > 3e4) {
+  if (r > 3e4 || (o.photo && r * o.photo[1] > W * 3.2)) {
     const left = x - r;
     const soft = o.kind === "galaxy" || o.kind === "cluster" || o.kind === "universe" || o.kind === "nebula";
     const grad = g.createLinearGradient(left, 0, left + W * 0.6, 0);
@@ -394,8 +394,11 @@ function drawObj(g: CanvasRenderingContext2D, o: Obj, x: number, y: number, r: n
     return;
   }
   if (sp && o.photo) {
-    const f = o.photo[1];
-    g.drawImage(sp, x - r * f, y - r * f, r * f * 2, r * f * 2);
+    const f = o.photo[1], span = r * f;
+    // Zu stark vergrößert wird das Foto unscharf: ausblenden und in den weichen Farbverlauf übergehen.
+    g.globalAlpha = span > W * 1.2 ? Math.max(0, 1 - (span - W * 1.2) / (W * 2)) : 1;
+    g.drawImage(sp, x - span, y - span, span * 2, span * 2);
+    g.globalAlpha = 1;
     return;
   }
   if (o.kind === "galaxy" || o.kind === "nebula" || o.kind === "cluster" || o.kind === "universe") {
@@ -534,6 +537,8 @@ export default function SizeComparison({ index }: { index: string }) {
     dirty.current = true;
     const last = OBJECTS.length - 1;
     const ready = () => { dirty.current = true; };
+    // Fotos (Nebel, Galaxien, Universum) früh im Hintergrund laden, damit beim Hineinzoomen nichts leer bleibt.
+    OBJECTS.forEach((o, i) => { if (o.photo) window.setTimeout(() => requestSprite(o, ready), 1500 + i * 400); });
 
     const resize = () => {
       const r = wrap.getBoundingClientRect();
