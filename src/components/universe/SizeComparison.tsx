@@ -923,31 +923,35 @@ export default function SizeComparison({ index }: { index: string }) {
       // Kleinere Objekte, die links aus dem Bild laufen würden, bleiben als Punkte am
       // linken Rand stehen und blenden langsam aus, sobald sie neben den größeren
       // kaum noch zu sehen sind (Nutzerwunsch 15.10.2026).
-      // Die Parkplätze liegen am linken Rand, aber nie im Objekt im Fokus oder seinem Nachbarn.
-      const ef = (i: number) => rs[i] * (OBJECTS[i].ring || OBJECTS[i].kind === "bh" ? 2.3 : spanF(OBJECTS[i]) || 1);
-      const lim = Math.min(xs[i0] + off - ef(i0), xs[i1] + off - ef(i1)) - 14;
-      const slot = new Map<number, number>();
-      for (let i = i0 - 1, j = 0; i >= 0 && j < 6; i--) {
-        if (rs[i] < 0.4) break;
+      // Die Parkplätze liegen am linken Rand, aber nie im Objekt im Fokus. Die letzten Objekte
+      // bleiben als Punkte sichtbar und blenden Stufe für Stufe aus (Nutzerwunsch 15.10.2026).
+      const fo = Math.round(t);
+      const lim = xs[fo] + off - rs[fo] * (OBJECTS[fo].ring || OBJECTS[fo].kind === "bh" ? 2.3 : 1) - 14;
+      const stepA = [1, 0.8, 0.55, 0.35, 0.2, 0.1];
+      const slot = new Map<number, { sx: number; j: number }>();
+      for (let i = fo - 1, j = 0; i >= 0 && j < 6; i--) {
+        if (rs[i] >= 8) continue; // große Objekte laufen wie bisher aus dem Bild
         const sx = Math.min(lim, 106) - j * 18;
         if (sx < 10) break;
-        if (rs[i] < 8 && xs[i] + off < sx) { slot.set(i, sx); j++; }
+        slot.set(i, { sx, j });
+        j++;
       }
       g.font = "400 11px ui-monospace, monospace";
       for (let i = 0; i <= last; i++) {
         const o = OBJECTS[i], r = rs[i];
-        const sx = slot.get(i), pinned = sx !== undefined;
-        const x = sx !== undefined ? sx : xs[i] + off;
-        const al = pinned ? Math.max(0, Math.min(1, (r - 0.4) / 1.6)) : 1;
+        const sl = slot.get(i), tx = xs[i] + off;
+        const parked = sl !== undefined && tx < sl.sx;
+        const x = sl !== undefined && parked ? sl.sx : tx;
+        const al = sl !== undefined ? stepA[sl.j] + (1 - stepA[sl.j]) * Math.max(0, Math.min(1, 1 - (sl.sx - tx) / 60)) : 1;
         const ext = r * (o.ring || o.kind === "bh" ? 2.3 : spanF(o) || 1) + 90;
-        if (r < 0.4 || al <= 0.02 || (!pinned && (x + ext < 0 || x - ext > W))) continue;
+        if (al <= 0.02 || (sl === undefined && (r < 0.4 || x + ext < 0 || x - ext > W))) continue;
         if (r > 1.5) requestSprite(o, ready);
         g.globalAlpha = al;
-        drawObj(g, o, x, cy, Math.max(r, pinned ? 1.6 : 0.8), W, H);
+        drawObj(g, o, x, cy, Math.max(r, sl !== undefined ? 1.6 : 0.8), W, H);
         g.globalAlpha = 1;
-        if (r < H * 0.42 && al > 0.45) {
+        if (r < H * 0.42 && (sl === undefined || sl.j < 2)) {
           const name = objName(o, lng), text = name.length > 26 ? name.slice(0, 25) + "…" : name;
-          if (pinned) {
+          if (parked) {
             // Namen am Rand nur, wenn sie nicht in das große Objekt ragen
             const w = g.measureText(text).width, lx = Math.max(x, w / 2 + 4);
             if (lx + w / 2 < lim + 10) labels.push({ x: lx, y: cy + 14, text, main: false });
