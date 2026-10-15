@@ -732,7 +732,7 @@ export default function SizeComparison({ index }: { index: string }) {
         if (r < 0.4 || x + ext < 0 || x - ext > W) continue;
         if (r > 1.5) requestSprite(o, ready);
         drawObj(g, o, x, cy, Math.max(r, 0.8), W, H);
-        if (r >= 2.5 && r < H * 0.42) {
+        if (r >= 0.8 && r < H * 0.42) {
           const name = objName(o, lng);
           labels.push({ x, y: cy + Math.max(r, 6) * (o.kind === "galaxy" && !o.photo ? 0.55 : 1) + 8, text: name.length > 26 ? name.slice(0, 25) + "…" : name, main: i === focus });
         }
