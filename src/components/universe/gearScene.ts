@@ -1145,8 +1145,16 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
   // --- Animation: ewige Maschine, Stellung aus der absoluten Uhrzeit ---
   // (siehe machineTime.ts) — für alle Besucher gleich, startet nie neu.
   let animationId = 0;
+  // Nur rendern, solange die Maschine im Bild ist (Nutzer 15.10.2026: Hintergrund ruckelt beim Scrollen,
+  // die Maschine lief unsichtbar mit voller Auflösung weiter). Die Stellung kommt aus der Uhrzeit,
+  // das Weiterlaufen nach dem Zurückscrollen ist also nahtlos.
+  let onScreen = true;
+  const visIo = typeof IntersectionObserver === "function"
+    ? new IntersectionObserver((entries) => { onScreen = entries[0]?.isIntersecting ?? true; }, { rootMargin: "150px 0px" })
+    : null;
+  visIo?.observe(mount);
   function animate() {
-    if (document.documentElement.dataset.overlay === "1") {
+    if (document.documentElement.dataset.overlay === "1" || !onScreen || document.hidden) {
       animationId = requestAnimationFrame(animate);
       return;
     }
@@ -1164,6 +1172,7 @@ export function createGearScene(mount: HTMLElement, opts: GearSceneOptions = {})
 
   function dispose() {
     cancelAnimationFrame(animationId);
+    visIo?.disconnect();
     window.removeEventListener("resize", handleResize);
     resizeObserver?.disconnect();
     el.removeEventListener("wheel", handleWheel);
