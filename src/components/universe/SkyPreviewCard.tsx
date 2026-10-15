@@ -123,8 +123,6 @@ const CONSTELLATIONS: Constellation[] = [
   },
 ];
 
-const OPEN: LocalizedText = { de: "Öffnen", en: "Open", es: "Abrir", fr: "Ouvrir", pt: "Abrir", tr: "Aç", ru: "Открыть", el: "Άνοιγμα", ar: "افتح", hi: "खोलें", zh: "打开", ja: "開く", ko: "열기" };
-
 const HOLD = 6500; // ms pro Sternbild
 const DEG = Math.PI / 180;
 
@@ -292,7 +290,7 @@ export default function SkyPreviewCard({ label, title }: { label: string; title:
       ctx.shadowBlur = 0;
 
       // Sterne mit Leuchthof + Namen
-      ctx.font = "500 10px ui-monospace, SFMono-Regular, Menlo, monospace";
+      ctx.font = `500 ${narrow ? 9 : 10}px ui-monospace, SFMono-Regular, Menlo, monospace`;
       ctx.textBaseline = "middle";
       c.stars.forEach((s, i) => {
         const p = pts[i];
@@ -302,7 +300,7 @@ export default function SkyPreviewCard({ label, title }: { label: string; title:
         halo.addColorStop(0, `rgba(200,215,255,${0.5 * fade})`); halo.addColorStop(1, "rgba(200,215,255,0)");
         ctx.fillStyle = halo; ctx.beginPath(); ctx.arc(p.x, p.y, r * 5, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = `rgba(255,255,255,${fade})`; ctx.beginPath(); ctx.arc(p.x, p.y, r * pulse, 0, Math.PI * 2); ctx.fill();
-        if (s.n && (!narrow || s.m < 1.7)) {
+        if (s.n) {
           ctx.fillStyle = `rgba(210,220,255,${0.75 * fade * Math.min(1, Math.max(0, (k - 0.3) / 0.1))})`;
           ctx.fillText(s.n, p.x + r + 6, p.y);
         }
@@ -375,7 +373,7 @@ export default function SkyPreviewCard({ label, title }: { label: string; title:
         <p className="label-mono text-xs uppercase text-accent">{label}</p>
         <p className="mt-1 flex max-w-xl items-center gap-2 text-sm font-semibold text-foreground">
           <span className="min-w-0 flex-1">{title}</span>
-          <span className="sky-cta shrink-0">{localize(OPEN, lang)} ↗</span>
+          <span className="shrink-0 transition-transform group-hover:translate-x-1">↗</span>
         </p>
       </div>
     </Link>
