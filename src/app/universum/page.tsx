@@ -12,6 +12,7 @@ import Gear3D from "@/components/universe/Gear3D";
 import SolarSystemModal from "@/components/universe/SolarSystemModal";
 import SkyPreviewCard from "@/components/universe/SkyPreviewCard";
 import SizeComparison from "@/components/universe/SizeComparison";
+import SpaceCalculators from "@/components/universe/SpaceCalculators";
 import SectionHeading from "@/components/ui/SectionHeading";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -1493,6 +1494,8 @@ export default function UniversumPage() {
           })}
         </div>
         </section>
+
+        <SpaceCalculators index="05" />
 
         <SpaceNewsSection />
 
