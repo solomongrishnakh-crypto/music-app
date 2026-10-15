@@ -953,8 +953,8 @@ export default function SizeComparison({ index }: { index: string }) {
           const name = objName(o, lng), text = name.length > 26 ? name.slice(0, 25) + "…" : name;
           if (parked) {
             // Namen am Rand nur, wenn sie nicht in das große Objekt ragen
-            const w = g.measureText(text).width, lx = Math.max(x, w / 2 + 4);
-            if (lx + w / 2 < lim + 10) labels.push({ x: lx, y: cy + 14, text, main: false });
+            const w = g.measureText(text).width, lx = Math.max(w / 2 + 4, Math.min(x, lim + 6 - w / 2));
+            labels.push({ x: lx, y: cy + 14, text, main: sl !== undefined && sl.j === 0 });
           } else {
             labels.push({ x, y: cy + Math.max(r, 6) * (o.kind === "galaxy" && !o.photo ? 0.55 : 1) + 8, text, main: i === focus });
           }
