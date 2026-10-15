@@ -411,9 +411,29 @@ function ensureRot(o: Obj, texSrc?: CanvasImageSource) {
 // immer die realistische eigene Oberfläche (Ceres, Nutzerkorrektur 15.10.2026).
 const PROC_ONLY = new Set(["ceres"]);
 
+// Start-Ruckeln (Nutzer 15.10.2026): Alle Oberflächen (Sterne, Planeten) wurden im
+// ersten Bild auf einmal berechnet → ~1,6 s Stillstand. Jetzt höchstens ein
+// schwerer Aufbau pro Zeitscheibe; der Rest folgt in den nächsten Bildern.
+let heavyLock = false;
+let heavyRetry = false;
+function heavyTurn(onReady: () => void): boolean {
+  if (heavyLock) {
+    if (!heavyRetry) { heavyRetry = true; window.setTimeout(() => { heavyRetry = false; onReady(); }, 70); }
+    return false;
+  }
+  heavyLock = true;
+  window.setTimeout(() => { heavyLock = false; }, 60);
+  return true;
+}
+
 function requestSprite(o: Obj, onReady: () => void) {
-  if (o.kind === "star") { ensureRot(o); return; }
+  if (o.kind === "star") {
+    if (!rots.has(o.id) && !heavyTurn(onReady)) return;
+    ensureRot(o);
+    return;
+  }
   if (sprites.has(o.id) || pending.has(o.id)) return;
+  if ((PROC_ONLY.has(o.id) || (o.tex && PROC.has(o.id))) && !heavyTurn(onReady)) return;
   if (PROC_ONLY.has(o.id)) {
     try {
       const sc = cachedCanvas("surface-" + o.id, () => surfaceCanvas(o.id, o.color));
