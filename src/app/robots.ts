@@ -8,7 +8,7 @@ import type { MetadataRoute } from "next";
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [{ userAgent: "*", allow: "/", disallow: "/api/" }],
-    sitemap: "https://centaurian.vercel.app/sitemap.xml",
-    host: "https://centaurian.vercel.app",
+    sitemap: "https://centaurianspace.com/sitemap.xml",
+    host: "https://centaurianspace.com",
   };
 }
