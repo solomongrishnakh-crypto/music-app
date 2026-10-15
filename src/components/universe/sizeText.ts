@@ -25,3 +25,27 @@ export const UI2: Record<Lang, UiText2> = {
   ja: T("天体を検索 …", "見つかりません", "ズーム", "全体表示", "ズーム：ピンチまたはマウスホイール · 移動：ドラッグ · 左下のスケールバーが実際の長さです。"),
   ko: T("천체 검색 …", "결과 없음", "확대", "전체 보기", "확대: 두 손가락 또는 마우스 휠 · 이동: 드래그 · 왼쪽 아래 축척이 실제 길이를 보여 줍니다."),
 };
+
+/** Übersicht aller Objekte (Nutzerwunsch 15.10.2026: mehr Objekte gleichzeitig sehen). */
+export interface UiText3 {
+  all: string;
+  allHint: string;
+}
+
+const T3 = (all: string, allHint: string): UiText3 => ({ all, allHint });
+
+export const UI3: Record<Lang, UiText3> = {
+  de: T3("Überblick", "Alle Objekte auf einen Blick. Die Größen sind hier stark gestaucht, damit alles auf einmal passt (nicht maßstabsgetreu) – die Reihenfolge stimmt. Antippen öffnet den maßstabsgetreuen Vergleich."),
+  en: T3("Overview", "All objects at a glance. Sizes are strongly compressed so everything fits at once (not to scale) – the order is correct. Tap an object to open the true-scale comparison."),
+  es: T3("Resumen", "Todos los objetos de un vistazo. Los tamaños están muy comprimidos para que quepan a la vez (sin escala real); el orden es correcto. Toca un objeto para abrir la comparación a escala real."),
+  fr: T3("Aperçu", "Tous les objets en un coup d'œil. Les tailles sont très compressées pour tout afficher à la fois (pas à l'échelle) ; l'ordre est correct. Touche un objet pour ouvrir la comparaison à l'échelle réelle."),
+  pt: T3("Visão geral", "Todos os objetos num relance. Os tamanhos estão muito comprimidos para caberem de uma vez (fora de escala); a ordem está correta. Toque num objeto para abrir a comparação em escala real."),
+  tr: T3("Genel bakış", "Tüm nesneler tek bakışta. Hepsi sığsın diye boyutlar güçlü biçimde sıkıştırıldı (ölçekli değil); sıralama doğru. Gerçek ölçekli karşılaştırmayı açmak için bir nesneye dokun."),
+  ru: T3("Обзор", "Все объекты сразу. Размеры сильно сжаты, чтобы всё поместилось (не в масштабе); порядок верный. Нажмите на объект, чтобы открыть сравнение в реальном масштабе."),
+  el: T3("Επισκόπηση", "Όλα τα αντικείμενα με μια ματιά. Τα μεγέθη είναι έντονα συμπιεσμένα ώστε να χωράνε όλα (όχι υπό κλίμακα) · η σειρά είναι σωστή. Πάτα ένα αντικείμενο για τη σύγκριση σε πραγματική κλίμακα."),
+  ar: T3("نظرة عامة", "كل الأجرام في لمحة. الأحجام مضغوطة بشدة لتتسع كلها (ليست بمقياس حقيقي) والترتيب صحيح. المس جرماً لفتح المقارنة بالمقياس الحقيقي."),
+  hi: T3("अवलोकन", "सभी वस्तुएँ एक नज़र में। सब कुछ समा सके इसलिए आकार काफ़ी सिकोड़े गए हैं (असली पैमाने पर नहीं) – क्रम सही है। असली पैमाने की तुलना खोलने के लिए किसी वस्तु को छुएँ।"),
+  zh: T3("总览", "所有天体一览。为了全部放下，大小被大幅压缩（并非真实比例），但顺序是正确的。点按任一天体即可打开真实比例的对比。"),
+  ja: T3("一覧", "すべての天体を一覧表示。全部が収まるよう大きさを強く圧縮しています（実際の縮尺ではありません）が、順番は正しいです。天体をタップすると実寸の比較が開きます。"),
+  ko: T3("한눈에", "모든 천체를 한눈에. 한꺼번에 들어가도록 크기를 크게 압축했습니다(실제 비율 아님). 순서는 정확합니다. 천체를 누르면 실제 비율 비교가 열립니다."),
+};
