@@ -234,7 +234,7 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
   const traveled = Number.isFinite(speedKms) ? Math.min(d.km, speedKms * simT) : 0;
   const prog = d.km > 0 ? traveled / d.km : 0;
   const pct = Math.round(Math.min(1, Math.max(0, prog)) * 100);
-  const fmtKm = (km: number) =>
+  const fmtDist = (km: number) =>
     km >= LY_KM / 10
       ? nf(lang, { notation: "compact", compactDisplay: "short", maximumFractionDigits: 2 }, km / LY_KM) + " " + localize(SEARCH_TX.ly, lang)
       : nf(lang, { notation: "compact", compactDisplay: "short", maximumFractionDigits: 1 }, km) + " km";
@@ -542,7 +542,7 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
 
                 <div className="mt-3">
                   <div className="label-mono mb-1.5 flex items-center justify-between gap-2 text-[9px] uppercase tracking-wider text-muted" dir="ltr">
-                    <span className="min-w-0 truncate">◢ {localize(ROUTE_TX, lang)} · {earth.name} → {destName(d)} · {fmtKm(d.km)}</span>
+                    <span className="min-w-0 truncate">◢ {localize(ROUTE_TX, lang)} · {earth.name} → {destName(d)} · {fmtDist(d.km)}</span>
                     <span className="shrink-0 tabular-nums text-accent">{pct} %</span>
                   </div>
                   <div className="flex items-center gap-2" dir="ltr">
@@ -562,7 +562,7 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                       />
                       {traveled > 0 && (
                         <div className="absolute top-0 -translate-x-1/2" style={{ left: Math.min(Math.max(prog * 100, 12), 88) + "%" }}>
-                          <span className="label-mono block whitespace-nowrap border border-accent/60 bg-black/70 px-1 text-[9px] tabular-nums text-accent">{fmtKm(traveled)}</span>
+                          <span className="label-mono block whitespace-nowrap border border-accent/60 bg-black/70 px-1 text-[9px] tabular-nums text-accent">{fmtDist(traveled)}</span>
                         </div>
                       )}
                       <div className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: prog * 100 + "%" }}>
@@ -571,7 +571,7 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                           style={{ boxShadow: "0 0 14px 3px rgb(var(--hud-accent))" }}
                         />
                       </div>
-                      <div className="label-mono absolute bottom-0 left-0 right-0 flex justify-between text-[8px] text-muted/70"><span>0</span><span>{fmtKm(d.km)}</span></div>
+                      <div className="label-mono absolute bottom-0 left-0 right-0 flex justify-between text-[8px] text-muted/70"><span>0</span><span>{fmtDist(d.km)}</span></div>
                     </div>
                     <div className="flex w-14 shrink-0 flex-col items-center gap-0.5 sm:w-20">
                       <Thumb id={d.id} size={36} color={d.color} />
