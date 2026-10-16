@@ -4,6 +4,7 @@ import Link from "next/link";
 import type { FormEvent, KeyboardEvent, PointerEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import SiteBackground from "@/components/particles/SiteBackground";
+import ImperienIntro from "@/components/history/ImperienIntro";
 import CosmicCalendar from "@/components/history/CosmicCalendar";
 import REICH_SLUGS from "@/data/reiche/slugs.json";
 import Spinner from "@/components/ui/Spinner";
@@ -1541,6 +1542,7 @@ export default function ImperienClient() {
   return (
     <main className="relative min-h-screen">
       <SiteBackground />
+      <ImperienIntro />
 
       {/* Leaflet-Standardsteuerelemente (Zoom +/-) an den dunklen Seitenstil
           angepasst - sonst weiss/hell und ein Stilbruch. Beschriftungen
