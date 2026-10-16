@@ -135,6 +135,14 @@ function Thumb({ id, size, color }: { id: string; size: number; color: string })
 }
 
 const C_KMH = 299792.458 * 3600;
+const LIMIT_TX: Tx = {
+  de: "Schneller als Licht geht nichts – gerechnet mit Lichtgeschwindigkeit.", en: "Nothing travels faster than light – calculated at light speed.",
+  es: "Nada viaja más rápido que la luz: calculado a la velocidad de la luz.", fr: "Rien ne va plus vite que la lumière : calcul à la vitesse de la lumière.",
+  pt: "Nada viaja mais rápido que a luz: calculado à velocidade da luz.", tr: "Işıktan hızlı hiçbir şey yoktur: ışık hızıyla hesaplandı.",
+  ru: "Ничто не движется быстрее света: расчёт при скорости света.", el: "Τίποτα δεν κινείται ταχύτερα από το φως: υπολογισμός με την ταχύτητα του φωτός.",
+  ar: "لا شيء أسرع من الضوء — الحساب بسرعة الضوء.", hi: "प्रकाश से तेज़ कुछ नहीं चलता – गणना प्रकाश की गति पर की गई है।",
+  zh: "没有什么比光更快——已按光速计算。", ja: "光より速いものはありません。光速で計算しています。", ko: "빛보다 빠른 것은 없습니다. 광속으로 계산했습니다.",
+};
 const KM_AU = 149597870.7;
 // Aktueller Abstand Erde → Ziel aus den Bahndaten (wie im 3D-Sonnensystem); Sterne und Galaxien bleiben fest
 function liveKm(id: string, fixed: number): number {
@@ -214,6 +222,7 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
   // Geschwindigkeit: Fahrzeug oder eigene Eingabe (höchstens Lichtgeschwindigkeit)
   const cv = parseFloat(cust.replace(",", "."));
   const custKmh = !Number.isFinite(cv) || cv <= 0 ? NaN : Math.min(C_KMH, cunit === "kmh" ? cv : cunit === "kms" ? cv * 3600 : (cv / 100) * C_KMH);
+  const custCapped = Number.isFinite(cv) && cv > 0 && (cunit === "kmh" ? cv : cunit === "kms" ? cv * 3600 : (cv / 100) * C_KMH) > C_KMH;
   const veh = VEHICLES.find((v) => v.id === sel);
   const speedKmh = sel === "custom" ? custKmh : veh ? veh.kmh : NaN;
   const speedKms = speedKmh / 3600;
@@ -506,6 +515,7 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                       ▶ {localize(JOURNEY_TX.go, lang)}
                     </button>
                   </div>
+                  {sel === "custom" && custCapped && <p className="mt-1.5 text-[10px] leading-snug text-accent">{localize(LIMIT_TX, lang)}</p>}
                 </div>
               </div>
 
