@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import SiteBackground from "@/components/particles/SiteBackground";
 import Typewriter from "@/components/ui/Typewriter";
 import DetailModal from "@/components/ui/DetailModal";
@@ -1387,6 +1387,18 @@ export default function UniversumPage() {
   const [showSolarSystem, setShowSolarSystem] = useState(false);
   const { t, lang, localePath } = useLanguage();
 
+  // Direktlink #maschine (z. B. von der Seite "Maschine der Ewigkeit"): zur Maschine scrollen.
+  useEffect(() => {
+    if (typeof window === "undefined" || window.location.hash !== "#maschine") return;
+    const go = () => document.getElementById("maschine")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    const t1 = window.setTimeout(go, 700);
+    const t2 = window.setTimeout(go, 1800);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, []);
+
   return (
     <main className="relative min-h-screen">
       <SiteBackground />
@@ -1446,7 +1458,7 @@ export default function UniversumPage() {
         <SpaceCalculators index="03" />
 
         {/* Nutzerwunsch 03.10.2026: Maschine der Ewigkeit über "Universum in Zahlen" */}
-        <section className="mb-10">
+        <section id="maschine" className="mb-10 scroll-mt-4">
           <SectionHeading index="04" label={t("gearLabel")} />
         <div className="hud-card flex flex-col items-center overflow-hidden p-3 lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:items-center lg:gap-x-8 lg:p-5">
           <Gear3D className="h-60 w-full sm:h-72 lg:row-span-2 lg:h-80" />
