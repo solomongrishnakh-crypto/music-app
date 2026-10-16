@@ -12,7 +12,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Centaurian",
     short_name: "Centaurian",
-    description: "Songs suchen und direkt hören, das Universum entdecken und die Geschichte großer Imperien erleben.",
+    description: "Das Universum live entdecken und die Weltgeschichte aller Imperien erleben — nebenbei auch Musik.",
     start_url: "/",
     display: "standalone",
     background_color: "#000000",

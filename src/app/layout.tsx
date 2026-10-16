@@ -7,7 +7,7 @@ import LangRedirect from "@/components/LangRedirect";
 import PersistentPlayerBar from "@/components/player/PersistentPlayerBar";
 import { HOME_KEYWORDS } from "@/lib/seoKeywords";
 import Script from "next/script";
-import { hreflang } from "@/lib/seoI18n";
+import { PAGE_SEO, hreflang } from "@/lib/seoI18n";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
@@ -29,11 +29,10 @@ const orbitron = Orbitron({
 export const metadata: Metadata = {
   metadataBase: new URL("https://centaurianspace.com"),
   title: {
-    default: "CENTAURIAN — Musik, Universum & Geschichte",
+    default: "CENTAURIAN — Universum & Weltgeschichte",
     template: "%s | CENTAURIAN",
   },
-  description:
-    "Centaurian: Songs suchen und direkt im Browser hören, das Sonnensystem interaktiv entdecken und auf einer Weltgeschichte-Karte alle Imperien von 3400 v. Chr. bis heute erleben — kostenlos, ohne Anmeldung.",
+  description: PAGE_SEO.home.de.description,
   applicationName: "Centaurian",
   keywords: HOME_KEYWORDS,
   alternates: { canonical: "/", languages: hreflang("/") },
@@ -41,15 +40,14 @@ export const metadata: Metadata = {
     type: "website",
     url: "/",
     siteName: "Centaurian",
-    title: "CENTAURIAN — Musik, Universum & Geschichte",
-    description:
-      "Songs suchen und direkt hören, das Universum entdecken und die Geschichte großer Imperien erleben — kostenlos, ohne Anmeldung.",
+    title: "CENTAURIAN — Universum & Weltgeschichte",
+    description: PAGE_SEO.home.de.description,
     images: [{ url: "/branding/og-image.jpg", width: 1200, height: 630, alt: "Centaurian Logo" }],
   },
   twitter: {
     card: "summary_large_image",
-    title: "CENTAURIAN — Musik, Universum & Geschichte",
-    description: "Songs suchen und direkt hören, das Universum entdecken und die Geschichte großer Imperien erleben.",
+    title: "CENTAURIAN — Universum & Weltgeschichte",
+    description: "Das Universum live entdecken und die Weltgeschichte aller Imperien erleben — nebenbei auch Musik.",
     images: ["/branding/og-image.jpg"],
   },
   robots: { index: true, follow: true },
@@ -82,7 +80,8 @@ export default function RootLayout({
               name: "Centaurian",
               keywords: HOME_KEYWORDS.join(", "),
               url: "https://centaurianspace.com",
-              description: "Songs suchen und direkt hören, das Universum entdecken und die Geschichte großer Imperien erleben.",
+              alternateName: "CENTAURIAN — Universe & World History",
+              description: PAGE_SEO.home.de.description,
               publisher: {
                 "@type": "Organization",
                 name: "Centaurian",

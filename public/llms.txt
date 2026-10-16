@@ -1,14 +1,14 @@
-# Centaurian
+# CENTAURIAN — Universum & Weltgeschichte / Universe & World History
 
-> Centaurian (https://centaurianspace.com) ist ein kostenloses, privates Hobby-Projekt ohne Anmeldung und ohne Werbung: Musik hören, den Sternenhimmel live erkunden, das Sonnensystem in 3D entdecken und die Weltgeschichte auf einer interaktiven Karte erleben. Die Webseite ist in 13 Sprachen verfügbar (Deutsch, Englisch, Hindi, Chinesisch, Koreanisch, Japanisch, Spanisch, Französisch, Türkisch, Russisch, Portugiesisch, Arabisch, Griechisch).
+> Centaurian (https://centaurianspace.com) ist ein kostenloses, privates Hobby-Projekt ohne Anmeldung und ohne Werbung rund um Universum und Weltgeschichte: das Sonnensystem in 3D entdecken, den Sternenhimmel live erkunden und die Weltgeschichte aller Imperien auf einer interaktiven Karte erleben. Musik gibt es nur als kleinen Zusatz. Die Webseite ist in 13 Sprachen verfügbar (Deutsch, Englisch, Hindi, Chinesisch, Koreanisch, Japanisch, Spanisch, Französisch, Türkisch, Russisch, Portugiesisch, Arabisch, Griechisch).
 >
-> Centaurian (https://centaurianspace.com) is a free, private hobby project with no sign-up and no ads: listen to music, explore the live night sky, discover the solar system in 3D and experience world history on an interactive map. Available in 13 languages.
+> Centaurian (https://centaurianspace.com) is a free, private hobby project with no sign-up and no ads about the universe and world history: discover the solar system in 3D, explore the live night sky and experience every empire in history on an interactive map. Music is only a small extra. Available in 13 languages.
 
 Diese Datei beschreibt alle Werkzeuge der Webseite für KI-Assistenten und Suchmaschinen, weil viele Inhalte interaktiv (Grafik, 3D, WebGL) sind und als Text schwer lesbar wären.
 
 ## Seiten / Pages
 
-- [Startseite / Home](https://centaurianspace.com/): Musik-Suche und Wiedergabe, KI-News, Übersicht aller Bereiche, Kontakt.
+- [Startseite / Home](https://centaurianspace.com/): Suche nach Planeten, Sternen, Sternbildern und Imperien, Übersicht aller Bereiche, KI-News, Kontakt; nebenbei auch Musik.
 - [Universum / Universe](https://centaurianspace.com/universum): Sonnensystem live in 3D, Maschine der Ewigkeit, Universum in Zahlen, Weltraum-News.
 - [Sternenhimmel / Night sky](https://centaurianspace.com/sternenhimmel): interaktive Sternkarte live für den eigenen Ort.
 - [Himmel heute / Sky tonight](https://centaurianspace.com/en/himmel-heute): which planets are visible tonight, today's Moon phase, next full moon, meteor showers and eclipses – recalculated every hour, with rise/set times for the visitor's location (13 languages).
@@ -20,13 +20,6 @@ Diese Datei beschreibt alle Werkzeuge der Webseite für KI-Assistenten und Suchm
 - [Alle Reiche / List of empires](https://centaurianspace.com/en/imperien/reiche): 300 historical empires, each with a map of its greatest extent, area, dates, predecessors and successors.
 
 All pages exist in 13 languages: German without prefix, others under /en, /es, /fr, /pt, /tr, /ru, /el, /ar, /hi, /zh, /ja, /ko (e.g. https://centaurianspace.com/es/sternbilder/orion).
-
-## Musik (Startseite)
-
-- Songs, Künstler und Alben suchen und direkt auf der Seite hören.
-- Läuft ausschließlich über die offizielle YouTube Data API und den offiziellen YouTube-Player; nichts wird heruntergeladen oder gespeichert.
-- Favoriten, Zufallswiedergabe, Player-Leiste, die beim Seitenwechsel weiterläuft.
-- Kein Login, kein Abo.
 
 ## KI-News (Startseite)
 
@@ -73,6 +66,13 @@ All pages exist in 13 languages: German without prefix, others under /en, /es, /
 - Jahres-Regler mit Zeitleiste, Abspielen „durch die Jahre“ in mehreren Geschwindigkeiten, Sprung zu Anfang und Ende.
 - Reiche antippen für Steckbrief (Zeitraum, Sprache, Beschreibung aus Wikipedia); Suche nach Reich oder Herrscher.
 - Übersicht der größten Imperien der Geschichte.
+
+## Musik (kleiner Zusatz / small extra)
+
+- Songs, Künstler und Alben suchen und direkt auf der Seite hören.
+- Läuft ausschließlich über die offizielle YouTube Data API und den offiziellen YouTube-Player; nichts wird heruntergeladen oder gespeichert.
+- Favoriten, Zufallswiedergabe, Player-Leiste, die beim Seitenwechsel weiterläuft.
+- Kein Login, kein Abo.
 
 ## Android-App
 

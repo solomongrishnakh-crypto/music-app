@@ -33,6 +33,7 @@ export default async function LangHome({ params }: Props) {
     "@context": "https://schema.org",
     "@type": "WebSite",
     name: "Centaurian",
+    alternateName: isPrefixedLang(lang) ? PAGE_SEO.home[lang].title : undefined,
     url: BASE_URL + langPath("/", isPrefixedLang(lang) ? lang : "en"),
     inLanguage: lang,
     description: isPrefixedLang(lang) ? PAGE_SEO.home[lang].description : undefined,
