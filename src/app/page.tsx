@@ -172,7 +172,8 @@ export default function Home() {
         ) : (
           <header className="mb-10 text-center sm:mb-14">
             <h1 className="text-4xl font-bold uppercase tracking-tight sm:text-6xl">
-              <TypedWordmark speed={90} />
+              <span className="sr-only">Centaurian</span>
+              <span aria-hidden="true"><TypedWordmark speed={90} /></span>
             </h1>
             <p className="mx-auto mt-3 max-w-xl text-xs text-muted sm:text-sm">
               // {ht.subtitle}
