@@ -1062,7 +1062,6 @@ export default function SizeComparison({ index }: { index: string }) {
       g.font = "400 11px ui-monospace, monospace";
       for (let i = 0; i <= last; i++) {
         const o = OBJECTS[i], r = rs[i];
-        if (i === eIdx && refA > 0.02) continue;
         const sl = slot.get(i), tx = xs[i] + off;
         // Kleine Vorgänger gleiten beim Schrumpfen (8 → 5,5 px) an ihren Parkplatz links und
         // erscheinen nie zwischen dem linken Rand und dem Objekt im Fokus (Nutzer 15.10.2026).
