@@ -1057,7 +1057,7 @@ export default function SizeComparison({ index }: { index: string }) {
       // Maßstab vor der Scheibe des Objekts im Fokus (Nutzerwunsch 15.10.2026).
       const eIdx = OBJECTS.findIndex((o) => o.id === "earth");
       const fobj = OBJECTS[fo];
-      const refA = fobj.kind === "planet" && fobj.id !== "earth" && rs[eIdx] >= 1.5 && rs[fo] > rs[eIdx] * 3
+      const refA = fobj.kind === "planet" && fobj.id !== "earth" && fobj.d >= 139820 && rs[eIdx] >= 1.5 && rs[fo] > rs[eIdx] * 3
         ? Math.max(0, Math.min(1, 1 - Math.abs(t - fo) * 3)) : 0;
       g.font = "400 11px ui-monospace, monospace";
       for (let i = 0; i <= last; i++) {
