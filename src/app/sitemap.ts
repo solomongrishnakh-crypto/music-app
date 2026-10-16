@@ -38,6 +38,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...SPACE_BODIES.flatMap((b) => withLangs(`/sonnensystem/${b.id}`, 0.6, "monthly")),
     ...withLangs("/groessenvergleich", 0.9, "monthly"),
     ...withLangs("/weltraum-rechner", 0.9, "monthly"),
+    ...withLangs("/geburtstag", 0.8, "monthly"),
     ...DESTS.flatMap((d) => VEHICLES.flatMap((v) => withLangs(travelPath(d, v), 0.6, "yearly"))),
     ...withLangs("/maschine-der-ewigkeit", 0.7, "yearly"),
     ...withLangs("/sternbilder", 0.7, "monthly"),
