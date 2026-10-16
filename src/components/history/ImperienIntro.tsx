@@ -7,11 +7,6 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const SKIP: Record<string, string> = {
-  de: "Überspringen", en: "Skip", es: "Omitir", fr: "Passer", pt: "Pular", tr: "Geç", ru: "Пропустить",
-  el: "Παράλειψη", ar: "تخطي", hi: "छोड़ें", zh: "跳过", ja: "スキップ", ko: "건너뛰기",
-};
-
 function initIntro(cv: HTMLCanvasElement, LAND: number[][], lang0: string, onDone: () => void): () => void {
   var coarse = matchMedia('(pointer: coarse)').matches;
   var renderer;
@@ -199,9 +194,9 @@ function initIntro(cv: HTMLCanvasElement, LAND: number[][], lang0: string, onDon
   var t0 = performance.now(), alive = true, raf = 0, done = false;
   function loop(now){
     if (!alive) return;
-    var t = (now - t0)/1000;
+    var t = (now - t0)/1000*1.7;
     mat.uniforms.uT.value = t; tmat.uniforms.uT.value = t; renderer.render(scene, cam);
-    if (t > 7.5 && !done){ done = true; onDone(); }
+    if (t > 6.2 && !done){ done = true; onDone(); }
     raf = requestAnimationFrame(loop);
   }
   raf = requestAnimationFrame(loop);
@@ -243,14 +238,6 @@ export default function ImperienIntro() {
       onClick={finish}
     >
       <canvas ref={ref} aria-hidden="true" className="block h-full w-full" />
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); finish(); }}
-        className="absolute right-4 border border-[rgba(255,160,150,.25)] bg-[rgba(8,3,5,.6)] px-3 py-2 text-[11px] uppercase tracking-[.12em] text-[#f6ecea]"
-        style={{ top: "max(14px, env(safe-area-inset-top))" }}
-      >
-        {SKIP[lang] ?? SKIP.en}
-      </button>
     </div>
   );
 }
