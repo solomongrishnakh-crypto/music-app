@@ -54,7 +54,7 @@ export const metadata: Metadata = {
   },
   robots: { index: true, follow: true },
   // Besitznachweis für die Google Search Console (HTML-Tag-Methode)
-  verification: { google: "qrhceuDz1zuZMNrlVjkiybQo6epyEYiL-2UkmQJI5AY" },
+  verification: { google: ["qrhceuDz1zuZMNrlVjkiybQo6epyEYiL-2UkmQJI5AY", "vdypSkBZIwT8t0TWz288f1_dx6NjdPLCIw3FKlpwXi0"] },
 };
 
 export const viewport: Viewport = {
