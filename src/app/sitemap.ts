@@ -3,6 +3,7 @@ import { REICHE_INDEX } from "@/lib/history/reiche";
 import { ALL_LANGS, BASE_URL, hreflang } from "@/lib/seoI18n";
 import { SPACE_BODIES } from "@/components/space/bodies";
 import { CONSTELLATIONS } from "@/components/space/ConstView";
+import { DESTS, VEHICLES, travelPath } from "@/lib/travelTime";
 
 /**
  * sitemap.xml — alle Seiten in allen 13 Sprachen (Deutsch ohne Präfix,
@@ -37,6 +38,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...SPACE_BODIES.flatMap((b) => withLangs(`/sonnensystem/${b.id}`, 0.6, "monthly")),
     ...withLangs("/groessenvergleich", 0.9, "monthly"),
     ...withLangs("/weltraum-rechner", 0.9, "monthly"),
+    ...DESTS.flatMap((d) => VEHICLES.flatMap((v) => withLangs(travelPath(d, v), 0.6, "yearly"))),
     ...withLangs("/maschine-der-ewigkeit", 0.7, "yearly"),
     ...withLangs("/sternbilder", 0.7, "monthly"),
     ...CONSTELLATIONS.flatMap((c) => withLangs(`/sternbilder/${c.slug}`, 0.6, "yearly")),

@@ -5,6 +5,7 @@ import { spaceTexts } from "@/lib/spaceText";
 import { TOOLS_PAGE } from "@/lib/toolsPageText";
 import { BASE_URL, OG_LOCALE, hreflang, langPath } from "@/lib/seoI18n";
 import SpaceCalculators from "@/components/universe/SpaceCalculators";
+import { TravelHub } from "./TravelView";
 
 /**
  * Eigene Seite für den Weltraum-Rechner (/weltraum-rechner, /en/weltraum-rechner …)
@@ -70,6 +71,7 @@ export default function ToolsView({ lang }: { lang: Lang }) {
         <h2 className="sr-only">{T.h2Tool}</h2>
         <SpaceCalculators index="01" />
       </section>
+      <TravelHub lang={lang} />
       <section className="mt-10 max-w-3xl">
         <h2 className="font-display text-lg font-bold text-foreground sm:text-xl">{T.h2Faq}</h2>
         <div className="mt-3 space-y-3">
