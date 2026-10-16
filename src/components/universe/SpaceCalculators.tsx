@@ -135,6 +135,10 @@ function Thumb({ id, size, color }: { id: string; size: number; color: string })
 }
 
 const C_KMH = 299792.458 * 3600;
+const ROUTE_TX: Tx = {
+  de: "Route", en: "Route", es: "Ruta", fr: "Itinéraire", pt: "Rota", tr: "Rota", ru: "Маршрут", el: "Διαδρομή",
+  ar: "المسار", hi: "मार्ग", zh: "航线", ja: "航路", ko: "항로",
+};
 const LIMIT_TX: Tx = {
   de: "Schneller als Licht geht nichts – gerechnet mit Lichtgeschwindigkeit.", en: "Nothing travels faster than light – calculated at light speed.",
   es: "Nada viaja más rápido que la luz: calculado a la velocidad de la luz.", fr: "Rien ne va plus vite que la lumière : calcul à la vitesse de la lumière.",
@@ -229,6 +233,11 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
   const totalS = Number.isFinite(speedKmh) ? (d.km / speedKmh) * 3600 : NaN;
   const traveled = Number.isFinite(speedKms) ? Math.min(d.km, speedKms * simT) : 0;
   const prog = d.km > 0 ? traveled / d.km : 0;
+  const pct = Math.round(Math.min(1, Math.max(0, prog)) * 100);
+  const fmtKm = (km: number) =>
+    km >= LY_KM / 10
+      ? nf(lang, { notation: "compact", compactDisplay: "short", maximumFractionDigits: 2 }, km / LY_KM) + " " + localize(SEARCH_TX.ly, lang)
+      : nf(lang, { notation: "compact", compactDisplay: "short", maximumFractionDigits: 1 }, km) + " km";
   const arrived = Number.isFinite(totalS) && simT >= totalS;
 
   // Abstand regelmäßig aktualisieren (nur solange keine Reise läuft oder pausiert ist)
@@ -532,29 +541,37 @@ export default function SpaceCalculators({ index = "03" }: { index?: string }) {
                 </div>
 
                 <div className="mt-3">
+                  <div className="label-mono mb-1.5 flex items-center justify-between gap-2 text-[9px] uppercase tracking-wider text-muted" dir="ltr">
+                    <span className="min-w-0 truncate">◢ {localize(ROUTE_TX, lang)} · {earth.name} → {destName(d)} · {fmtKm(d.km)}</span>
+                    <span className="shrink-0 tabular-nums text-accent">{pct} %</span>
+                  </div>
                   <div className="flex items-center gap-2" dir="ltr">
                     <div className="flex w-14 shrink-0 flex-col items-center gap-0.5 sm:w-20">
                       <Thumb id="earth" size={36} color={earth.color} />
                       <span className="label-mono max-w-full truncate text-[9px] uppercase text-muted">{earth.name}</span>
                     </div>
-                    <div className="relative h-10 min-w-0 flex-1">
+                    <div className="relative h-12 min-w-0 flex-1">
                       <div
-                        className="absolute left-0 right-0 top-1/2 h-px -translate-y-1/2"
-                        style={{
-                          backgroundImage: "repeating-linear-gradient(90deg, rgba(255,255,255,0.35) 0 6px, rgba(255,255,255,0) 6px 14px)",
-                          backgroundPositionX: run ? -((now / 18) % 14) : 0,
-                        }}
+                        className="absolute left-0 right-0 top-1/2 h-2 -translate-y-1/2 border-r border-white/30"
+                        style={{ backgroundImage: "repeating-linear-gradient(90deg, rgba(255,255,255,0.3) 0 1px, transparent 1px 10%)" }}
                       />
+                      <div className="absolute left-0 right-0 top-1/2 h-px -translate-y-1/2 bg-white/25" />
                       <div
-                        className="absolute left-0 top-1/2 h-[2px] -translate-y-1/2 bg-accent"
-                        style={{ width: prog * 100 + "%", boxShadow: "0 0 10px rgb(var(--hud-accent))" }}
+                        className="absolute left-0 top-1/2 h-[2px] -translate-y-1/2"
+                        style={{ width: prog * 100 + "%", background: "linear-gradient(90deg, rgba(var(--hud-accent),0.1), rgb(var(--hud-accent)))", boxShadow: "0 0 10px rgb(var(--hud-accent))" }}
                       />
+                      {traveled > 0 && (
+                        <div className="absolute top-0 -translate-x-1/2" style={{ left: Math.min(Math.max(prog * 100, 12), 88) + "%" }}>
+                          <span className="label-mono block whitespace-nowrap border border-accent/60 bg-black/70 px-1 text-[9px] tabular-nums text-accent">{fmtKm(traveled)}</span>
+                        </div>
+                      )}
                       <div className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2" style={{ left: prog * 100 + "%" }}>
                         <span
                           className={"block h-3 w-3 rotate-45 bg-accent " + (run ? "animate-pulse" : "")}
                           style={{ boxShadow: "0 0 14px 3px rgb(var(--hud-accent))" }}
                         />
                       </div>
+                      <div className="label-mono absolute bottom-0 left-0 right-0 flex justify-between text-[8px] text-muted/70"><span>0</span><span>{fmtKm(d.km)}</span></div>
                     </div>
                     <div className="flex w-14 shrink-0 flex-col items-center gap-0.5 sm:w-20">
                       <Thumb id={d.id} size={36} color={d.color} />
