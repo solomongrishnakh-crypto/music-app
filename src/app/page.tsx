@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import SiteBackground from "@/components/particles/SiteBackground";
+import TunnelBackground from "@/components/particles/TunnelBackground";
 import SearchBar from "@/components/search/SearchBar";
 import SearchResults from "@/components/search/SearchResults";
 import CompactSongList from "@/components/search/CompactSongList";
@@ -142,7 +142,7 @@ export default function Home() {
 
   return (
     <main className="relative min-h-screen">
-      <SiteBackground />
+      <div className="fixed inset-x-0 top-0 -z-10 h-[100lvh] overflow-hidden bg-background"><TunnelBackground /></div>
 
       {/* Ecken-UI im igloo.inc-Stil: kurzer Info-Block oben rechts, dezenter
           Hinweis unten links. Die Wordmark oben links und die Menüleiste
