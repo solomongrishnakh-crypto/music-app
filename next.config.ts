@@ -72,6 +72,20 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Umzug auf die neue Domain (16.10.2026): die alte Adresse leitet dauerhaft um.
+  // Ausnahme: die Dateien, die die Android-App (TWA) auf der alten Adresse braucht.
+  async redirects() {
+    const old = [{ type: "host" as const, value: "centaurian.vercel.app" }];
+    return [
+      { source: "/", has: old, destination: "https://centaurianspace.com/", permanent: true },
+      {
+        source: "/:path((?!.well-known/assetlinks|download/).+)",
+        has: old,
+        destination: "https://centaurianspace.com/:path",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {
