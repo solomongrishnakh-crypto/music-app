@@ -9,6 +9,7 @@ import SkyPreviewCard from "@/components/universe/SkyPreviewCard";
 import { homeText } from "@/lib/homeText";
 import { SIZE_PAGE } from "@/lib/sizePageText";
 import { TOOLS_PAGE } from "@/lib/toolsPageText";
+import { BIRTHDAY_TEXT } from "@/lib/birthdayText";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 /**
@@ -105,6 +106,12 @@ export default function FeaturesSection() {
           className="label-mono inline-block border border-border px-3 py-1.5 text-[10px] uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent"
         >
           {(TOOLS_PAGE[lang] ?? TOOLS_PAGE.en).link} →
+        </Link>
+        <Link
+          href={localePath("/geburtstag")}
+          className="label-mono ml-2 inline-block border border-border px-3 py-1.5 text-[10px] uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent"
+        >
+          {BIRTHDAY_TEXT[lang].link} →
         </Link>
       </p>
 
