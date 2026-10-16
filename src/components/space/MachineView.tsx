@@ -83,7 +83,7 @@ export default function MachineView({ lang }: { lang: Lang }) {
       <h1 className="font-display text-3xl font-bold text-foreground sm:text-5xl">{T.machineH1}</h1>
       <p className="mt-4 text-lg leading-relaxed text-foreground/90">{T.machineIntro}</p>
       <Link
-        href={langPath("/universum", lang)}
+        href={`${langPath("/universum", lang)}#maschine`}
         className="mt-6 inline-block border border-accent px-4 py-2.5 text-sm uppercase tracking-wide text-accent transition-colors hover:bg-accent hover:text-black"
       >
         ▶ {T.machineOpen}
