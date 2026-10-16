@@ -132,15 +132,15 @@ function initIntro(cv: HTMLCanvasElement, LAND: number[][], lang0: string, onDon
   geo.setAttribute('aCH', new THREE.BufferAttribute(aCH,3)); geo.setAttribute('aCM', new THREE.BufferAttribute(aCM,3));
   var mat = new THREE.ShaderMaterial({
     transparent:true, depthTest:false, depthWrite:false, blending:THREE.AdditiveBlending,
-    uniforms:{uT:{value:0}, uRes:{value:new THREE.Vector2(1,1)}, uHB:{value:new THREE.Vector4()}, uMB:{value:new THREE.Vector4()}, uPx:{value:1}},
+    uniforms:{uT:{value:0}, uRes:{value:new THREE.Vector2(1,1)}, uHB:{value:new THREE.Vector4()}, uMB:{value:new THREE.Vector4()}, uPx:{value:1}, uOut:{value:0}},
     vertexShader:
-      'attribute vec2 aS, aH, aM, aD; attribute vec4 aR; attribute vec3 aCH, aCM; uniform float uT, uPx; uniform vec2 uRes; uniform vec4 uHB, uMB; varying vec3 vC; varying float vA;' +
+      'attribute vec2 aS, aH, aM, aD; attribute vec4 aR; attribute vec3 aCH, aCM; uniform float uT, uPx, uOut; uniform vec2 uRes; uniform vec4 uHB, uMB; varying vec3 vC; varying float vA;' +
       'float sm(float x){ x = clamp(x,0.,1.); return x*x*(3.-2.*x); } float eo(float x){ x = clamp(x,0.,1.); return 1. - pow(1.-x,3.); }' +
       'void main(){ vec2 hp = uHB.xy + aH*uHB.zw; vec2 mp = uMB.xy + aM*uMB.zw; vec2 sp = aS*uRes; vec2 dp = hp + aD;' +
       'float e0 = eo((uT - aR.x*.5)/.75); float e1 = sm((uT - 1.7 - aR.y*.3)/.6); float e2 = sm((uT - 2.2 - aM.x*.5 - aR.z*.15)/1.1);' +
       'vec2 p = mix(sp, hp, e0); p = mix(p, dp, e1); vec2 dir = mp - p; vec2 perp = normalize(vec2(-dir.y, dir.x) + vec2(1e-4)); p = mix(p, mp, e2) + perp*sin(3.14159*e2)*aR.w*80.;' +
-      'float tw = .78 + .22*sin(uT*3. + aR.x*40.); vC = mix(aCH, aCM, e2)*tw; vA = e0; gl_PointSize = (1.5 + aR.y*1.7)*uPx;' +
-      'gl_Position = vec4(p.x/uRes.x*2. - 1., 1. - p.y/uRes.y*2., 0., 1.); }',
+      'float tw = .78 + .22*sin(uT*3. + aR.x*40.); vC = mix(aCH, aCM, e2)*tw; vA = e0*(1.-sm(uOut)); gl_PointSize = (1.5 + aR.y*1.7)*uPx;' +
+      'p += vec2(cos(aR.x*6.2832), sin(aR.x*6.2832))*(60. + aR.y*380.)*uOut*uOut; gl_Position = vec4(p.x/uRes.x*2. - 1., 1. - p.y/uRes.y*2., 0., 1.); }',
     fragmentShader:
       'varying vec3 vC; varying float vA; void main(){ vec2 q = gl_PointCoord - .5; float r = length(q)*2.; if (r > 1.) discard; float a = exp(-r*r*3.2)*vA; gl_FragColor = vec4(vC*a*1.15, a); }'
   });
@@ -154,13 +154,13 @@ function initIntro(cv: HTMLCanvasElement, LAND: number[][], lang0: string, onDon
   tGeo.setAttribute('position', new THREE.BufferAttribute(tpos,3)); tGeo.setAttribute('aF', new THREE.BufferAttribute(taF,2)); tGeo.setAttribute('aT', new THREE.BufferAttribute(taT,2)); tGeo.setAttribute('aR', new THREE.BufferAttribute(taR,4));
   var tmat = new THREE.ShaderMaterial({
     transparent:true, depthTest:false, depthWrite:false, blending:THREE.AdditiveBlending,
-    uniforms:{uT:{value:0}, uRes:{value:new THREE.Vector2(1,1)}, uTB:{value:new THREE.Vector4()}, uMB:{value:new THREE.Vector4()}, uPx:{value:1}},
+    uniforms:{uT:{value:0}, uRes:{value:new THREE.Vector2(1,1)}, uTB:{value:new THREE.Vector4()}, uMB:{value:new THREE.Vector4()}, uPx:{value:1}, uOut:{value:0}},
     vertexShader:
-      'attribute vec2 aF, aT; attribute vec4 aR; uniform float uT, uPx; uniform vec2 uRes; uniform vec4 uTB, uMB; varying float vA;' +
+      'attribute vec2 aF, aT; attribute vec4 aR; uniform float uT, uPx, uOut; uniform vec2 uRes; uniform vec4 uTB, uMB; varying float vA;' +
       'float sm(float x){ x = clamp(x,0.,1.); return x*x*(3.-2.*x); }' +
       'void main(){ vec2 mp = uMB.xy + aF*uMB.zw; vec2 tp = uTB.xy + aT*uTB.zw; float e3 = sm((uT - 2.3 - aR.x*.4)/.8); vec2 dir = tp - mp; vec2 perp = normalize(vec2(-dir.y, dir.x) + vec2(1e-4));' +
-      'vec2 p = mix(mp, tp, e3) + perp*sin(3.14159*e3)*aR.w*40.; vA = sm((uT - 2.2)/.3)*(.75 + .25*sin(uT*3. + aR.y*40.)); gl_PointSize = (1.6 + aR.z*1.6)*uPx;' +
-      'gl_Position = vec4(p.x/uRes.x*2. - 1., 1. - p.y/uRes.y*2., 0., 1.); }',
+      'vec2 p = mix(mp, tp, e3) + perp*sin(3.14159*e3)*aR.w*40.; vA = sm((uT - 2.2)/.3)*(.75 + .25*sin(uT*3. + aR.y*40.))*(1.-sm(uOut)); gl_PointSize = (1.6 + aR.z*1.6)*uPx;' +
+      'p += vec2(cos(aR.x*6.2832), sin(aR.x*6.2832))*(60. + aR.y*380.)*uOut*uOut; gl_Position = vec4(p.x/uRes.x*2. - 1., 1. - p.y/uRes.y*2., 0., 1.); }',
     fragmentShader:
       'varying float vA; void main(){ vec2 q = gl_PointCoord - .5; float r = length(q)*2.; if (r > 1.) discard; float a = exp(-r*r*3.2)*vA; gl_FragColor = vec4(vec3(1.,.82,.74)*a*1.1, a); }'
   });
@@ -195,8 +195,8 @@ function initIntro(cv: HTMLCanvasElement, LAND: number[][], lang0: string, onDon
   function loop(now){
     if (!alive) return;
     var t = (now - t0)/1000*1.7;
-    mat.uniforms.uT.value = t; tmat.uniforms.uT.value = t; renderer.render(scene, cam);
-    if (t > 6.2 && !done){ done = true; onDone(); }
+    mat.uniforms.uT.value = t; tmat.uniforms.uT.value = t; var o = Math.min(1, Math.max(0, (t - 3.8)/0.9)); mat.uniforms.uOut.value = o; tmat.uniforms.uOut.value = o; renderer.render(scene, cam);
+    if (t > 3.9 && !done){ done = true; onDone(); }
     raf = requestAnimationFrame(loop);
   }
   raf = requestAnimationFrame(loop);
@@ -217,7 +217,7 @@ export default function ImperienIntro() {
 
   function finish() {
     setFade(true);
-    setTimeout(() => setShow(false), 600);
+    setTimeout(() => setShow(false), 950);
   }
 
   useEffect(() => {
@@ -234,7 +234,7 @@ export default function ImperienIntro() {
   return (
     <div
       className="fixed inset-0 z-[100000] bg-[#030206]"
-      style={{ opacity: fade ? 0 : 1, transition: "opacity .6s", pointerEvents: fade ? "none" : "auto" }}
+      style={{ opacity: fade ? 0 : 1, transition: "opacity .9s", pointerEvents: fade ? "none" : "auto" }}
       onClick={finish}
     >
       <canvas ref={ref} aria-hidden="true" className="block h-full w-full" />
