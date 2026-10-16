@@ -238,7 +238,7 @@ export default function ImperienIntro() {
   if (!show) return null;
   return (
     <div
-      className="fixed inset-0 z-[100] bg-[#030206]"
+      className="fixed inset-0 z-[100000] bg-[#030206]"
       style={{ opacity: fade ? 0 : 1, transition: "opacity .6s", pointerEvents: fade ? "none" : "auto" }}
       onClick={finish}
     >
