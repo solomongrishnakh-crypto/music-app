@@ -72,6 +72,11 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Google fragt zuerst /favicon.ico ab: dort das Logo (ohne Schrift) ausliefern.
+  async rewrites() {
+    return [{ source: "/favicon.ico", destination: "/icon.png" }];
+  },
+
   // Umzug auf die neue Domain (16.10.2026): die alte Adresse leitet dauerhaft um.
   // Ausnahme: die Dateien, die die Android-App (TWA) auf der alten Adresse braucht.
   async redirects() {
