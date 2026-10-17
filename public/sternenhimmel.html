@@ -1541,23 +1541,24 @@ function draw() {
     let [cr, cg, cb] = s.c2, css = s.css;
     if (red > 0.04) { cr = Math.round(cr + (255 - cr) * red * 0.6); cg = Math.round(cg - cg * red * 0.25); cb = Math.round(cb - cb * red * 0.55); css = `rgb(${cr},${cg},${cb})`; }
     if (r > 1.5) {
-      ctx.globalAlpha = a * 0.7;
-      const g = r * 3.4;
+      ctx.globalAlpha = a * 0.45;
+      const g = r * 4.2;
       ctx.drawImage(tinted(cr, cg, cb), P.x - g, P.y - g, g * 2, g * 2);
     }
-    if (s.mag < 1.6) {
+    if (s.mag < 1.2) {
       // Funkeln: Strahlen werden langsam länger/kürzer
       const sp = r * (5.5 + 1.5 * Math.sin(tw * 1.7 + i * 0.7)) * Math.min(1.4, (2.2 - s.mag) / 2);
-      ctx.globalAlpha = a * 0.55;
+      ctx.globalAlpha = a * 0.28;
       ctx.drawImage(spikeSprite, P.x - sp, P.y - sp, sp * 2, sp * 2);
     }
     ctx.globalAlpha = a;
     ctx.fillStyle = css;
-    if (r < 1.7) ctx.fillRect(P.x - 0.65, P.y - 0.65, 1.3, 1.3); // schwache Sterne: schneller als Kreise
-    else {
-      ctx.beginPath(); ctx.arc(P.x, P.y, r * 0.5, 0, 6.2832); ctx.fill();
-      // helle Sterne: weiß überstrahlter Kern, farbiger Rand (wie auf Fotos)
-      if (s.mag < 2.2) { ctx.fillStyle = "rgba(255,255,255,0.85)"; ctx.beginPath(); ctx.arc(P.x, P.y, r * 0.2, 0, 6.2832); ctx.fill(); }
+    if (r < 1.7) {
+      if (a > 0.1) { const sz = 1.7 + r * 0.75; ctx.drawImage(psf(cr, cg, cb, false), P.x - sz, P.y - sz, sz * 2, sz * 2); }
+      else ctx.fillRect(P.x - 0.65, P.y - 0.65, 1.3, 1.3); // schwache Sterne: schneller
+    } else {
+      const sz = 2.3 + r * 0.95;
+      ctx.drawImage(psf(cr, cg, cb, sz > 6), P.x - sz, P.y - sz, sz * 2, sz * 2);
     }
   }
   ctx.globalAlpha = 1;
@@ -2418,6 +2419,22 @@ function tinted(r, g, b) {
     tintCache.set(key, c);
   }
   return c;
+}
+// 17.10.2026 (Nutzerwunsch "Sterne wie echt"): weiche Punktabbildung statt harter Punkte —
+// ueberbelichteter weisser Kern, farbiger Saum, langer schwacher Halo (wie auf Kamerabildern)
+const psfCache = new Map();
+function psf(r, g, b, big) {
+  const key = (big ? 1 : 0) + ":" + (r >> 3) + "," + (g >> 3) + "," + (b >> 3);
+  let c = psfCache.get(key); if (c) return c;
+  const N = big ? 64 : 16, h = N / 2;
+  c = document.createElement("canvas"); c.width = c.height = N;
+  const x = c.getContext("2d"), gr = x.createRadialGradient(h, h, 0, h, h, h);
+  const w = [Math.round(r + (255 - r) * 0.65), Math.round(g + (255 - g) * 0.65), Math.round(b + (255 - b) * 0.65)];
+  gr.addColorStop(0, "rgba(" + w + ",1)"); gr.addColorStop(0.1, "rgba(" + w + ",0.92)");
+  gr.addColorStop(0.24, "rgba(" + r + "," + g + "," + b + ",0.5)"); gr.addColorStop(0.46, "rgba(" + r + "," + g + "," + b + ",0.15)");
+  gr.addColorStop(0.72, "rgba(" + r + "," + g + "," + b + ",0.04)"); gr.addColorStop(1, "rgba(" + r + "," + g + "," + b + ",0)");
+  x.fillStyle = gr; x.fillRect(0, 0, N, N);
+  psfCache.set(key, c); return c;
 }
 const mix = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
 const rgb = (c) => `rgb(${c[0]},${c[1]},${c[2]})`;
