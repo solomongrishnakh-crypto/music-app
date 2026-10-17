@@ -33,6 +33,8 @@ interface TranslationEntry {
   pt: string;
   ar: string;
   el: string;
+  id: string;
+  fa: string;
 }
 
 const TRANSLATIONS_SOURCE = {
@@ -40,24 +42,29 @@ const TRANSLATIONS_SOURCE = {
   navMusic: {
     de: "Musik", en: "Music", hi: "संगीत", zh: "音乐", ko: "음악", ja: "音楽",
     es: "Música", fr: "Musique", tr: "Müzik", ru: "Музыка", pt: "Música", ar: "الموسيقى", el: "Μουσική",
+    id: "Musik", fa: "موسیقی",
   },
   navAiNews: {
     de: "AI News", en: "AI News", hi: "AI समाचार", zh: "AI新闻", ko: "AI 뉴스", ja: "AIニュース",
     es: "Noticias IA", fr: "Actu IA", tr: "AI Haberleri", ru: "Новости ИИ", pt: "Notícias IA", ar: "أخبار الذكاء الاصطناعي", el: "Νέα AI",
+    id: "Berita AI", fa: "اخبار هوش مصنوعی",
   },
   navContacts: {
     de: "Kontakte", en: "Contact", hi: "संपर्क", zh: "联系方式", ko: "연락처", ja: "連絡先",
     es: "Contacto", fr: "Contact", tr: "İletişim", ru: "Контакты", pt: "Contato", ar: "اتصل بنا", el: "Επικοινωνία",
+    id: "Kontak", fa: "تماس",
   },
 
   // Allgemein
   back: {
     de: "Zurück", en: "Back", hi: "वापस", zh: "返回", ko: "뒤로", ja: "戻る",
     es: "Atrás", fr: "Retour", tr: "Geri", ru: "Назад", pt: "Voltar", ar: "رجوع", el: "Πίσω",
+    id: "Kembali", fa: "بازگشت",
   },
   close: {
     de: "Schließen", en: "Close", hi: "बंद करें", zh: "关闭", ko: "닫기", ja: "閉じる",
     es: "Cerrar", fr: "Fermer", tr: "Kapat", ru: "Закрыть", pt: "Fechar", ar: "إغلاق", el: "Κλείσιμο",
+    id: "Tutup", fa: "بستن",
   },
 
   // Suche
@@ -67,50 +74,61 @@ const TRANSLATIONS_SOURCE = {
     es: "Buscar artistas, canciones o álbumes…", fr: "Rechercher artistes, titres ou albums…",
     tr: "Sanatçı, şarkı veya albüm ara…", ru: "Поиск артистов, песен или альбомов…",
     pt: "Buscar artistas, músicas ou álbuns…", ar: "ابحث عن فنانين أو أغانٍ أو ألبومات…", el: "Αναζήτηση καλλιτεχνών, τραγουδιών ή άλμπουμ…",
+    id: "Cari artis, lagu, atau album …", fa: "جستجوی هنرمند، آهنگ یا آلبوم …",
   },
   searchAriaLabel: {
     de: "Musiksuche", en: "Music search", hi: "संगीत खोज", zh: "音乐搜索", ko: "음악 검색", ja: "音楽検索",
     es: "Búsqueda de música", fr: "Recherche musicale", tr: "Müzik arama", ru: "Поиск музыки", pt: "Busca de música", ar: "بحث الموسيقى", el: "Αναζήτηση μουσικής",
+    id: "Pencarian musik", fa: "جستجوی موسیقی",
   },
 
   // Player
   playerPlay: {
     de: "Abspielen", en: "Play", hi: "चलाएं", zh: "播放", ko: "재생", ja: "再生",
     es: "Reproducir", fr: "Lecture", tr: "Oynat", ru: "Воспроизвести", pt: "Reproduzir", ar: "تشغيل", el: "Αναπαραγωγή",
+    id: "Putar", fa: "پخش",
   },
   playerPause: {
     de: "Pause", en: "Pause", hi: "रोकें", zh: "暂停", ko: "일시정지", ja: "一時停止",
     es: "Pausa", fr: "Pause", tr: "Duraklat", ru: "Пауза", pt: "Pausar", ar: "إيقاف مؤقت", el: "Παύση",
+    id: "Jeda", fa: "توقف",
   },
   playerNext: {
     de: "Nächster Titel", en: "Next track", hi: "अगला ट्रैक", zh: "下一曲", ko: "다음 트랙", ja: "次の曲",
     es: "Siguiente pista", fr: "Piste suivante", tr: "Sonraki parça", ru: "Следующий трек", pt: "Próxima faixa", ar: "المقطع التالي", el: "Επόμενο κομμάτι",
+    id: "Lagu berikutnya", fa: "آهنگ بعدی",
   },
   playerPrevious: {
     de: "Vorheriger Titel", en: "Previous track", hi: "पिछला ट्रैक", zh: "上一曲", ko: "이전 트랙", ja: "前の曲",
     es: "Pista anterior", fr: "Piste précédente", tr: "Önceki parça", ru: "Предыдущий трек", pt: "Faixa anterior", ar: "المقطع السابق", el: "Προηγούμενο κομμάτι",
+    id: "Lagu sebelumnya", fa: "آهنگ قبلی",
   },
 
   // Universum-Seite
   universeLabel: {
     de: "// Universum", en: "// Universe", hi: "// ब्रह्मांड", zh: "// 宇宙", ko: "// 우주", ja: "// 宇宙",
     es: "// Universo", fr: "// Univers", tr: "// Evren", ru: "// Вселенная", pt: "// Universo", ar: "// الكون", el: "// Σύμπαν",
+    id: "// Alam Semesta", fa: "// جهان",
   },
   universeTitle: {
     de: "Universum kennenlernen", en: "Explore the Universe", hi: "ब्रह्मांड को जानें", zh: "探索宇宙", ko: "우주 알아보기", ja: "宇宙を知る",
     es: "Descubre el Universo", fr: "Découvrir l'Univers", tr: "Evreni Keşfet", ru: "Познакомьтесь со Вселенной", pt: "Conheça o Universo", ar: "تعرف على الكون", el: "Γνωρίστε το Σύμπαν",
+    id: "Jelajahi Alam Semesta", fa: "جهان را کاوش کنید",
   },
   universeInNumbers: {
     de: "// Universum in Zahlen", en: "// Universe in Numbers", hi: "// आंकड़ों में ब्रह्मांड", zh: "// 数字中的宇宙", ko: "// 숫자로 보는 우주", ja: "// 数字で見る宇宙",
     es: "// El Universo en cifras", fr: "// L'Univers en chiffres", tr: "// Rakamlarla Evren", ru: "// Вселенная в цифрах", pt: "// O Universo em números", ar: "// الكون بالأرقام", el: "// Το Σύμπαν σε αριθμούς",
+    id: "// Alam Semesta dalam Angka", fa: "// جهان در اعداد",
   },
   solarSystemLabel: {
     de: "// Sonnensystem", en: "// Solar System", hi: "// सौर मंडल", zh: "// 太阳系", ko: "// 태양계", ja: "// 太陽系",
     es: "// Sistema Solar", fr: "// Système Solaire", tr: "// Güneş Sistemi", ru: "// Солнечная система", pt: "// Sistema Solar", ar: "// النظام الشمسي", el: "// Ηλιακό Σύστημα",
+    id: "// Tata Surya", fa: "// منظومه شمسی",
   },
   liveExplore: {
     de: "Live erkunden", en: "Explore live", hi: "लाइव देखें", zh: "实时探索", ko: "실시간 탐험", ja: "ライブで探索",
     es: "Explorar en vivo", fr: "Explorer en direct", tr: "Canlı keşfet", ru: "Исследовать вживую", pt: "Explorar ao vivo", ar: "استكشف مباشرة", el: "Εξερεύνηση ζωντανά",
+    id: "Jelajahi langsung", fa: "کاوش زنده",
   },
   // Sichtbare Unterzeile mit Suchbegriffen (Nutzerwunsch 30.09.2026)
   universeSeoTagline: {
@@ -119,6 +137,7 @@ const TRANSLATIONS_SOURCE = {
     es: "Sistema solar en vivo con posiciones reales · Máquina de la eternidad · edad del universo", fr: "Système solaire en direct aux positions réelles · Machine de l'éternité · âge de l'univers",
     tr: "Gerçek konumlarla canlı Güneş Sistemi · Sonsuzluk Makinesi · evrenin yaşı", ru: "Солнечная система в реальном времени · Машина вечности · возраст Вселенной",
     pt: "Sistema solar ao vivo com posições reais · Máquina da eternidade · idade do universo", ar: "النظام الشمسي مباشرةً بمواقع حقيقية · آلة الأبدية · عمر الكون", el: "Ζωντανό ηλιακό σύστημα με πραγματικές θέσεις · Μηχανή της αιωνιότητας · ηλικία του σύμπαντος",
+    id: "Tata surya langsung dengan posisi nyata · Mesin Keabadian · usia alam semesta", fa: "منظومه شمسی زنده با موقعیت‌های واقعی · ماشین جاودانگی · سن جهان",
   },
   universeIntro: {
     de: "Zahlen und Fakten zum Kosmos — vom Alter des Universums über Dunkle Materie bis zu Schwarzen Löchern. Auf eine Karte klicken für eine ausführlichere Erklärung. Dazu aktuelle Live-News aus der Raumfahrt.",
@@ -134,6 +153,7 @@ const TRANSLATIONS_SOURCE = {
     pt: "Números e fatos sobre o cosmos — da idade do universo à matéria escura e buracos negros. Clique num cartão para uma explicação mais detalhada. Além de notícias espaciais ao vivo.",
     ar: "أرقام وحقائق عن الكون — من عمر الكون إلى المادة المظلمة والثقوب السوداء. انقر على بطاقة للحصول على شرح أكثر تفصيلاً. بالإضافة إلى أخبار الفضاء المباشرة.",
     el: "Αριθμοί και στοιχεία για το σύμπαν — από την ηλικία του σύμπαντος μέχρι τη σκοτεινή ύλη και τις μαύρες τρύπες. Κάντε κλικ σε μια κάρτα για πιο αναλυτική εξήγηση. Επιπλέον, ζωντανά νέα από το διάστημα.",
+    id: "Angka dan fakta tentang kosmos — dari usia alam semesta hingga materi gelap dan lubang hitam. Klik kartu untuk penjelasan lebih rinci. Ditambah berita antariksa terkini.", fa: "اعداد و واقعیت‌هایی درباره کیهان — از سن جهان تا ماده تاریک و سیاه‌چاله‌ها. برای توضیح بیشتر روی یک کارت کلیک کنید. به‌علاوه آخرین اخبار فضا.",
   },
 
   // Alters-Ticker (Nutzerwunsch 27.09.2026: "kannst ein timer hier oben
@@ -143,30 +163,37 @@ const TRANSLATIONS_SOURCE = {
   universeAgeTickerLabel: {
     de: "// Alter des Universums · live", en: "// Age of the Universe · live", hi: "// ब्रह्मांड की आयु · लाइव", zh: "// 宇宙的年龄 · 实时", ko: "// 우주의 나이 · 실시간", ja: "// 宇宙の年齢・ライブ",
     es: "// Edad del Universo · en vivo", fr: "// Âge de l'Univers · en direct", tr: "// Evrenin Yaşı · canlı", ru: "// Возраст Вселенной · в реальном времени", pt: "// Idade do Universo · ao vivo", ar: "// عمر الكون · مباشر", el: "// Ηλικία του Σύμπαντος · ζωντανά",
+    id: "// Usia Alam Semesta · langsung", fa: "// سن جهان · زنده",
   },
   ageYears: {
     de: "Jahre", en: "Years", hi: "वर्ष", zh: "年", ko: "년", ja: "年",
     es: "Años", fr: "Années", tr: "Yıl", ru: "Лет", pt: "Anos", ar: "سنوات", el: "Έτη",
+    id: "Tahun", fa: "سال",
   },
   ageMonths: {
     de: "Monate", en: "Months", hi: "महीने", zh: "月", ko: "개월", ja: "ヶ月",
     es: "Meses", fr: "Mois", tr: "Ay", ru: "Месяцев", pt: "Meses", ar: "أشهر", el: "Μήνες",
+    id: "Bulan", fa: "ماه",
   },
   ageDays: {
     de: "Tage", en: "Days", hi: "दिन", zh: "天", ko: "일", ja: "日",
     es: "Días", fr: "Jours", tr: "Gün", ru: "Дней", pt: "Dias", ar: "أيام", el: "Ημέρες",
+    id: "Hari", fa: "روز",
   },
   ageHours: {
     de: "Stunden", en: "Hours", hi: "घंटे", zh: "小时", ko: "시간", ja: "時間",
     es: "Horas", fr: "Heures", tr: "Saat", ru: "Часов", pt: "Horas", ar: "ساعات", el: "Ώρες",
+    id: "Jam", fa: "ساعت",
   },
   ageMinutes: {
     de: "Minuten", en: "Minutes", hi: "मिनट", zh: "分钟", ko: "분", ja: "分",
     es: "Minutos", fr: "Minutes", tr: "Dakika", ru: "Минут", pt: "Minutos", ar: "دقائق", el: "Λεπτά",
+    id: "Menit", fa: "دقیقه",
   },
   ageSeconds: {
     de: "Sekunden", en: "Seconds", hi: "सेकंड", zh: "秒", ko: "초", ja: "秒",
     es: "Segundos", fr: "Secondes", tr: "Saniye", ru: "Секунд", pt: "Segundos", ar: "ثوانٍ", el: "Δευτερόλεπτα",
+    id: "Detik", fa: "ثانیه",
   },
   universeAgeTickerFootnote: {
     de: "Basierend auf ≈ 13,797 Mrd. Jahren (Planck-Messung); Monate/Tage sind Kalender-Näherungswerte, keine exakte kosmologische Größe.",
@@ -182,11 +209,13 @@ const TRANSLATIONS_SOURCE = {
     pt: "Baseado em ≈ 13,797 bilhões de anos (medição do Planck); meses/dias são aproximações de calendário, não um valor cosmológico exato.",
     ar: "استنادًا إلى ≈ 13.797 مليار سنة (قياس بلانك)؛ الأشهر/الأيام تقريبات تقويمية وليست قيمة كونية دقيقة.",
     el: "Βασισμένο σε ≈ 13,797 δισ. έτη (μέτρηση Planck)· οι μήνες/ημέρες είναι ημερολογιακές προσεγγίσεις, όχι ακριβές κοσμολογικό μέγεθος.",
+    id: "Berdasarkan ≈ 13,797 miliar tahun (pengukuran Planck); bulan/hari hanyalah perkiraan kalender, bukan besaran kosmologis yang tepat.", fa: "بر پایه ≈ ۱۳٫۷۹۷ میلیارد سال (اندازه‌گیری پلانک)؛ ماه‌ها و روزها تقریب‌های تقویمی‌اند، نه کمیتی دقیق در کیهان‌شناسی.",
   },
 
   gearLabel: {
     de: "Die Maschine der Ewigkeit", en: "The Machine of Eternity", hi: "अनंतता की मशीन", zh: "永恒之机", ko: "영원의 기계", ja: "永遠の機械",
     es: "La máquina de la eternidad", fr: "La machine de l'éternité", tr: "Sonsuzluk Makinesi", ru: "Машина вечности", pt: "A máquina da eternidade", ar: "آلة الأبدية", el: "Η μηχανή της αιωνιότητας",
+    id: "Mesin Keabadian", fa: "ماشین جاودانگی",
   },
   gearCaption: {
     de: "Diese Maschine läuft seit dem Urknall. Jedes Zahnrad dreht das nächste an, aber sechsmal langsamer. Das erste schafft eine Runde in drei Sekunden, das zweite in zwanzig, das dritte in zwei Minuten. So wird es von Rad zu Rad langsamer, bis zum letzten: Es braucht für eine einzige Runde 13,8 Milliarden Jahre, so lange, wie es das Universum schon gibt. Keiner von uns wird es sich bewegen sehen, aber es dreht sich trotzdem. Die rote Markierung zeigt, wie weit.",
@@ -202,51 +231,62 @@ const TRANSLATIONS_SOURCE = {
     pt: "Esta máquina funciona desde o Big Bang. Cada engrenagem gira a seguinte, mas seis vezes mais devagar. A primeira dá uma volta em três segundos, a segunda em vinte, a terceira em dois minutos. Assim fica mais lenta de engrenagem em engrenagem, até a última: ela precisa de 13,8 bilhões de anos para uma única volta, o tempo que o universo existe. Nenhum de nós a verá se mover, mas ela continua girando. A marca vermelha mostra quanto.",
     ar: "تعمل هذه الآلة منذ الانفجار العظيم. كل ترس يدير الذي يليه، لكن أبطأ بست مرات. الأول يكمل دورة في ثلاث ثوانٍ، والثاني في عشرين، والثالث في دقيقتين. وهكذا يبطؤ من ترس إلى ترس حتى الأخير: يحتاج إلى 13.8 مليار سنة لدورة واحدة، بقدر عمر الكون. لن يراه أحد منا يتحرك، لكنه يدور رغم ذلك. العلامة الحمراء تُظهر إلى أي حد.",
     el: "Αυτή η μηχανή λειτουργεί από τη Μεγάλη Έκρηξη. Κάθε γρανάζι γυρίζει το επόμενο, αλλά έξι φορές πιο αργά. Το πρώτο κάνει μια στροφή σε τρία δευτερόλεπτα, το δεύτερο σε είκοσι, το τρίτο σε δύο λεπτά. Έτσι γίνεται όλο και πιο αργό, μέχρι το τελευταίο: χρειάζεται 13,8 δισ. χρόνια για μία μόνο στροφή, όσο υπάρχει το σύμπαν. Κανείς μας δεν θα το δει να κινείται, αλλά γυρίζει παρ' όλα αυτά. Το κόκκινο σημάδι δείχνει πόσο.",
+    id: "Mesin ini berputar sejak Big Bang. Setiap roda gigi memutar roda gigi berikutnya, tetapi enam kali lebih lambat. Yang pertama menyelesaikan satu putaran dalam tiga detik, yang kedua dalam dua puluh detik, yang ketiga dalam dua menit. Makin lama makin lambat dari roda ke roda, hingga yang terakhir: ia butuh 13,8 miliar tahun untuk satu putaran, selama alam semesta ada. Tak seorang pun dari kita akan melihatnya bergerak, namun ia tetap berputar. Tanda merah menunjukkan sejauh mana.", fa: "این ماشین از زمان مه‌بانگ در حال کار است. هر چرخ‌دنده چرخ‌دنده بعدی را می‌چرخاند، اما شش برابر کندتر. اولی یک دور را در سه ثانیه کامل می‌کند، دومی در بیست ثانیه، سومی در دو دقیقه. از چرخ‌دنده‌ای به چرخ‌دنده دیگر کندتر می‌شود تا آخرین: برای یک دور ۱۳٫۸ میلیارد سال زمان لازم دارد، به‌اندازه عمر جهان. هیچ‌یک از ما هرگز حرکتش را نخواهیم دید، اما با این حال می‌چرخد. نشانه قرمز نشان می‌دهد تا کجا رسیده است.",
   },
   // Rad-für-Rad-Navigation der Zahnrad-Maschine
   gearNavPrev: {
     de: "Vorheriges Rad", en: "Previous gear", hi: "पिछला गियर", zh: "上一个齿轮", ko: "이전 기어", ja: "前の歯車",
     es: "Engranaje anterior", fr: "Engrenage précédent", tr: "Önceki dişli", ru: "Предыдущая шестерня", pt: "Engrenagem anterior", ar: "الترس السابق", el: "Προηγούμενο γρανάζι",
+    id: "Roda gigi sebelumnya", fa: "چرخ‌دنده قبلی",
   },
   gearNavNext: {
     de: "Nächstes Rad", en: "Next gear", hi: "अगला गियर", zh: "下一个齿轮", ko: "다음 기어", ja: "次の歯車",
     es: "Siguiente engranaje", fr: "Engrenage suivant", tr: "Sonraki dişli", ru: "Следующая шестерня", pt: "Próxima engrenagem", ar: "الترس التالي", el: "Επόμενο γρανάζι",
+    id: "Roda gigi berikutnya", fa: "چرخ‌دنده بعدی",
   },
   gearNavOverview: {
     de: "Übersicht", en: "Overview", hi: "अवलोकन", zh: "总览", ko: "전체 보기", ja: "全体",
     es: "Vista general", fr: "Vue d'ensemble", tr: "Genel görünüm", ru: "Обзор", pt: "Visão geral", ar: "نظرة عامة", el: "Επισκόπηση",
+    id: "Ikhtisar", fa: "نمای کلی",
   },
   gearNavGear: {
     de: "Rad {n} von {total}", en: "Gear {n} of {total}", hi: "गियर {n} / {total}", zh: "第 {n} 个齿轮(共 {total} 个)", ko: "{total}개 중 {n}번 기어", ja: "歯車 {n} / {total}",
     es: "Engranaje {n} de {total}", fr: "Engrenage {n} sur {total}", tr: "Dişli {n} / {total}", ru: "Шестерня {n} из {total}", pt: "Engrenagem {n} de {total}", ar: "الترس {n} من {total}", el: "Γρανάζι {n} από {total}",
+    id: "Roda gigi {n} dari {total}", fa: "چرخ‌دنده {n} از {total}",
   },
   gearNavPeriod: {
     de: "1 Umdrehung: {t}", en: "1 rotation: {t}", hi: "1 चक्कर: {t}", zh: "转一圈:{t}", ko: "1회전: {t}", ja: "1回転:{t}",
     es: "1 vuelta: {t}", fr: "1 tour : {t}", tr: "1 tur: {t}", ru: "1 оборот: {t}", pt: "1 volta: {t}", ar: "دورة واحدة: {t}", el: "1 περιστροφή: {t}",
+    id: "1 putaran: {t}", fa: "۱ دور: {t}",
   },
   gearNavAngle: {
     de: "Stellung jetzt", en: "Position now", hi: "अभी की स्थिति", zh: "当前角度", ko: "현재 위치", ja: "現在の角度",
     es: "Posición actual", fr: "Position actuelle", tr: "Şu anki konum", ru: "Положение сейчас", pt: "Posição atual", ar: "الموضع الآن", el: "Θέση τώρα",
+    id: "Posisi sekarang", fa: "موقعیت کنونی",
   },
   gearNavHint: {
     de: "Wischen oder ◀ ▶ – Rad für Rad bis zum letzten", en: "Swipe or ◀ ▶ – gear by gear to the last one", hi: "स्वाइप करें या ◀ ▶ – गियर-दर-गियर आखिरी तक", zh: "滑动或 ◀ ▶ —— 逐个查看直到最后一个齿轮", ko: "스와이프 또는 ◀ ▶ – 마지막 기어까지 하나씩", ja: "スワイプまたは ◀ ▶ ― 最後の歯車まで1つずつ",
     es: "Desliza o ◀ ▶ – engranaje a engranaje hasta el último", fr: "Balayez ou ◀ ▶ – engrenage par engrenage jusqu'au dernier", tr: "Kaydır veya ◀ ▶ – sonuncuya kadar dişli dişli", ru: "Свайп или ◀ ▶ — шестерня за шестернёй до последней", pt: "Deslize ou ◀ ▶ – engrenagem a engrenagem até a última", ar: "اسحب أو ◀ ▶ – ترسًا ترسًا حتى الأخير", el: "Σύρετε ή ◀ ▶ – γρανάζι-γρανάζι μέχρι το τελευταίο",
+    id: "Geser atau ◀ ▶ – roda gigi demi roda gigi hingga yang terakhir", fa: "بکشید یا ◀ ▶ – چرخ‌دنده به چرخ‌دنده تا آخرین",
   },
 
   // Sonnensystem-Modal
   solarSystemTapHint: {
     de: "Planet tippen für Details", en: "Tap a planet for details", hi: "विवरण के लिए ग्रह पर टैप करें", zh: "点击行星查看详情", ko: "행성을 탭하면 자세히 보기", ja: "惑星をタップして詳細を表示",
     es: "Toca un planeta para más detalles", fr: "Touchez une planète pour les détails", tr: "Ayrıntılar için gezegene dokunun", ru: "Нажмите на планету для подробностей", pt: "Toque num planeta para detalhes", ar: "اضغط على كوكب لعرض التفاصيل", el: "Πατήστε έναν πλανήτη για λεπτομέρειες",
+    id: "Ketuk planet untuk detail", fa: "برای جزئیات روی یک سیاره بزنید",
   },
   // Nutzerwunsch 29.09.2026 ("realistischer mit Größe, Abstand"): Umschalter
   // echter Maßstab / kompakt, Zeitraffer und Datum im Sonnensystem.
   solarScaleReal: {
     de: "Echter Maßstab", en: "True scale", hi: "वास्तविक पैमाना", zh: "真实比例", ko: "실제 축척", ja: "実寸スケール",
     es: "Escala real", fr: "Échelle réelle", tr: "Gerçek ölçek", ru: "Реальный масштаб", pt: "Escala real", ar: "المقياس الحقيقي", el: "Πραγματική κλίμακα",
+    id: "Skala asli", fa: "مقیاس واقعی",
   },
   solarScaleCompact: {
     de: "Kompakt", en: "Compact", hi: "संक्षिप्त", zh: "紧凑", ko: "간략", ja: "コンパクト",
     es: "Compacto", fr: "Compact", tr: "Kompakt", ru: "Компактно", pt: "Compacto", ar: "مضغوط", el: "Συμπαγές",
+    id: "Ringkas", fa: "فشرده",
   },
   solarScaleRealNote: {
     de: "Alles maßstabsgetreu: Abstände, Sonne & Planeten · Winzige als Punkt", en: "Everything to scale: distances, Sun & planets · tiny ones as dots",
@@ -254,6 +294,7 @@ const TRANSLATIONS_SOURCE = {
     es: "Todo a escala: distancias, Sol y planetas · los diminutos como puntos", fr: "Tout à l'échelle : distances, Soleil et planètes · les minuscules en points",
     tr: "Her şey ölçekli: mesafeler, Güneş ve gezegenler · çok küçükler nokta olarak", ru: "Всё в масштабе: расстояния, Солнце и планеты · крошечные — точками",
     pt: "Tudo à escala: distâncias, Sol e planetas · os minúsculos como pontos", ar: "كل شيء بالمقياس الحقيقي: المسافات والشمس والكواكب · الصغيرة جدًا كنقاط", el: "Όλα σε κλίμακα: αποστάσεις, Ήλιος & πλανήτες · οι μικροσκοπικοί ως τελείες",
+    id: "Semuanya sesuai skala: jarak, Matahari & planet · yang kecil tampak sebagai titik", fa: "همه‌چیز در مقیاس واقعی: فاصله‌ها، خورشید و سیارات · اجرام کوچک به‌صورت نقطه",
   },
   solarScaleCompactNote: {
     de: "Abstände gestaucht · ab 3× Zoom Größen echt im Verhältnis zur Sonne", en: "Distances compressed · from 3× zoom, sizes true relative to the Sun",
@@ -261,15 +302,18 @@ const TRANSLATIONS_SOURCE = {
     es: "Distancias comprimidas · desde zoom 3×, tamaños reales respecto al Sol", fr: "Distances compressées · dès le zoom 3×, tailles réelles par rapport au Soleil",
     tr: "Mesafeler sıkıştırılmış · 3× yakınlaştırmadan itibaren boyutlar Güneş'e göre gerçek", ru: "Расстояния сжаты · с 3× размеры реальны относительно Солнца",
     pt: "Distâncias comprimidas · a partir de zoom 3×, tamanhos reais em relação ao Sol", ar: "المسافات مضغوطة · من تكبير 3× الأحجام حقيقية نسبةً إلى الشمس", el: "Συμπιεσμένες αποστάσεις · από ζουμ 3× μεγέθη πραγματικά σε σχέση με τον Ήλιο",
+    id: "Jarak dipadatkan · mulai zoom 3×, ukuran sesuai perbandingan sebenarnya dengan Matahari", fa: "فاصله‌ها فشرده شده‌اند · از بزرگ‌نمایی ۳× اندازه‌ها نسبت به خورشید واقعی‌اند",
   },
   solarDaysPerSecond: {
     de: "Tage/s", en: "days/s", hi: "दिन/से", zh: "天/秒", ko: "일/초", ja: "日/秒",
     es: "días/s", fr: "jours/s", tr: "gün/sn", ru: "дн./с", pt: "dias/s", ar: "يوم/ث", el: "ημέρες/δ",
+    id: "hari/dtk", fa: "روز/ثانیه",
   },
   // Nutzerwunsch 01.10.2026: Live-Bewegung + "wann kommt Mars nah"
   solarLive: {
     de: "Live", en: "Live", hi: "लाइव", zh: "实时", ko: "실시간", ja: "ライブ",
     es: "En vivo", fr: "En direct", tr: "Canlı", ru: "Онлайн", pt: "Ao vivo", ar: "مباشر", el: "Ζωντανά",
+    id: "Langsung", fa: "زنده",
   },
   // Nutzerwunsch 01.10.2026: "schreib, dass es echte Rotation ist"
   solarRealMotionLive: {
@@ -278,6 +322,7 @@ const TRANSLATIONS_SOURCE = {
     es: "Movimiento real en tiempo real · posiciones de datos orbitales de NASA/JPL", fr: "Mouvement réel en temps réel · positions d'après les données orbitales NASA/JPL",
     tr: "Gerçek zamanlı gerçek hareket · konumlar NASA/JPL yörünge verilerinden", ru: "Реальное движение в реальном времени · положения по орбитальным данным NASA/JPL",
     pt: "Movimento real em tempo real · posições de dados orbitais da NASA/JPL", ar: "حركة حقيقية في الوقت الفعلي · المواقع من بيانات مدارات NASA/JPL", el: "Πραγματική κίνηση σε πραγματικό χρόνο · θέσεις από τροχιακά δεδομένα NASA/JPL",
+    id: "Gerak nyata secara real time · posisi dari data orbit NASA/JPL", fa: "حرکت واقعی به‌صورت زنده · موقعیت‌ها از داده‌های مداری ناسا/JPL",
   },
   solarRealMotionFast: {
     de: "Echte Bahnen & Geschwindigkeiten im Zeitraffer · NASA/JPL-Bahndaten", en: "Real orbits & speeds in time-lapse · NASA/JPL orbital data",
@@ -285,34 +330,42 @@ const TRANSLATIONS_SOURCE = {
     es: "Órbitas y velocidades reales en cámara rápida · datos orbitales de NASA/JPL", fr: "Orbites et vitesses réelles en accéléré · données orbitales NASA/JPL",
     tr: "Hızlandırılmış gerçek yörüngeler ve hızlar · NASA/JPL yörünge verileri", ru: "Реальные орбиты и скорости в ускоренном режиме · данные NASA/JPL",
     pt: "Órbitas e velocidades reais em time-lapse · dados orbitais da NASA/JPL", ar: "مدارات وسرعات حقيقية بتسريع زمني · بيانات مدارات NASA/JPL", el: "Πραγματικές τροχιές & ταχύτητες σε επιτάχυνση · τροχιακά δεδομένα NASA/JPL",
+    id: "Orbit & kecepatan nyata dipercepat · data orbit NASA/JPL", fa: "مدارها و سرعت‌های واقعی با شتاب زمانی · داده‌های مداری ناسا/JPL",
   },
   solarGoToDate: {
     de: "Datum wählen", en: "Choose date", hi: "तिथि चुनें", zh: "选择日期", ko: "날짜 선택", ja: "日付を選択",
     es: "Elegir fecha", fr: "Choisir une date", tr: "Tarih seç", ru: "Выбрать дату", pt: "Escolher data", ar: "اختر التاريخ", el: "Επιλογή ημερομηνίας",
+    id: "Pilih tanggal", fa: "انتخاب تاریخ",
   },
   solarJumpToDate: {
     de: "Zu diesem Datum springen", en: "Jump to this date", hi: "इस तिथि पर जाएँ", zh: "跳转到此日期", ko: "이 날짜로 이동", ja: "この日付へ移動",
     es: "Ir a esta fecha", fr: "Aller à cette date", tr: "Bu tarihe git", ru: "Перейти к этой дате", pt: "Ir para esta data", ar: "الانتقال إلى هذا التاريخ", el: "Μετάβαση σε αυτή την ημερομηνία",
+    id: "Lompat ke tanggal ini", fa: "رفتن به این تاریخ",
   },
   solarDistances: {
     de: "Abstand zur Erde", en: "Distance from Earth", hi: "पृथ्वी से दूरी", zh: "与地球的距离", ko: "지구와의 거리", ja: "地球からの距離",
     es: "Distancia a la Tierra", fr: "Distance à la Terre", tr: "Dünya'ya uzaklık", ru: "Расстояние до Земли", pt: "Distância da Terra", ar: "المسافة عن الأرض", el: "Απόσταση από τη Γη",
+    id: "Jarak dari Bumi", fa: "فاصله از زمین",
   },
   solarNow: {
     de: "Jetzt", en: "Now", hi: "अभी", zh: "现在", ko: "지금", ja: "現在",
     es: "Ahora", fr: "Maintenant", tr: "Şimdi", ru: "Сейчас", pt: "Agora", ar: "الآن", el: "Τώρα",
+    id: "Sekarang", fa: "اکنون",
   },
   solarNextClosest: {
     de: "Nächste Annäherung", en: "Next closest approach", hi: "अगला निकटतम दृष्टिकोण", zh: "下次最接近", ko: "다음 최근접", ja: "次の最接近",
     es: "Próxima máxima aproximación", fr: "Prochain rapprochement", tr: "Sonraki en yakın yaklaşım", ru: "Следующее сближение", pt: "Próxima aproximação máxima", ar: "أقرب اقتراب قادم", el: "Επόμενη μέγιστη προσέγγιση",
+    id: "Pendekatan terdekat berikutnya", fa: "نزدیک‌ترین فاصله بعدی",
   },
   solarMillionKm: {
     de: "Mio. km", en: "million km", hi: "मिलियन किमी", zh: "百万公里", ko: "백만 km", ja: "百万km",
     es: "mill. km", fr: "millions km", tr: "milyon km", ru: "млн км", pt: "milhões km", ar: "مليون كم", el: "εκατ. χλμ.",
+    id: "juta km", fa: "میلیون کیلومتر",
   },
   solarLightMinutes: {
     de: "Licht-Min.", en: "light-min", hi: "प्रकाश-मिनट", zh: "光分", ko: "광분", ja: "光分",
     es: "min-luz", fr: "min-lumière", tr: "ışık-dk", ru: "свет. мин", pt: "min-luz", ar: "دقيقة ضوئية", el: "λεπτά φωτός",
+    id: "menit cahaya", fa: "دقیقه نوری",
   },
   solarDistanceNote: {
     de: "Berechnet aus NASA/JPL-Bahndaten zum angezeigten Datum.", en: "Calculated from NASA/JPL orbital data for the date shown.",
@@ -320,14 +373,17 @@ const TRANSLATIONS_SOURCE = {
     es: "Calculado con datos orbitales de NASA/JPL para la fecha mostrada.", fr: "Calculé à partir des données orbitales NASA/JPL pour la date affichée.",
     tr: "Gösterilen tarih için NASA/JPL yörünge verilerinden hesaplandı.", ru: "Рассчитано по орбитальным данным NASA/JPL на показанную дату.",
     pt: "Calculado a partir de dados orbitais da NASA/JPL para a data mostrada.", ar: "محسوب من بيانات مدارات NASA/JPL للتاريخ المعروض.", el: "Υπολογισμένο από τροχιακά δεδομένα NASA/JPL για την εμφανιζόμενη ημερομηνία.",
+    id: "Dihitung dari data orbit NASA/JPL untuk tanggal yang ditampilkan.", fa: "بر پایه داده‌های مداری ناسا/JPL برای تاریخ نمایش‌داده‌شده محاسبه شده است.",
   },
   solarToday: {
     de: "Heute", en: "Today", hi: "आज", zh: "今天", ko: "오늘", ja: "今日",
     es: "Hoy", fr: "Aujourd'hui", tr: "Bugün", ru: "Сегодня", pt: "Hoje", ar: "اليوم", el: "Σήμερα",
+    id: "Hari ini", fa: "امروز",
   },
   skyLinkLabel: {
     de: "Sternenhimmel live", en: "Night sky live", hi: "रात्रि आकाश लाइव", zh: "实时星空", ko: "실시간 밤하늘", ja: "ライブ星空",
     es: "Cielo nocturno en vivo", fr: "Ciel nocturne en direct", tr: "Canlı gece gökyüzü", ru: "Звёздное небо онлайн", pt: "Céu noturno ao vivo", ar: "سماء الليل مباشرة", el: "Νυχτερινός ουρανός ζωντανά",
+    id: "Langit malam langsung", fa: "آسمان شب زنده",
   },
   skyLinkTitle: {
     de: "Welche Sterne siehst du gerade? Halte dein Handy in den Himmel", en: "Which stars can you see right now? Hold your phone up to the sky",
@@ -335,6 +391,7 @@ const TRANSLATIONS_SOURCE = {
     es: "¿Qué estrellas ves ahora? Apunta tu móvil al cielo", fr: "Quelles étoiles voyez-vous maintenant ? Pointez votre téléphone vers le ciel",
     tr: "Şu an hangi yıldızları görüyorsun? Telefonunu gökyüzüne tut", ru: "Какие звёзды видны сейчас? Наведите телефон на небо",
     pt: "Quais estrelas você vê agora? Aponte o celular para o céu", ar: "ما النجوم التي تراها الآن؟ وجّه هاتفك نحو السماء", el: "Ποια αστέρια βλέπεις τώρα; Στρέψε το κινητό στον ουρανό",
+    id: "Bintang apa yang bisa Anda lihat sekarang? Arahkan ponsel ke langit", fa: "همین الان کدام ستاره‌ها را می‌توانید ببینید؟ گوشی را رو به آسمان بگیرید",
   },
   solarSystemDragHint: {
     de: "Ziehen: drehen · Rechtsklick / 2 Finger: verschieben · Mausrad / Pinch: zoomen · Doppelklick: hinfliegen", en: "Drag: orbit · Right-drag / 2 fingers: pan · Scroll / pinch: zoom · Double-click: fly to",
@@ -342,94 +399,116 @@ const TRANSLATIONS_SOURCE = {
     es: "Arrastrar: girar · Clic derecho / 2 dedos: mover · Rueda / pellizcar: zoom · Doble clic: volar hasta", fr: "Glisser : pivoter · Clic droit / 2 doigts : déplacer · Molette / pincer : zoom · Double-clic : s'y rendre",
     tr: "Sürükle: döndür · Sağ tık / 2 parmak: kaydır · Tekerlek / iki parmak: yakınlaştır · Çift tık: oraya uç", ru: "Перетаскивание: вращение · Правая кнопка / 2 пальца: сдвиг · Колесо / щипок: масштаб · Двойной клик: перелёт",
     pt: "Arrastar: girar · Botão direito / 2 dedos: mover · Roda / pinça: zoom · Duplo clique: voar até", ar: "اسحب: تدوير · زر يمين / إصبعان: تحريك · العجلة / القرص: تكبير · نقرتان: الانتقال إليه", el: "Σύρετε: περιστροφή · Δεξί κλικ / 2 δάχτυλα: μετακίνηση · Ροδέλα / τσίμπημα: ζουμ · Διπλό κλικ: μετάβαση",
+    id: "Seret: orbit · Seret kanan / 2 jari: geser · Gulir / cubit: zoom · Klik dua kali: terbang ke sana", fa: "کشیدن: چرخش · کشیدن راست / ۲ انگشت: جابه‌جایی · اسکرول / دو انگشت: بزرگ‌نمایی · دوبار کلیک: پرواز به آنجا",
   },
   kindStar: {
     de: "Stern", en: "Star", hi: "तारा", zh: "恒星", ko: "항성", ja: "恒星",
     es: "Estrella", fr: "Étoile", tr: "Yıldız", ru: "Звезда", pt: "Estrela", ar: "نجم", el: "Αστέρι",
+    id: "Bintang", fa: "ستاره",
   },
   kindDwarf: {
     de: "Zwergplanet", en: "Dwarf planet", hi: "बौना ग्रह", zh: "矮行星", ko: "왜소행성", ja: "準惑星",
     es: "Planeta enano", fr: "Planète naine", tr: "Cüce gezegen", ru: "Карликовая планета", pt: "Planeta anão", ar: "كوكب قزم", el: "Πλανήτης νάνος",
+    id: "Planet kerdil", fa: "سیاره کوتوله",
   },
   kindProbe: {
     de: "Raumsonde", en: "Probe", hi: "अंतरिक्ष यान", zh: "探测器", ko: "탐사선", ja: "探査機",
     es: "Sonda espacial", fr: "Sonde spatiale", tr: "Uzay sondası", ru: "Космический зонд", pt: "Sonda espacial", ar: "مسبار فضائي", el: "Διαστημικός ανιχνευτής",
+    id: "Wahana antariksa", fa: "کاوشگر",
   },
   kindPlanet: {
     de: "Planet", en: "Planet", hi: "ग्रह", zh: "行星", ko: "행성", ja: "惑星",
     es: "Planeta", fr: "Planète", tr: "Gezegen", ru: "Планета", pt: "Planeta", ar: "كوكب", el: "Πλανήτης",
+    id: "Planet", fa: "سیاره",
   },
   distanceToSun: {
     de: "Abstand zur Sonne", en: "Distance from Sun", hi: "सूर्य से दूरी", zh: "与太阳的距离", ko: "태양까지 거리", ja: "太陽からの距離",
     es: "Distancia al Sol", fr: "Distance au Soleil", tr: "Güneş'e uzaklık", ru: "Расстояние до Солнца", pt: "Distância ao Sol", ar: "المسافة من الشمس", el: "Απόσταση από τον Ήλιο",
+    id: "Jarak dari Matahari", fa: "فاصله از خورشید",
   },
   orbitalPeriod: {
     de: "Umlaufzeit", en: "Orbital period", hi: "परिक्रमा अवधि", zh: "公转周期", ko: "공전 주기", ja: "公転周期",
     es: "Período orbital", fr: "Période orbitale", tr: "Yörünge periyodu", ru: "Период обращения", pt: "Período orbital", ar: "الفترة المدارية", el: "Περίοδος περιφοράς",
+    id: "Periode orbit", fa: "دوره مداری",
   },
   diameter: {
     de: "Durchmesser", en: "Diameter", hi: "व्यास", zh: "直径", ko: "지름", ja: "直径",
     es: "Diámetro", fr: "Diamètre", tr: "Çap", ru: "Диаметр", pt: "Diâmetro", ar: "القطر", el: "Διάμετρος",
+    id: "Diameter", fa: "قطر",
   },
   moons: {
     de: "Monde", en: "Moons", hi: "उपग्रह", zh: "卫星数量", ko: "위성 수", ja: "衛星数",
     es: "Lunas", fr: "Lunes", tr: "Uydular", ru: "Спутники", pt: "Luas", ar: "الأقمار", el: "Δορυφόροι",
+    id: "Bulan", fa: "قمرها",
   },
   closeInfo: {
     de: "Info schließen", en: "Close info", hi: "जानकारी बंद करें", zh: "关闭信息", ko: "정보 닫기", ja: "情報を閉じる",
     es: "Cerrar información", fr: "Fermer les infos", tr: "Bilgiyi kapat", ru: "Закрыть информацию", pt: "Fechar informação", ar: "إغلاق المعلومات", el: "Κλείσιμο πληροφοριών",
+    id: "Tutup info", fa: "بستن اطلاعات",
   },
 
   // Imperien-Karte
   empiresBack: {
     de: "Zurück", en: "Back", hi: "वापस", zh: "返回", ko: "뒤로", ja: "戻る",
     es: "Atrás", fr: "Retour", tr: "Geri", ru: "Назад", pt: "Voltar", ar: "رجوع", el: "Πίσω",
+    id: "Kembali", fa: "بازگشت",
   },
   empiresPlay: {
     de: "Durch die Jahre abspielen", en: "Play through the years", hi: "वर्षों के माध्यम से चलाएं", zh: "按年份播放", ko: "연도별로 재생", ja: "年代を再生",
     es: "Reproducir a través de los años", fr: "Lire à travers les années", tr: "Yıllar boyunca oynat", ru: "Воспроизвести по годам", pt: "Reproduzir ao longo dos anos", ar: "تشغيل عبر السنوات", el: "Αναπαραγωγή στα χρόνια",
+    id: "Putar sepanjang tahun", fa: "پخش در طول سال‌ها",
   },
   empiresPause: {
     de: "Pause", en: "Pause", hi: "रोकें", zh: "暂停", ko: "일시정지", ja: "一時停止",
     es: "Pausa", fr: "Pause", tr: "Duraklat", ru: "Пауза", pt: "Pausar", ar: "إيقاف مؤقت", el: "Παύση",
+    id: "Jeda", fa: "توقف",
   },
   empiresJumpStart: {
     de: "Zum Anfang springen", en: "Jump to start", hi: "शुरुआत पर जाएं", zh: "跳到开头", ko: "처음으로 이동", ja: "最初に移動",
     es: "Ir al inicio", fr: "Aller au début", tr: "Başa git", ru: "К началу", pt: "Ir para o início", ar: "الانتقال إلى البداية", el: "Μετάβαση στην αρχή",
+    id: "Lompat ke awal", fa: "رفتن به ابتدا",
   },
   empiresJumpEnd: {
     de: "Zum Ende springen", en: "Jump to end", hi: "अंत पर जाएं", zh: "跳到结尾", ko: "끝으로 이동", ja: "最後に移動",
     es: "Ir al final", fr: "Aller à la fin", tr: "Sona git", ru: "К концу", pt: "Ir para o fim", ar: "الانتقال إلى النهاية", el: "Μετάβαση στο τέλος",
+    id: "Lompat ke akhir", fa: "رفتن به انتها",
   },
   empiresSpeed: {
     de: "Abspielgeschwindigkeit ändern", en: "Change playback speed", hi: "प्लेबैक गति बदलें", zh: "更改播放速度", ko: "재생 속도 변경", ja: "再生速度を変更",
     es: "Cambiar velocidad de reproducción", fr: "Changer la vitesse de lecture", tr: "Oynatma hızını değiştir", ru: "Изменить скорость воспроизведения", pt: "Alterar velocidade de reprodução", ar: "تغيير سرعة التشغيل", el: "Αλλαγή ταχύτητας αναπαραγωγής",
+    id: "Ubah kecepatan putar", fa: "تغییر سرعت پخش",
   },
   empiresYearInput: {
     de: "Jahr eingeben", en: "Enter year", hi: "वर्ष दर्ज करें", zh: "输入年份", ko: "연도 입력", ja: "年を入力",
     es: "Introducir año", fr: "Saisir l'année", tr: "Yıl girin", ru: "Введите год", pt: "Inserir ano", ar: "أدخل السنة", el: "Εισαγωγή έτους",
+    id: "Masukkan tahun", fa: "سال را وارد کنید",
   },
   // Kurzwörter über dem Zeitlineal und Titel der Geschichte-Animation
   // (Texte selbst geschrieben, nicht von Muttersprachlern geprüft).
   empiresYearWord: {
     de: "Jahr", en: "Year", hi: "वर्ष", zh: "年份", ko: "연도", ja: "年",
     es: "Año", fr: "Année", tr: "Yıl", ru: "Год", pt: "Ano", ar: "السنة", el: "Έτος",
+    id: "Tahun", fa: "سال",
   },
   empiresGoWord: {
     de: "Los", en: "Go", hi: "जाएं", zh: "前往", ko: "이동", ja: "移動",
     es: "Ir", fr: "OK", tr: "Git", ru: "Ок", pt: "Ir", ar: "اذهب", el: "Πάμε",
+    id: "Pergi", fa: "برو",
   },
   empiresIntroTitle: {
     de: "Weltgeschichte", en: "World History", hi: "विश्व इतिहास", zh: "世界历史", ko: "세계사", ja: "世界史",
     es: "Historia universal", fr: "Histoire du monde", tr: "Dünya Tarihi", ru: "Всемирная история", pt: "História mundial", ar: "تاريخ العالم", el: "Παγκόσμια ιστορία",
+    id: "Sejarah Dunia", fa: "تاریخ جهان",
   },
   empiresYearSelect: {
     de: "Jahr auswählen", en: "Select year", hi: "वर्ष चुनें", zh: "选择年份", ko: "연도 선택", ja: "年を選択",
     es: "Seleccionar año", fr: "Sélectionner l'année", tr: "Yıl seçin", ru: "Выберите год", pt: "Selecionar ano", ar: "اختر السنة", el: "Επιλογή έτους",
+    id: "Pilih tahun", fa: "انتخاب سال",
   },
   navEmpiresLabel: {
     de: "Große Imperien", en: "Great Empires", hi: "महान साम्राज्य", zh: "伟大帝国", ko: "위대한 제국", ja: "大帝国",
     es: "Grandes Imperios", fr: "Grands Empires", tr: "Büyük İmparatorluklar", ru: "Великие империи", pt: "Grandes Impérios", ar: "الإمبراطوريات العظيمة", el: "Μεγάλες Αυτοκρατορίες",
+    id: "Imperium Besar", fa: "امپراتوری‌های بزرگ",
   },
 
   empiresTitle: {
@@ -437,6 +516,7 @@ const TRANSLATIONS_SOURCE = {
     hi: "सदियों से होकर दुनिया", zh: "穿越世纪的世界", ko: "세기를 통과한 세계", ja: "世紀を超える世界",
     es: "El mundo a través de los siglos", fr: "Le monde à travers les siècles", tr: "Yüzyıllar Boyunca Dünya",
     ru: "Мир сквозь века", pt: "O mundo através dos séculos", ar: "العالم عبر القرون", el: "Ο κόσμος μέσα από τους αιώνες",
+    id: "Dunia Sepanjang Abad", fa: "جهان در گذر قرن‌ها",
   },
   // Sichtbare Unterzeile mit den Suchbegriffen (Nutzerwunsch 30.09.2026:
   // bei "Weltgeschichte Karte" gefunden werden)
@@ -446,6 +526,7 @@ const TRANSLATIONS_SOURCE = {
     es: "Mapa interactivo de historia mundial · todos los imperios desde el 3400 a. C. hasta hoy", fr: "Carte interactive de l'histoire du monde · tous les empires de 3400 av. J.-C. à aujourd'hui",
     tr: "Etkileşimli dünya tarihi haritası · MÖ 3400'den bugüne tüm imparatorluklar", ru: "Интерактивная карта всемирной истории · все империи с 3400 г. до н. э. до наших дней",
     pt: "Mapa interativo da história mundial · todos os impérios de 3400 a.C. até hoje", ar: "خريطة تفاعلية لتاريخ العالم · كل الإمبراطوريات من 3400 ق.م حتى اليوم", el: "Διαδραστικός χάρτης παγκόσμιας ιστορίας · όλες οι αυτοκρατορίες από το 3400 π.Χ. έως σήμερα",
+    id: "Peta sejarah dunia interaktif · setiap imperium dari 3400 SM hingga kini", fa: "نقشه تعاملی تاریخ جهان · هر امپراتوری از ۳۴۰۰ پیش از میلاد تا امروز",
   },
   empiresIntroPrefix: {
     de: "Historische Grenzen von der Antike bis heute — große Reiche (rot, mit Namen auf der Karte) auf einer echten Zeitleiste. Auf ein Gebiet klicken für eine ausführliche Beschreibung. Datenquelle:",
@@ -461,6 +542,7 @@ const TRANSLATIONS_SOURCE = {
     pt: "Fronteiras históricas da Antiguidade até hoje — grandes impérios (a vermelho, com nome no mapa) numa linha do tempo real. Clique num território para uma descrição detalhada. Fonte dos dados:",
     ar: "الحدود التاريخية من العصور القديمة حتى اليوم — الإمبراطوريات الكبرى (باللون الأحمر، مع أسمائها على الخريطة) على جدول زمني حقيقي. انقر على منطقة للحصول على وصف مفصل. مصدر البيانات:",
     el: "Ιστορικά σύνορα από την αρχαιότητα μέχρι σήμερα — μεγάλες αυτοκρατορίες (κόκκινο, με ονόματα στον χάρτη) σε πραγματική χρονογραμμή. Κάντε κλικ σε μια περιοχή για αναλυτική περιγραφή. Πηγή δεδομένων:",
+    id: "Batas wilayah bersejarah dari zaman kuno hingga kini — imperium besar (merah, diberi nama di peta) pada garis waktu nyata. Klik suatu wilayah untuk deskripsi lengkap. Sumber data:", fa: "مرزهای تاریخی از دوران باستان تا امروز — امپراتوری‌های بزرگ (قرمز، با نام روی نقشه) بر یک خط زمانی واقعی. برای توضیح کامل روی یک قلمرو کلیک کنید. منبع داده:",
   },
   // Nutzerwunsch 21.09.2026: "kannst du auch option erstellen das man
   // imperien oder herrscher sucht und infos bekommt" — freie Textsuche
@@ -470,10 +552,12 @@ const TRANSLATIONS_SOURCE = {
   empiresSearchPlaceholder: {
     de: "Reich oder Herrscher suchen …", en: "Search an empire or ruler …", hi: "साम्राज्य या शासक खोजें …", zh: "搜索帝国或统治者……", ko: "제국 또는 통치자 검색…", ja: "帝国または統治者を検索…",
     es: "Buscar un imperio o gobernante…", fr: "Rechercher un empire ou un souverain…", tr: "Bir imparatorluk veya hükümdar ara…", ru: "Поиск империи или правителя…", pt: "Pesquisar um império ou governante…", ar: "ابحث عن إمبراطورية أو حاكم…", el: "Αναζήτηση αυτοκρατορίας ή ηγεμόνα…",
+    id: "Cari imperium atau penguasa …", fa: "جستجوی امپراتوری یا فرمانروا …",
   },
   empiresSearchButton: {
     de: "Suchen", en: "Search", hi: "खोजें", zh: "搜索", ko: "검색", ja: "検索",
     es: "Buscar", fr: "Rechercher", tr: "Ara", ru: "Искать", pt: "Pesquisar", ar: "بحث", el: "Αναζήτηση",
+    id: "Cari", fa: "جستجو",
   },
 
   // Nutzerkorrektur 21.09.2026 ("hab sprache auf englisch aber diese
@@ -484,38 +568,47 @@ const TRANSLATIONS_SOURCE = {
   empiresResultSearch: {
     de: "Suchergebnis", en: "Search result", hi: "खोज परिणाम", zh: "搜索结果", ko: "검색 결과", ja: "検索結果",
     es: "Resultado de búsqueda", fr: "Résultat de recherche", tr: "Arama sonucu", ru: "Результат поиска", pt: "Resultado da pesquisa", ar: "نتيجة البحث", el: "Αποτέλεσμα αναζήτησης",
+    id: "Hasil pencarian", fa: "نتیجه جستجو",
   },
   empiresResultGreatEmpire: {
     de: "Großes Imperium", en: "Great empire", hi: "महान साम्राज्य", zh: "伟大帝国", ko: "위대한 제국", ja: "大帝国",
     es: "Gran imperio", fr: "Grand empire", tr: "Büyük imparatorluk", ru: "Великая империя", pt: "Grande império", ar: "إمبراطورية عظيمة", el: "Μεγάλη αυτοκρατορία",
+    id: "Imperium besar", fa: "امپراتوری بزرگ",
   },
   empiresResultSelected: {
     de: "Ausgewählt", en: "Selected", hi: "चयनित", zh: "已选择", ko: "선택됨", ja: "選択済み",
     es: "Seleccionado", fr: "Sélectionné", tr: "Seçildi", ru: "Выбрано", pt: "Selecionado", ar: "محدد", el: "Επιλεγμένο",
+    id: "Dipilih", fa: "انتخاب‌شده",
   },
   empiresSubjectTo: {
     de: "Teil von / Kolonialmacht:", en: "Part of / colonial power:", hi: "भाग / औपनिवेशिक शक्ति:", zh: "所属 / 殖民宗主国：", ko: "소속 / 식민 종주국:", ja: "所属／宗主国：",
     es: "Parte de / potencia colonial:", fr: "Partie de / puissance coloniale :", tr: "Parçası / sömürge gücü:", ru: "Часть / колониальная держава:", pt: "Parte de / potência colonial:", ar: "جزء من / القوة الاستعمارية:", el: "Μέρος / αποικιακή δύναμη:",
+    id: "Bagian dari / penguasa kolonial:", fa: "بخشی از / قدرت استعماری:",
   },
   empiresYearShown: {
     de: "Angezeigtes Jahr:", en: "Year shown:", hi: "दिखाया गया वर्ष:", zh: "显示年份：", ko: "표시된 연도:", ja: "表示中の年：",
     es: "Año mostrado:", fr: "Année affichée :", tr: "Gösterilen yıl:", ru: "Показанный год:", pt: "Ano exibido:", ar: "السنة المعروضة:", el: "Έτος που εμφανίζεται:",
+    id: "Tahun ditampilkan:", fa: "سال نمایش‌داده‌شده:",
   },
   empiresLanguageLabel: {
     de: "Sprache:", en: "Language:", hi: "भाषा:", zh: "语言：", ko: "언어:", ja: "言語：",
     es: "Idioma:", fr: "Langue :", tr: "Dil:", ru: "Язык:", pt: "Idioma:", ar: "اللغة:", el: "Γλώσσα:",
+    id: "Bahasa:", fa: "زبان:",
   },
   empiresLanguageUnknown: {
     de: "nicht bekannt", en: "not known", hi: "अज्ञात", zh: "未知", ko: "알 수 없음", ja: "不明",
     es: "desconocido", fr: "inconnue", tr: "bilinmiyor", ru: "неизвестен", pt: "desconhecido", ar: "غير معروفة", el: "άγνωστη",
+    id: "tidak diketahui", fa: "نامشخص",
   },
   empiresMoreOnWikipedia: {
     de: "Mehr auf Wikipedia ↗", en: "More on Wikipedia ↗", hi: "विकिपीडिया पर और देखें ↗", zh: "在维基百科了解更多 ↗", ko: "위키백과에서 더 보기 ↗", ja: "Wikipediaで詳しく見る ↗",
     es: "Más en Wikipedia ↗", fr: "Plus sur Wikipédia ↗", tr: "Wikipedia'da devamı ↗", ru: "Подробнее в Википедии ↗", pt: "Mais na Wikipédia ↗", ar: "المزيد على ويكيبيديا ↗", el: "Περισσότερα στη Wikipedia ↗",
+    id: "Selengkapnya di Wikipedia ↗", fa: "بیشتر در ویکی‌پدیا ↗",
   },
   empiresEditorialSource: {
     de: "// Quelle: redaktionell (kein Wikipedia-Artikel gefunden)", en: "// Source: editorial (no Wikipedia article found)", hi: "// स्रोत: संपादकीय (कोई विकिपीडिया लेख नहीं मिला)", zh: "// 来源：编辑撰写（未找到维基百科文章）", ko: "// 출처: 편집팀 작성 (위키백과 문서 없음)", ja: "// 出典：編集部作成（Wikipedia記事なし）",
     es: "// Fuente: editorial (no se encontró artículo en Wikipedia)", fr: "// Source : rédactionnelle (aucun article Wikipédia trouvé)", tr: "// Kaynak: editoryal (Wikipedia makalesi bulunamadı)", ru: "// Источник: редакционный (статья в Википедии не найдена)", pt: "// Fonte: editorial (nenhum artigo da Wikipédia encontrado)", ar: "// المصدر: تحريري (لم يتم العثور على مقالة ويكيبيديا)", el: "// Πηγή: συντακτική (δεν βρέθηκε άρθρο Wikipedia)",
+    id: "// Sumber: redaksi (tidak ditemukan artikel Wikipedia)", fa: "// منبع: تحریریه (مقاله‌ای در ویکی‌پدیا یافت نشد)",
   },
   // Nutzerkorrektur 21.09.2026 ("wieso steht da wieder texte auf deutsch
   // zb ... n chr") — formatYear() haengte bisher IMMER "v. Chr."/"n. Chr."
@@ -534,6 +627,7 @@ const TRANSLATIONS_SOURCE = {
     pt: "Pré-história e Idade da Pedra",
     ar: "ما قبل التاريخ والعصر الحجري",
     el: "Προϊστορία και Λίθινη Εποχή",
+    id: "Prasejarah & Zaman Batu", fa: "پیش‌ازتاریخ و عصر حجر",
   },
   prehistHint: {
     de: "Vor den ersten Reichen: Menschenarten, Jäger und Sammler, erste Bauern und Dörfer. Zeitpunkt antippen, dann ein Gebiet für Infos.",
@@ -549,6 +643,7 @@ const TRANSLATIONS_SOURCE = {
     pt: "Antes dos primeiros impérios: espécies humanas, caçadores-coletores, primeiros agricultores e aldeias. Toque numa época e depois numa área para ver informações.",
     ar: "قبل أولى الإمبراطوريات: أنواع البشر والصيادون الجامعون وأوائل المزارعين والقرى. اختر زمنًا ثم منطقة لمعرفة المزيد.",
     el: "Πριν από τις πρώτες αυτοκρατορίες: είδη ανθρώπων, κυνηγοί-τροφοσυλλέκτες, πρώτοι γεωργοί και χωριά. Πάτησε μια εποχή και μετά μια περιοχή για πληροφορίες.",
+    id: "Sebelum imperium pertama: spesies manusia, pemburu-pengumpul, petani pertama, dan desa-desa. Ketuk satu momen, lalu satu wilayah untuk info.", fa: "پیش از نخستین امپراتوری‌ها: گونه‌های انسانی، شکارچی‌گردآورندگان، نخستین کشاورزان و روستاها. یک زمان را انتخاب کنید و سپس یک ناحیه را برای اطلاعات بزنید.",
   },
   prehistBack: {
     de: "Zu den Reichen",
@@ -564,6 +659,7 @@ const TRANSLATIONS_SOURCE = {
     pt: "Para os impérios",
     ar: "إلى الإمبراطوريات",
     el: "Στις αυτοκρατορίες",
+    id: "Ke imperium", fa: "به امپراتوری‌ها",
   },
   prehistResult: {
     de: "Urzeit-Kultur",
@@ -579,6 +675,7 @@ const TRANSLATIONS_SOURCE = {
     pt: "Cultura pré-histórica",
     ar: "ثقافة ما قبل التاريخ",
     el: "Προϊστορικός πολιτισμός",
+    id: "Budaya prasejarah", fa: "فرهنگ پیش‌ازتاریخی",
   },
   prehistPeriod: {
     de: "Zeitraum (ungefähr):",
@@ -594,50 +691,62 @@ const TRANSLATIONS_SOURCE = {
     pt: "Período (aprox.):",
     ar: "الفترة (تقريبًا):",
     el: "Περίοδος (περίπου):",
+    id: "Periode (perkiraan):", fa: "دوره (تقریبی):",
   },
   linkAllPlanets: {
     de: "Alle Planeten & Fakten", en: "All planets & facts", hi: "सभी ग्रह और तथ्य", zh: "所有行星与资料", ko: "모든 행성과 정보", ja: "すべての惑星とデータ",
     es: "Todos los planetas y datos", fr: "Toutes les planètes et infos", tr: "Tüm gezegenler ve bilgiler", ru: "Все планеты и факты", pt: "Todos os planetas e fatos", ar: "كل الكواكب وحقائقها", el: "Όλοι οι πλανήτες και στοιχεία",
+    id: "Semua planet & fakta", fa: "همه سیارات و واقعیت‌ها",
   },
   linkMachine: {
     de: "Maschine der Ewigkeit erklärt", en: "The eternity machine explained", hi: "अनंत काल की मशीन समझें", zh: "永恒机器详解", ko: "영원의 기계 설명", ja: "永遠のマシンの解説",
     es: "La máquina de la eternidad explicada", fr: "La machine de l'éternité expliquée", tr: "Sonsuzluk makinesi nasıl çalışır", ru: "Как работает машина вечности", pt: "A máquina da eternidade explicada", ar: "شرح آلة الأبدية", el: "Η μηχανή της αιωνιότητας εξηγείται",
+    id: "Mesin keabadian dijelaskan", fa: "توضیح ماشین جاودانگی",
   },
   linkSkyToday: {
     de: "Himmel heute", en: "Sky tonight", hi: "आज रात का आसमान", zh: "今晚星空", ko: "오늘 밤 하늘", ja: "今夜の空",
     es: "El cielo esta noche", fr: "Le ciel ce soir", tr: "Bu gece gökyüzü", ru: "Небо сегодня", pt: "O céu hoje à noite", ar: "السماء الليلة", el: "Ο ουρανός απόψε",
+    id: "Langit malam ini", fa: "آسمان امشب",
   },
   linkConstellations: {
     de: "Alle 88 Sternbilder", en: "All 88 constellations", hi: "सभी 88 तारामंडल", zh: "全部88个星座", ko: "88개 별자리 전체", ja: "全88星座",
     es: "Las 88 constelaciones", fr: "Les 88 constellations", tr: "88 takımyıldızın tamamı", ru: "Все 88 созвездий", pt: "As 88 constelações", ar: "الكوكبات الـ88", el: "Και οι 88 αστερισμοί",
+    id: "Semua 88 rasi bintang", fa: "همه ۸۸ صورت فلکی",
   },
   empiresOwnPage: {
     de: "Seite zu diesem Reich", en: "Page about this empire", hi: "इस साम्राज्य का पेज", zh: "该帝国的专页", ko: "이 제국 페이지", ja: "この帝国のページ",
     es: "Página de este imperio", fr: "Page de cet empire", tr: "Bu imparatorluğun sayfası", ru: "Страница этой державы", pt: "Página deste império", ar: "صفحة هذه الإمبراطورية", el: "Σελίδα αυτής της αυτοκρατορίας",
+    id: "Halaman tentang imperium ini", fa: "صفحه درباره این امپراتوری",
   },
   empiresAllEmpires: {
     de: "Alle Reiche von A–Z", en: "All empires A–Z", hi: "सभी साम्राज्य A–Z", zh: "所有帝国一览", ko: "모든 제국 목록", ja: "すべての帝国一覧",
     es: "Todos los imperios A–Z", fr: "Tous les empires de A à Z", tr: "Tüm imparatorluklar A–Z", ru: "Все державы от А до Я", pt: "Todos os impérios A–Z", ar: "كل الإمبراطوريات", el: "Όλες οι αυτοκρατορίες Α–Ω",
+    id: "Semua imperium A–Z", fa: "همه امپراتوری‌ها A–Z",
   },
   empiresShare: {
     de: "Teilen", en: "Share", hi: "साझा करें", zh: "分享", ko: "공유", ja: "共有",
     es: "Compartir", fr: "Partager", tr: "Paylaş", ru: "Поделиться", pt: "Compartilhar", ar: "مشاركة", el: "Κοινοποίηση",
+    id: "Bagikan", fa: "اشتراک‌گذاری",
   },
   empiresLinkCopied: {
     de: "Link kopiert", en: "Link copied", hi: "लिंक कॉपी हुआ", zh: "链接已复制", ko: "링크 복사됨", ja: "リンクをコピーしました",
     es: "Enlace copiado", fr: "Lien copié", tr: "Bağlantı kopyalandı", ru: "Ссылка скопирована", pt: "Link copiado", ar: "تم نسخ الرابط", el: "Ο σύνδεσμος αντιγράφηκε",
+    id: "Tautan disalin", fa: "پیوند کپی شد",
   },
   empiresShareTitle: {
     de: "Die Welt im Jahr", en: "The world in", hi: "दुनिया, वर्ष", zh: "世界地图：", ko: "세계 지도:", ja: "世界地図：",
     es: "El mundo en el año", fr: "Le monde en", tr: "Dünya, yıl", ru: "Мир в", pt: "O mundo no ano", ar: "العالم في عام", el: "Ο κόσμος το",
+    id: "Dunia pada tahun", fa: "جهان در سال",
   },
   empiresEraBC: {
     de: "v. Chr.", en: "BC", hi: "ईसा पूर्व", zh: "公元前", ko: "기원전", ja: "紀元前",
     es: "a. C.", fr: "av. J.-C.", tr: "MÖ", ru: "до н. э.", pt: "a.C.", ar: "ق.م.", el: "π.Χ.",
+    id: "SM", fa: "پ.م.",
   },
   empiresEraAD: {
     de: "n. Chr.", en: "AD", hi: "ईसवी", zh: "公元", ko: "기원후", ja: "紀元後",
     es: "d. C.", fr: "apr. J.-C.", tr: "MS", ru: "н. э.", pt: "d.C.", ar: "م.", el: "μ.Χ.",
+    id: "M", fa: "م.",
   },
   empiresNoDescription: {
     de: "Keine ausführliche Beschreibung gefunden — für dieses Gebiet gibt es (noch) keinen passenden Wikipedia-Artikel.",
@@ -653,14 +762,17 @@ const TRANSLATIONS_SOURCE = {
     pt: "Nenhuma descrição detalhada encontrada — (ainda) não existe um artigo correspondente na Wikipédia.",
     ar: "لم يتم العثور على وصف مفصل — لا توجد (بعد) مقالة ويكيبيديا مطابقة لهذا.",
     el: "Δεν βρέθηκε λεπτομερής περιγραφή — δεν υπάρχει (ακόμη) αντίστοιχο άρθρο Wikipedia.",
+    id: "Deskripsi lengkap tidak ditemukan — belum ada artikel Wikipedia yang sesuai untuk ini.", fa: "توضیح کاملی یافت نشد — هنوز مقاله مناسبی در ویکی‌پدیا برای این مورد وجود ندارد.",
   },
   empiresTiles: {
     de: "Kartenkacheln", en: "Map tiles", hi: "मानचित्र टाइलें", zh: "地图图块", ko: "지도 타일", ja: "地図タイル",
     es: "Teselas del mapa", fr: "Tuiles cartographiques", tr: "Harita kareleri", ru: "Тайлы карты", pt: "Blocos do mapa", ar: "بلاطات الخريطة", el: "Πλακίδια χάρτη",
+    id: "Ubin peta", fa: "کاشی‌های نقشه",
   },
   empiresDescriptions: {
     de: "Beschreibungen", en: "Descriptions", hi: "विवरण", zh: "描述", ko: "설명", ja: "説明",
     es: "Descripciones", fr: "Descriptions", tr: "Açıklamalar", ru: "Описания", pt: "Descrições", ar: "الأوصاف", el: "Περιγραφές",
+    id: "Deskripsi", fa: "توضیحات",
   },
 
   // Startseite: Header/Info/Copyright
@@ -669,10 +781,12 @@ const TRANSLATIONS_SOURCE = {
     hi: "गाना खोजें और सीधे यहीं चलाएं।", zh: "搜索歌曲，直接在这里播放。", ko: "곡을 검색하고 바로 여기서 재생하세요.", ja: "曲を検索してここで再生。",
     es: "Busca una canción y reprodúcela aquí mismo.", fr: "Recherchez un titre et écoutez-le ici.", tr: "Bir şarkı ara ve doğrudan burada çal.",
     ru: "Найдите песню и слушайте прямо здесь.", pt: "Procure uma música e reproduza aqui mesmo.", ar: "ابحث عن أغنية وشغّلها هنا مباشرة.", el: "Αναζητήστε ένα τραγούδι και ακούστε το εδώ.",
+    id: "Cari lagu dan putar langsung di sini.", fa: "آهنگی را جستجو کنید و همین‌جا پخش کنید.",
   },
   infoLabel: {
     de: "// Info", en: "// Info", hi: "// जानकारी", zh: "// 信息", ko: "// 정보", ja: "// 情報",
     es: "// Info", fr: "// Infos", tr: "// Bilgi", ru: "// Инфо", pt: "// Info", ar: "// معلومات", el: "// Πληροφορίες",
+    id: "// Info", fa: "// اطلاعات",
   },
   infoText: {
     de: "Musik, KI-News und mehr — alles auf einer Seite. Kein Login, kein Abo.",
@@ -688,10 +802,12 @@ const TRANSLATIONS_SOURCE = {
     pt: "Música, notícias de IA e muito mais — tudo numa só página. Sem login, sem assinatura.",
     ar: "الموسيقى وأخبار الذكاء الاصطناعي والمزيد — كل ذلك في صفحة واحدة. بدون تسجيل دخول، بدون اشتراك.",
     el: "Μουσική, νέα AI και άλλα — όλα σε μία σελίδα. Χωρίς σύνδεση, χωρίς συνδρομή.",
+    id: "Musik, berita AI, dan lainnya — semua dalam satu halaman. Tanpa login, tanpa langganan.", fa: "موسیقی، اخبار هوش مصنوعی و بیشتر — همه در یک صفحه. بدون ورود، بدون اشتراک.",
   },
   copyrightLabel: {
     de: "// Copyright", en: "// Copyright", hi: "// कॉपीराइट", zh: "// 版权", ko: "// 저작권", ja: "// 著作権",
     es: "// Copyright", fr: "// Copyright", tr: "// Telif Hakkı", ru: "// Авторское право", pt: "// Direitos autorais", ar: "// حقوق النشر", el: "// Πνευματικά δικαιώματα",
+    id: "// Hak cipta", fa: "// حق نشر",
   },
   infoHintNote1: {
     de: "Hinweis: Gemerkte Songs werden lokal in diesem Browser gespeichert — im privaten/Inkognito-Fenster gehen sie beim Schließen verloren.",
@@ -707,6 +823,7 @@ const TRANSLATIONS_SOURCE = {
     pt: "Nota: as músicas guardadas ficam armazenadas localmente neste navegador — numa janela privada/anónima perdem-se ao fechar.",
     ar: "ملاحظة: يتم حفظ الأغاني المحفوظة محليًا في هذا المتصفح — في نافذة التصفح الخاص تُفقد عند الإغلاق.",
     el: "Σημείωση: τα αποθηκευμένα τραγούδια αποθηκεύονται τοπικά σε αυτό το πρόγραμμα περιήγησης — σε ιδιωτικό παράθυρο χάνονται όταν κλείσει.",
+    id: "Catatan: lagu tersimpan disimpan secara lokal di peramban ini — di jendela pribadi/samaran akan hilang saat ditutup.", fa: "توجه: آهنگ‌های ذخیره‌شده به‌صورت محلی در همین مرورگر نگه‌داری می‌شوند — در پنجره خصوصی/ناشناس با بستن آن از بین می‌روند.",
   },
   infoHintNote2: {
     de: "Manche Browser (z.B. Safari auf dem iPhone) pausieren die Wiedergabe im Hintergrund, wenn die Seite verlassen oder das Gerät gesperrt wird.",
@@ -722,34 +839,42 @@ const TRANSLATIONS_SOURCE = {
     pt: "Alguns navegadores (p. ex. Safari no iPhone) pausam a reprodução em segundo plano ao sair da página ou bloquear o dispositivo.",
     ar: "بعض المتصفحات (مثل Safari على iPhone) توقف التشغيل في الخلفية مؤقتًا عند مغادرة الصفحة أو قفل الجهاز.",
     el: "Ορισμένα προγράμματα περιήγησης (π.χ. Safari σε iPhone) θέτουν σε παύση την αναπαραγωγή στο παρασκήνιο όταν φύγετε από τη σελίδα ή κλειδώσει η συσκευή.",
+    id: "Beberapa peramban (mis. Safari di iPhone) menjeda pemutaran latar belakang saat Anda meninggalkan halaman atau mengunci perangkat.", fa: "برخی مرورگرها (مثلاً سافاری در آیفون) با ترک صفحه یا قفل کردن دستگاه پخش پس‌زمینه را متوقف می‌کنند.",
   },
   infoHintAriaLabel: {
     de: "Hinweise anzeigen", en: "Show hints", hi: "संकेत दिखाएं", zh: "显示提示", ko: "안내 표시", ja: "ヒントを表示",
     es: "Mostrar avisos", fr: "Afficher les infos", tr: "İpuçlarını göster", ru: "Показать подсказки", pt: "Mostrar avisos", ar: "عرض الملاحظات", el: "Εμφάνιση συμβουλών",
+    id: "Tampilkan petunjuk", fa: "نمایش راهنما",
   },
   favoritesLabel: {
     de: "// Gemerkte Musics", en: "// Saved songs", hi: "// सहेजे गए गाने", zh: "// 已收藏歌曲", ko: "// 저장된 곡", ja: "// 保存した曲",
     es: "// Canciones guardadas", fr: "// Titres enregistrés", tr: "// Kaydedilen şarkılar", ru: "// Сохранённые песни", pt: "// Músicas guardadas", ar: "// الأغاني المحفوظة", el: "// Αποθηκευμένα τραγούδια",
+    id: "// Lagu tersimpan", fa: "// آهنگ‌های ذخیره‌شده",
   },
   shufflePlay: {
     de: "Zufällig abspielen", en: "Shuffle play", hi: "बेतरतीब चलाएं", zh: "随机播放", ko: "무작위 재생", ja: "シャッフル再生",
     es: "Reproducción aleatoria", fr: "Lecture aléatoire", tr: "Karışık çal", ru: "Случайное воспроизведение", pt: "Reprodução aleatória", ar: "تشغيل عشوائي", el: "Τυχαία αναπαραγωγή",
+    id: "Putar acak", fa: "پخش تصادفی",
   },
   shufflePlayAria: {
     de: "Gemerkte Musics zufällig abspielen", en: "Shuffle play saved songs", hi: "सहेजे गए गाने बेतरतीब चलाएं", zh: "随机播放收藏歌曲", ko: "저장된 곡 무작위 재생", ja: "保存した曲をシャッフル再生",
     es: "Reproducir canciones guardadas al azar", fr: "Lecture aléatoire des titres enregistrés", tr: "Kaydedilen şarkıları karışık çal", ru: "Случайно воспроизвести сохранённые песни", pt: "Reproduzir músicas guardadas aleatoriamente", ar: "تشغيل الأغاني المحفوظة عشوائيًا", el: "Τυχαία αναπαραγωγή αποθηκευμένων τραγουδιών",
+    id: "Putar acak lagu tersimpan", fa: "پخش تصادفی آهنگ‌های ذخیره‌شده",
   },
   favoritesCompactLabel: {
     de: "// Gemerkt", en: "// Saved", hi: "// सहेजा गया", zh: "// 已收藏", ko: "// 저장됨", ja: "// 保存済み",
     es: "// Guardado", fr: "// Enregistré", tr: "// Kaydedildi", ru: "// Сохранено", pt: "// Guardado", ar: "// محفوظ", el: "// Αποθηκευμένο",
+    id: "// Tersimpan", fa: "// ذخیره‌شده",
   },
   moreShow: {
     de: "mehr anzeigen", en: "show more", hi: "और दिखाएं", zh: "显示更多", ko: "더 보기", ja: "もっと見る",
     es: "mostrar más", fr: "afficher plus", tr: "daha fazla göster", ru: "показать ещё", pt: "mostrar mais", ar: "عرض المزيد", el: "εμφάνιση περισσότερων",
+    id: "tampilkan lebih banyak", fa: "نمایش بیشتر",
   },
   searchFailed: {
     de: "Suche fehlgeschlagen.", en: "Search failed.", hi: "खोज विफल रही।", zh: "搜索失败。", ko: "검색에 실패했습니다.", ja: "検索に失敗しました。",
     es: "La búsqueda falló.", fr: "La recherche a échoué.", tr: "Arama başarısız oldu.", ru: "Поиск не удался.", pt: "A pesquisa falhou.", ar: "فشل البحث.", el: "Η αναζήτηση απέτυχε.",
+    id: "Pencarian gagal.", fa: "جستجو ناموفق بود.",
   },
   searchFailedConn: {
     de: "Suche fehlgeschlagen. Bitte Internetverbindung prüfen.", en: "Search failed. Please check your internet connection.",
@@ -757,30 +882,37 @@ const TRANSLATIONS_SOURCE = {
     es: "La búsqueda falló. Comprueba tu conexión a internet.", fr: "La recherche a échoué. Vérifiez votre connexion internet.",
     tr: "Arama başarısız oldu. Lütfen internet bağlantınızı kontrol edin.", ru: "Поиск не удался. Проверьте подключение к интернету.",
     pt: "A pesquisa falhou. Verifique a sua ligação à internet.", ar: "فشل البحث. يرجى التحقق من اتصال الإنترنت.", el: "Η αναζήτηση απέτυχε. Ελέγξτε τη σύνδεσή σας στο διαδίκτυο.",
+    id: "Pencarian gagal. Periksa koneksi internet Anda.", fa: "جستجو ناموفق بود. لطفاً اتصال اینترنت خود را بررسی کنید.",
   },
   noResultsFor: {
     de: "Keine Ergebnisse für", en: "No results for", hi: "इसके लिए कोई परिणाम नहीं", zh: "没有找到相关结果：", ko: "다음에 대한 결과 없음:", ja: "検索結果がありません：",
     es: "Sin resultados para", fr: "Aucun résultat pour", tr: "Şunun için sonuç yok:", ru: "Нет результатов для", pt: "Sem resultados para", ar: "لا توجد نتائج لـ", el: "Κανένα αποτέλεσμα για",
+    id: "Tidak ada hasil untuk", fa: "نتیجه‌ای یافت نشد برای",
   },
   searchPrompt: {
     de: "Suche nach einem Song oder Künstler.", en: "Search for a song or artist.", hi: "किसी गाने या कलाकार को खोजें।", zh: "搜索歌曲或艺人。", ko: "곡 또는 아티스트를 검색하세요.", ja: "曲またはアーティストを検索してください。",
     es: "Busca una canción o artista.", fr: "Recherchez un titre ou un artiste.", tr: "Bir şarkı veya sanatçı arayın.", ru: "Найдите песню или исполнителя.", pt: "Procure uma música ou artista.", ar: "ابحث عن أغنية أو فنان.", el: "Αναζητήστε ένα τραγούδι ή καλλιτέχνη.",
+    id: "Cari lagu atau artis.", fa: "یک آهنگ یا هنرمند را جستجو کنید.",
   },
   resultsFor: {
     de: "Ergebnisse für", en: "Results for", hi: "इसके परिणाम", zh: "搜索结果：", ko: "검색 결과:", ja: "検索結果：",
     es: "Resultados para", fr: "Résultats pour", tr: "Sonuçlar:", ru: "Результаты для", pt: "Resultados para", ar: "نتائج لـ", el: "Αποτελέσματα για",
+    id: "Hasil untuk", fa: "نتایج برای",
   },
   resultsLabel: {
     de: "Ergebnisse", en: "Results", hi: "परिणाम", zh: "结果", ko: "결과", ja: "検索結果",
     es: "Resultados", fr: "Résultats", tr: "Sonuçlar", ru: "Результаты", pt: "Resultados", ar: "النتائج", el: "Αποτελέσματα",
+    id: "Hasil", fa: "نتایج",
   },
   featuresLabel: {
     de: "// Was dich erwartet", en: "// What's here", hi: "// आपके लिए क्या है", zh: "// 你将获得", ko: "// 무엇이 있나요", ja: "// ここでできること",
     es: "// Lo que te espera", fr: "// Ce qui t'attend", tr: "// Seni neler bekliyor", ru: "// Что тебя ждёт", pt: "// O que te espera", ar: "// ما الذي ينتظرك", el: "// Τι σε περιμένει",
+    id: "// Apa saja di sini", fa: "// اینجا چه چیزی هست",
   },
   featureMusicTitle: {
     de: "Musik", en: "Music", hi: "संगीत", zh: "音乐", ko: "음악", ja: "音楽",
     es: "Música", fr: "Musique", tr: "Müzik", ru: "Музыка", pt: "Música", ar: "الموسيقى", el: "Μουσική",
+    id: "Musik", fa: "موسیقی",
   },
   featureMusicText: {
     de: "Song suchen und direkt hier hören — über den offiziellen YouTube-Katalog, kein Login, kein Download.",
@@ -796,10 +928,12 @@ const TRANSLATIONS_SOURCE = {
     pt: "Procure uma música e ouça aqui mesmo — através do catálogo oficial do YouTube, sem login, sem download.",
     ar: "ابحث عن أغنية واستمع إليها هنا مباشرة — عبر كتالوج يوتيوب الرسمي، بدون تسجيل دخول أو تنزيل.",
     el: "Αναζητήστε ένα τραγούδι και ακούστε το εδώ — μέσω του επίσημου καταλόγου YouTube, χωρίς σύνδεση ή λήψη.",
+    id: "Cari lagu dan dengarkan langsung di sini — lewat katalog resmi YouTube, tanpa login, tanpa unduhan.", fa: "آهنگی را جستجو کنید و همین‌جا گوش دهید — از طریق فهرست رسمی یوتیوب، بدون ورود و بدون دانلود.",
   },
   featureUniverseTitle: {
     de: "Universum", en: "Universe", hi: "ब्रह्मांड", zh: "宇宙", ko: "우주", ja: "宇宙",
     es: "Universo", fr: "Univers", tr: "Evren", ru: "Вселенная", pt: "Universo", ar: "الكون", el: "Σύμπαν",
+    id: "Alam Semesta", fa: "جهان",
   },
   featureUniverseText: {
     de: "Zahlen, Fakten und ein interaktives Sonnensystem zum Erkunden — vom Urknall bis zu Voyager 1.",
@@ -815,10 +949,12 @@ const TRANSLATIONS_SOURCE = {
     pt: "Números, factos e um sistema solar interativo para explorar — do Big Bang à Voyager 1.",
     ar: "أرقام وحقائق ونظام شمسي تفاعلي لاستكشافه — من الانفجار العظيم إلى فوييجر 1.",
     el: "Αριθμοί, στοιχεία και ένα διαδραστικό ηλιακό σύστημα για εξερεύνηση — από τη Μεγάλη Έκρηξη μέχρι το Voyager 1.",
+    id: "Angka, fakta, dan tata surya interaktif untuk dijelajahi — dari Big Bang hingga Voyager 1.", fa: "اعداد، واقعیت‌ها و یک منظومه شمسی تعاملی برای کاوش — از مه‌بانگ تا وویجر ۱.",
   },
   featureHistoryTitle: {
     de: "Geschichte", en: "History", hi: "इतिहास", zh: "历史", ko: "역사", ja: "歴史",
     es: "Historia", fr: "Histoire", tr: "Tarih", ru: "История", pt: "História", ar: "التاريخ", el: "Ιστορία",
+    id: "Sejarah", fa: "تاریخ",
   },
   featureHistoryText: {
     de: "Große Reiche auf einer Zeitleiste von der Antike bis heute, mit Jahres-Regler zum Durchspielen.",
@@ -834,6 +970,7 @@ const TRANSLATIONS_SOURCE = {
     pt: "Grandes impérios numa linha do tempo da Antiguidade até hoje, com um controlo deslizante de anos para reproduzir.",
     ar: "إمبراطوريات عظيمة على جدول زمني من العصور القديمة حتى اليوم، مع شريط تمرير للسنوات للتشغيل.",
     el: "Μεγάλες αυτοκρατορίες σε χρονογραμμή από την αρχαιότητα μέχρι σήμερα, με ρυθμιστικό έτους για αναπαραγωγή.",
+    id: "Imperium besar pada garis waktu dari zaman kuno hingga kini, dengan penggeser tahun untuk diputar.", fa: "امپراتوری‌های بزرگ بر خط زمانی از دوران باستان تا امروز، با نوار سال برای پخش.",
   },
   discoverUniverseText: {
     de: "Zahlen und Fakten zum Kosmos — vom Alter des Universums über Dunkle Materie bis zu Schwarzen Löchern, dazu aktuelle Live-News aus der Raumfahrt.",
@@ -849,14 +986,17 @@ const TRANSLATIONS_SOURCE = {
     pt: "Números e factos sobre o cosmos — da idade do universo à matéria escura e buracos negros, mais notícias espaciais ao vivo.",
     ar: "أرقام وحقائق عن الكون — من عمر الكون إلى المادة المظلمة والثقوب السوداء، بالإضافة إلى أخبار الفضاء المباشرة.",
     el: "Αριθμοί και στοιχεία για το σύμπαν — από την ηλικία του σύμπαντος μέχρι τη σκοτεινή ύλη και τις μαύρες τρύπες, καθώς και ζωντανά νέα από το διάστημα.",
+    id: "Angka dan fakta tentang kosmos — dari usia alam semesta hingga materi gelap dan lubang hitam, plus berita antariksa terkini.", fa: "اعداد و واقعیت‌هایی درباره کیهان — از سن جهان تا ماده تاریک و سیاه‌چاله‌ها، به‌علاوه آخرین اخبار فضا.",
   },
   discoverCta: {
     de: "Entdecken", en: "Explore", hi: "खोजें", zh: "探索", ko: "탐험하기", ja: "探索する",
     es: "Descubrir", fr: "Découvrir", tr: "Keşfet", ru: "Исследовать", pt: "Descobrir", ar: "استكشف", el: "Ανακαλύψτε",
+    id: "Jelajahi", fa: "کاوش کنید",
   },
   historyTitle: {
     de: "Weltgeschichte entdecken", en: "Explore World History", hi: "विश्व इतिहास खोजें", zh: "探索世界历史", ko: "세계 역사 탐험하기", ja: "世界史を探索する",
     es: "Descubre la historia mundial", fr: "Découvrir l'histoire du monde", tr: "Dünya Tarihini Keşfet", ru: "Исследуйте всемирную историю", pt: "Descobre a história mundial", ar: "اكتشف تاريخ العالم", el: "Ανακαλύψτε την παγκόσμια ιστορία",
+    id: "Jelajahi Sejarah Dunia", fa: "تاریخ جهان را کاوش کنید",
   },
   historyText: {
     de: "Historische Weltkarte mit Jahres-Regler — von der Antike bis heute, große Reiche wie Rom, die Mongolen oder das British Empire farblich hervorgehoben.",
@@ -872,14 +1012,17 @@ const TRANSLATIONS_SOURCE = {
     pt: "Mapa-múndi histórico com controlo deslizante de anos — da Antiguidade até hoje, grandes impérios como Roma, os mongóis ou o Império Britânico destacados a cores.",
     ar: "خريطة عالمية تاريخية مع شريط تمرير للسنوات — من العصور القديمة حتى اليوم، مع تمييز الإمبراطوريات الكبرى مثل روما والمغول أو الإمبراطورية البريطانية بالألوان.",
     el: "Ιστορικός παγκόσμιος χάρτης με ρυθμιστικό έτους — από την αρχαιότητα μέχρι σήμερα, με μεγάλες αυτοκρατορίες όπως η Ρώμη, οι Μογγόλοι ή η Βρετανική Αυτοκρατορία τονισμένες με χρώμα.",
+    id: "Peta dunia bersejarah dengan penggeser tahun — dari zaman kuno hingga kini, imperium besar seperti Roma, Mongol, atau Kekaisaran Inggris disorot dengan warna.", fa: "نقشه تاریخی جهان با نوار سال — از دوران باستان تا امروز، امپراتوری‌های بزرگی مانند روم، مغول یا امپراتوری بریتانیا با رنگ مشخص شده‌اند.",
   },
   viewMapCta: {
     de: "Karte ansehen", en: "View map", hi: "मानचित्र देखें", zh: "查看地图", ko: "지도 보기", ja: "地図を見る",
     es: "Ver mapa", fr: "Voir la carte", tr: "Haritayı görüntüle", ru: "Смотреть карту", pt: "Ver mapa", ar: "عرض الخريطة", el: "Προβολή χάρτη",
+    id: "Lihat peta", fa: "مشاهده نقشه",
   },
   aiNewsHeroTitle: {
     de: "KI-News", en: "AI News", hi: "AI समाचार", zh: "AI 新闻", ko: "AI 뉴스", ja: "AIニュース",
     es: "Noticias de IA", fr: "Actus IA", tr: "Yapay Zekâ Haberleri", ru: "Новости ИИ", pt: "Notícias de IA", ar: "أخبار الذكاء الاصطناعي", el: "Νέα AI",
+    id: "Berita AI", fa: "اخبار هوش مصنوعی",
   },
   aiNewsHeroText: {
     de: "Aktuelle Schlagzeilen rund um künstliche Intelligenz — live geladen, keine erfundenen Meldungen.",
@@ -895,30 +1038,37 @@ const TRANSLATIONS_SOURCE = {
     pt: "Manchetes atuais sobre inteligência artificial — carregadas em direto, sem notícias inventadas.",
     ar: "عناوين حالية حول الذكاء الاصطناعي — محمّلة مباشرة، بدون أخبار ملفقة.",
     el: "Τρέχοντες τίτλοι ειδήσεων για την τεχνητή νοημοσύνη — φορτώνονται ζωντανά, χωρίς επινοημένες ειδήσεις.",
+    id: "Berita terkini tentang kecerdasan buatan — dimuat langsung, tanpa cerita rekaan.", fa: "آخرین سرخط‌های هوش مصنوعی — به‌صورت زنده بارگذاری می‌شوند، بدون خبر ساختگی.",
   },
   collapse: {
     de: "Einklappen", en: "Collapse", hi: "संक्षिप्त करें", zh: "收起", ko: "접기", ja: "折りたたむ",
     es: "Contraer", fr: "Réduire", tr: "Daralt", ru: "Свернуть", pt: "Recolher", ar: "طي", el: "Σύμπτυξη",
+    id: "Ciutkan", fa: "جمع کردن",
   },
   showAllNews: {
     de: "Alle News anzeigen", en: "Show all news", hi: "सभी समाचार दिखाएं", zh: "显示所有新闻", ko: "모든 뉴스 보기", ja: "すべてのニュースを表示",
     es: "Mostrar todas las noticias", fr: "Afficher toutes les actualités", tr: "Tüm haberleri göster", ru: "Показать все новости", pt: "Mostrar todas as notícias", ar: "عرض جميع الأخبار", el: "Εμφάνιση όλων των ειδήσεων",
+    id: "Tampilkan semua berita", fa: "نمایش همه اخبار",
   },
   readArticle: {
     de: "Artikel lesen", en: "Read article", hi: "लेख पढ़ें", zh: "阅读文章", ko: "기사 읽기", ja: "記事を読む",
     es: "Leer artículo", fr: "Lire l'article", tr: "Makaleyi oku", ru: "Читать статью", pt: "Ler artigo", ar: "قراءة المقال", el: "Ανάγνωση άρθρου",
+    id: "Baca artikel", fa: "خواندن مقاله",
   },
   noNewsAvailable: {
     de: "Aktuell keine News verfügbar", en: "No news available right now", hi: "अभी कोई समाचार उपलब्ध नहीं", zh: "目前没有可用新闻", ko: "현재 이용 가능한 뉴스가 없습니다", ja: "現在ニュースはありません",
     es: "Actualmente no hay noticias disponibles", fr: "Aucune actualité disponible pour le moment", tr: "Şu anda haber yok", ru: "Сейчас новостей нет", pt: "Atualmente sem notícias disponíveis", ar: "لا توجد أخبار متاحة حاليًا", el: "Δεν υπάρχουν διαθέσιμα νέα αυτή τη στιγμή",
+    id: "Belum ada berita saat ini", fa: "در حال حاضر خبری موجود نیست",
   },
   aiNewsLoadError: {
     de: "KI-News konnten nicht geladen werden.", en: "AI news could not be loaded.", hi: "AI समाचार लोड नहीं हो सके।", zh: "无法加载 AI 新闻。", ko: "AI 뉴스를 불러올 수 없습니다.", ja: "AIニュースを読み込めませんでした。",
     es: "No se pudieron cargar las noticias de IA.", fr: "Impossible de charger les actualités IA.", tr: "AI haberleri yüklenemedi.", ru: "Не удалось загрузить новости ИИ.", pt: "Não foi possível carregar as notícias de IA.", ar: "تعذر تحميل أخبار الذكاء الاصطناعي.", el: "Δεν ήταν δυνατή η φόρτωση των νέων AI.",
+    id: "Berita AI tidak dapat dimuat.", fa: "بارگذاری اخبار هوش مصنوعی ممکن نشد.",
   },
   aboutLabel: {
     de: "// Über die Webseite", en: "// About this site", hi: "// इस वेबसाइट के बारे में", zh: "// 关于本站", ko: "// 이 사이트에 대해", ja: "// このサイトについて",
     es: "// Sobre este sitio", fr: "// À propos du site", tr: "// Bu site hakkında", ru: "// Об этом сайте", pt: "// Sobre este site", ar: "// حول هذا الموقع", el: "// Σχετικά με τον ιστότοπο",
+    id: "// Tentang situs ini", fa: "// درباره این سایت",
   },
   aboutText: {
     de: "Centaurian ist ein privates, nicht-kommerzielles Hobby-Projekt — kein offizieller Dienst, ohne Werbe-Tracking-Schnickschnack und ohne aufgeblähtes Interface. Mehr als nur Musik: Neben Suche und Wiedergabe gehören eine interaktive Weltkarte zum Erkunden der Geschichte und eine Übersicht zum Kennenlernen des Universums dazu — Centaurian als kleiner Ort, um Wissen über die Existenz zu entdecken. Die Musik-Suche und Wiedergabe laufen ausschließlich über die offizielle YouTube Data API und den offiziellen YouTube-Player; es wird nichts heruntergeladen, kopiert oder auf dieser Seite gespeichert. Da nur öffentlich dokumentierte, offizielle Schnittstellen genutzt werden, ist die Nutzung dieser Seite legal.",
@@ -934,6 +1084,7 @@ const TRANSLATIONS_SOURCE = {
     pt: "Centaurian é um projeto pessoal e não comercial — não é um serviço oficial, sem rastreamento publicitário nem interface sobrecarregada. Mais do que apenas música: além da pesquisa e reprodução, inclui um mapa-múndi interativo para explorar a história e uma visão geral para conhecer o universo — Centaurian como um pequeno lugar para descobrir conhecimento sobre a existência. A pesquisa e reprodução de música funcionam exclusivamente através da API oficial do YouTube Data e do leitor oficial do YouTube; nada é descarregado, copiado ou armazenado neste site. Como só são usadas interfaces oficiais e publicamente documentadas, o uso deste site é legal.",
     ar: "Centaurian هو مشروع هواية خاص وغير تجاري — ليس خدمة رسمية، بدون فوضى تتبع الإعلانات وبدون واجهة متضخمة. أكثر من مجرد موسيقى: إلى جانب البحث والتشغيل، يتضمن خريطة عالمية تفاعلية لاستكشاف التاريخ ونظرة عامة للتعرف على الكون — Centaurian كمكان صغير لاكتشاف المعرفة حول الوجود. يعمل البحث عن الموسيقى وتشغيلها حصريًا عبر واجهة YouTube Data الرسمية ومشغل يوتيوب الرسمي؛ لا يتم تنزيل أو نسخ أو تخزين أي شيء على هذا الموقع. وبما أنه يتم استخدام واجهات رسمية موثقة علنًا فقط، فإن استخدام هذا الموقع قانوني.",
     el: "Το Centaurian είναι ένα ιδιωτικό, μη εμπορικό ερασιτεχνικό έργο — όχι επίσημη υπηρεσία, χωρίς θόρυβο διαφημιστικής παρακολούθησης και χωρίς φουσκωμένο περιβάλλον. Περισσότερο από απλή μουσική: εκτός από αναζήτηση και αναπαραγωγή, περιλαμβάνει έναν διαδραστικό παγκόσμιο χάρτη για εξερεύνηση της ιστορίας και μια επισκόπηση για γνωριμία με το σύμπαν — το Centaurian ως ένας μικρός χώρος για ανακάλυψη γνώσης για την ύπαρξη. Η αναζήτηση και αναπαραγωγή μουσικής λειτουργούν αποκλειστικά μέσω του επίσημου YouTube Data API και του επίσημου YouTube player· τίποτα δεν κατεβάζεται, αντιγράφεται ή αποθηκεύεται σε αυτόν τον ιστότοπο. Καθώς χρησιμοποιούνται μόνο δημόσια τεκμηριωμένες, επίσημες διεπαφές, η χρήση αυτού του ιστότοπου είναι νόμιμη.",
+    id: "Centaurian adalah proyek hobi pribadi non-komersial — bukan layanan resmi, tanpa pelacak iklan yang mengganggu dan tanpa antarmuka yang membengkak. Lebih dari sekadar musik: selain pencarian dan pemutaran, tersedia peta dunia interaktif untuk menjelajahi sejarah dan ikhtisar untuk mengenal alam semesta — Centaurian sebagai tempat kecil untuk menemukan pengetahuan tentang keberadaan. Pencarian dan pemutaran musik berjalan sepenuhnya lewat YouTube Data API resmi dan pemutar YouTube resmi; tidak ada yang diunduh, disalin, atau disimpan di situs ini. Karena hanya antarmuka resmi yang terdokumentasi secara publik yang digunakan, penggunaan situs ini sah.", fa: "سنتائوریان یک پروژه سرگرمی شخصی و غیرتجاری است — نه یک سرویس رسمی، بدون ردیاب‌های تبلیغاتی مزاحم و بدون رابط کاربری سنگین. چیزی بیش از موسیقی: در کنار جستجو و پخش، یک نقشه تعاملی جهان برای کاوش در تاریخ و یک نمای کلی برای شناخت جهان هستی دارد — سنتائوریان به‌عنوان جایی کوچک برای کشف دانش درباره هستی. جستجو و پخش موسیقی فقط از طریق API رسمی داده یوتیوب و پخش‌کننده رسمی یوتیوب انجام می‌شود؛ چیزی در این سایت دانلود، کپی یا ذخیره نمی‌شود. چون فقط از رابط‌های رسمی و مستند عمومی استفاده می‌شود، استفاده از این سایت قانونی است.",
   },
   aboutLead: {
     de: "Centaurian ist ein privates Hobby-Projekt: ein kleiner Ort, um Musik zu hören und unsere Welt und das Universum zu entdecken — kostenlos, ohne Anmeldung, ohne Werbung.",
@@ -949,6 +1100,7 @@ const TRANSLATIONS_SOURCE = {
     pt: "Centaurian é um projeto pessoal: um pequeno lugar para ouvir música e explorar o nosso mundo e o universo — grátis, sem registo e sem anúncios.",
     ar: "Centaurian مشروع هواية خاص: مكان صغير للاستماع إلى الموسيقى واستكشاف عالمنا والكون — مجاني، بدون تسجيل، وبدون إعلانات.",
     el: "Το Centaurian είναι ένα ιδιωτικό χόμπι: ένας μικρός χώρος για να ακούς μουσική και να εξερευνάς τον κόσμο μας και το σύμπαν — δωρεάν, χωρίς εγγραφή, χωρίς διαφημίσεις.",
+    id: "Centaurian adalah proyek hobi pribadi: tempat kecil untuk mendengarkan musik dan menjelajahi dunia serta alam semesta kita — gratis, tanpa pendaftaran, tanpa iklan.", fa: "سنتائوریان یک پروژه سرگرمی شخصی است: جایی کوچک برای گوش دادن به موسیقی و کاوش در جهان و کیهان ما — رایگان، بدون ثبت‌نام، بدون تبلیغات.",
   },
   aboutF1: {
     de: "Musik — Songs suchen und direkt hören, über den offiziellen YouTube-Player.",
@@ -964,6 +1116,7 @@ const TRANSLATIONS_SOURCE = {
     pt: "Música — pesquise músicas e ouça aqui mesmo pelo leitor oficial do YouTube.",
     ar: "الموسيقى — ابحث عن الأغاني واستمع إليها هنا مباشرة عبر مشغل يوتيوب الرسمي.",
     el: "Μουσική — αναζήτησε τραγούδια και άκουσέ τα εδώ μέσω του επίσημου YouTube player.",
+    id: "Musik — cari lagu dan putar langsung di sini lewat pemutar YouTube resmi.", fa: "موسیقی — آهنگ‌ها را جستجو و همین‌جا با پخش‌کننده رسمی یوتیوب پخش کنید.",
   },
   aboutF2: {
     de: "Sternenhimmel — 108.000 echte Sterne, Sternbilder und Planeten live für deinen Ort.",
@@ -979,6 +1132,7 @@ const TRANSLATIONS_SOURCE = {
     pt: "Céu noturno — 108.000 estrelas reais, constelações e planetas ao vivo para a sua localização.",
     ar: "سماء الليل — 108٬000 نجم حقيقي وأبراج وكواكب مباشرة لموقعك.",
     el: "Νυχτερινός ουρανός — 108.000 πραγματικά αστέρια, αστερισμοί και πλανήτες ζωντανά για την τοποθεσία σου.",
+    id: "Langit malam — 108.000 bintang nyata, rasi bintang, dan planet secara langsung untuk lokasi Anda.", fa: "آسمان شب — ۱۰۸٬۰۰۰ ستاره واقعی، صورت‌های فلکی و سیارات به‌صورت زنده برای موقعیت شما.",
   },
   aboutF3: {
     de: "Universum — Sonnensystem in 3D mit echten Positionen, Fakten und Weltraum-News.",
@@ -994,6 +1148,7 @@ const TRANSLATIONS_SOURCE = {
     pt: "Universo — sistema solar em 3D com posições reais, factos e notícias do espaço.",
     ar: "الكون — نظام شمسي ثلاثي الأبعاد بمواقع حقيقية وحقائق وأخبار الفضاء.",
     el: "Σύμπαν — ηλιακό σύστημα σε 3D με πραγματικές θέσεις, γεγονότα και διαστημικά νέα.",
+    id: "Alam semesta — tata surya 3D dengan posisi nyata, fakta, dan berita antariksa.", fa: "جهان — منظومه شمسی سه‌بعدی با موقعیت‌های واقعی، واقعیت‌ها و اخبار فضا.",
   },
   aboutF4: {
     de: "Geschichte — alle großen Reiche von 3400 v. Chr. bis heute auf einer Weltkarte.",
@@ -1009,6 +1164,7 @@ const TRANSLATIONS_SOURCE = {
     pt: "História — todos os grandes impérios de 3400 a.C. até hoje num mapa-múndi.",
     ar: "التاريخ — كل الإمبراطوريات الكبرى من 3400 ق.م حتى اليوم على خريطة عالمية واحدة.",
     el: "Ιστορία — όλες οι μεγάλες αυτοκρατορίες από το 3400 π.Χ. έως σήμερα σε έναν παγκόσμιο χάρτη.",
+    id: "Sejarah — setiap imperium besar dari 3400 SM hingga kini dalam satu peta dunia.", fa: "تاریخ — هر امپراتوری بزرگ از ۳۴۰۰ پیش از میلاد تا امروز در یک نقشه جهان.",
   },
   aboutLegal: {
     de: "Alles läuft über offizielle, öffentlich dokumentierte Schnittstellen (YouTube, NASA/JPL, Wikipedia). Nichts wird heruntergeladen oder auf dieser Seite gespeichert.",
@@ -1024,6 +1180,7 @@ const TRANSLATIONS_SOURCE = {
     pt: "Tudo funciona através de interfaces oficiais e publicamente documentadas (YouTube, NASA/JPL, Wikipédia). Nada é descarregado nem guardado neste site.",
     ar: "يعمل كل شيء عبر واجهات رسمية موثقة علنًا (يوتيوب، ناسا/JPL، ويكيبيديا). لا يتم تنزيل أو تخزين أي شيء على هذا الموقع.",
     el: "Όλα λειτουργούν μέσω επίσημων, δημόσια τεκμηριωμένων διεπαφών (YouTube, NASA/JPL, Βικιπαίδεια). Τίποτα δεν κατεβαίνει ούτε αποθηκεύεται σε αυτόν τον ιστότοπο.",
+    id: "Semuanya berjalan lewat antarmuka resmi yang terdokumentasi secara publik (YouTube, NASA/JPL, Wikipedia). Tidak ada yang diunduh atau disimpan di situs ini.", fa: "همه‌چیز از طریق رابط‌های رسمی و مستند عمومی (یوتیوب، ناسا/JPL، ویکی‌پدیا) انجام می‌شود. چیزی در این سایت دانلود یا ذخیره نمی‌شود.",
   },
   appTopBtn: {
     de: "App herunterladen",
@@ -1039,81 +1196,100 @@ const TRANSLATIONS_SOURCE = {
     pt: "Baixar app",
     ar: "تنزيل التطبيق",
     el: "Λήψη εφαρμογής",
+    id: "Unduh aplikasi", fa: "دانلود برنامه",
   },
   contactsLabel: {
     de: "// Kontakte", en: "// Contact", hi: "// संपर्क", zh: "// 联系方式", ko: "// 연락처", ja: "// 連絡先",
     es: "// Contacto", fr: "// Contact", tr: "// İletişim", ru: "// Контакты", pt: "// Contato", ar: "// اتصل بنا", el: "// Επικοινωνία",
+    id: "// Kontak", fa: "// تماس",
   },
   nowPlayingLabel: {
     de: "// Now Playing", en: "// Now Playing", hi: "// अभी चल रहा है", zh: "// 正在播放", ko: "// 재생 중", ja: "// 再生中",
     es: "// Reproduciendo", fr: "// Lecture en cours", tr: "// Şimdi Çalıyor", ru: "// Сейчас играет", pt: "// A reproduzir", ar: "// قيد التشغيل الآن", el: "// Αναπαράγεται τώρα",
+    id: "// Sedang diputar", fa: "// در حال پخش",
   },
   lastSongAria: {
     de: "Letzter Song", en: "Previous song", hi: "पिछला गाना", zh: "上一首歌曲", ko: "이전 곡", ja: "前の曲",
     es: "Canción anterior", fr: "Titre précédent", tr: "Önceki şarkı", ru: "Предыдущая песня", pt: "Música anterior", ar: "الأغنية السابقة", el: "Προηγούμενο τραγούδι",
+    id: "Lagu sebelumnya", fa: "آهنگ قبلی",
   },
   nextSongAria: {
     de: "Nächster Song", en: "Next song", hi: "अगला गाना", zh: "下一首歌曲", ko: "다음 곡", ja: "次の曲",
     es: "Siguiente canción", fr: "Titre suivant", tr: "Sonraki şarkı", ru: "Следующая песня", pt: "Próxima música", ar: "الأغنية التالية", el: "Επόμενο τραγούδι",
+    id: "Lagu berikutnya", fa: "آهنگ بعدی",
   },
   playbackPositionAria: {
     de: "Wiedergabeposition", en: "Playback position", hi: "प्लेबैक स्थिति", zh: "播放进度", ko: "재생 위치", ja: "再生位置",
     es: "Posición de reproducción", fr: "Position de lecture", tr: "Oynatma konumu", ru: "Позиция воспроизведения", pt: "Posição de reprodução", ar: "موضع التشغيل", el: "Θέση αναπαραγωγής",
+    id: "Posisi pemutaran", fa: "موقعیت پخش",
   },
   backToHomeAria: {
     de: "Zurück zur Startseite", en: "Back to home", hi: "होम पर वापस जाएं", zh: "返回主页", ko: "홈으로 돌아가기", ja: "ホームに戻る",
     es: "Volver al inicio", fr: "Retour à l'accueil", tr: "Ana sayfaya dön", ru: "Назад на главную", pt: "Voltar ao início", ar: "العودة إلى الصفحة الرئيسية", el: "Επιστροφή στην αρχική",
+    id: "Kembali ke beranda", fa: "بازگشت به صفحه اصلی",
   },
   shuffleWord: {
     de: "Zufällig", en: "Shuffle", hi: "शफल", zh: "随机", ko: "무작위", ja: "シャッフル",
     es: "Aleatorio", fr: "Aléatoire", tr: "Karışık", ru: "Случайно", pt: "Aleatório", ar: "عشوائي", el: "Τυχαία",
+    id: "Acak", fa: "تصادفی",
   },
 
   solarSystemVisAria: {
     de: "Sonnensystem-Visualisierung", en: "Solar system visualization", hi: "सौर मंडल दृश्यीकरण", zh: "太阳系可视化", ko: "태양계 시각화", ja: "太陽系ビジュアライゼーション",
     es: "Visualización del sistema solar", fr: "Visualisation du système solaire", tr: "Güneş sistemi görselleştirmesi", ru: "Визуализация солнечной системы", pt: "Visualização do sistema solar", ar: "تصور النظام الشمسي", el: "Οπτικοποίηση ηλιακού συστήματος",
+    id: "Visualisasi tata surya", fa: "نمایش تصویری منظومه شمسی",
   },
   clearSearchAria: {
     de: "Suche zurücksetzen", en: "Clear search", hi: "खोज साफ़ करें", zh: "清除搜索", ko: "검색 지우기", ja: "検索をクリア",
     es: "Borrar búsqueda", fr: "Effacer la recherche", tr: "Aramayı temizle", ru: "Очистить поиск", pt: "Limpar pesquisa", ar: "مسح البحث", el: "Καθαρισμός αναζήτησης",
+    id: "Hapus pencarian", fa: "پاک کردن جستجو",
   },
   noSongSelected: {
     de: "Kein Song ausgewählt", en: "No song selected", hi: "कोई गाना चयनित नहीं", zh: "未选择歌曲", ko: "선택된 곡 없음", ja: "曲が選択されていません",
     es: "Ninguna canción seleccionada", fr: "Aucun titre sélectionné", tr: "Şarkı seçilmedi", ru: "Песня не выбрана", pt: "Nenhuma música selecionada", ar: "لم يتم اختيار أغنية", el: "Δεν επιλέχθηκε τραγούδι",
+    id: "Tidak ada lagu dipilih", fa: "آهنگی انتخاب نشده است",
   },
   playerCloseAria: {
     de: "Player schließen", en: "Close player", hi: "प्लेयर बंद करें", zh: "关闭播放器", ko: "플레이어 닫기", ja: "プレーヤーを閉じる",
     es: "Cerrar reproductor", fr: "Fermer le lecteur", tr: "Oynatıcıyı kapat", ru: "Закрыть плеер", pt: "Fechar reprodutor", ar: "إغلاق المشغل", el: "Κλείσιμο player",
+    id: "Tutup pemutar", fa: "بستن پخش‌کننده",
   },
   spaceNewsLabel: {
     de: "Space News", en: "Space News", hi: "स्पेस न्यूज़", zh: "航天新闻", ko: "우주 뉴스", ja: "宇宙ニュース",
     es: "Noticias espaciales", fr: "Actu spatiale", tr: "Uzay Haberleri", ru: "Космоновости", pt: "Notícias espaciais", ar: "أخبار الفضاء", el: "Νέα Διαστήματος",
+    id: "Berita Antariksa", fa: "اخبار فضا",
   },
   liveLabel: {
     de: "Live", en: "Live", hi: "लाइव", zh: "实时", ko: "실시간", ja: "ライブ",
     es: "En vivo", fr: "En direct", tr: "Canlı", ru: "Прямой эфир", pt: "Ao vivo", ar: "مباشر", el: "Ζωντανά",
+    id: "Langsung", fa: "زنده",
   },
   spaceNewsLoadError: {
     de: "Space News konnten nicht geladen werden.", en: "Space news could not be loaded.", hi: "स्पेस न्यूज़ लोड नहीं हो सकीं।", zh: "无法加载航天新闻。", ko: "우주 뉴스를 불러올 수 없습니다.", ja: "宇宙ニュースを読み込めませんでした。",
     es: "No se pudieron cargar las noticias espaciales.", fr: "Impossible de charger l'actualité spatiale.", tr: "Uzay haberleri yüklenemedi.", ru: "Не удалось загрузить космоновости.", pt: "Não foi possível carregar as notícias espaciais.", ar: "تعذر تحميل أخبار الفضاء.", el: "Δεν ήταν δυνατή η φόρτωση των νέων διαστήματος.",
+    id: "Berita antariksa tidak dapat dimuat.", fa: "بارگذاری اخبار فضا ممکن نشد.",
   },
   byAuthor: {
     de: "Von", en: "By", hi: "द्वारा", zh: "作者：", ko: "작성자:", ja: "著者：",
     es: "Por", fr: "Par", tr: "Yazan:", ru: "Автор:", pt: "Por", ar: "بواسطة", el: "Από",
+    id: "Oleh", fa: "نوشته",
   },
   missionLabel: {
     de: "Mission", en: "Mission", hi: "मिशन", zh: "任务", ko: "미션", ja: "ミッション",
     es: "Misión", fr: "Mission", tr: "Görev", ru: "Миссия", pt: "Missão", ar: "المهمة", el: "Αποστολή",
+    id: "Misi", fa: "مأموریت",
   },
   eventLabel: {
     de: "Event", en: "Event", hi: "इवेंट", zh: "事件", ko: "이벤트", ja: "イベント",
     es: "Evento", fr: "Événement", tr: "Etkinlik", ru: "Событие", pt: "Evento", ar: "الحدث", el: "Εκδήλωση",
+    id: "Peristiwa", fa: "رویداد",
   },
 
   // Sprachumschalter
   languageMenuLabel: {
     de: "Sprache", en: "Language", hi: "भाषा", zh: "语言", ko: "언어", ja: "言語",
     es: "Idioma", fr: "Langue", tr: "Dil", ru: "Язык", pt: "Idioma", ar: "اللغة", el: "Γλώσσα",
+    id: "Bahasa", fa: "زبان",
   },
 } as const satisfies Record<string, TranslationEntry>;
 
