@@ -6,7 +6,7 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 
-function initTunnel(canvas: HTMLCanvasElement): () => void {
+function initTunnel(canvas: HTMLCanvasElement, lite: boolean): () => void {
   var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   var coarse = matchMedia('(pointer: coarse)').matches;
   var renderer;
@@ -20,7 +20,7 @@ function initTunnel(canvas: HTMLCanvasElement): () => void {
   var L = 335;
   function resize(){
     var w = innerWidth, h = innerHeight;
-    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, coarse ? 2 : 2.5));
+    renderer.setPixelRatio(Math.min(devicePixelRatio || 1, lite ? 1.25 : coarse ? 2 : 2.5));
     renderer.setSize(w, h, false);
     camera.aspect = w / h; camera.updateProjectionMatrix();
   }
@@ -60,7 +60,7 @@ function initTunnel(canvas: HTMLCanvasElement): () => void {
   var PAL = [{a:'#ff3a3a', b:'#ff9c86'}];
   var cA = new THREE.Color(), cB = new THREE.Color(), painters = [], tmp = new THREE.Color();
   /* Sterne */
-  var NS = coarse ? 1400 : 2600, sPos = new Float32Array(NS*3), sCol = new Float32Array(NS*3), sK = new Float32Array(NS), sB = new Float32Array(NS);
+  var NS = lite ? 900 : coarse ? 1400 : 2600, sPos = new Float32Array(NS*3), sCol = new Float32Array(NS*3), sK = new Float32Array(NS), sB = new Float32Array(NS);
   for (var i=0;i<NS;i++){
     var z = 30 - Math.random()*450, a = Math.random()*6.2832, r = 7 + Math.pow(Math.random(),.7)*95;
     sPos[i*3]=Math.cos(a)*r; sPos[i*3+1]=Math.sin(a)*r*.7; sPos[i*3+2]=z; sK[i]=Math.random(); sB[i]=.45+Math.random()*.55;
@@ -78,7 +78,7 @@ function initTunnel(canvas: HTMLCanvasElement): () => void {
     sGeo.attributes.aCol.needsUpdate = true;
   });
   /* Bewegliche Partikel in den Bildschirm-Ecken */
-  var NC = coarse ? 6000 : 16000, cN = new Float32Array(NC*2), cPh = new Float32Array(NC), cSp = new Float32Array(NC), cK = new Float32Array(NC), cB2 = new Float32Array(NC), cW = new Float32Array(NC), cPos = new Float32Array(NC*3), cCol = new Float32Array(NC*3);
+  var NC = lite ? 2500 : coarse ? 6000 : 16000, cN = new Float32Array(NC*2), cPh = new Float32Array(NC), cSp = new Float32Array(NC), cK = new Float32Array(NC), cB2 = new Float32Array(NC), cW = new Float32Array(NC), cPos = new Float32Array(NC*3), cCol = new Float32Array(NC*3);
   for (var ci=0;ci<NC;ci++){
     var rin = .72, rout = 2.7; cN[ci*2] = Math.sqrt(rin*rin + Math.random()*(rout*rout - rin*rin)); cN[ci*2+1] = Math.random()*6.2832;
     cPh[ci] = Math.random()*6.2832; cSp[ci] = .4 + Math.random()*1.1; cK[ci] = Math.random(); cB2[ci] = .5 + Math.random()*.5; cW[ci] = (Math.random()<.5 ? -1 : 1)*(.03 + Math.random()*.06);
@@ -126,8 +126,8 @@ function initTunnel(canvas: HTMLCanvasElement): () => void {
       geo.attributes.position.needsUpdate = true;
     });
   }
-  swirl(coarse ? 20000 : 60000, .36, 1, .75);
-  swirl(coarse ? 500 : 1200, 1.1, .6, .6, function(){ return .7 + Math.random()*.6; });
+  swirl(lite ? 8000 : coarse ? 20000 : 60000, .36, 1, .75);
+  swirl(lite ? 300 : coarse ? 500 : 1200, 1.1, .6, .6, function(){ return .7 + Math.random()*.6; });
 
   function setPal(i){ cA.set(PAL[i].a); cB.set(PAL[i].b); painters.forEach(function(fn){ fn(); }); }
   setPal(0);
@@ -297,9 +297,10 @@ function initTunnel(canvas: HTMLCanvasElement): () => void {
   var bhMesh = new THREE.Mesh(new THREE.PlaneGeometry(1,1), bhMat); bhMesh.renderOrder = 10; bhMesh.frustumCulled = false; bhMesh.position.set(0,0,-362);
   scene.add(camera); scene.add(bhMesh); 
   function bhUpd(t){ starUpd(); cornerUpd(t); sky.position.copy(camera.position); sky.quaternion.copy(camera.quaternion); bhMesh.quaternion.copy(camera.quaternion); bhMesh.scale.setScalar(46 + 50*Math.pow(Math.min(1,Math.max(0,ps)),1.2)); bhMat.uniforms.uTime.value = t*2.2; bhMat.uniforms.uIncl.value = .12 + ptr.y*.1; bhMat.uniforms.uYaw.value = ptr.x*.2; }
-  var ps = 0, last = performance.now(), time = 0, raf = 0, alive = true;
+  var fc = 0, ps = 0, last = performance.now(), time = 0, raf = 0, alive = true;
   function loop(now){
     if (!alive) return;
+    if (lite && (fc++ & 1)) { raf = requestAnimationFrame(loop); return; }
     var dt = Math.min(.05, (now - last)/1000); last = now; if (reduce) dt *= .3; time += dt;
     var y = window.scrollY || document.documentElement.scrollTop || 0, max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
     var p = Math.min(1, Math.max(0, y/max));
@@ -332,11 +333,11 @@ function initTunnel(canvas: HTMLCanvasElement): () => void {
  * TunnelBackground: Reise durch einen rotierenden Partikel-Tunnel bis zum
  * Schwarzen Loch der Seite. Der Scroll-Fortschritt steuert die Kamera.
  */
-export default function TunnelBackground() {
+export default function TunnelBackground({ lite = false }: { lite?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
   useEffect(() => {
     if (!ref.current) return;
-    return initTunnel(ref.current);
+    return initTunnel(ref.current, lite);
   }, []);
   return <canvas ref={ref} aria-hidden="true" className="block h-full w-full" />;
 }
