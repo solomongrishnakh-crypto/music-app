@@ -4,6 +4,8 @@ import type { Lang } from "@/contexts/LanguageContext";
 import { REICHE_INDEX, dauer, type Reich, type ReichRef } from "@/lib/history/reiche";
 import { reichNameL } from "@/lib/history/reicheNames";
 import { eraIndex, fill, reichTexts } from "@/lib/history/reicheText";
+import ReichProfile from "@/components/reiche/ReichProfile";
+import { PROFILE_LABELS, getProfile } from "@/lib/history/reichProfiles";
 import {
   BASE_URL,
   OG_LOCALE,
@@ -206,6 +208,13 @@ export default function ReichView({ r, lang }: { r: Reich; lang: Lang }) {
       >
         ▶ {T.openMap}
       </Link>
+
+      {getProfile(r.slug) && (
+        <section className="mt-10">
+          <h2 className="font-display text-lg font-bold text-foreground sm:text-xl">{(PROFILE_LABELS[lang] ?? PROFILE_LABELS.en)[7]}</h2>
+          <ReichProfile slug={r.slug} lang={lang} />
+        </section>
+      )}
 
       <section className="mt-10">
         <h2 className="font-display text-lg font-bold text-foreground sm:text-xl">{T.h2Period}</h2>
