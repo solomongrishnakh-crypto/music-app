@@ -55,6 +55,20 @@ export default function FeedbackBox() {
     return () => window.removeEventListener("keydown", h);
   }, [open]);
 
+  // Menueeintrag im Sternenhimmel (iframe) oeffnet das Panel per postMessage
+  useEffect(() => {
+    const h = (e: MessageEvent) => {
+      if (e.origin !== window.location.origin) return;
+      const d = e.data as { centaurianFeedback?: boolean } | null;
+      if (d && d.centaurianFeedback) {
+        setState("idle");
+        setOpen(true);
+      }
+    };
+    window.addEventListener("message", h);
+    return () => window.removeEventListener("message", h);
+  }, []);
+
   // Nicht in eingebetteten Ansichten und nicht auf der Admin-Seite
   if (pathname.includes("embed") || pathname.startsWith("/admin")) return null;
 
@@ -93,11 +107,11 @@ export default function FeedbackBox() {
   const field =
     "w-full rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-white placeholder-white/35 outline-none transition focus:border-accent/80 focus:bg-white/10";
   const pos = { bottom: "calc(env(safe-area-inset-bottom, 0px) + 84px)" } as const;
-  // Sternenhimmel-Seite: Button links neben dem Menue-Knopf, damit er das Menue nicht verdeckt
+  // Sternenhimmel: kein schwebender Button, Feedback steckt im Menue der Ansicht
   const sky = /\/sternenhimmel\/?$/.test(pathname);
-  const posBtn = sky ? ({ bottom: "calc(env(safe-area-inset-bottom, 0px) + 18px)", right: 72 } as const) : pos;
 
   if (!open) {
+    if (sky) return null;
     return (
       <button
         type="button"
@@ -107,7 +121,7 @@ export default function FeedbackBox() {
         }}
         aria-label={tx[0]}
         className="fixed right-3 z-[3100] flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white/85 shadow-[0_4px_24px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] backdrop-blur-xl transition hover:border-accent/70 hover:bg-white/15 hover:text-white"
-        style={posBtn}
+        style={pos}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />
