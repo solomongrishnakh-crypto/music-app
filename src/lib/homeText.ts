@@ -143,6 +143,24 @@ const HT: Record<Lang, HomeText> = {
     planet: "행성", dwarf: "왜행성", sun: "항성", probe: "우주 탐사선", constellation: "별자리", star: "별", empire: "제국",
     ly: "광년", inConst: "별자리:", moreSky: "별하늘", moreHistory: "제국", noHits: "결과가 없습니다.",
   },
+  id: {
+    subtitle: "Planet, bintang, kekaisaran — alam semesta dan sejarah umat manusia.",
+    placeholder: "Cari planet, bintang, kekaisaran, atau lagu …",
+    aria: "Cari",
+    musicBtn: "🎵 Cari musik juga",
+    musicChip: "🎵 Sampingan: musik — cukup ketik lagu di kolom pencarian.",
+    planet: "Planet", dwarf: "Planet kerdil", sun: "Bintang", probe: "Wahana antariksa", constellation: "Rasi bintang", star: "Bintang", empire: "Kekaisaran",
+    ly: "tahun cahaya", inConst: "di rasi", moreSky: "Langit malam", moreHistory: "Kekaisaran", noHits: "Tidak ditemukan.",
+  },
+  fa: {
+    subtitle: "سیارات، ستارگان، امپراتوری‌ها — کیهان و تاریخ بشر.",
+    placeholder: "جستجوی سیاره، ستاره، امپراتوری یا آهنگ …",
+    aria: "جستجو",
+    musicBtn: "🎵 موسیقی هم جستجو کن",
+    musicChip: "🎵 در کنار آن: موسیقی — فقط نام آهنگ را در جستجو بنویسید.",
+    planet: "سیاره", dwarf: "سیارهٔ کوتوله", sun: "ستاره", probe: "کاوشگر فضایی", constellation: "صورت فلکی", star: "ستاره", empire: "امپراتوری",
+    ly: "سال نوری", inConst: "در صورت فلکی", moreSky: "آسمان شب", moreHistory: "امپراتوری‌ها", noHits: "چیزی یافت نشد.",
+  },
 };
 
 export function homeText(lang: Lang): HomeText {
