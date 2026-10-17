@@ -576,16 +576,19 @@ function cachedLatLngs(L: any, g: any): any {
   }
   return ll;
 }
-// Rahmen (minLng, minLat, maxLng, maxLat) des größten Teilstücks — dafür wird
-// die Schriftgröße des Namens angepasst (nicht das Gesamtgebiet mit Inseln).
+// Rahmen (minLng, minLat, maxLng, maxLat) des Teilstücks, in dem der Name
+// steht (kleinster Rahmen, der den Namenspunkt enthält) — danach richtet sich
+// die Schriftgröße, nicht nach dem Gesamtgebiet mit entfernten Inseln.
 const mainBoxCache = new WeakMap<object, number[] | null>();
-function cachedMainBox(g: any): number[] | null {
+function cachedMainBox(g: any, point: number[] | null): number[] | null {
   let box = mainBoxCache.get(g);
   if (box === undefined) {
     const sm = cachedSmooth(g);
     const polys: any[] = sm.type === "MultiPolygon" ? sm.coordinates : [sm.coordinates];
     let best: number[] | null = null;
-    let bestArea = -1;
+    let bestArea = Infinity;
+    let biggest: number[] | null = null;
+    let biggestArea = -1;
     for (const poly of polys) {
       const ring = poly && poly[0];
       if (!ring || !ring.length) continue;
@@ -597,12 +600,16 @@ function cachedMainBox(g: any): number[] | null {
         if (pt[1] > y1) y1 = pt[1];
       }
       const ar = (x1 - x0) * (y1 - y0);
-      if (ar > bestArea) {
+      if (ar > biggestArea) {
+        biggestArea = ar;
+        biggest = [x0, y0, x1, y1];
+      }
+      if (point && point[0] >= x0 && point[0] <= x1 && point[1] >= y0 && point[1] <= y1 && ar < bestArea) {
         bestArea = ar;
         best = [x0, y0, x1, y1];
       }
     }
-    box = best;
+    box = best || biggest;
     mainBoxCache.set(g, box);
   }
   return box;
@@ -909,6 +916,29 @@ export default function ImperienClient() {
 
     mapRef.current = map;
 
+    // Handy (Canvas): Die oberste Canvas-Ebene fängt alle Klicks ab, die
+    // Reichsflächen darunter bekommen sie nie. Deshalb den Klick selbst auf
+    // der Karte auswerten und das kleinste getroffene Gebiet öffnen.
+    if (lite) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      map.on("click", (ev: any) => {
+        const terr = territoryRef.current;
+        if (!terr) return;
+        const lp = map.latLngToLayerPoint(ev.latlng);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        let hitE: any = null;
+        let hitA = Infinity;
+        for (const en of terr.entries.values()) {
+          let inside = false;
+          try { inside = !!en.fill._containsPoint(lp); } catch { inside = false; }
+          if (!inside) continue;
+          const ar = cachedArea(en.geom);
+          if (ar < hitA) { hitA = ar; hitE = en; }
+        }
+        if (hitE) hitE.fill.fire("click");
+      });
+    }
+
     // Nutzerkorrektur 20.09.2026: "es ist zu dicht ... kleine imperien
     // name nicht angezeigt wird bis du mehr reinzoomst" — beim Reinzoomen
     // dieselben (bereits geladenen) Grenzen einfach neu zeichnen, damit
@@ -985,7 +1015,7 @@ export default function ImperienClient() {
     const size = map.getSize();
     const W = size.x;
     const H = size.y;
-    const minFs = 8.5;
+    const minFs = 8;
     const maxFs = 16;
     const pad = 4;
     const placed: number[][] = [];
@@ -995,12 +1025,12 @@ export default function ImperienClient() {
       .map((_, i) => i)
       .sort((a, b) => Number(labelText(list[a].name) !== list[a].name) - Number(labelText(list[b].name) !== list[b].name) || a - b);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const plan: { e: any; f: number; cx: number; cy: number }[] = [];
+    const plan: { e: any; f: number; cx: number; cy: number; tw: number; th: number }[] = [];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const hide: any[] = [];
     for (const i of order) {
       const e = list[i];
-      const bb = e.geom ? cachedMainBox(e.geom) : null;
+      const bb = e.geom ? cachedMainBox(e.geom, e.point) : null;
       if (!bb || !e.point) { hide.push(e); continue; }
       const p1 = map.latLngToContainerPoint([bb[3], bb[0]]);
       const p2 = map.latLngToContainerPoint([bb[1], bb[2]]);
@@ -1008,20 +1038,40 @@ export default function ImperienClient() {
       const vt = Math.max(p1.y, 0), vb = Math.min(p2.y, H);
       const vw = vr - vl, vh = vb - vt;
       if (vw <= 0 || vh <= 0) { hide.push(e); continue; }
-      const cw = 0.66 * labelText(e.name).length;
-      const fs = Math.min(maxFs, (vw * 0.8) / cw, vh * 0.5);
-      if (fs < minFs) { hide.push(e); continue; }
+      const words = labelText(e.name).split(" ");
+      // Zeilenumbruch wie im Browser (Zeichenbreite ca. 0,66 em): so wird der
+      // Name auch in schmalen Reichen groß genug und bleibt darin.
+      const tryFit = (f: number) => {
+        const maxChars = Math.floor((vw * 0.94) / (0.66 * f));
+        const lines: number[] = [];
+        let cur = 0;
+        for (const wd of words) {
+          if (wd.length > maxChars) return null;
+          if (cur === 0) cur = wd.length;
+          else if (cur + 1 + wd.length <= maxChars) cur += 1 + wd.length;
+          else { lines.push(cur); cur = wd.length; }
+        }
+        lines.push(cur);
+        const th = lines.length * f * 1.2;
+        if (th > vh * 0.85) return null;
+        return { f, tw: Math.max(...lines) * 0.66 * f + f * 0.7, th };
+      };
+      let base: { f: number; tw: number; th: number } | null = null;
+      for (let f = maxFs; f >= minFs; f -= 0.5) {
+        base = tryFit(f);
+        if (base) break;
+      }
+      if (!base) { hide.push(e); continue; }
       const pt = map.latLngToContainerPoint([e.point[1], e.point[0]]);
       let ok = false;
       for (const k of [1, 0.85, 0.72]) {
-        const f = fs * k;
-        if (f < minFs) break;
-        const tw = cw * f, th = f * 1.5;
-        const cx = Math.min(Math.max(pt.x, vl + tw / 2), vr - tw / 2);
-        const cy = Math.min(Math.max(pt.y, vt + th / 2), vb - th / 2);
-        if (!hit(cx - tw / 2, cy - th / 2, cx + tw / 2, cy + th / 2)) {
-          placed.push([cx - tw / 2, cy - th / 2, cx + tw / 2, cy + th / 2]);
-          plan.push({ e, f, cx, cy });
+        const c = k === 1 ? base : base.f * k >= minFs ? tryFit(base.f * k) : null;
+        if (!c) continue;
+        const cx = Math.min(Math.max(pt.x, vl + c.tw / 2), Math.max(vr - c.tw / 2, vl + c.tw / 2));
+        const cy = Math.min(Math.max(pt.y, vt + c.th / 2), Math.max(vb - c.th / 2, vt + c.th / 2));
+        if (!hit(cx - c.tw / 2, cy - c.th / 2, cx + c.tw / 2, cy + c.th / 2)) {
+          placed.push([cx - c.tw / 2, cy - c.th / 2, cx + c.tw / 2, cy + c.th / 2]);
+          plan.push({ e, f: c.f, cx, cy, tw: c.tw, th: c.th });
           ok = true;
           break;
         }
@@ -1036,6 +1086,12 @@ export default function ImperienClient() {
       if (!el) continue;
       el.style.display = "";
       el.style.fontSize = q.f.toFixed(1) + "px";
+      el.style.letterSpacing = "0.06em";
+      el.style.whiteSpace = "normal";
+      el.style.textAlign = "center";
+      el.style.padding = "0";
+      el.style.lineHeight = "1.2";
+      el.style.width = Math.ceil(q.tw) + "px";
     }
     for (const q of plan) {
       const ll = map.containerPointToLatLng([q.cx, q.cy]);
