@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { Lang } from "@/contexts/LanguageContext";
 import INDEX from "@/data/reiche/index.json";
 import { reichNameL } from "@/lib/history/reicheNames";
@@ -171,21 +171,16 @@ function Compare({
     <section>
       <div className="grid gap-3 sm:grid-cols-3">
         {sel.map((v, i) => (
-          <label key={i} className="block text-xs text-muted">
-            {T.cmpPick} {i + 1}
-            <select
-              value={v}
-              onChange={(ev) => setSel(sel.map((x, j) => (j === i ? ev.target.value : x)))}
-              className="mt-1 w-full border border-border bg-background px-2 py-2 text-sm text-foreground"
-            >
-              {i === 2 && <option value="">–</option>}
-              {sorted.map((e) => (
-                <option key={e.slug} value={e.slug}>
-                  {name(e)}
-                </option>
-              ))}
-            </select>
-          </label>
+          <ReichPicker
+            key={i}
+            label={`${T.cmpPick} ${i + 1}`}
+            value={v}
+            onChange={(sv) => setSel(sel.map((x, j) => (j === i ? sv : x)))}
+            sorted={sorted}
+            name={name}
+            lang={lang}
+            allowNone={i === 2}
+          />
         ))}
       </div>
       {items.length > 0 && (
@@ -218,6 +213,112 @@ function Compare({
       )}
       {items.length > 0 && <CompareChart T={T} lang={lang} items={items} series={series} name={name} />}
     </section>
+  );
+}
+
+const PICK_TX: Record<string, [string, string]> = {
+  de: ["Reich suchen…", "Nichts gefunden"],
+  en: ["Search empire…", "No results"],
+  hi: ["साम्राज्य खोजें…", "कोई परिणाम नहीं"],
+  zh: ["搜索帝国…", "无结果"],
+  ko: ["제국 검색…", "결과 없음"],
+  ja: ["帝国を検索…", "見つかりません"],
+  es: ["Buscar imperio…", "Sin resultados"],
+  fr: ["Chercher un empire…", "Aucun résultat"],
+  tr: ["İmparatorluk ara…", "Sonuç yok"],
+  ru: ["Найти империю…", "Ничего не найдено"],
+  pt: ["Buscar império…", "Sem resultados"],
+  ar: ["ابحث عن إمبراطورية…", "لا نتائج"],
+  el: ["Αναζήτηση αυτοκρατορίας…", "Κανένα αποτέλεσμα"],
+  id: ["Cari kekaisaran…", "Tidak ada hasil"],
+  fa: ["جستجوی امپراتوری…", "نتیجه‌ای نیست"],
+};
+
+const norm = (t: string) => t.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+
+/** Reich-Auswahl mit Suchfeld: tippen filtert die Liste (auch nach englischem/deutschem Namen). */
+function ReichPicker({
+  label, value, onChange, sorted, name, lang, allowNone,
+}: {
+  label: string;
+  value: string;
+  onChange: (slug: string) => void;
+  sorted: E[];
+  name: (e: E) => string;
+  lang: Lang;
+  allowNone: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const ref = useRef<HTMLDivElement>(null);
+  const tx = PICK_TX[lang] ?? PICK_TX.en;
+  const cur = sorted.find((e) => e.slug === value);
+  useEffect(() => {
+    if (!open) return;
+    const h = (ev: Event) => {
+      if (ref.current && !ref.current.contains(ev.target as Node)) setOpen(false);
+    };
+    document.addEventListener("mousedown", h);
+    document.addEventListener("touchstart", h);
+    return () => {
+      document.removeEventListener("mousedown", h);
+      document.removeEventListener("touchstart", h);
+    };
+  }, [open]);
+  const nq = norm(q.trim());
+  const list = nq ? sorted.filter((e) => norm(name(e) + " " + e.en + " " + (e.de ?? "")).includes(nq)) : sorted;
+  const pick = (slug: string) => {
+    onChange(slug);
+    setOpen(false);
+    setQ("");
+  };
+  return (
+    <div ref={ref} className="relative text-xs text-muted">
+      <span>{label}</span>
+      <input
+        type="text"
+        value={open ? q : cur ? name(cur) : "–"}
+        placeholder={open ? tx[0] : undefined}
+        autoComplete="off"
+        spellCheck={false}
+        onFocus={() => {
+          setQ("");
+          setOpen(true);
+        }}
+        onChange={(ev) => {
+          setQ(ev.target.value);
+          setOpen(true);
+        }}
+        onKeyDown={(ev) => {
+          if (ev.key === "Escape") setOpen(false);
+          if (ev.key === "Enter" && list[0]) pick(list[0].slug);
+        }}
+        className="mt-1 w-full border border-border bg-background px-2 py-2 text-sm text-foreground outline-none focus:border-accent"
+      />
+      {open && (
+        <ul className="absolute z-30 mt-1 max-h-60 w-full overflow-y-auto border border-border bg-background shadow-lg">
+          {allowNone && !nq && (
+            <li>
+              <button type="button" onClick={() => pick("")} className="block w-full px-2 py-2 text-start text-sm text-muted hover:bg-accent/10">
+                –
+              </button>
+            </li>
+          )}
+          {list.map((e) => (
+            <li key={e.slug}>
+              <button
+                type="button"
+                onClick={() => pick(e.slug)}
+                className={"block w-full px-2 py-2 text-start text-sm hover:bg-accent/10 " + (e.slug === value ? "text-accent" : "text-foreground")}
+              >
+                {name(e)}
+              </button>
+            </li>
+          ))}
+          {list.length === 0 && <li className="px-2 py-2 text-sm text-muted">{tx[1]}</li>}
+        </ul>
+      )}
+    </div>
   );
 }
 
