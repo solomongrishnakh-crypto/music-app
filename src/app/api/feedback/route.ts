@@ -57,6 +57,8 @@ export async function POST(req: NextRequest) {
   if (clean(body.hp, 50) || elapsed < 2000) return NextResponse.json({ ok: true });
   const message = clean(body.message, 2000);
   if (message.length < 5) return NextResponse.json({ error: "too short" }, { status: 400 });
+  const name = clean(body.name, 40);
+  if (name.length < 2) return NextResponse.json({ error: "name required" }, { status: 400 });
   if (limited(postHits, clientIp(req), 5, 10 * 60 * 1000)) {
     return NextResponse.json({ error: "rate limit" }, { status: 429 });
   }
@@ -66,6 +68,7 @@ export async function POST(req: NextRequest) {
   const entry = {
     ts: new Date().toISOString(),
     type,
+    name,
     message,
     email,
     page: clean(body.page, 200),
