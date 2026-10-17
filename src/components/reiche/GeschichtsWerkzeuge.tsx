@@ -7,6 +7,7 @@ import INDEX from "@/data/reiche/index.json";
 import { reichNameL } from "@/lib/history/reicheNames";
 import { eraIndex, fill, reichTexts } from "@/lib/history/reicheText";
 import { toolTexts } from "@/lib/history/toolsText";
+import { usePersist } from "@/lib/usePersist";
 import { formatAreaL, formatYearL, langPath } from "@/lib/seoI18n";
 
 /**
@@ -65,7 +66,7 @@ export default function GeschichtsWerkzeuge({ lang }: { lang: Lang }) {
   const collator = useMemo(() => new Intl.Collator(lang), [lang]);
   const sorted = useMemo(() => [...ALL].sort((a, b) => collator.compare(name(a), name(b))), [collator, lang]); // eslint-disable-line react-hooks/exhaustive-deps
   const bySlug = useMemo(() => new Map(ALL.map((e) => [e.slug, e])), []);
-  const [tab, setTab] = useState<Tab>("compare");
+  const [tab, setTab] = usePersist<Tab>("gw:tab", "compare");
   const [series, setSeries] = useState<Series | null>(null);
   useEffect(() => {
     if (series || (tab !== "compare" && tab !== "year")) return;
@@ -152,7 +153,7 @@ function Compare({
   num: (n: number, d?: number) => string;
   eras: string[];
 }) {
-  const [sel, setSel] = useState<string[]>(["roemisches-reich", "mongolisches-reich", ""]);
+  const [sel, setSel] = usePersist<string[]>("gw:sel", ["roemisches-reich", "mongolisches-reich", ""]);
   const items = sel.map((s) => bySlug.get(s)).filter(Boolean) as E[];
   const rows: [string, (e: E) => string][] = [
     [T.cmpPeriod, period],
@@ -270,8 +271,8 @@ function CompareChart({ T, lang, items, series, name }: Pick<Common, "T" | "lang
 function Records({
   T, lang, name, period, yearsTxt, link, eras,
 }: Common & { yearsTxt: (e: E) => string; link: (e: E, cls?: string) => React.ReactNode; eras: string[] }) {
-  const [by, setBy] = useState<"area" | "dur" | "old">("area");
-  const [era, setEra] = useState(-1);
+  const [by, setBy] = usePersist<"area" | "dur" | "old">("gw:by", "area");
+  const [era, setEra] = usePersist("gw:era", -1);
   const list = useMemo(() => {
     const l = ALL.filter((e) => era < 0 || eraIndex(e.from) === era);
     const key = by === "area" ? (e: E) => -e.peakArea : by === "dur" ? (e: E) => -dur(e) : (e: E) => e.from;
@@ -347,7 +348,7 @@ function Records({
 /* ------------------------------------------------------------------ Welt im Jahr */
 
 function YearView({ T, lang, series, name, period, link }: Common & { series: Series | null; link: (e: E, cls?: string) => React.ReactNode }) {
-  const [year, setYear] = useState(100);
+  const [year, setYear] = usePersist("gw:year", 100);
   const y = year === 0 ? 1 : year;
   const rows = useMemo(() => {
     if (!series) return [];
@@ -436,10 +437,10 @@ function makeQuestion(): Q {
 }
 
 function Quiz({ T, lang, name, period, yearsTxt }: Common & { yearsTxt: (e: E) => string }) {
-  const [qs, setQs] = useState<Q[] | null>(null);
-  const [i, setI] = useState(0);
-  const [picked, setPicked] = useState<string | null>(null);
-  const [score, setScore] = useState(0);
+  const [qs, setQs] = usePersist<Q[] | null>("gw:qs", null);
+  const [i, setI] = usePersist("gw:qi", 0);
+  const [picked, setPicked] = usePersist<string | null>("gw:qp", null);
+  const [score, setScore] = usePersist("gw:qscore", 0);
   const start = () => {
     setQs(Array.from({ length: N_Q }, makeQuestion));
     setI(0);
