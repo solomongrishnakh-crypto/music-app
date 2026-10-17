@@ -8,6 +8,7 @@ import { reichNameL } from "@/lib/history/reicheNames";
 import { eraIndex, fill, reichTexts } from "@/lib/history/reicheText";
 import { toolTexts } from "@/lib/history/toolsText";
 import { usePersist } from "@/lib/usePersist";
+import ReichProfile from "@/components/reiche/ReichProfile";
 import { formatAreaL, formatYearL, langPath } from "@/lib/seoI18n";
 
 /**
@@ -155,13 +156,8 @@ function Compare({
 }) {
   const [sel, setSel] = usePersist<string[]>("gw:sel", ["roemisches-reich", "mongolisches-reich", ""]);
   const items = sel.map((s) => bySlug.get(s)).filter(Boolean) as E[];
-  const rows: [string, (e: E) => string][] = [
-    [T.cmpPeriod, period],
-    [T.cmpDuration, yearsTxt],
-    [T.cmpPeakYear, (e) => formatYearL(e.peakYear, lang)],
-    [T.cmpPeakArea, (e) => formatAreaL(e.peakArea, lang)],
-    [T.cmpEra, (e) => eras[eraIndex(e.from)]],
-  ];
+  const maxArea = Math.max(...items.map((e) => e.peakArea), 1);
+  const maxDur = Math.max(...items.map((e) => dur(e)), 1);
   const sentences: string[] = [];
   if (items.length >= 2) {
     const [a, b] = [...items].sort((x, y) => y.peakArea - x.peakArea);
@@ -193,31 +189,24 @@ function Compare({
         ))}
       </div>
       {items.length > 0 && (
-        <div className="mt-6 overflow-x-auto">
-          <table className="w-full min-w-[32rem] border-collapse text-sm">
-            <thead>
-              <tr className="border-b border-border text-start">
-                <th className="py-2 pe-3 text-start" />
-                {items.map((e, i) => (
-                  <th key={e.slug} className="px-2 py-2 text-start font-display" style={{ color: COLORS[i] }}>
-                    {link(e, "text-inherit")}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {rows.map(([label, f]) => (
-                <tr key={label} className="border-b border-border/60">
-                  <th className="py-2 pe-3 text-start text-xs font-normal text-muted">{label}</th>
-                  {items.map((e) => (
-                    <td key={e.slug} className="px-2 py-2 text-foreground">
-                      {f(e)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className={"mt-6 grid gap-4 " + (items.length === 2 ? "md:grid-cols-2" : items.length === 3 ? "md:grid-cols-2 lg:grid-cols-3" : "")}>
+          {items.map((e, i) => (
+            <article key={e.slug} className="hud-card border border-border p-4" style={{ borderTop: "3px solid " + COLORS[i] }}>
+              <p className="label-mono text-[10px] uppercase text-muted">{eras[eraIndex(e.from)]}</p>
+              <h3 className="font-display mt-1 text-xl font-bold" style={{ color: COLORS[i] }}>
+                {link(e, "text-inherit")}
+              </h3>
+              <p className="mt-1 text-xs text-muted">{period(e)}</p>
+              <div className="mt-4 space-y-3">
+                <Bar label={T.cmpPeakArea} value={formatAreaL(e.peakArea, lang)} frac={e.peakArea / maxArea} color={COLORS[i]} />
+                <Bar label={T.cmpDuration} value={yearsTxt(e)} frac={dur(e) / maxDur} color={COLORS[i]} />
+              </div>
+              <p className="mt-2 text-xs text-muted">
+                {T.cmpPeakYear}: {formatYearL(e.peakYear, lang)}
+              </p>
+              <ReichProfile slug={e.slug} lang={lang} compact />
+            </article>
+          ))}
         </div>
       )}
       {sentences.length > 0 && (
@@ -229,6 +218,20 @@ function Compare({
       )}
       {items.length > 0 && <CompareChart T={T} lang={lang} items={items} series={series} name={name} />}
     </section>
+  );
+}
+
+function Bar({ label, value, frac, color }: { label: string; value: string; frac: number; color: string }) {
+  return (
+    <div>
+      <div className="flex items-baseline justify-between gap-2 text-xs">
+        <span className="text-muted">{label}</span>
+        <span className="font-medium text-foreground">{value}</span>
+      </div>
+      <div className="mt-1 h-1.5 bg-border/50">
+        <div className="h-1.5" style={{ width: Math.max(3, frac * 100) + "%", background: color }} />
+      </div>
+    </div>
   );
 }
 
