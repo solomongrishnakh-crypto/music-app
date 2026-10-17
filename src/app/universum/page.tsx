@@ -1362,6 +1362,7 @@ function FactThumbnail({ src, alt }: { src: string; alt: string }) {
  */
 export default function UniversumPage() {
   const [selectedFact, setSelectedFact] = useState<number | null>(null);
+  const [factsOpen, setFactsOpen] = useState(false);
   const [showSolarSystem, setShowSolarSystem] = useState(false);
   const { t, lang, localePath } = useLanguage();
 
@@ -1451,8 +1452,27 @@ export default function UniversumPage() {
         </section>
 
         <section className="mb-6">
-          <SectionHeading index="05" label={t("universeInNumbers")} />
+          <button
+            type="button"
+            onClick={() => setFactsOpen((o) => !o)}
+            aria-expanded={factsOpen}
+            className="group mb-3 flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-surface-elevated/60 px-4 py-3 text-start transition-colors hover:border-accent"
+          >
+            <span className="min-w-0">
+              <span className="label-mono block text-[10px] uppercase tracking-widest text-accent">05 · {UNIVERSE_FACTS.length}</span>
+              <span className="font-display mt-0.5 block text-sm font-bold uppercase tracking-tight text-foreground sm:text-base">
+                {t("universeInNumbers").replace(/^\/\/\s*/, "")}
+              </span>
+            </span>
+            <span
+              aria-hidden="true"
+              className={"grid h-8 w-8 shrink-0 place-items-center rounded-full border border-border text-accent transition-transform duration-300 group-hover:border-accent " + (factsOpen ? "rotate-180" : "")}
+            >
+              ▾
+            </span>
+          </button>
         <UniverseAgeTicker />
+        {factsOpen && (
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {UNIVERSE_FACTS.map((fact, i) => {
             const value = localize(fact.value, lang);
@@ -1463,9 +1483,9 @@ export default function UniversumPage() {
               <article
                 key={i}
                 className={
-                  "group overflow-hidden rounded-2xl border bg-surface-elevated/50 backdrop-blur transition-all duration-300 " +
+                  "overflow-hidden rounded-2xl border bg-surface-elevated/50 transition-colors duration-300 " +
                   (open
-                    ? "border-accent/60 shadow-[0_0_30px_-12px_var(--accent)] sm:col-span-2 lg:col-span-3"
+                    ? "border-accent/60 sm:col-span-2 lg:col-span-3"
                     : "border-border hover:border-accent/40")
                 }
               >
@@ -1473,16 +1493,16 @@ export default function UniversumPage() {
                   type="button"
                   onClick={() => setSelectedFact(open ? null : i)}
                   aria-expanded={open}
-                  className="flex w-full items-center gap-3 p-3 text-start sm:gap-4 sm:p-4"
+                  className="flex w-full items-start gap-3 p-3 text-start sm:gap-4 sm:p-4"
                 >
                   <FactThumbnail src={fact.image} alt={label} />
                   <span className="min-w-0 flex-1">
-                    <span className="font-display block text-sm font-bold leading-snug text-foreground sm:text-base">{label}</span>
-                    {!open && <span className="mt-1 line-clamp-2 block text-[11px] leading-snug text-muted">{lead}</span>}
-                  </span>
-                  <span className="flex max-w-[9rem] shrink-0 flex-col items-end gap-1.5">
-                    <span className="label-mono rounded-lg border border-accent/50 bg-accent/10 px-2.5 py-1 text-center text-[11px] font-bold leading-tight text-accent sm:text-xs">{value}</span>
-                    <span aria-hidden="true" className={"text-accent transition-transform duration-300 " + (open ? "rotate-180" : "")}>▾</span>
+                    <span className="flex items-start justify-between gap-2">
+                      <span className="font-display block text-sm font-bold leading-snug text-foreground sm:text-base">{label}</span>
+                      <span aria-hidden="true" className={"shrink-0 text-accent transition-transform duration-300 " + (open ? "rotate-180" : "")}>▾</span>
+                    </span>
+                    <span className="label-mono mt-1.5 inline-block rounded-lg border border-accent/50 bg-accent/10 px-2.5 py-1 text-[11px] font-bold leading-tight text-accent sm:text-xs">{value}</span>
+                    {!open && <span className="mt-1.5 line-clamp-2 block text-[11px] leading-snug text-muted">{lead}</span>}
                   </span>
                 </button>
                 {open && (
@@ -1497,6 +1517,7 @@ export default function UniversumPage() {
             );
           })}
         </div>
+        )}
         </section>
 
         <SpaceNewsSection />
