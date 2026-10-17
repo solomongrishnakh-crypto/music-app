@@ -11,6 +11,7 @@ import SolarSystemModal from "@/components/universe/SolarSystemModal";
 import SkyPreviewCard from "@/components/universe/SkyPreviewCard";
 import SizeComparison from "@/components/universe/SizeComparison";
 import SpaceCalculators from "@/components/universe/SpaceCalculators";
+import CosmicCalendar from "@/components/history/CosmicCalendar";
 import SectionHeading from "@/components/ui/SectionHeading";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -1519,6 +1520,11 @@ export default function UniversumPage() {
         </div>
         )}
         </section>
+
+        {/* Nutzerwunsch 17.10.2026: Kosmischer Kalender auch unter "Universum in Zahlen" */}
+        <div className="mb-10">
+          <CosmicCalendar index="06" />
+        </div>
 
         <SpaceNewsSection />
 
