@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-function initIntro(cv: HTMLCanvasElement, LAND: number[][], lang0: string, onDone: () => void): () => void {
+function initIntro(cv: HTMLCanvasElement, LAND: number[][], lang0: string, onDone: () => void, title0: string): () => void {
   var coarse = matchMedia('(pointer: coarse)').matches;
   var renderer;
   try { renderer = new THREE.WebGLRenderer({canvas:cv, antialias:false}); } catch (e) { onDone(); return function(){}; }
@@ -147,7 +147,7 @@ function initIntro(cv: HTMLCanvasElement, LAND: number[][], lang0: string, onDon
   var pts = new THREE.Points(geo, mat); pts.frustumCulled = false; scene.add(pts);
 
   /* Titel unter der Karte: ebenfalls aus Partikeln, in der Sprache des Besuchers */
-  var TITLES = {de:'Weltgeschichte', en:'World History', es:'Historia universal', fr:'Histoire du monde', pt:'História mundial', tr:'Dünya Tarihi', ru:'Всемирная история', el:'Παγκόσμια ιστορία', ar:'تاريخ العالم', hi:'विश्व इतिहास', zh:'世界历史', ja:'世界史', ko:'세계사'};
+  var TITLE = title0;
   var NT = coarse ? 2200 : 4200, tAspect = 4, taT = new Float32Array(NT*2), taF = new Float32Array(NT*2), taR = new Float32Array(NT*4), tpos = new Float32Array(NT*3);
   for (var q=0; q<NT; q++){ var src = (Math.random()*N)|0; taF[q*2] = ms.X[src]; taF[q*2+1] = ms.Y[src]; taR[q*4] = Math.random(); taR[q*4+1] = Math.random(); taR[q*4+2] = Math.random(); taR[q*4+3] = Math.random()*2 - 1; }
   var tGeo = new THREE.BufferGeometry();
@@ -165,10 +165,10 @@ function initIntro(cv: HTMLCanvasElement, LAND: number[][], lang0: string, onDon
       'varying float vA; void main(){ vec2 q = gl_PointCoord - .5; float r = length(q)*2.; if (r > 1.) discard; float a = exp(-r*r*3.2)*vA; gl_FragColor = vec4(vec3(1.,.82,.74)*a*1.1, a); }'
   });
   var tpts = new THREE.Points(tGeo, tmat); tpts.frustumCulled = false; scene.add(tpts);
-  var curLang = TITLES[lang0] ? lang0 : 'de';
+  var curLang = lang0;
   var TF = '600 150px "Chakra Petch","Noto Sans","Segoe UI",sans-serif';
   function setTitle(code){
-    var s = TITLES[code] || TITLES.de, c = document.createElement('canvas'), x = c.getContext('2d');
+    var s = TITLE, c = document.createElement('canvas'), x = c.getContext('2d');
     x.font = TF; x.direction = code === 'ar' ? 'rtl' : 'ltr';
     var tw = Math.ceil(x.measureText(s).width) + 40; c.width = tw; c.height = 210;
     x.font = TF; x.direction = code === 'ar' ? 'rtl' : 'ltr'; x.textBaseline = 'middle'; x.textAlign = 'center'; x.fillStyle = '#fff'; x.fillText(s, tw/2, 108);
@@ -208,9 +208,11 @@ function initIntro(cv: HTMLCanvasElement, LAND: number[][], lang0: string, onDon
 }
 
 export default function ImperienIntro() {
-  const { lang } = useLanguage();
+  const { lang, t } = useLanguage();
   const langRef = useRef(lang);
   langRef.current = lang;
+  const titleRef = useRef(t("empiresIntroTitle"));
+  titleRef.current = t("empiresIntroTitle");
   const ref = useRef<HTMLCanvasElement>(null);
   const [show, setShow] = useState(true);
   const [fade, setFade] = useState(false);
@@ -221,11 +223,17 @@ export default function ImperienIntro() {
   }
 
   useEffect(() => {
-    if (matchMedia("(prefers-reduced-motion: reduce)").matches) { setShow(false); return; }
+    // Nur beim ersten Besuch der Webseite (Nutzerwunsch 17.10.2026); mit
+    // ?intro=1 in der Adresse lässt sie sich erneut ansehen.
+    let seen = false;
+    try { seen = localStorage.getItem("cn_intro_seen") === "1"; } catch { /* ignorieren */ }
+    const force = /[?&]intro=1(&|$)/.test(location.search);
+    if ((seen && !force) || matchMedia("(prefers-reduced-motion: reduce)").matches) { setShow(false); return; }
+    try { localStorage.setItem("cn_intro_seen", "1"); } catch { /* ignorieren */ }
     let stop = () => {}, dead = false;
     fetch("/data/land-10m.json").then((r) => r.json()).then((land) => {
       if (dead || !ref.current) return;
-      stop = initIntro(ref.current, land, langRef.current, finish);
+      stop = initIntro(ref.current, land, langRef.current, finish, titleRef.current);
     }).catch(() => setShow(false));
     return () => { dead = true; stop(); };
   }, []);
