@@ -576,6 +576,37 @@ function cachedLatLngs(L: any, g: any): any {
   }
   return ll;
 }
+// Rahmen (minLng, minLat, maxLng, maxLat) des größten Teilstücks — dafür wird
+// die Schriftgröße des Namens angepasst (nicht das Gesamtgebiet mit Inseln).
+const mainBoxCache = new WeakMap<object, number[] | null>();
+function cachedMainBox(g: any): number[] | null {
+  let box = mainBoxCache.get(g);
+  if (box === undefined) {
+    const sm = cachedSmooth(g);
+    const polys: any[] = sm.type === "MultiPolygon" ? sm.coordinates : [sm.coordinates];
+    let best: number[] | null = null;
+    let bestArea = -1;
+    for (const poly of polys) {
+      const ring = poly && poly[0];
+      if (!ring || !ring.length) continue;
+      let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+      for (const pt of ring) {
+        if (pt[0] < x0) x0 = pt[0];
+        if (pt[0] > x1) x1 = pt[0];
+        if (pt[1] < y0) y0 = pt[1];
+        if (pt[1] > y1) y1 = pt[1];
+      }
+      const ar = (x1 - x0) * (y1 - y0);
+      if (ar > bestArea) {
+        bestArea = ar;
+        best = [x0, y0, x1, y1];
+      }
+    }
+    box = best;
+    mainBoxCache.set(g, box);
+  }
+  return box;
+}
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 // Nutzerhinweis 05.10.2026 ("Grenzen sehen nicht realistisch aus"): Flächen,
@@ -893,6 +924,7 @@ export default function ImperienClient() {
     map.on("moveend zoomend", () => {
       if (!pauseWantedRef.current) delete docEl.dataset.bgpause;
     });
+    map.on("moveend", () => layoutLabelsRef.current());
     map.on("zoomend", () => {
       const year = lastRenderedYearRef.current;
       if (year === null) return;
@@ -936,6 +968,82 @@ export default function ImperienClient() {
   const pendingDrawTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const renderBordersGeojsonRef = useRef<(geojson: any) => void>(() => {});
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const wantLabelRef = useRef<any[]>([]);
+  const layoutLabelsRef = useRef<() => void>(() => {});
+
+  // Namen passend zur Größe des Reichs: Schrift richtet sich nach dem sichtbaren
+  // Teil des größten Gebietsstücks, der Name bleibt im Kartenausschnitt (auch
+  // am Rand) und überlappt keinen bereits gesetzten Namen. Passt er nicht,
+  // wird er ausgeblendet (Nutzerhinweis 17.10.2026).
+  function layoutLabels() {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const L = (window as any).L;
+    const map = mapRef.current;
+    const list = wantLabelRef.current;
+    if (!map || !L || !list.length) return;
+    const size = map.getSize();
+    const W = size.x;
+    const H = size.y;
+    const minFs = 8.5;
+    const maxFs = 16;
+    const pad = 4;
+    const placed: number[][] = [];
+    const hit = (l: number, t: number, r: number, b: number) =>
+      placed.some((p) => l - pad < p[2] && r + pad > p[0] && t - pad < p[3] && b + pad > p[1]);
+    const order = list
+      .map((_, i) => i)
+      .sort((a, b) => Number(labelText(list[a].name) !== list[a].name) - Number(labelText(list[b].name) !== list[b].name) || a - b);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const plan: { e: any; f: number; cx: number; cy: number }[] = [];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const hide: any[] = [];
+    for (const i of order) {
+      const e = list[i];
+      const bb = e.geom ? cachedMainBox(e.geom) : null;
+      if (!bb || !e.point) { hide.push(e); continue; }
+      const p1 = map.latLngToContainerPoint([bb[3], bb[0]]);
+      const p2 = map.latLngToContainerPoint([bb[1], bb[2]]);
+      const vl = Math.max(p1.x, 0), vr = Math.min(p2.x, W);
+      const vt = Math.max(p1.y, 0), vb = Math.min(p2.y, H);
+      const vw = vr - vl, vh = vb - vt;
+      if (vw <= 0 || vh <= 0) { hide.push(e); continue; }
+      const cw = 0.66 * labelText(e.name).length;
+      const fs = Math.min(maxFs, (vw * 0.8) / cw, vh * 0.5);
+      if (fs < minFs) { hide.push(e); continue; }
+      const pt = map.latLngToContainerPoint([e.point[1], e.point[0]]);
+      let ok = false;
+      for (const k of [1, 0.85, 0.72]) {
+        const f = fs * k;
+        if (f < minFs) break;
+        const tw = cw * f, th = f * 1.5;
+        const cx = Math.min(Math.max(pt.x, vl + tw / 2), vr - tw / 2);
+        const cy = Math.min(Math.max(pt.y, vt + th / 2), vb - th / 2);
+        if (!hit(cx - tw / 2, cy - th / 2, cx + tw / 2, cy + th / 2)) {
+          placed.push([cx - tw / 2, cy - th / 2, cx + tw / 2, cy + th / 2]);
+          plan.push({ e, f, cx, cy });
+          ok = true;
+          break;
+        }
+      }
+      if (!ok) hide.push(e);
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const elOf = (e: any): HTMLElement | undefined => e.fill.getTooltip?.()?.getElement?.();
+    for (const e of hide) { const el = elOf(e); if (el) el.style.display = "none"; }
+    for (const q of plan) {
+      const el = elOf(q.e);
+      if (!el) continue;
+      el.style.display = "";
+      el.style.fontSize = q.f.toFixed(1) + "px";
+    }
+    for (const q of plan) {
+      const ll = map.containerPointToLatLng([q.cx, q.cy]);
+      q.e.labelLL = ll;
+      q.e.fill.getTooltip?.()?.setLatLng?.(ll);
+    }
+  }
+  layoutLabelsRef.current = layoutLabels;
 
   // Zeichnet ein bereits geladenes GeoJSON auf die Karte — ausgelagert aus
   // dem Lade-Effekt, damit sowohl ein frischer Server-Fetch als auch ein
@@ -1061,14 +1169,14 @@ export default function ImperienClient() {
         });
         const point = cachedLabelPoint(feature.geometry);
         const subjectTo: string = feature.properties?.SUBJECTO ?? "";
-        e = { fill, border, name, isMajor, labeled: false, labelClass: "", point, styleKey: `${!hl || hl.has(name)}|${isMajor}` };
+        e = { fill, border, name, geom: feature.geometry, labelLL: null, isMajor, labeled: false, labelClass: "", point, styleKey: `${!hl || hl.has(name)}|${isMajor}` };
         const entry = e;
         // Name in die echte Mitte der Fläche ("Pole of Inaccessibility") —
         // bei JEDEM Öffnen gesetzt, Leaflet springt sonst zum ersten Teilstück.
         if (point) {
           const labelLatLng = L.latLng(point[1], point[0]);
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          fill.on("tooltipopen", (ev: any) => ev.tooltip?.setLatLng?.(labelLatLng));
+          fill.on("tooltipopen", (ev: any) => ev.tooltip?.setLatLng?.(entry.labelLL || labelLatLng));
         }
         fill.on({
           mouseover: () => entry.border.setStyle({ weight: 2.6, opacity: 1, color: "#ffffff" }),
@@ -1115,44 +1223,8 @@ export default function ImperienClient() {
       }
     }
 
-    // Nutzerkorrektur 29.09.2026: überlappende Namen — nach Wichtigkeit
-    // durchgehen; überschneidet sich ein Name mit einem bereits platzierten,
-    // wird er nur beim Antippen gezeigt. Erst ALLE Positionen lesen, dann
-    // ändern (sonst rechnet der Browser das Layout pro Name neu).
-    const rects = wantLabel.map((e) => {
-      const el: HTMLElement | undefined = e.fill.getTooltip?.()?.getElement?.();
-      return el ? el.getBoundingClientRect() : null;
-    });
-    const placedRects: DOMRect[] = [];
-    const pad = 3;
-    const hits = (r: DOMRect) =>
-      placedRects.some(
-        (p) =>
-          r.left - pad < p.right &&
-          r.right + pad > p.left &&
-          r.top - pad < p.bottom &&
-          r.bottom + pad > p.top
-      );
-    // Echte Reiche zuerst, Lehns-/Bündnis-Gebiete danach; bei Überschneidung
-    // erst mit kleinerer Schrift versuchen, erst dann ausblenden.
-    const order = wantLabel
-      .map((_, i) => i)
-      .sort((a, b) => Number(labelText(wantLabel[a].name) !== wantLabel[a].name) - Number(labelText(wantLabel[b].name) !== wantLabel[b].name) || a - b);
-    for (const i of order) {
-      const e = wantLabel[i];
-      const r = rects[i];
-      if (!r) continue;
-      if (!hits(r)) {
-        placedRects.push(r);
-        continue;
-      }
-      const origClass = e.labelClass;
-      setLabel(e, true, origClass.replace(" empire-label-big", "") + " empire-label-sm");
-      const el2: HTMLElement | undefined = e.fill.getTooltip?.()?.getElement?.();
-      const r2 = el2 ? el2.getBoundingClientRect() : null;
-      if (r2 && !hits(r2)) placedRects.push(r2);
-      else setLabel(e, false, origClass);
-    }
+    wantLabelRef.current = wantLabel;
+    layoutLabels();
 
     setErrorMessage(null);
     setHasRenderedBorders(true);
