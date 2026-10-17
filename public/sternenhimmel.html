@@ -986,6 +986,7 @@ function drawFigures(fade, dt) {
       if (f === best) target = f.ang < lim * 1.6 ? 1 : 0;
       else if (f === second) target = f.ang < lim ? 0.3 : 0;
     }
+    target *= Math.max(0, Math.min(1, (S.fov / DEG - 7) / 9)); // 17.10.2026: beim starken Hineinzoomen weich ausblenden
     f.alpha += (target - f.alpha) * k;
     if (f.alpha < 0.02) continue;
     const tex = artTexture(f);
@@ -1535,7 +1536,7 @@ function draw() {
     const y = b.sy + b.pr + 11;
     if (free(b.sx - w / 2, y - 7, w, 14)) { ctx.fillStyle = b.id === S.sel?.id ? "#ff5a4d" : b.dwarf ? "rgba(201,182,255,0.85)" : b.iss ? "#9fe8ff" : b.kind === tr("planet") ? "#ff9f86" : "#f3eedf"; haloText(label, b.sx, y); }
   }
-  if (S.showDSO && starFade > 0.15) drawDSOLabels(free, starFade);
+  if (S.showDSO && !window.skyClean && starFade > 0.15) drawDSOLabels(free, starFade);
   const nameFade = Math.max(starFade, dayK > 0 ? 0.85 : 0);
   if (S.showNames && nameFade > 0.15) {
     // Nutzerwunsch 04.10.2026: je näher man zoomt, desto mehr bekannte Sterne bekommen Namen
