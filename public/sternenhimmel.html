@@ -1543,14 +1543,14 @@ function draw() {
     for (const n of STAR_NAMES) {
       if (n.mag > lim) continue;
       const v = eqToEnu(n.ra * DEG, Math.sin(n.dec * DEG), Math.cos(n.dec * DEG), tmpV);
-      if (S.atmo && v[2] < 0) continue;
+      const underN = S.atmo && v[2] < 0; // 17.10.2026: unter dem Horizont gedämpft statt weggelassen
       if (!project(v, P) || P.x < 0 || P.x > W || P.y < 0 || P.y > H) continue;
       const label = n.n[LANG] || n.n.en;
       const bright = n.mag < 1.5;
       ctx.font = (bright ? "500 13px " : "400 12px ") + cssVar("--font-sans");
       const w = ctx.measureText(label).width;
       if (!free(P.x + 7, P.y - 8, w, 16)) continue;
-      const al = n.mag < 1.5 ? 0.95 : n.mag < 2.5 ? 0.78 : 0.55;
+      const al = (n.mag < 1.5 ? 0.95 : n.mag < 2.5 ? 0.78 : 0.55) * (underN ? 0.6 : 1);
       ctx.textAlign = "left"; ctx.fillStyle = `rgba(240,242,255,${al * nameFade})`;
       ctx.shadowBlur = 0; // 06.10.2026: Unschärfe-Schatten war teuer am Handy, Kontur reicht
       haloText(label, P.x + 8, P.y + 1);
