@@ -370,7 +370,7 @@ function YearView({ T, lang, series, name, period, link }: Common & { series: Se
       {series && (
         <>
           <p className="mt-2 text-foreground/90">
-            {rows.length ? fill(T.yrCount, { n: rows.length, t: ALL.length, year: formatYearL(y, lang) }) : T.yrNone}
+            {rows.length ? fill(T.yrCount, { n: rows.length, t: ALL.length, year: formatYearL(y, lang) }).replace(/\.\.$/, ".") : T.yrNone}
             {rows.length > 0 && <> {fill(T.yrBiggest, { name: name(rows[0].e), area: formatAreaL(rows[0].a, lang) })}</>}
           </p>
           <Link href={`${langPath("/imperien", lang)}?jahr=${y}`} className="label-mono mt-3 inline-block border border-border px-4 py-2 text-xs uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent">
