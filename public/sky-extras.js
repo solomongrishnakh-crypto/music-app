@@ -86,3 +86,30 @@
   box.append(lbl, strip);
   row.insertBefore(box, row.firstChild);
 })();
+
+// 17.10.2026: moderne, durchsichtige Bedienelemente + Aufräumen-Schnellknopf
+(function () {
+  const st = document.createElement("style");
+  st.textContent = [
+    ".round { width: 42px !important; height: 42px !important; background: rgba(12, 16, 38, 0.26) !important; border: 1px solid rgba(255, 255, 255, 0.16) !important; backdrop-filter: blur(14px) saturate(1.5) !important; -webkit-backdrop-filter: blur(14px) saturate(1.5) !important; box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important; transition: transform 0.18s ease, background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease; }",
+    ".round svg { width: 20px !important; height: 20px !important; opacity: 0.92; }",
+    ".round:hover { background: rgba(24, 30, 66, 0.38) !important; border-color: rgba(255, 255, 255, 0.3) !important; }",
+    ".round:active { transform: scale(0.9); }",
+    ".round[aria-pressed='true'] { border-color: rgba(255, 106, 92, 0.75) !important; box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28), 0 0 16px rgba(255, 90, 77, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important; }",
+    ".pill { border-radius: 999px !important; background: rgba(12, 16, 38, 0.26) !important; border: 1px solid rgba(255, 255, 255, 0.16) !important; backdrop-filter: blur(14px) saturate(1.5) !important; -webkit-backdrop-filter: blur(14px) saturate(1.5) !important; box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important; padding: 6px 15px !important; transition: transform 0.18s ease, border-color 0.25s ease; }",
+    ".pill:active { transform: translateX(-50%) scale(0.97); }",
+    "#nightQuick { background: rgba(12, 16, 38, 0.26) !important; border-color: rgba(255, 255, 255, 0.16) !important; backdrop-filter: blur(14px) saturate(1.5) !important; box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28) !important; }",
+    "#cleanQuick { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); left: 66px; }",
+    "#cleanQuick svg { width: 19px !important; height: 19px !important; }"
+  ].join("\n");
+  document.head.appendChild(st);
+  const clean = document.createElement("button");
+  clean.type = "button"; clean.id = "cleanQuick"; clean.className = "round";
+  clean.setAttribute("aria-pressed", "false"); clean.setAttribute("aria-label", "Clean view"); clean.title = "Clean view";
+  clean.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M18.5 15.5l.7 1.8 1.8.7-1.8.7-.7 1.8-.7-1.8-1.8-.7 1.8-.7z"/></svg>';
+  document.body.appendChild(clean);
+  const real = () => document.getElementById("tClean");
+  clean.addEventListener("click", () => { const r = real(); if (r) r.click(); sync(); });
+  function sync() { const r = real(); const on = !!r && r.getAttribute("aria-pressed") === "true"; clean.setAttribute("aria-pressed", on ? "true" : "false"); }
+  setInterval(sync, 500);
+})();
