@@ -38,11 +38,27 @@
   const LS = [["de", "🇩🇪", "Deutsch"], ["en", "🇬🇧", "English"], ["es", "🇪🇸", "Español"], ["fr", "🇫🇷", "Français"], ["pt", "🇵🇹", "Português"], ["tr", "🇹🇷", "Türkçe"], ["ru", "🇷🇺", "Русский"], ["el", "🇬🇷", "Ελληνικά"], ["ar", "🇸🇦", "العربية"], ["hi", "🇮🇳", "हिन्दी"], ["zh", "🇨🇳", "中文"], ["ja", "🇯🇵", "日本語"], ["ko", "🇰🇷", "한국어"], ["id", "🇮🇩", "Indonesia"], ["fa", "🇮🇷", "فارسی"]];
   const box = document.createElement("div");
   box.id = "langBox";
-  const lbl = document.createElement("div");
+  const cur = LS.find((x) => x[0] === LANG) || LS[0];
+  const lbl = document.createElement("button");
+  lbl.type = "button";
   lbl.className = "lbl";
-  lbl.textContent = "🌐 Language · Sprache · زبان";
+  lbl.setAttribute("aria-expanded", "false");
+  lbl.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;background:none;border:0;padding:0;font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit;cursor:pointer;text-align:start";
+  const lt = document.createElement("span");
+  lt.textContent = "🌐 " + cur[1] + " " + cur[2] + " · Language";
+  const ch = document.createElement("span");
+  ch.textContent = "▾";
+  ch.style.transition = "transform .2s";
+  lbl.append(lt, ch);
   const strip = document.createElement("div");
   strip.id = "langStrip";
+  strip.style.display = "none";
+  lbl.addEventListener("click", () => {
+    const open = strip.style.display === "none";
+    strip.style.display = open ? "" : "none";
+    lbl.setAttribute("aria-expanded", String(open));
+    ch.style.transform = open ? "rotate(180deg)" : "";
+  });
   const go = (l) => {
     try { localStorage.setItem("centaurian-lang", l); } catch (e) {}
     const q = new URLSearchParams(location.search);
