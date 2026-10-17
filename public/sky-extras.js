@@ -113,3 +113,20 @@
   function sync() { const r = real(); const on = !!r && r.getAttribute("aria-pressed") === "true"; clean.setAttribute("aria-pressed", on ? "true" : "false"); }
   setInterval(sync, 500);
 })();
+
+// 17.10.2026: Space-&-Astronomie-News-Box im Menü (führt zur aufklappbaren News-Sektion)
+(function () {
+  const size = document.getElementById("sizeLink");
+  if (!size || document.getElementById("newsLink")) return;
+  const T = {
+    de: "📰 Weltraum & Astronomie News →", en: "📰 Space & Astronomy News →", hi: "📰 अंतरिक्ष और खगोल समाचार →", zh: "📰 航天与天文新闻 →", ko: "📰 우주·천문 뉴스 →", ja: "📰 宇宙・天文ニュース →",
+    es: "📰 Noticias de espacio y astronomía →", fr: "📰 Actus espace & astronomie →", tr: "📰 Uzay ve Astronomi Haberleri →", ru: "📰 Новости космоса и астрономии →", pt: "📰 Notícias de espaço e astronomia →", ar: "📰 أخبار الفضاء والفلك →", el: "📰 Νέα Διαστήματος & Αστρονομίας →",
+    id: "📰 Berita Antariksa & Astronomi →", fa: "📰 اخبار فضا و نجوم‌شناسی →"
+  };
+  const a = document.createElement("a");
+  a.className = "chip"; a.id = "newsLink"; a.href = "/universum#space-news"; a.target = "_top";
+  a.style.cssText = "flex-basis:100%;text-align:center;border-color:rgba(120,200,255,.55);color:#9fdcff;box-shadow:0 0 18px -8px rgba(120,200,255,.8)";
+  const upd = () => { const t = T[window.LANG] || T[typeof LANG === "string" ? LANG : "en"] || T.en; if (a.textContent !== t) a.textContent = t; };
+  upd(); setInterval(upd, 1000);
+  size.parentNode.insertBefore(a, size);
+})();
