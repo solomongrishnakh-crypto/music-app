@@ -48,7 +48,7 @@ export const PLANETS: PlanetData[] = [
   {
     id: "mercury",
     name: {
-      de: "Merkur", en: "Mercury", hi: "बुध", zh: "水星", ko: "수성", ja: "水星",
+      de: "Merkur", en: "Mercury", id: "Merkurius", fa: "عطارد", hi: "बुध", zh: "水星", ko: "수성", ja: "水星",
       es: "Mercurio", fr: "Mercure", tr: "Merkür", ru: "Меркурий", pt: "Mercúrio", ar: "عطارد", el: "Ερμής",
     },
     distanceAu: 0.387,
@@ -94,7 +94,7 @@ export const PLANETS: PlanetData[] = [
   {
     id: "venus",
     name: {
-      de: "Venus", en: "Venus", hi: "शुक्र", zh: "金星", ko: "금성", ja: "金星",
+      de: "Venus", en: "Venus", id: "Venus", fa: "زهره", hi: "शुक्र", zh: "金星", ko: "금성", ja: "金星",
       es: "Venus", fr: "Vénus", tr: "Venüs", ru: "Венера", pt: "Vénus", ar: "الزهرة", el: "Αφροδίτη",
     },
     distanceAu: 0.723,
@@ -140,7 +140,7 @@ export const PLANETS: PlanetData[] = [
   {
     id: "earth",
     name: {
-      de: "Erde", en: "Earth", hi: "पृथ्वी", zh: "地球", ko: "지구", ja: "地球",
+      de: "Erde", en: "Earth", id: "Bumi", fa: "زمین", hi: "पृथ्वी", zh: "地球", ko: "지구", ja: "地球",
       es: "Tierra", fr: "Terre", tr: "Dünya", ru: "Земля", pt: "Terra", ar: "الأرض", el: "Γη",
     },
     distanceAu: 1,
@@ -186,7 +186,7 @@ export const PLANETS: PlanetData[] = [
   {
     id: "mars",
     name: {
-      de: "Mars", en: "Mars", hi: "मंगल", zh: "火星", ko: "화성", ja: "火星",
+      de: "Mars", en: "Mars", id: "Mars", fa: "مریخ", hi: "मंगल", zh: "火星", ko: "화성", ja: "火星",
       es: "Marte", fr: "Mars", tr: "Mars", ru: "Марс", pt: "Marte", ar: "المريخ", el: "Άρης",
     },
     distanceAu: 1.524,
@@ -232,7 +232,7 @@ export const PLANETS: PlanetData[] = [
   {
     id: "jupiter",
     name: {
-      de: "Jupiter", en: "Jupiter", hi: "बृहस्पति", zh: "木星", ko: "목성", ja: "木星",
+      de: "Jupiter", en: "Jupiter", id: "Jupiter", fa: "مشتری", hi: "बृहस्पति", zh: "木星", ko: "목성", ja: "木星",
       es: "Júpiter", fr: "Jupiter", tr: "Jüpiter", ru: "Юпитер", pt: "Júpiter", ar: "المشتري", el: "Δίας",
     },
     distanceAu: 5.204,
@@ -278,7 +278,7 @@ export const PLANETS: PlanetData[] = [
   {
     id: "saturn",
     name: {
-      de: "Saturn", en: "Saturn", hi: "शनि", zh: "土星", ko: "토성", ja: "土星",
+      de: "Saturn", en: "Saturn", id: "Saturnus", fa: "زحل", hi: "शनि", zh: "土星", ko: "토성", ja: "土星",
       es: "Saturno", fr: "Saturne", tr: "Satürn", ru: "Сатурн", pt: "Saturno", ar: "زحل", el: "Κρόνος",
     },
     distanceAu: 9.583,
@@ -325,7 +325,7 @@ export const PLANETS: PlanetData[] = [
   {
     id: "uranus",
     name: {
-      de: "Uranus", en: "Uranus", hi: "अरुण", zh: "天王星", ko: "천왕성", ja: "天王星",
+      de: "Uranus", en: "Uranus", id: "Uranus", fa: "اورانوس", hi: "अरुण", zh: "天王星", ko: "천왕성", ja: "天王星",
       es: "Urano", fr: "Uranus", tr: "Uranüs", ru: "Уран", pt: "Urano", ar: "أورانوس", el: "Ουρανός",
     },
     distanceAu: 19.2,
@@ -371,7 +371,7 @@ export const PLANETS: PlanetData[] = [
   {
     id: "neptune",
     name: {
-      de: "Neptun", en: "Neptune", hi: "वरुण", zh: "海王星", ko: "해왕성", ja: "海王星",
+      de: "Neptun", en: "Neptune", id: "Neptunus", fa: "نپتون", hi: "वरुण", zh: "海王星", ko: "해왕성", ja: "海王星",
       es: "Neptuno", fr: "Neptune", tr: "Neptün", ru: "Нептун", pt: "Neptuno", ar: "نبتون", el: "Ποσειδώνας",
     },
     distanceAu: 30.05,
@@ -425,7 +425,7 @@ export const DWARF_PLANETS: PlanetData[] = [
   {
     id: "ceres",
     name: {
-      de: "Ceres", en: "Ceres", hi: "सेरेस", zh: "谷神星", ko: "세레스", ja: "ケレス",
+      de: "Ceres", en: "Ceres", id: "Ceres", fa: "سرس", hi: "सेरेस", zh: "谷神星", ko: "세레스", ja: "ケレス",
       es: "Ceres", fr: "Cérès", tr: "Ceres", ru: "Церера", pt: "Ceres", ar: "سيريس", el: "Δήμητρα",
     },
     distanceAu: 2.77,
@@ -472,7 +472,7 @@ export const DWARF_PLANETS: PlanetData[] = [
   {
     id: "pluto",
     name: {
-      de: "Pluto", en: "Pluto", hi: "प्लूटो", zh: "冥王星", ko: "명왕성", ja: "冥王星",
+      de: "Pluto", en: "Pluto", id: "Pluto", fa: "پلوتو", hi: "प्लूटो", zh: "冥王星", ko: "명왕성", ja: "冥王星",
       es: "Plutón", fr: "Pluton", tr: "Plüton", ru: "Плутон", pt: "Plutão", ar: "بلوتو", el: "Πλούτωνας",
     },
     distanceAu: 39.48,
@@ -519,7 +519,7 @@ export const DWARF_PLANETS: PlanetData[] = [
   {
     id: "haumea",
     name: {
-      de: "Haumea", en: "Haumea", hi: "हौमेआ", zh: "妊神星", ko: "하우메아", ja: "ハウメア",
+      de: "Haumea", en: "Haumea", id: "Haumea", fa: "هائومئا", hi: "हौमेआ", zh: "妊神星", ko: "하우메아", ja: "ハウメア",
       es: "Haumea", fr: "Hauméa", tr: "Haumea", ru: "Хаумеа", pt: "Haumeia", ar: "هاوميا", el: "Χαουμέα",
     },
     distanceAu: 43.13,
@@ -566,7 +566,7 @@ export const DWARF_PLANETS: PlanetData[] = [
   {
     id: "makemake",
     name: {
-      de: "Makemake", en: "Makemake", hi: "मेकमेक", zh: "鸟神星", ko: "마케마케", ja: "マケマケ",
+      de: "Makemake", en: "Makemake", id: "Makemake", fa: "ماکیماکی", hi: "मेकमेक", zh: "鸟神星", ko: "마케마케", ja: "マケマケ",
       es: "Makemake", fr: "Makémaké", tr: "Makemake", ru: "Макемаке", pt: "Makemake", ar: "ماكيماكي", el: "Μακεμάκε",
     },
     distanceAu: 45.79,
@@ -613,7 +613,7 @@ export const DWARF_PLANETS: PlanetData[] = [
   {
     id: "eris",
     name: {
-      de: "Eris", en: "Eris", hi: "एरिस", zh: "阋神星", ko: "에리스", ja: "エリス",
+      de: "Eris", en: "Eris", id: "Eris", fa: "اریس", hi: "एरिस", zh: "阋神星", ko: "에리스", ja: "エリス",
       es: "Eris", fr: "Éris", tr: "Eris", ru: "Эрида", pt: "Éris", ar: "إريس", el: "Έρις",
     },
     distanceAu: 67.78,
@@ -669,7 +669,7 @@ export const DWARF_PLANETS: PlanetData[] = [
 export const VOYAGER1: PlanetData = {
   id: "voyager1",
   name: {
-    de: "Voyager 1", en: "Voyager 1", hi: "वॉयजर 1", zh: "旅行者1号", ko: "보이저 1호", ja: "ボイジャー1号",
+    de: "Voyager 1", en: "Voyager 1", id: "Voyager 1", fa: "وویجر ۱", hi: "वॉयजर 1", zh: "旅行者1号", ko: "보이저 1호", ja: "ボイジャー1号",
     es: "Voyager 1", fr: "Voyager 1", tr: "Voyager 1", ru: "Вояджер-1", pt: "Voyager 1", ar: "فوييجر 1", el: "Voyager 1",
   },
   distanceAu: 172,
@@ -740,7 +740,7 @@ export const VOYAGER1: PlanetData = {
 export const SUN: PlanetData = {
   id: "sun",
   name: {
-    de: "Sonne", en: "Sun", hi: "सूर्य", zh: "太阳", ko: "태양", ja: "太陽",
+    de: "Sonne", en: "Sun", id: "Matahari", fa: "خورشید", hi: "सूर्य", zh: "太阳", ko: "태양", ja: "太陽",
     es: "Sol", fr: "Soleil", tr: "Güneş", ru: "Солнце", pt: "Sol", ar: "الشمس", el: "Ήλιος",
   },
   distanceAu: 0,
