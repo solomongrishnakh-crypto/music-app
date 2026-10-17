@@ -161,7 +161,7 @@ function Compare({
     [T.cmpPeakArea, (e) => formatAreaL(e.peakArea, lang)],
     [T.cmpEra, (e) => eras[eraIndex(e.from)]],
   ];
-  let sentences: string[] = [];
+  const sentences: string[] = [];
   if (items.length >= 2) {
     const [a, b] = [...items].sort((x, y) => y.peakArea - x.peakArea);
     const xa = a.peakArea / b.peakArea;
