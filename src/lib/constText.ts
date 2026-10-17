@@ -193,6 +193,30 @@ const T: Record<Lang, ConstTexts> = {
     indexTitle: "88개 별자리 전체 — 성도, 별, 관측 시기", indexDesc: "88개 별자리 전체의 성도, 가장 밝은 별, 관측 적기 — 그리고 내 위치의 실시간 밤하늘.",
     indexIntro: "88개 공식 별자리 — 성도, 가장 밝은 별, 관측 적기와 함께.", credit: "별 데이터: HYG 데이터베이스. 경계: IAU.", fullyAll: "지구 어디에서나",
   },
+  id: {
+    crumbHome: "Centaurian", crumbSky: "Rasi bintang", title: "Rasi {name} — Bintang, Peta Bintang & Kapan Melihatnya",
+    desc: "Rasi {name}: paling baik dilihat di langit malam pada bulan {month}, bintang terangnya {star}. Dengan peta bintang, daftar bintangnya, dan tampilan langit langsung untuk lokasi Anda.",
+    kind: "Rasi bintang", latin: "Nama Latin", abbr: "Singkatan", best: "Visibilitas terbaik", bestVal: "malam hari di bulan {month}",
+    visible: "Terlihat penuh antara", brightest: "Bintang terterang", nakedEye: "Bintang kasatmata",
+    intro: "{name} ({la}) berada paling tinggi di langit malam (sekitar pukul 21.00) pada bulan {month}. Seluruh rasi terbit di atas cakrawala antara {north} dan {south}.",
+    introStar: "Bintang terangnya adalah {star} dengan magnitudo {mag} — sekitar {ly} tahun cahaya jauhnya.",
+    starsH2: "Bintang-bintang terterang", colStar: "Bintang", colDes: "Sebutan", colMag: "Magnitudo", colDist: "Jarak", ly: "tc",
+    openSky: "Lihat langsung di langit", figCaption: "Peta bintang {name} dengan garis dan batas rasi", others: "Rasi bintang lainnya",
+    indexTitle: "Semua 88 Rasi Bintang — Peta Bintang, Bintang & Visibilitas", indexDesc: "Semua 88 rasi bintang dengan peta bintang, bintang terangnya, dan waktu terbaik melihatnya — plus langit malam langsung untuk lokasi Anda.",
+    indexIntro: "Semua 88 rasi bintang resmi dengan peta bintang, bintang terang, dan waktu terbaik untuk mengamatinya.", credit: "Data bintang: basis data HYG. Batas rasi: IAU.", fullyAll: "di seluruh Bumi",
+  },
+  fa: {
+    crumbHome: "Centaurian", crumbSky: "صورت‌های فلکی", title: "صورت فلکی {name} — ستارگان، نقشهٔ ستارگان و زمان دیدن آن",
+    desc: "صورت فلکی {name}: بهترین زمان دیدن در آسمان شب در ماه {month}، درخشان‌ترین ستاره {star}. همراه با نقشهٔ ستارگان، ستاره‌هایش و نمای زندهٔ آسمان برای موقعیت شما.",
+    kind: "صورت فلکی", latin: "نام لاتین", abbr: "نشانهٔ اختصاری", best: "بهترین زمان دید", bestVal: "شب‌های {month}",
+    visible: "کاملاً قابل مشاهده بین", brightest: "درخشان‌ترین ستاره", nakedEye: "ستارگان قابل دیدن با چشم غیرمسلح",
+    intro: "{name} ({la}) در ماه {month} بالاترین ارتفاع را در آسمان شب (حدود ساعت ۲۱) دارد. کل صورت فلکی بین {north} و {south} بالای افق دیده می‌شود.",
+    introStar: "درخشان‌ترین ستارهٔ آن {star} با قدر {mag} است — حدود {ly} سال نوری دورتر.",
+    starsH2: "درخشان‌ترین ستارگان", colStar: "ستاره", colDes: "نام‌گذاری", colMag: "قدر", colDist: "فاصله", ly: "س.ن.",
+    openSky: "دیدن زندهٔ آن در آسمان", figCaption: "نقشهٔ ستارگان {name} با خطوط و مرزهای صورت فلکی", others: "صورت‌های فلکی بیشتر",
+    indexTitle: "هر ۸۸ صورت فلکی — نقشهٔ ستارگان، ستارگان و زمان دید", indexDesc: "هر ۸۸ صورت فلکی با نقشهٔ ستارگان، درخشان‌ترین ستاره‌هایشان و زمان دیدنشان — به‌علاوهٔ آسمان شب زنده برای موقعیت شما.",
+    indexIntro: "هر ۸۸ صورت فلکی رسمی با نقشهٔ ستارگان، درخشان‌ترین ستاره‌ها و بهترین زمان رصد.", credit: "داده‌های ستارگان: پایگاه داده HYG. مرز صورت‌های فلکی: IAU.", fullyAll: "در سراسر زمین",
+  },
 };
 
 export function constTexts(lang: Lang): ConstTexts {
@@ -213,6 +237,7 @@ export function formatLat(lat: number, lang: Lang): string {
     case "zh": return `${n ? "北纬" : "南纬"}${a}°`;
     case "ja": return `${n ? "北緯" : "南緯"}${a}°`;
     case "ko": return `${n ? "북위" : "남위"} ${a}°`;
+    case "fa": return `${a}° ${n ? "شمالی" : "جنوبی"}`;
     default: return `${a}° ${n ? "N" : "S"}`;
   }
 }
