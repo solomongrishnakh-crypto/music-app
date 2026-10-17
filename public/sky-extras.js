@@ -26,8 +26,8 @@
 #menuSheet a.chip#backLink{background:rgba(255,255,255,.04)}
 #langBox{padding:2px 0 6px}
 #langBox .lbl{font:600 11px/1 var(--font-sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:0 2px 8px}
-#langStrip{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:6px}
-#langStrip button{display:flex;align-items:center;gap:8px;padding:9px 11px;border-radius:12px;font:500 13px/1.1 var(--font-sans);color:var(--muted);background:rgba(255,255,255,.04);border:1px solid rgba(190,205,255,.1);cursor:pointer;text-align:start;transition:background .15s,border-color .15s,color .15s}
+#langStrip{display:grid;grid-template-columns:repeat(auto-fill,minmax(94px,1fr));gap:6px}
+#langStrip button{display:flex;align-items:center;gap:6px;padding:8px 9px;border-radius:12px;font:500 13px/1.1 var(--font-sans);color:var(--muted);background:rgba(255,255,255,.04);border:1px solid rgba(190,205,255,.1);cursor:pointer;text-align:start;transition:background .15s,border-color .15s,color .15s}
 #langStrip button:hover{color:var(--ink);background:rgba(255,255,255,.08)}
 #langStrip button[aria-current="true"]{color:var(--ink);border-color:rgba(255,90,77,.6);background:rgba(255,90,77,.14)}
 #langStrip .fl{font-size:17px;line-height:1;flex:none}
