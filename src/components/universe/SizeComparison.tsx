@@ -109,9 +109,25 @@ const LY_KM = 9.461e12;
 const IMG_BASE = "https://upload.wikimedia.org/wikipedia/commons/";
 const SPHERE = (k: Kind) => k === "planet" || k === "moon" || k === "dwarf" || k === "star" || k === "ns" || k === "bh";
 
+const IDFA: Record<string, Partial<Record<"id" | "fa", string>>> = {
+  ns: { id: "Bintang neutron", fa: "ستاره نوترونی" },
+  sbh: { id: "Lubang hitam (10 massa Matahari)", fa: "سیاه‌چاله (۱۰ جرم خورشیدی)" },
+  moon: { id: "Bulan", fa: "ماه" },
+  arcturus: { id: "Arcturus", fa: "ارکتوروس" },
+  rigel: { id: "Rigel", fa: "ریجل" },
+  betelgeuse: { id: "Betelgeuse", fa: "ابط‌الجوزا" },
+  neporbit: { id: "Orbit Neptunus (Tata Surya)", fa: "مدار نپتون (منظومه شمسی)" },
+  orion: { id: "Nebula Orion", fa: "سحابی جبار" },
+  lmc: { id: "Awan Magellan Besar", fa: "ابر ماژلانی بزرگ" },
+  milkyway: { id: "Bima Sakti", fa: "راه شیری" },
+  andromeda: { id: "Galaksi Andromeda", fa: "کهکشان آندرومدا" },
+  laniakea: { id: "Superkluster Laniakea", fa: "ابرخوشه لانیاکیا" },
+  universe: { id: "Alam semesta teramati", fa: "جهان قابل مشاهده" },
+};
+
 function objName(o: Obj, lang: Lang): string {
   if (typeof o.name === "string") return o.name;
-  if (o.name) return o.name[lang] ?? o.name.en;
+  if (o.name) return o.name[lang] ?? (IDFA[o.id] as Record<string, string | undefined> | undefined)?.[lang] ?? o.name.en;
   const b = findBody(o.id);
   return b ? b.name[lang] ?? b.name.en ?? b.name.de : o.id;
 }
