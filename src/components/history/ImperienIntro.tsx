@@ -195,8 +195,8 @@ function initIntro(cv: HTMLCanvasElement, LAND: number[][], lang0: string, onDon
   function loop(now){
     if (!alive) return;
     var t = (now - t0)/1000*1.7;
-    mat.uniforms.uT.value = t; tmat.uniforms.uT.value = t; var o = Math.min(1, Math.max(0, (t - 3.8)/0.9)); mat.uniforms.uOut.value = o; tmat.uniforms.uOut.value = o; renderer.render(scene, cam);
-    if (t > 3.9 && !done){ done = true; onDone(); }
+    mat.uniforms.uT.value = t; tmat.uniforms.uT.value = t; var o = Math.min(1, Math.max(0, (t - 5.0)/0.9)); mat.uniforms.uOut.value = o; tmat.uniforms.uOut.value = o; renderer.render(scene, cam);
+    if (t > 5.1 && !done){ done = true; onDone(); }
     raf = requestAnimationFrame(loop);
   }
   raf = requestAnimationFrame(loop);
