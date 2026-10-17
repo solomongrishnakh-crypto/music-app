@@ -1015,9 +1015,9 @@ export default function ImperienClient() {
     const size = map.getSize();
     const W = size.x;
     const H = size.y;
-    const minFs = 8;
-    const maxFs = 16;
-    const pad = 4;
+    const minFs = 7.5;
+    const maxFs = 12;
+    const pad = 6;
     const placed: number[][] = [];
     const hit = (l: number, t: number, r: number, b: number) =>
       placed.some((p) => l - pad < p[2] && r + pad > p[0] && t - pad < p[3] && b + pad > p[1]);
@@ -1042,7 +1042,7 @@ export default function ImperienClient() {
       // Zeilenumbruch wie im Browser (Zeichenbreite ca. 0,66 em): so wird der
       // Name auch in schmalen Reichen groß genug und bleibt darin.
       const tryFit = (f: number) => {
-        const maxChars = Math.floor((vw * 0.94) / (0.66 * f));
+        const maxChars = Math.floor((vw * 0.94) / (0.62 * f));
         const lines: number[] = [];
         let cur = 0;
         for (const wd of words) {
@@ -1052,9 +1052,10 @@ export default function ImperienClient() {
           else { lines.push(cur); cur = wd.length; }
         }
         lines.push(cur);
+        if (lines.length > 2) return null;
         const th = lines.length * f * 1.2;
         if (th > vh * 0.85) return null;
-        return { f, tw: Math.max(...lines) * 0.66 * f + f * 0.7, th };
+        return { f, tw: Math.max(...lines) * 0.62 * f + f * 0.7, th };
       };
       let base: { f: number; tw: number; th: number } | null = null;
       for (let f = maxFs; f >= minFs; f -= 0.5) {
@@ -1086,7 +1087,7 @@ export default function ImperienClient() {
       if (!el) continue;
       el.style.display = "";
       el.style.fontSize = q.f.toFixed(1) + "px";
-      el.style.letterSpacing = "0.06em";
+      el.style.letterSpacing = "0.02em";
       el.style.whiteSpace = "normal";
       el.style.textAlign = "center";
       el.style.padding = "0";
