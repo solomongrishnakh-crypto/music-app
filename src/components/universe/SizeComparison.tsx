@@ -697,6 +697,11 @@ export function SizeTable({ ids, labels }: { ids: string[]; labels: { obj: strin
   );
 }
 
+/** Teilen-Knopf im Vergleich (17.10.2026): [Teilen, Link kopiert] */
+const SHARE_TXT: Record<Lang, [string, string]> = {
+  de: ["Teilen", "Link kopiert"], en: ["Share", "Link copied"], hi: ["साझा करें", "लिंक कॉपी हुआ"], zh: ["分享", "链接已复制"], ko: ["공유", "링크 복사됨"], ja: ["共有", "リンクをコピーしました"], es: ["Compartir", "Enlace copiado"], fr: ["Partager", "Lien copié"],
+  tr: ["Paylaş", "Bağlantı kopyalandı"], ru: ["Поделиться", "Ссылка скопирована"], pt: ["Compartilhar", "Link copiado"], ar: ["مشاركة", "تم نسخ الرابط"], el: ["Κοινοποίηση", "Ο σύνδεσμος αντιγράφηκε"], id: ["Bagikan", "Tautan disalin"], fa: ["اشتراک‌گذاری", "پیوند کپی شد"],
+};
 export default function SizeComparison({ index }: { index: string }) {
   const { lang } = useLanguage();
   const ui = UI[lang] ?? UI.en;
@@ -713,6 +718,7 @@ export default function SizeComparison({ index }: { index: string }) {
   const [cmpA, setCmpA] = useState(OBJECTS.findIndex((o) => o.id === "sun"));
   const [cmpB, setCmpB] = useState(OBJECTS.findIndex((o) => o.id === "st218"));
   const [pick, setPick] = useState<0 | 1 | null>(null);
+  const [shared, setShared] = useState(false);
   const [zs, setZs] = useState(0);
   const [zx, setZx] = useState(1);
   const langRef = useRef(lang);
@@ -735,6 +741,24 @@ export default function SizeComparison({ index }: { index: string }) {
       window.clearTimeout(t2);
     };
   }, []);
+
+  // Teilbarer Link (?a=sun&b=st218): öffnet genau diesen Vergleich
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const q = new URLSearchParams(window.location.search);
+    const ia = OBJECTS.findIndex((o) => o.id === q.get("a")), ib = OBJECTS.findIndex((o) => o.id === q.get("b"));
+    if (ia < 0 || ib < 0 || ia === ib) return;
+    setCmpA(ia); setCmpB(ib); setMode("cmp");
+    const t = window.setTimeout(() => document.getElementById("groessenvergleich")?.scrollIntoView({ behavior: "smooth", block: "start" }), 700);
+    return () => window.clearTimeout(t);
+  }, []);
+  // Adresszeile folgt dem Vergleich, damit man den Link direkt kopieren kann
+  useEffect(() => {
+    if (mode !== "cmp" || typeof window === "undefined") return;
+    const u = new URL(window.location.href);
+    u.searchParams.set("a", OBJECTS[cmpA].id); u.searchParams.set("b", OBJECTS[cmpB].id);
+    window.history.replaceState(null, "", u.toString());
+  }, [mode, cmpA, cmpB]);
 
   useEffect(() => {
     langRef.current = lang;
@@ -1261,6 +1285,13 @@ export default function SizeComparison({ index }: { index: string }) {
       <span aria-hidden="true" className="text-muted">⌕</span>
     </button>
   );
+  const shareCmp = async () => {
+    const sh = SHARE_TXT[lang] ?? SHARE_TXT.en;
+    const url = window.location.origin + window.location.pathname + "?a=" + OBJECTS[cmpA].id + "&b=" + OBJECTS[cmpB].id;
+    const title = objName(OBJECTS[cmpA], lang) + " vs " + objName(OBJECTS[cmpB], lang);
+    if (typeof navigator.share === "function") { try { await navigator.share({ title, url }); } catch { /* abgebrochen */ } return; }
+    try { await navigator.clipboard.writeText(url); setShared(true); window.setTimeout(() => setShared(false), 2000); } catch { window.prompt(sh[0], url); }
+  };
   const sbtn = "h-8 w-8 shrink-0 border border-border text-foreground transition-colors hover:border-accent hover:text-accent";
 
   return (
@@ -1338,6 +1369,7 @@ export default function SizeComparison({ index }: { index: string }) {
             />
             <button type="button" className={sbtn} aria-label="+" onClick={() => api.current.zoomBy(1.8)}>+</button>
             <button type="button" className="h-8 shrink-0 border border-border px-2 text-[10px] uppercase text-foreground transition-colors hover:border-accent hover:text-accent" onClick={() => api.current.reset()}>{ui2.reset}</button>
+            <button type="button" className="h-8 shrink-0 border border-border px-2 text-[10px] uppercase text-foreground transition-colors hover:border-accent hover:text-accent" onClick={shareCmp}>{shared ? "✓ " + (SHARE_TXT[lang] ?? SHARE_TXT.en)[1] : "⇪ " + (SHARE_TXT[lang] ?? SHARE_TXT.en)[0]}</button>
           </div>
           <div className="mt-2 grid grid-cols-2 gap-2 text-[11px]">
             {[A, B].map((x, i) => {
