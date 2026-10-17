@@ -20,17 +20,85 @@ export interface CosmosHit {
   score: number;
 }
 
-const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+/** Normalisieren: Groß/Klein, Akzente, Umlaute (ä/ae), ß, arabische/persische Varianten. */
+const norm = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/ß/g, "ss")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f\u064b-\u065f\u0670\u0640]/g, "")
+    .replace(/[أإآٱ]/g, "ا")
+    .replace(/[ىيئ]/g, "ی")
+    .replace(/ك/g, "ک")
+    .replace(/[ةۀ]/g, "ه")
+    .replace(/ae|oe|ue/g, (m) => m[0])
+    .replace(/[^\p{L}\p{N}\s\-'’]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+/** Edit-Distanz (Damerau, begrenzt): gibt max+1 zurück, wenn größer als max. */
+function dist(a: string, b: string, max: number): number {
+  if (Math.abs(a.length - b.length) > max) return max + 1;
+  const m = a.length, n = b.length;
+  let p2: number[] = [];
+  let p1 = Array.from({ length: n + 1 }, (_, j) => j);
+  for (let i = 1; i <= m; i++) {
+    const cur = [i];
+    let rowMin = i;
+    for (let j = 1; j <= n; j++) {
+      let v = Math.min(p1[j] + 1, cur[j - 1] + 1, p1[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) v = Math.min(v, p2[j - 2] + 1);
+      cur[j] = v;
+      if (v < rowMin) rowMin = v;
+    }
+    if (rowMin > max) return max + 1;
+    p2 = p1;
+    p1 = cur;
+  }
+  return p1[n];
+}
+
+const tol = (len: number) => (len <= 3 ? 0 : len <= 6 ? 1 : 2);
+
+/** Wert eines einzelnen Suchworts gegen ein Wort des Namens (0 = kein Treffer). */
+function wordScore(t: string, w: string): number {
+  if (w === t) return 70;
+  if (w.startsWith(t)) return 60;
+  if (t.length >= 3 && w.includes(t)) return 35;
+  const k = tol(t.length);
+  if (!k) return 0;
+  const d1 = dist(t, w, k);
+  if (d1 <= k) return 55 - d1 * 8;
+  const d2 = dist(t, w.slice(0, t.length), k);
+  if (d2 <= k) return 48 - d2 * 8;
+  return 0;
+}
 
 function score(q: string, names: string[]): number {
+  const toks = q.split(/[\s\-'’]+/).filter(Boolean);
   let best = 0;
   for (const n of names) {
     const x = norm(n);
     if (!x) continue;
     if (x === q) return 100;
-    if (x.startsWith(q)) best = Math.max(best, 80);
-    else if (x.split(/[\s\-'’]/).some((w) => w.startsWith(q))) best = Math.max(best, 60);
-    else if (q.length >= 5 && x.includes(q)) best = Math.max(best, 40);
+    if (x.startsWith(q)) { best = Math.max(best, 80); continue; }
+    const words = x.split(/[\s\-'’]+/).filter(Boolean);
+    if (words.some((w) => w.startsWith(q))) { best = Math.max(best, 60); continue; }
+    if (q.length >= 3 && x.includes(q)) best = Math.max(best, q.length >= 5 ? 40 : 30);
+    // Wortweise (Reihenfolge egal, Tippfehler erlaubt): jedes Suchwort muss ein Namenswort treffen
+    if (toks.length) {
+      let sum = 0;
+      for (const t of toks) {
+        let m = 0;
+        for (const w of words) m = Math.max(m, wordScore(t, w));
+        if (!m) { sum = 0; break; }
+        sum += m;
+      }
+      if (sum) best = Math.max(best, Math.min(58, (sum / toks.length) * 0.85));
+    }
+    // ganzer Name mit Tippfehler (z. B. „jupitr“)
+    const k = tol(q.length);
+    if (k && dist(q, x, k) <= k) best = Math.max(best, 50);
   }
   return best;
 }
