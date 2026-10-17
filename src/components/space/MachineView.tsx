@@ -14,7 +14,7 @@ import { BASE_URL, OG_LOCALE, hreflang, langPath } from "@/lib/seoI18n";
  */
 const NUM_LOCALE: Record<Lang, string> = {
   de: "de-DE", en: "en-US", es: "es-ES", fr: "fr-FR", pt: "pt-BR", tr: "tr-TR", ru: "ru-RU",
-  el: "el-GR", ar: "ar", hi: "hi-IN", zh: "zh-CN", ja: "ja-JP", ko: "ko-KR",
+  el: "el-GR", ar: "ar", hi: "hi-IN", zh: "zh-CN", ja: "ja-JP", ko: "ko-KR", id: "id-ID", fa: "fa-IR",
 };
 
 function duration(sec: number, T: SpaceTexts, lang: Lang): string {
