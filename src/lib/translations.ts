@@ -723,6 +723,11 @@ const TRANSLATIONS_SOURCE = {
     es: "Todos los imperios A–Z", fr: "Tous les empires de A à Z", tr: "Tüm imparatorluklar A–Z", ru: "Все державы от А до Я", pt: "Todos os impérios A–Z", ar: "كل الإمبراطوريات", el: "Όλες οι αυτοκρατορίες Α–Ω",
     id: "Semua imperium A–Z", fa: "همه امپراتوری‌ها A–Z",
   },
+  empiresTools: {
+    de: "Geschichts-Werkzeuge", en: "History tools", hi: "इतिहास उपकरण", zh: "历史工具", ko: "역사 도구", ja: "歴史ツール",
+    es: "Herramientas de historia", fr: "Outils d'histoire", tr: "Tarih araçları", ru: "Инструменты истории", pt: "Ferramentas de história", ar: "أدوات التاريخ", el: "Εργαλεία ιστορίας",
+    id: "Alat sejarah", fa: "ابزارهای تاریخ",
+  },
   empiresShare: {
     de: "Teilen", en: "Share", hi: "साझा करें", zh: "分享", ko: "공유", ja: "共有",
     es: "Compartir", fr: "Partager", tr: "Paylaş", ru: "Поделиться", pt: "Compartilhar", ar: "مشاركة", el: "Κοινοποίηση",
