@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useState } from "react";
 import SiteBackground from "@/components/particles/SiteBackground";
-import Typewriter from "@/components/ui/Typewriter";
-import DetailModal from "@/components/ui/DetailModal";
 import SpaceNewsSection from "@/components/home/SpaceNewsSection";
 import SolarSystem from "@/components/universe/SolarSystem";
 import UniverseAgeTicker from "@/components/universe/UniverseAgeTicker";
@@ -16,7 +14,6 @@ import SpaceCalculators from "@/components/universe/SpaceCalculators";
 import SectionHeading from "@/components/ui/SectionHeading";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useInView } from "@/hooks/useInView";
 import type { LocalizedText } from "@/lib/i18n";
 import { localize } from "@/lib/i18n";
 
@@ -1329,25 +1326,6 @@ const UNIVERSE_FACTS: UniverseFact[] = [
   },
 ];
 
-interface RevealCardProps {
-  children: (inView: boolean) => ReactNode;
-  className?: string;
-  onClick?: () => void;
-}
-
-function RevealCard({ children, className, onClick }: RevealCardProps) {
-  const { ref, inView } = useInView<HTMLButtonElement>();
-  return (
-    <button
-      ref={ref}
-      onClick={onClick}
-      className={`group text-left transition-colors ${className ?? ""}`}
-    >
-      {children(inView)}
-    </button>
-  );
-}
-
 // Nutzerkorrektur 20.09.2026: "mach es bitte klein also die boxen klein
 // das bild daneben auch klein (box soll futuristisch sein)" — statt eines
 // großen 16:9-Bilds über der ganzen Kartenbreite jetzt ein kleines
@@ -1479,31 +1457,43 @@ export default function UniversumPage() {
           {UNIVERSE_FACTS.map((fact, i) => {
             const value = localize(fact.value, lang);
             const label = localize(fact.label, lang);
+            const lead = localize(fact.details[0], lang);
+            const open = selectedFact === i;
             return (
-              <RevealCard
-                key={value + label}
-                className="glass-card flex items-center gap-3 p-3"
-                onClick={() => setSelectedFact(i)}
+              <article
+                key={i}
+                className={
+                  "group overflow-hidden rounded-2xl border bg-surface-elevated/50 backdrop-blur transition-all duration-300 " +
+                  (open
+                    ? "border-accent/60 shadow-[0_0_30px_-12px_var(--accent)] sm:col-span-2 lg:col-span-3"
+                    : "border-border hover:border-accent/40")
+                }
               >
-                {(inView) => (
-                  <>
-                    <FactThumbnail src={fact.image} alt={label} />
-                    <div className="min-w-0 flex-1">
-                      <p className="font-display min-h-[1.3em] text-sm font-bold text-accent sm:text-base">
-                        <Typewriter text={value} active={inView} speed={12} />
-                      </p>
-                      <p className="mt-1 min-h-[1.2em] text-[10px] uppercase leading-snug tracking-wide text-muted">
-                        <Typewriter
-                          text={label}
-                          active={inView}
-                          speed={10}
-                          delay={value.length * 12 + 150}
-                        />
-                      </p>
-                    </div>
-                  </>
+                <button
+                  type="button"
+                  onClick={() => setSelectedFact(open ? null : i)}
+                  aria-expanded={open}
+                  className="flex w-full items-center gap-3 p-3 text-start sm:gap-4 sm:p-4"
+                >
+                  <FactThumbnail src={fact.image} alt={label} />
+                  <span className="min-w-0 flex-1">
+                    <span className="font-display block text-sm font-bold leading-snug text-foreground sm:text-base">{label}</span>
+                    {!open && <span className="mt-1 line-clamp-2 block text-[11px] leading-snug text-muted">{lead}</span>}
+                  </span>
+                  <span className="flex max-w-[9rem] shrink-0 flex-col items-end gap-1.5">
+                    <span className="label-mono rounded-lg border border-accent/50 bg-accent/10 px-2.5 py-1 text-center text-[11px] font-bold leading-tight text-accent sm:text-xs">{value}</span>
+                    <span aria-hidden="true" className={"text-accent transition-transform duration-300 " + (open ? "rotate-180" : "")}>▾</span>
+                  </span>
+                </button>
+                {open && (
+                  <div className="grid gap-3 border-t border-border/60 px-3 pb-4 pt-3 sm:px-4 lg:grid-cols-3">
+                    {fact.details.map((d, k) => (
+                      <p key={k} className="text-xs leading-relaxed text-muted sm:text-sm">{localize(d, lang)}</p>
+                    ))}
+                    <p className="label-mono text-[10px] text-muted/70 lg:col-span-3">Bild: Wikimedia Commons</p>
+                  </div>
                 )}
-              </RevealCard>
+              </article>
             );
           })}
         </div>
@@ -1530,19 +1520,6 @@ export default function UniversumPage() {
             </Link>
           ))}
         </nav>
-
-        {selectedFact !== null && (
-          <DetailModal
-            eyebrow={t("universeInNumbers")}
-            title={localize(UNIVERSE_FACTS[selectedFact].label, lang)}
-            meta={localize(UNIVERSE_FACTS[selectedFact].value, lang)}
-            paragraphs={UNIVERSE_FACTS[selectedFact].details.map((d) => localize(d, lang))}
-            imageUrl={UNIVERSE_FACTS[selectedFact].image}
-            imageAlt={localize(UNIVERSE_FACTS[selectedFact].label, lang)}
-            imageCredit="Bild: Wikimedia Commons"
-            onClose={() => setSelectedFact(null)}
-          />
-        )}
 
         {showSolarSystem && (
           <SolarSystemModal onClose={() => setShowSolarSystem(false)} />
