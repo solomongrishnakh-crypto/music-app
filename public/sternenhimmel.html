@@ -1240,6 +1240,8 @@ const MOON_OPEN = { jupiter: 0.05, saturn: 0.4, neptune: 0.3 };
 const MOON_BY_ID = {};
 let MOON_WANT = null;
 for (const m of MOON_DEFS) { MOON_BY_ID[m.id] = m; const Pd = Math.abs(360 / m.n); BODY_FACTS[m.id] = { k: "moon", d: m.d, m: m.m, rot: [Pd, "days", m.n < 0], orb: [Pd, "days"], temp: m.t }; }
+const MOON_ORB = { de: "Umlauf um {p}", en: "Orbit around {p}", hi: "{p} की परिक्रमा", zh: "绕{p}公转周期", ko: "{p} 공전 주기", ja: "{p}の公転周期", es: "Órbita alrededor de {p}", fr: "Orbite autour de {p}", tr: "{p} çevresinde yörünge", ru: "Обращение вокруг: {p}", pt: "Órbita ao redor de {p}", ar: "المدار حول {p}", el: "Τροχιά γύρω από {p}", id: "Orbit mengelilingi {p}", fa: "مدار پیرامون {p}" };
+function moonOrbLabel(pid) { return (MOON_ORB[LANG] || MOON_ORB.en).replace("{p}", tr("p_" + pid)); }
 function moonName(m) { const i = MOON_LANGS.indexOf(LANG); return (i >= 0 && m.nm[i]) || m.nm[1]; }
 function addMoons(list, earth, jd) {
   if (MOON_WANT && !(S.sel && S.sel.type === "body" && S.sel.id === MOON_WANT)) MOON_WANT = null;
@@ -1808,6 +1810,7 @@ function drawSelFx() {
 // „rückwärts“ laufen; Mond ±1,5 Tage). Fest gegenüber den Sternen.
 let trackCache = null;
 function bodyEqAt(id, jd) {
+  if (MOON_BY_ID[id]) id = MOON_BY_ID[id].p; // Monde: Auf-/Untergang und Kulmination wie der Planet
   if (id === "moon") { const m = moonPos(jd); return { ra: m.ra, dec: m.dec }; }
   const e = helio("earth", jd), p = id === "sun" ? [0, 0, 0] : helio(id, jd);
   const q = eclToRaDec(p[0] - e[0], p[1] - e[1], p[2] - e[2]);
@@ -2501,7 +2504,7 @@ function fillInfo() {
     if (F.m) rows.push([tr("mass"), tr("xEarth", { n: F.m >= 10 ? nf0.format(F.m) : F.m >= 0.1 ? nf.format(F.m) : F.m.toLocaleString(LANG, { maximumSignificantDigits: 2 }) })]);
     if (F.mo) rows.push([tr("moons"), F.mo]);
     if (F.rot) rows.push([tr("rotation"), `${nf.format(F.rot[0])} ${tr(F.rot[1])}${F.rot[2] ? " (" + tr("retro") + ")" : ""}`]);
-    if (F.orb) rows.push([tr(b.id === "moon" ? "orbitEarth" : "orbitTime") + (b.moonOf ? " · " + tr("p_" + b.moonOf) : ""), `${nf.format(F.orb[0])} ${tr(F.orb[1])}`]);
+    if (F.orb) rows.push([b.moonOf ? moonOrbLabel(b.moonOf) : tr(b.id === "moon" ? "orbitEarth" : "orbitTime"), `${nf.format(F.orb[0])} ${tr(F.orb[1])}`]);
     if (F.temp) rows.push([tr("temp"), `${F.temp} °C`]);
     if (b.dwarf) { rows.push([tr("brightness"), `${nf.format(b.mag)} mag`]); rows.push([tr("visibleWith"), tr(b.mag <= 6 ? "eye" : b.mag <= 9.5 ? "binoculars" : "telescope")]); }
     if (b.id === "sun") { rows.push([tr("starType"), `${tr("mainSeq")} (G2V)`]); rows.push([tr("age"), tr("sunAge")]); }
