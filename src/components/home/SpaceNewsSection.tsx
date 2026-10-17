@@ -101,7 +101,16 @@ export default function SpaceNewsSection() {
     return () => window.clearTimeout(timer);
   }, []);
 
-  useEffect(() => {
+  // Ruckel-Fix 17.10.2026: Solange die News-Liste offen ist, wird der WebGL-Hintergrund eingefroren
+    useEffect(() => {
+      if (!isExpanded) return;
+      const el = document.documentElement;
+      const prev = el.dataset.bgpause;
+      el.dataset.bgpause = "freeze";
+      return () => { if (prev === undefined) delete el.dataset.bgpause; else el.dataset.bgpause = prev; };
+    }, [isExpanded]);
+    
+    useEffect(() => {
     let cancelled = false;
     fetch("/api/space-news")
       .then((res) => res.json())
