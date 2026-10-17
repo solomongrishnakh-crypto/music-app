@@ -25,4 +25,6 @@ export const SEARCH_TEXT: Record<Lang, SearchText> = {
   zh: T("找到 {n} 个帝国，已在地图上高亮", "点一个帝国，地图就会跳到那里。", "取消高亮", "信息", "地图上未找到，维基百科信息："),
   ja: T("{n} 件の帝国が見つかりました（地図で強調表示）", "帝国をタップすると地図がそこへ移動します。", "強調表示を解除", "情報", "地図に見つかりません。ウィキペディアの情報："),
   ko: T("제국 {n}개를 찾았습니다 – 지도에 강조 표시", "제국을 누르면 지도가 그곳으로 이동합니다.", "강조 해제", "정보", "지도에서 찾지 못했습니다 – 위키백과 정보:"),
+  id: T("{n} kekaisaran ditemukan, disorot di peta", "Ketuk sebuah kekaisaran dan peta akan melompat ke sana.", "Hapus sorotan", "Info", "Tidak ada kekaisaran di peta – info Wikipedia:"),
+  fa: T("{n} امپراتوری یافت شد – روی نقشه مشخص شد", "روی یک امپراتوری بزنید تا نقشه به آنجا برود.", "حذف برجسته‌سازی", "اطلاعات", "در نقشه یافت نشد – اطلاعات ویکی‌پدیا:"),
 };
