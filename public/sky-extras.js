@@ -99,7 +99,8 @@
     ".pill { border-radius: 999px !important; background: rgba(12, 16, 38, 0.26) !important; border: 1px solid rgba(255, 255, 255, 0.16) !important; backdrop-filter: blur(14px) saturate(1.5) !important; -webkit-backdrop-filter: blur(14px) saturate(1.5) !important; box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.14) !important; padding: 6px 15px !important; transition: transform 0.18s ease, border-color 0.25s ease; }",
     ".pill:active { transform: translateX(-50%) scale(0.97); }",
     "#nightQuick { background: rgba(12, 16, 38, 0.26) !important; border-color: rgba(255, 255, 255, 0.16) !important; backdrop-filter: blur(14px) saturate(1.5) !important; box-shadow: 0 6px 22px rgba(0, 0, 0, 0.28) !important; }",
-    "#cleanQuick { bottom: calc(16px + env(safe-area-inset-bottom, 0px)); left: 66px; }",
+    "#cleanQuick { bottom: calc(68px + env(safe-area-inset-bottom, 0px)); left: 16px; }",
+    "body:has(.sheet:not([hidden])) #cleanQuick { display: none; }",
     "#cleanQuick svg { width: 19px !important; height: 19px !important; }"
   ].join("\n");
   document.head.appendChild(st);
@@ -129,4 +130,36 @@
   const upd = () => { const t = T[window.LANG] || T[typeof LANG === "string" ? LANG : "en"] || T.en; if (a.textContent !== t) a.textContent = t; };
   upd(); setInterval(upd, 1000);
   size.parentNode.insertBefore(a, size);
+})();
+
+// 17.10.2026: Ort-Leiste kompakt (nur Pin), sobald der Nutzer selbst einen Ort gewählt hat
+(function () {
+  const pill = document.getElementById("pill");
+  if (!pill) return;
+  const KEY = "sky-loc-user";
+  const st = document.createElement("style");
+  st.textContent = "#pill.locset #place { font-size: 0; margin: 0 1px; } #pill.locset #place::before { content: attr(data-pin); font-size: 12px; } #pill.locset > span[aria-hidden] { display: none; }";
+  document.head.appendChild(st);
+  function userSet() {
+    try {
+      const f = localStorage.getItem(KEY);
+      if (f !== null) return f === "1";
+      const sv = JSON.parse(localStorage.getItem("sky-loc") || "null");
+      if (!sv) return false;
+      const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+      const c = CITIES.find((x) => x[0] === PREFERRED[tz]) || CITIES.find((x) => x[4] === tz);
+      return sv.name !== (c ? c[0] : "Greenwich");
+    } catch (e) { return false; }
+  }
+  function apply() { const pl = document.getElementById("place"); if (pl) pl.setAttribute("data-pin", String.fromCharCode(55357, 56525)); pill.classList.toggle("locset", userSet()); }
+  const orig = window.setLocation;
+  if (typeof orig === "function") {
+    window.setLocation = function () {
+      const r = orig.apply(this, arguments);
+      try { localStorage.setItem(KEY, "1"); } catch (e) {}
+      apply();
+      return r;
+    };
+  }
+  apply();
 })();
