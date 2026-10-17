@@ -300,6 +300,7 @@ function initTunnel(canvas: HTMLCanvasElement, lite: boolean): () => void {
   var fc = 0, ps = 0, last = performance.now(), time = 0, raf = 0, alive = true;
   function loop(now){
     if (!alive) return;
+    if (document.documentElement.dataset.bgpause === "freeze") { last = now; raf = requestAnimationFrame(loop); return; }
     var paused = !!document.documentElement.dataset.bgpause;
     if (paused) { if (now - last < 45) { raf = requestAnimationFrame(loop); return; } }
     else if (lite && (fc++ & 1)) { raf = requestAnimationFrame(loop); return; }
