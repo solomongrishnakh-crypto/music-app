@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import SectionHeading from "@/components/ui/SectionHeading";
 import { useLanguage, type Lang } from "@/contexts/LanguageContext";
 import { localize } from "@/lib/i18n";
 import { CAL_EVENTS, CAL_TX } from "@/lib/toolsText";
@@ -52,6 +51,7 @@ function agoText(ago: number, lang: Lang): string {
 export default function CosmicCalendar({ index = "01" }: { index?: string }) {
   const { lang } = useLanguage();
   const [scale, setScale] = useState<Scale>("year");
+  const [open, setOpen] = useState(false);
   const L = SPAN[scale];
   const lifeS = (80 / AGE) * YEAR_S;
   const life = (() => {
@@ -65,55 +65,69 @@ export default function CosmicCalendar({ index = "01" }: { index?: string }) {
   const rows = [...CAL_EVENTS.map((e) => ({ ago: e.ago, name: localize(e.n, lang) })), { ago: 0, name: localize(CAL_TX.today, lang) }];
 
   return (
-    <section className="mt-12">
-      <SectionHeading index={index} label={localize(CAL_TX.title, lang)} />
-      <div className="hud-card p-4 sm:p-5">
-        <p className="max-w-3xl text-xs leading-relaxed text-muted sm:text-sm">{localize(CAL_TX.intro, lang)}</p>
+    <section className="mt-10">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="group flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-surface-elevated/60 px-4 py-3 text-start backdrop-blur transition-colors hover:border-accent"
+      >
+        <span className="min-w-0">
+          <span className="label-mono block text-[10px] uppercase tracking-widest text-accent">{index} · {rows.length}</span>
+          <span className="font-display mt-0.5 block truncate text-sm font-bold uppercase tracking-tight text-foreground sm:text-base">
+            {localize(CAL_TX.title, lang)}
+          </span>
+        </span>
+        <span
+          aria-hidden="true"
+          className={`grid h-8 w-8 shrink-0 place-items-center rounded-full border border-border text-accent transition-transform duration-300 group-hover:border-accent ${open ? "rotate-180" : ""}`}
+        >
+          ▾
+        </span>
+      </button>
 
-        <div className="mt-4 flex flex-wrap gap-2">
-          {(["year", "day", "minute"] as const).map((s) => (
-            <button
-              key={s}
-              type="button"
-              onClick={() => setScale(s)}
-              aria-pressed={scale === s}
-              className={`label-mono border px-3 py-1.5 text-[10px] uppercase tracking-wide transition-colors ${
-                scale === s ? "border-accent bg-accent/15 text-foreground" : "border-border text-muted hover:border-accent hover:text-foreground"
-              }`}
-            >
-              {localize(CAL_TX[s], lang)}
-            </button>
-          ))}
+      {open && (
+        <div className="mt-2 rounded-xl border border-border bg-surface-elevated/40 p-3 backdrop-blur sm:p-4">
+          <p className="max-w-3xl text-[11px] leading-relaxed text-muted sm:text-xs">{localize(CAL_TX.intro, lang)}</p>
+
+          <div className="mt-3 inline-flex overflow-hidden rounded-full border border-border">
+            {(["year", "day", "minute"] as const).map((s) => (
+              <button
+                key={s}
+                type="button"
+                onClick={() => setScale(s)}
+                aria-pressed={scale === s}
+                className={"label-mono px-3 py-1 text-[10px] uppercase tracking-wide transition-colors " + (scale === s ? "bg-accent/20 text-foreground" : "text-muted hover:text-foreground")}
+              >
+                {localize(CAL_TX[s], lang)}
+              </button>
+            ))}
+          </div>
+
+          <ul className="mt-3 grid gap-x-6 gap-y-1 md:grid-cols-2">
+            {rows.map((r) => {
+              const t = r.ago === 0 ? YEAR_S : YEAR_S * (1 - r.ago / AGE);
+              const p = (t - (YEAR_S - L)) / L;
+              const out = p < 0;
+              const pct = Math.max(0, Math.min(1, p)) * 100;
+              return (
+                <li key={r.ago} className={"min-w-0 py-1.5 transition-opacity " + (out ? "opacity-35" : "")} title={r.ago > 0 ? agoText(r.ago, lang) : undefined}>
+                  <div className="flex items-baseline justify-between gap-2">
+                    <span className="truncate text-xs font-semibold text-foreground">{r.name}</span>
+                    <span className="label-mono shrink-0 text-[10px] tabular-nums text-accent">{when(r.ago, lang)}</span>
+                  </div>
+                  <div className="relative mt-1 h-1 w-full overflow-hidden rounded-full bg-border/50" aria-hidden="true">
+                    {!out && <div className="h-full rounded-full bg-accent/80 transition-[width] duration-500" style={{ width: pct + "%" }} />}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+
+          <p className="mt-3 text-[11px] text-foreground">{localize(CAL_TX.life, lang).replace("{s}", life)}</p>
+          <p className="mt-1 text-[10px] text-muted">{localize(CAL_TX.note, lang)}</p>
         </div>
-
-        <ul className="mt-4 divide-y divide-border/60">
-          {rows.map((r) => {
-            const t = r.ago === 0 ? YEAR_S : YEAR_S * (1 - r.ago / AGE);
-            const p = (t - (YEAR_S - L)) / L;
-            const out = p < 0;
-            const pct = Math.max(0, Math.min(1, p)) * 100;
-            return (
-              <li key={r.ago} className={`py-2.5 transition-opacity ${out ? "opacity-40" : ""}`}>
-                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
-                  <span className="text-sm font-semibold text-foreground">{r.name}</span>
-                  <span className="label-mono text-[11px] tabular-nums text-accent">{when(r.ago, lang)}</span>
-                </div>
-                {r.ago > 0 && <p className="text-[10px] text-muted">{agoText(r.ago, lang)}</p>}
-                <div className="relative mt-1.5 h-1.5 w-full bg-border/50" aria-hidden="true">
-                  {!out && (
-                    <div className="relative h-full bg-accent/70 transition-[width] duration-500" style={{ width: `${pct}%` }}>
-                      <span className="absolute top-1/2 h-2.5 w-2.5 -translate-y-1/2 rounded-full bg-accent" style={{ insetInlineEnd: -5 }} />
-                    </div>
-                  )}
-                </div>
-              </li>
-            );
-          })}
-        </ul>
-
-        <p className="mt-4 text-xs text-foreground">{localize(CAL_TX.life, lang).replace("{s}", life)}</p>
-        <p className="mt-2 text-[10px] text-muted">{localize(CAL_TX.note, lang)}</p>
-      </div>
+      )}
     </section>
   );
 }
