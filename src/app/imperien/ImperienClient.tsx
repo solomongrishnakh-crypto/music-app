@@ -909,6 +909,25 @@ export default function ImperienClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [empireNames, lang, nameTick]);
 
+  // Eigene Vorschlagsliste (Nutzerhinweis 17.10.2026: auf dem Handy zeigte
+  // <datalist> keine Vorschläge): erscheint sofort beim Tippen.
+  const [searchFocus, setSearchFocus] = useState(false);
+  const searchFormRef = useRef<HTMLFormElement>(null);
+  const searchSuggestions = useMemo(() => {
+    const nz = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    const q = nz(searchQuery.trim());
+    if (q.length < 1) return [] as string[];
+    const starts: string[] = [];
+    const inc: string[] = [];
+    for (const d of suggestionMap.keys()) {
+      const x = nz(d);
+      if (x === q) continue;
+      if (x.startsWith(q)) starts.push(d);
+      else if (x.split(/[\s\-']+/).some((w) => w.startsWith(q)) || (q.length >= 3 && x.includes(q))) inc.push(d);
+    }
+    return [...starts, ...inc].slice(0, 8);
+  }, [searchQuery, suggestionMap]);
+
   useEffect(() => {
     let cancelled = false;
     getAllEmpireNames()
@@ -2090,22 +2109,44 @@ export default function ImperienClient() {
           </Link>
 
           <form
+            ref={searchFormRef}
             onSubmit={handleSearchSubmit}
-            className="mt-3 flex max-w-md items-center gap-2"
+            className="relative mt-3 flex max-w-md items-center gap-2"
           >
             <input
               type="text"
-              list="empire-name-suggestions"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => setSearchFocus(true)}
+              onBlur={() => window.setTimeout(() => setSearchFocus(false), 180)}
+              autoComplete="off"
+              enterKeyHint="search"
               placeholder={t("empiresSearchPlaceholder")}
               className="label-mono w-full border border-border bg-surface-elevated px-3 py-2 text-xs text-foreground placeholder:text-muted focus:border-accent focus:outline-none sm:text-sm"
             />
-            <datalist id="empire-name-suggestions">
-              {[...suggestionMap.keys()].map((d) => (
-                <option key={d} value={d} />
-              ))}
-            </datalist>
+            {searchFocus && searchSuggestions.length > 0 && (
+              <ul
+                role="listbox"
+                className="absolute left-0 top-full z-[2000] mt-1 max-h-64 w-full overflow-y-auto rounded-lg border border-accent/40 bg-background/95 py-1 shadow-xl backdrop-blur"
+              >
+                {searchSuggestions.map((s) => (
+                  <li key={s} role="option" aria-selected="false">
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => {
+                        setSearchQuery(s);
+                        setSearchFocus(false);
+                        window.setTimeout(() => searchFormRef.current?.requestSubmit(), 60);
+                      }}
+                      className="label-mono block w-full px-3 py-2 text-start text-xs text-foreground transition-colors hover:bg-accent/15 hover:text-accent sm:text-sm"
+                    >
+                      {s}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
             <button
               type="submit"
               className="label-mono shrink-0 border border-border bg-background px-3 py-2 text-xs uppercase text-muted transition-colors hover:border-accent hover:text-accent sm:text-sm"
