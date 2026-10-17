@@ -91,6 +91,16 @@ export default function SpaceNewsSection() {
   // Überschrift auf-/zuklappbar.
   const [isExpanded, setIsExpanded] = useState(false);
 
+  // Direktlink (#space-news) aus dem Sternenhimmel-Menü: aufklappen und hinscrollen
+  useEffect(() => {
+    if (window.location.hash !== "#space-news") return;
+    setIsExpanded(true);
+    const timer = window.setTimeout(() => {
+      document.getElementById("space-news")?.scrollIntoView({ block: "start", behavior: "smooth" });
+    }, 500);
+    return () => window.clearTimeout(timer);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     fetch("/api/space-news")
@@ -117,7 +127,7 @@ export default function SpaceNewsSection() {
   if (!isLoading && news.length === 0 && !errorMessage) return null;
 
   return (
-    <div className="mx-auto w-full max-w-6xl">
+    <div id="space-news" className="mx-auto w-full max-w-6xl scroll-mt-24">
       <button
         type="button"
         onClick={() => setIsExpanded((v) => !v)}
