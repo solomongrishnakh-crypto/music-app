@@ -12,7 +12,7 @@ import type { Lang } from "@/contexts/LanguageContext";
 export const BASE_URL = "https://centaurianspace.com";
 
 /** Sprachen mit eigenem URL-Präfix (Deutsch liegt ohne Präfix im Stamm). */
-export const PREFIXED_LANGS = ["en", "es", "fr", "pt", "tr", "ru", "el", "ar", "hi", "zh", "ja", "ko"] as const;
+export const PREFIXED_LANGS = ["en", "es", "fr", "pt", "tr", "ru", "el", "ar", "hi", "zh", "ja", "ko", "id", "fa"] as const;
 export type PrefixedLang = (typeof PREFIXED_LANGS)[number];
 export const ALL_LANGS: Lang[] = ["de", ...PREFIXED_LANGS];
 
@@ -37,7 +37,7 @@ export function hreflang(path: string): Record<string, string> {
 /** Sprachcode → Locale für og:locale */
 export const OG_LOCALE: Record<Lang, string> = {
   de: "de_DE", en: "en_US", es: "es_ES", fr: "fr_FR", pt: "pt_BR", tr: "tr_TR", ru: "ru_RU",
-  el: "el_GR", ar: "ar_AR", hi: "hi_IN", zh: "zh_CN", ja: "ja_JP", ko: "ko_KR",
+  el: "el_GR", ar: "ar_AR", hi: "hi_IN", zh: "zh_CN", ja: "ja_JP", ko: "ko_KR", id: "id_ID", fa: "fa_IR",
 };
 
 /** Jahreszahl mit Epochen-Angabe in der jeweiligen Sprache (es gibt kein Jahr 0). */
@@ -59,12 +59,14 @@ export function formatYearL(y: number, lang: Lang): string {
     case "zh": return bc ? `公元前${n}年` : `公元${n}年`;
     case "ja": return bc ? `紀元前${n}年` : `${n}年`;
     case "ko": return bc ? `기원전 ${n}년` : `${n}년`;
+    case "id": return bc ? `${n} SM` : `${n} M`;
+    case "fa": return bc ? `${n} پیش از میلاد` : `${n} میلادی`;
   }
 }
 
 const NUM_LOCALE: Record<Lang, string> = {
   de: "de-DE", en: "en-US", es: "es-ES", fr: "fr-FR", pt: "pt-BR", tr: "tr-TR", ru: "ru-RU",
-  el: "el-GR", ar: "ar", hi: "hi-IN", zh: "zh-CN", ja: "ja-JP", ko: "ko-KR",
+  el: "el-GR", ar: "ar", hi: "hi-IN", zh: "zh-CN", ja: "ja-JP", ko: "ko-KR", id: "id-ID", fa: "fa-IR",
 };
 
 export function formatNumberL(n: number, lang: Lang, maxFrac = 0, grouping = true): string {
@@ -85,11 +87,12 @@ export function formatAreaL(km2: number, lang: Lang): string {
     const unit: Record<string, string> = {
       de: "Mio. km²", en: "million km²", es: "millones de km²", fr: "millions de km²", pt: "milhões de km²",
       tr: "milyon km²", ru: "млн км²", el: "εκατ. km²", ar: "مليون كم²", hi: "मिलियन वर्ग किमी",
+      id: "juta km²", fa: "میلیون کیلومتر مربع",
     };
     return `${v} ${unit[lang]}`;
   }
   const v = formatNumberL(Math.round(km2 / 1000) * 1000, lang);
-  return lang === "ar" ? `${v} كم²` : lang === "hi" ? `${v} वर्ग किमी` : `${v} km²`;
+  return lang === "ar" ? `${v} كم²` : lang === "hi" ? `${v} वर्ग किमी` : lang === "fa" ? `${v} کیلومتر مربع` : `${v} km²`;
 }
 
 type PageKey = "home" | "universum" | "sternenhimmel" | "imperien" | "reiche";
@@ -111,6 +114,8 @@ export const PAGE_SEO: Record<PageKey, Record<Lang, PageText>> = {
     zh: { title: "CENTAURIAN — 宇宙与世界历史", description: "实时探索3D太阳系，查看你所在地今晚的星空，并在互动地图上浏览从公元前3400年至今历史上的所有帝国——还可以顺便听听音乐。免费，无需注册。" },
     ja: { title: "CENTAURIAN — 宇宙・世界史", description: "リアルタイムの3D太陽系を探検し、現在地から見た今夜の星空を表示、紀元前3400年から現在までの歴史上すべての帝国をインタラクティブな地図でたどれます。ちょっとした音楽もどうぞ。無料・登録不要。" },
     ko: { title: "CENTAURIAN — 우주와 세계사", description: "실시간 3D 태양계를 탐험하고, 내 위치에서 보이는 오늘 밤하늘을 보고, 기원전 3400년부터 오늘까지 역사 속 모든 제국을 인터랙티브 지도로 살펴보세요 — 덤으로 음악도 들을 수 있어요. 무료, 가입 불필요." },
+    id: { title: "CENTAURIAN — Alam Semesta & Sejarah Dunia", description: "Jelajahi tata surya 3D secara langsung, lihat langit malam ini di lokasi Anda, dan telusuri semua imperium dalam sejarah pada peta interaktif dari 3400 SM hingga kini — plus musik sebagai pelengkap. Gratis, tanpa daftar." },
+    fa: { title: "CENTAURIAN — جهان و تاریخ جهان", description: "منظومه شمسی سه‌بعدی زنده را کاوش کنید، آسمان امشب را از موقعیت خود ببینید و در یک نقشه تعاملی همه امپراتوری‌های تاریخ را از ۳۴۰۰ پیش از میلاد تا امروز مرور کنید — و در کنارش کمی موسیقی گوش دهید. رایگان و بدون ثبت‌نام." },
   },
   universum: {
     de: { title: "Sonnensystem live & Maschine der Ewigkeit — Universum entdecken", description: "Interaktives Sonnensystem mit echten Planeten-Positionen (NASA-Daten), echtem Maßstab und Zoom. Dazu die Maschine der Ewigkeit: Zahnräder, deren letztes sich erst in 13,8 Milliarden Jahren einmal dreht — plus Alter des Universums live." },
@@ -126,6 +131,8 @@ export const PAGE_SEO: Record<PageKey, Record<Lang, PageText>> = {
     zh: { title: "实时3D太阳系与永恒齿轮机 — 探索宇宙", description: "互动3D太阳系，显示行星的真实当前位置（NASA/JPL数据），支持真实比例和缩放。还有永恒齿轮机：最后一个齿轮每138亿年才转一圈——以及实时的宇宙年龄。" },
     ja: { title: "リアルタイム3D太陽系と永遠の歯車マシン — 宇宙を探検", description: "惑星の実際の現在位置（NASA/JPLデータ）を表示するインタラクティブな3D太陽系。実寸スケールとズーム対応。さらに最後の歯車が138億年に一回転する「永遠のマシン」と、宇宙の年齢をリアルタイムで。" },
     ko: { title: "실시간 3D 태양계와 영원의 기어 머신 — 우주 탐험", description: "행성의 실제 현재 위치(NASA/JPL 데이터)를 보여주는 인터랙티브 3D 태양계, 실제 축척과 확대 지원. 마지막 톱니바퀴가 138억 년에 한 번 도는 영원의 기계와 실시간 우주 나이까지." },
+    id: { title: "Tata Surya 3D Langsung & Mesin Roda Gigi Keabadian — Jelajahi Alam Semesta", description: "Tata surya 3D interaktif dengan posisi nyata saat ini semua planet (data NASA/JPL), skala sebenarnya, dan zoom. Plus mesin keabadian: rangkaian roda gigi yang roda terakhirnya berputar sekali setiap 13,8 miliar tahun — dan usia alam semesta, secara langsung." },
+    fa: { title: "منظومه شمسی سه‌بعدی زنده و ماشین چرخ‌دنده جاودانگی — جهان را کاوش کنید", description: "منظومه شمسی سه‌بعدی تعاملی با موقعیت‌های واقعی و کنونی همه سیارات (داده‌های ناسا/JPL)، با مقیاس واقعی و بزرگ‌نمایی. به‌علاوه ماشین جاودانگی: زنجیره‌ای از چرخ‌دنده‌ها که آخرین آن هر ۱۳٫۸ میلیارد سال یک بار می‌چرخد — و سن جهان، به‌صورت زنده." },
   },
   sternenhimmel: {
     de: { title: "Sternenhimmel live – wo stehen Sterne & Planeten gerade?", description: "Halte dein Handy in den Himmel und sieh sofort, welcher Stern oder Planet das ist – live für deinen Ort, am Handy oder PC. Kostenlos, ohne App: 108.000 Sterne, Mond, ISS." },
@@ -141,6 +148,8 @@ export const PAGE_SEO: Record<PageKey, Record<Lang, PageText>> = {
     zh: { title: "实时星空 — 星星和行星现在在哪里？", description: "把手机对准天空，立刻知道那是哪颗星星或行星——按你的位置实时显示，手机和电脑都能用。免费，无需安装应用：10.8万颗恒星、月球、国际空间站。" },
     ja: { title: "リアルタイム星空 — 今、星と惑星はどこ？", description: "スマホを空にかざすだけで、どの星や惑星かがすぐ分かる。あなたの場所に合わせてリアルタイム表示、スマホでもPCでも。無料・アプリ不要：10万8千個の星、月、ISS。" },
     ko: { title: "실시간 밤하늘 — 지금 별과 행성은 어디에?", description: "휴대폰을 하늘로 향하면 어떤 별이나 행성인지 바로 알 수 있어요. 내 위치 기준 실시간, 휴대폰과 PC 모두 지원. 무료, 앱 설치 불필요: 별 10만 8천 개, 달, ISS." },
+    id: { title: "Langit Malam Langsung – Di Mana Bintang & Planet Sekarang?", description: "Arahkan ponsel ke langit dan langsung lihat bintang atau planet apa yang Anda tatap – langsung untuk lokasi Anda, di ponsel atau PC. Gratis, tanpa aplikasi: 108.000 bintang, Bulan, ISS." },
+    fa: { title: "آسمان شب زنده – ستاره‌ها و سیارات همین حالا کجا هستند؟", description: "گوشی را رو به آسمان بگیرید و فوراً ببینید به کدام ستاره یا سیاره نگاه می‌کنید – زنده برای موقعیت شما، روی گوشی یا رایانه. رایگان و بدون برنامه: ۱۰۸٬۰۰۰ ستاره، ماه، ایستگاه فضایی بین‌المللی." },
   },
   imperien: {
     de: { title: "Weltgeschichte Karte — interaktive historische Weltkarte", description: "Interaktive Weltgeschichte-Karte: alle Reiche, Imperien und Grenzen von 3400 v. Chr. bis heute, Jahr für Jahr auf einer Zeitleiste. Kostenlos, mit Infos zu jedem Reich." },
@@ -156,6 +165,8 @@ export const PAGE_SEO: Record<PageKey, Record<Lang, PageText>> = {
     zh: { title: "世界历史地图 — 从公元前3400年至今的所有帝国", description: "互动世界历史地图：从公元前3400年至今所有的帝国、王国和疆界，按时间轴逐年浏览。免费，并附每个帝国的介绍。" },
     ja: { title: "世界史地図 — 紀元前3400年から現在までのすべての帝国", description: "インタラクティブな世界史地図：紀元前3400年から現在までのすべての帝国・王国・国境を年表で一年ずつ表示。無料で各帝国の解説付き。" },
     ko: { title: "세계사 지도 — 기원전 3400년부터 오늘까지 모든 제국", description: "인터랙티브 세계사 지도: 기원전 3400년부터 오늘까지 모든 제국, 왕국, 국경을 타임라인에서 한 해씩 살펴보세요. 무료, 각 제국 정보 포함." },
+    id: { title: "Peta Sejarah Dunia — Setiap Imperium dari 3400 SM hingga Kini", description: "Peta sejarah dunia interaktif: setiap imperium, kerajaan, dan perbatasan dari 3400 SM hingga kini, tahun demi tahun pada garis waktu. Gratis, dengan informasi tentang setiap imperium. Saksikan imperium bangkit dan runtuh." },
+    fa: { title: "نقشه تاریخ جهان — هر امپراتوری از ۳۴۰۰ پیش از میلاد تا امروز", description: "نقشه تعاملی تاریخ جهان: هر امپراتوری، پادشاهی و مرز از ۳۴۰۰ پیش از میلاد تا امروز، سال به سال بر یک خط زمانی. رایگان و با اطلاعات درباره هر امپراتوری. ظهور و سقوط امپراتوری‌ها را تماشا کنید." },
   },
   reiche: {
     de: { title: "Alle Reiche & Imperien der Weltgeschichte — Liste mit Karten", description: "300 historische Reiche und Imperien von der Antike bis zur Moderne: Zeitraum, größte Ausdehnung und Karte — vom Römischen Reich über das Mongolische Reich bis zum Britischen Weltreich." },
@@ -171,6 +182,8 @@ export const PAGE_SEO: Record<PageKey, Record<Lang, PageText>> = {
     zh: { title: "历史帝国列表 — 地图、面积与年代", description: "从古代到近现代的300个历史帝国：年代、最大疆域以及每个帝国的地图——从罗马帝国、蒙古帝国到大英帝国。" },
     ja: { title: "歴史上の帝国一覧 — 地図・面積・年代", description: "古代から近代までの300の歴史的帝国：年代、最大版図、それぞれの地図——ローマ帝国やモンゴル帝国から大英帝国まで。" },
     ko: { title: "역사 속 제국 목록 — 지도, 면적, 연대", description: "고대부터 근현대까지 300개 역사 제국: 연대, 최대 영토, 각 제국의 지도 — 로마 제국과 몽골 제국부터 대영 제국까지." },
+    id: { title: "Daftar Imperium dalam Sejarah — Peta, Luas & Tanggal", description: "300 imperium bersejarah dari zaman kuno hingga era modern: tanggal, luas maksimum, dan peta masing-masing — dari Kekaisaran Romawi dan Kekaisaran Mongol hingga Kekaisaran Inggris." },
+    fa: { title: "فهرست امپراتوری‌های تاریخ — نقشه، مساحت و تاریخ‌ها", description: "۳۰۰ امپراتوری تاریخی از دوران باستان تا عصر جدید: تاریخ‌ها، بیشینه گستره و نقشه هرکدام — از امپراتوری روم و امپراتوری مغول تا امپراتوری بریتانیا." },
   },
 };
 
@@ -189,6 +202,8 @@ export const YEAR_SHARE: Record<Lang, { title: (y: string) => string; descriptio
   zh: { title: (y) => `${y}的世界 — 世界历史地图`, description: (y) => `${y}的世界是什么样子：互动地图上的所有帝国、王国和疆界。` },
   ja: { title: (y) => `${y}の世界 — 世界史地図`, description: (y) => `${y}の世界の姿：インタラクティブ地図ですべての帝国・王国・国境を表示。` },
   ko: { title: (y) => `${y}의 세계 — 세계사 지도`, description: (y) => `${y}의 세계 모습: 인터랙티브 지도에서 모든 제국, 왕국, 국경을 확인하세요.` },
+  id: { title: (y) => `Dunia pada Tahun ${y} — Peta Sejarah Dunia`, description: (y) => `Seperti inilah dunia pada tahun ${y}: semua imperium, kerajaan, dan perbatasan pada peta sejarah dunia interaktif.` },
+  fa: { title: (y) => `جهان در سال ${y} — نقشه تاریخ جهان`, description: (y) => `جهان در سال ${y} این‌گونه بود: همه امپراتوری‌ها، پادشاهی‌ها و مرزها بر نقشه تعاملی تاریخ جهان.` },
 };
 
 /** Vorschaubild-Satz: Deutsch eigene Bilder, alle anderen Sprachen die englischen. */
