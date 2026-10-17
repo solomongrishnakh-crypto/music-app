@@ -29,8 +29,11 @@ const TXT: Record<Lang, string[]> = {
 const TYPES = ["bug", "idea", "other"] as const;
 
 export default function FeedbackBox() {
-  const { lang } = useLanguage();
+  const { lang: ctxLang } = useLanguage();
   const pathname = usePathname() || "";
+  // Sprache aus der Adresse (/pt/...) hat Vorrang, sonst die gespeicherte
+  const seg = pathname.split("/")[1] ?? "";
+  const lang = (Object.prototype.hasOwnProperty.call(TXT, seg) ? seg : ctxLang) as typeof ctxLang;
   const tx = TXT[lang] ?? TXT.en;
   const rtl = lang === "ar" || lang === "fa";
   const [open, setOpen] = useState(false);
