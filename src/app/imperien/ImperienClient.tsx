@@ -2,14 +2,14 @@
 
 import Link from "next/link";
 import type { FormEvent, KeyboardEvent, PointerEvent } from "react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import SiteBackground from "@/components/particles/SiteBackground";
 import ImperienIntro from "@/components/history/ImperienIntro";
 import CosmicCalendar from "@/components/history/CosmicCalendar";
 import REICH_SLUGS from "@/data/reiche/slugs.json";
 import Spinner from "@/components/ui/Spinner";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage, type Lang } from "@/contexts/LanguageContext";
 import type { TranslationKey } from "@/lib/translations";
 import { translateLanguageValue } from "@/lib/languageNameTranslations";
 import { searchEmpires, type EmpireHit } from "@/lib/history/empireSearch";
@@ -23,6 +23,8 @@ import {
 } from "@/lib/history/empiresClient";
 import { lookupWikiInBrowser } from "@/lib/history/wikiClientLookup";
 import { wikiLookupName } from "@/data/empireWikiAliases";
+import { reichNameL } from "@/lib/history/reicheNames";
+import reicheIndex from "@/data/reiche/index.json";
 import { decodeRing } from "@/lib/history/empiresClient";
 import {
   PREHIST_COLORS,
@@ -176,17 +178,33 @@ function loadNameStore(lang: string) {
     /* Speicher nicht verfügbar */
   }
 }
-function dispName(name: string, lang: string): string {
+// Geprüfte Namen aus der eigenen Namensliste (ca. 300 bekannte Reiche).
+const DE_NAMES = new Map<string, string>();
+for (const r of reicheIndex as unknown as { en: string; de: string | null }[]) {
+  if (r.de) DE_NAMES.set(r.en, r.de);
+}
+function curatedName(base: string, lang: string): string {
+  if (lang === "en") return "";
+  if (lang === "de") return DE_NAMES.get(base) ?? "";
+  const v = reichNameL(base, lang as Lang, null);
+  return v !== base ? v : "";
+}
+// Übersetzter Name oder "" (keine Übersetzung bekannt).
+function translatedName(name: string, lang: string): string {
+  if (lang === "en") return "";
   const base = labelText(name);
-  if (lang === "en") return base;
+  const c = curatedName(base, lang);
+  if (c) return c;
   loadNameStore(lang);
-  const v = nameCache.get(lang + "|" + name);
-  return v ? v : base;
+  return nameCache.get(lang + "|" + name) ?? "";
+}
+function dispName(name: string, lang: string): string {
+  return translatedName(name, lang) || labelText(name);
 }
 async function fetchNames(lang: string, names: string[]): Promise<boolean> {
   if (lang === "en") return false;
   loadNameStore(lang);
-  const todo = [...new Set(names)].filter((n) => !nameCache.has(lang + "|" + n));
+  const todo = [...new Set(names)].filter((n) => !nameCache.has(lang + "|" + n) && !curatedName(labelText(n), lang));
   let got = false;
   for (let i = 0; i < todo.length; i += 40) {
     const chunk = todo.slice(i, i + 40);
@@ -234,16 +252,6 @@ async function fetchNames(lang: string, names: string[]): Promise<boolean> {
   return got;
 }
 
-// "Jahr" / "Los" über dem Zeitlineal (waren fest auf Deutsch; Übersetzungen
-// selbst geschrieben, nicht von Muttersprachlern geprüft).
-const YEAR_WORD: Record<string, string> = {
-  de: "Jahr", en: "Year", hi: "वर्ष", zh: "年份", ko: "연도", ja: "年",
-  es: "Año", fr: "Année", tr: "Yıl", ru: "Год", pt: "Ano", ar: "السنة", el: "Έτος",
-};
-const GO_WORD: Record<string, string> = {
-  de: "Los", en: "Go", hi: "जाएं", zh: "前往", ko: "이동", ja: "移動",
-  es: "Ir", fr: "OK", tr: "Git", ru: "Ок", pt: "Ir", ar: "اذهب", el: "Πάμε",
-};
 
 function isLite(): boolean {
   if (liteCache === null) {
@@ -817,6 +825,17 @@ export default function ImperienClient() {
   // macht ohnehin eine echte Wikipedia-Suche, keine feste Namensliste.
   const [searchQuery, setSearchQuery] = useState("");
   const [empireNames, setEmpireNames] = useState<string[]>([]);
+  const [nameTick, setNameTick] = useState(0);
+  // Vorschläge in der gewählten Sprache; zurück auf den Datensatz-Namen übersetzt.
+  const suggestionMap = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const n of empireNames) {
+      const d = translatedName(n, lang) || n;
+      if (!m.has(d)) m.set(d, n);
+    }
+    return m;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [empireNames, lang, nameTick]);
 
   useEffect(() => {
     let cancelled = false;
@@ -881,7 +900,8 @@ export default function ImperienClient() {
 
   async function handleSearchSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const query = searchQuery.trim();
+    const typed = searchQuery.trim();
+    const query = suggestionMap.get(typed) ?? typed;
     if (!query) return;
     let found: EmpireHit[] = [];
     try {
@@ -1108,6 +1128,7 @@ export default function ImperienClient() {
     const maxFs = 12;
     const pad = 6;
     const placed: number[][] = [];
+    const shownTexts = new Set<string>();
     const hit = (l: number, t: number, r: number, b: number) =>
       placed.some((p) => l - pad < p[2] && r + pad > p[0] && t - pad < p[3] && b + pad > p[1]);
     const order = list
@@ -1128,6 +1149,7 @@ export default function ImperienClient() {
       const vw = vr - vl, vh = vb - vt;
       if (vw <= 0 || vh <= 0) { hide.push(e); continue; }
       const text = dispName(e.name, lang);
+      if (shownTexts.has(text)) { hide.push(e); continue; }
       const wide = (c: string) => /[\u2e80-\u9fff\uac00-\ud7af\uff00-\uffef]/.test(c);
       const cjk = wide(text);
       const toks = cjk ? Array.from(text) : text.split(" ");
@@ -1168,6 +1190,7 @@ export default function ImperienClient() {
         if (!hit(cx - c.tw / 2, cy - c.th / 2, cx + c.tw / 2, cy + c.th / 2)) {
           placed.push([cx - c.tw / 2, cy - c.th / 2, cx + c.tw / 2, cy + c.th / 2]);
           plan.push({ e, f: c.f, cx, cy, tw: c.tw, th: c.th });
+          shownTexts.add(text);
           ok = true;
           break;
         }
@@ -1391,7 +1414,10 @@ export default function ImperienClient() {
     wantLabelRef.current = wantLabel;
     applyNames();
     fetchNames(lang, wantLabel.map((e) => e.name)).then((changed) => {
-      if (changed) applyNames();
+      if (changed) {
+        applyNames();
+        setNameTick((x) => x + 1);
+      }
     });
 
     setErrorMessage(null);
@@ -1945,8 +1971,8 @@ export default function ImperienClient() {
               className="label-mono w-full border border-border bg-surface-elevated px-3 py-2 text-xs text-foreground placeholder:text-muted focus:border-accent focus:outline-none sm:text-sm"
             />
             <datalist id="empire-name-suggestions">
-              {empireNames.map((n) => (
-                <option key={n} value={n} />
+              {[...suggestionMap.keys()].map((d) => (
+                <option key={d} value={d} />
               ))}
             </datalist>
             <button
@@ -2174,7 +2200,7 @@ export default function ImperienClient() {
               "Jahr" am Handy immer oben, und die Jahreszahl hat eine feste
               Mindestbreite → nichts verschiebt sich mehr. */}
           <div className="mb-2 flex flex-row items-center justify-between gap-2 sm:gap-3">
-            <p className="label-mono text-xs uppercase text-muted">{YEAR_WORD[lang] ?? YEAR_WORD.en}</p>
+            <p className="label-mono text-xs uppercase text-muted">{t("empiresYearWord")}</p>
             <div className="flex items-center gap-3">
               {/* Nutzerwunsch 20.09.2026: "option hinzufügen das man auch
                   manuel das jahr eingeben kann" — Zahl eintippen und mit
@@ -2199,7 +2225,7 @@ export default function ImperienClient() {
                   type="submit"
                   className="border border-border px-2.5 py-1 text-[11px] uppercase text-foreground transition-colors hover:border-accent hover:text-accent"
                 >
-                  {GO_WORD[lang] ?? GO_WORD.en}
+                  {t("empiresGoWord")}
                 </button>
               </form>
               <p className="whitespace-nowrap text-right font-display text-sm font-bold tabular-nums text-accent sm:min-w-[11rem] sm:text-xl">
