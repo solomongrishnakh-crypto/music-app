@@ -655,7 +655,7 @@ void main(){
   // geringere Auflösung genügt (der Schleier ist weich) und schont Handys
   let gDpr = 1;
   function resize() {
-    gDpr = Math.min(window.devicePixelRatio || 1, 1.25) * (W * H > 900000 ? 0.75 : W * H < 600000 ? 0.62 : 0.85) * Q;
+    gDpr = Math.min(window.devicePixelRatio || 1, 1.5) * (W * H > 900000 ? 0.95 : W * H < 600000 ? 0.75 : 1) * Q;
     glCanvas.width = Math.max(1, Math.round(W * gDpr)); glCanvas.height = Math.max(1, Math.round(H * gDpr));
     gl.viewport(0, 0, glCanvas.width, glCanvas.height);
   }
@@ -3168,7 +3168,7 @@ let last = performance.now();
 let frameDt = 16;
      let perfAcc = 0, perfN = 0, perfGood = 0, perfSkip = 45, Qcap = 1, lastRaise = 0;
      function applyQ() { resize(); if (glSky) glSky.resize(); }
-     function adaptQuality(raw) { if (document.hidden || raw > 2000) { perfAcc = 0; perfN = 0; return; } if (perfSkip > 0) { perfSkip--; return; } perfAcc += Math.min(raw, 120); perfN++; if (perfN < 30) return; const avg = perfAcc / perfN; perfAcc = 0; perfN = 0; const nw = performance.now(); if (avg > 26 && Q > 0.55) { Q = Math.max(0.55, Q * 0.8); perfGood = 0; perfSkip = 15; if (nw - lastRaise < 20000) Qcap = Q; applyQ(); } else if (avg < 17.5 && Q < Qcap) { if (++perfGood >= 8) { Q = Math.min(Qcap, Q / 0.8); perfGood = 0; perfSkip = 15; lastRaise = nw; applyQ(); } } else perfGood = 0; }
+     function adaptQuality(raw) { if (document.hidden || raw > 2000) { perfAcc = 0; perfN = 0; return; } if (perfSkip > 0) { perfSkip--; return; } perfAcc += Math.min(raw, 120); perfN++; if (perfN < 30) return; const avg = perfAcc / perfN; perfAcc = 0; perfN = 0; const nw = performance.now(); if (avg > 34 && Q > 0.85) { Q = Math.max(0.85, Q * 0.9); perfGood = 0; perfSkip = 15; if (nw - lastRaise < 20000) Qcap = Q; applyQ(); } else if (avg < 22 && Q < Qcap) { if (++perfGood >= 4) { Q = Math.min(Qcap, Q / 0.9); perfGood = 0; perfSkip = 15; lastRaise = nw; applyQ(); } } else perfGood = 0; }
 function frame(now) {
      adaptQuality(now - last);
   const dt = Math.min(60, now - last); last = now; frameDt = dt;
