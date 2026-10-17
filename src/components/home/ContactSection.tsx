@@ -71,6 +71,7 @@ export default function ContactSection() {
             ["/sonnensystem", t("linkAllPlanets")],
             ["/maschine-der-ewigkeit", t("linkMachine")],
             ["/imperien/reiche", t("empiresAllEmpires")],
+            ["/imperien/werkzeuge", t("empiresTools")],
           ] as const
         ).map(([href, label]) => (
           <Link
