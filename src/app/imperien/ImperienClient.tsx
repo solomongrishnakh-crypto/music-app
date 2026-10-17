@@ -149,6 +149,13 @@ const stableColorByName = new Map<string, string>();
 // Karte — Canvas statt SVG, keine Küsten-Beschneidung, ungeglättete Linien,
 // weniger feste Beschriftungen (Nutzerhinweis 15.10.2026: zu laggy).
 let liteCache: boolean | null = null;
+// Lange Lehns-/Bündnis-Namen ("Allegiance of X to Y") auf den eigentlichen Namen
+// kürzen, damit sie keine großen Reiche verdecken (Nutzerhinweis 17.10.2026).
+function labelText(name: string): string {
+  const m = name.match(/^(?:allegiance|vassalage|suzerainty|protectorate|tribute)\s+of\s+(.+?)\s+to\s+.+$/i);
+  return m ? m[1] : name;
+}
+
 function isLite(): boolean {
   if (liteCache === null) {
     liteCache =
@@ -963,12 +970,12 @@ export default function ImperienClient() {
     const zoom = map.getZoom?.() ?? 2;
     let labelLimit: number;
     const lite = isLite();
-    if (zoom <= 2) labelLimit = lite ? 12 : 20;
-    else if (zoom === 3) labelLimit = lite ? 22 : 35;
-    else if (zoom === 4) labelLimit = lite ? 38 : 60;
-    else if (zoom === 5) labelLimit = lite ? 64 : 100;
-    else if (zoom === 6) labelLimit = lite ? 100 : 150;
-    else labelLimit = lite ? 160 : Infinity;
+    if (zoom <= 2) labelLimit = lite ? 16 : 30;
+    else if (zoom === 3) labelLimit = lite ? 30 : 50;
+    else if (zoom === 4) labelLimit = lite ? 50 : 80;
+    else if (zoom === 5) labelLimit = lite ? 76 : 120;
+    else if (zoom === 6) labelLimit = lite ? 110 : 180;
+    else labelLimit = lite ? 170 : Infinity;
     const hl = highlightRef.current;
     const permanentLabelNames = new Set(
       sortedFeatures.slice(0, labelLimit).map((f) => f.properties?.NAME)
@@ -998,7 +1005,7 @@ export default function ImperienClient() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function setLabel(e: any, permanent: boolean, className: string) {
       e.fill.unbindTooltip();
-      e.fill.bindTooltip(e.name, { permanent, direction: "center", className, opacity: 0.95 });
+      e.fill.bindTooltip(labelText(e.name), { permanent, direction: "center", className, opacity: 0.95 });
       if (e.point) e.fill.getTooltip?.()?.setLatLng?.(L.latLng(e.point[1], e.point[0]));
       e.labeled = permanent;
       e.labelClass = className;
@@ -1118,19 +1125,34 @@ export default function ImperienClient() {
     });
     const placedRects: DOMRect[] = [];
     const pad = 3;
-    wantLabel.forEach((e, i) => {
-      const r = rects[i];
-      if (!r) return;
-      const collides = placedRects.some(
+    const hits = (r: DOMRect) =>
+      placedRects.some(
         (p) =>
           r.left - pad < p.right &&
           r.right + pad > p.left &&
           r.top - pad < p.bottom &&
           r.bottom + pad > p.top
       );
-      if (!collides) placedRects.push(r);
-      else setLabel(e, false, e.labelClass);
-    });
+    // Echte Reiche zuerst, Lehns-/Bündnis-Gebiete danach; bei Überschneidung
+    // erst mit kleinerer Schrift versuchen, erst dann ausblenden.
+    const order = wantLabel
+      .map((_, i) => i)
+      .sort((a, b) => Number(labelText(wantLabel[a].name) !== wantLabel[a].name) - Number(labelText(wantLabel[b].name) !== wantLabel[b].name) || a - b);
+    for (const i of order) {
+      const e = wantLabel[i];
+      const r = rects[i];
+      if (!r) continue;
+      if (!hits(r)) {
+        placedRects.push(r);
+        continue;
+      }
+      const origClass = e.labelClass;
+      setLabel(e, true, origClass.replace(" empire-label-big", "") + " empire-label-sm");
+      const el2: HTMLElement | undefined = e.fill.getTooltip?.()?.getElement?.();
+      const r2 = el2 ? el2.getBoundingClientRect() : null;
+      if (r2 && !hits(r2)) placedRects.push(r2);
+      else setLabel(e, false, origClass);
+    }
 
     setErrorMessage(null);
     setHasRenderedBorders(true);
@@ -1541,7 +1563,7 @@ export default function ImperienClient() {
 
   return (
     <main className="relative min-h-screen">
-      <SiteBackground />
+      <SiteBackground lite />
       <ImperienIntro />
 
       {/* Leaflet-Standardsteuerelemente (Zoom +/-) an den dunklen Seitenstil
@@ -1588,6 +1610,10 @@ export default function ImperienClient() {
           letter-spacing: 0.02em;
           color: #fde7c4;
         }
+        .leaflet-tooltip.empire-label-sm {
+          font-size: 9px;
+          letter-spacing: 0.03em;
+        }
         .leaflet-tooltip.empire-label-big {
           font-size: 13px;
           letter-spacing: 0.14em;
@@ -1625,8 +1651,8 @@ export default function ImperienClient() {
         }
       `}</style>
 
-      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-20 pt-10 sm:px-8 sm:pt-14">
-        <div className="mb-8 flex items-center justify-between">
+      <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-12 pt-6 sm:px-8 sm:pt-8">
+        <div className="mb-4 flex items-center justify-between">
           <Link
             href={localePath("/")}
             className="label-mono inline-flex w-fit items-center gap-2 text-xs uppercase text-muted transition-colors hover:text-accent"
@@ -1636,7 +1662,7 @@ export default function ImperienClient() {
           <LanguageSwitcher />
         </div>
 
-        <header className="mb-8 border-b border-border pb-6">
+        <header className="mb-4 border-b border-border pb-4">
           <p className="label-mono text-xs uppercase text-muted">// {t("navEmpiresLabel")}</p>
           <h1 className="font-display mt-2 text-2xl font-bold uppercase tracking-tight text-foreground sm:text-4xl">
             {t("empiresTitle")}
@@ -1644,7 +1670,7 @@ export default function ImperienClient() {
           <p className="label-mono mt-2 text-[11px] uppercase tracking-wide text-accent sm:text-xs">
             {t("empiresSeoTagline")}
           </p>
-          <p className="mt-3 max-w-2xl text-xs leading-relaxed text-muted sm:text-sm">
+          <p className="mt-2 max-w-2xl text-[11px] leading-relaxed text-muted sm:text-xs">
             {t("empiresIntroPrefix")}{" "}
             <a
               href="https://github.com/Seshat-Global-History-Databank/cliopatria"
@@ -1668,7 +1694,7 @@ export default function ImperienClient() {
 
           <form
             onSubmit={handleSearchSubmit}
-            className="mt-4 flex max-w-md items-center gap-2"
+            className="mt-3 flex max-w-md items-center gap-2"
           >
             <input
               type="text"
@@ -1745,7 +1771,7 @@ export default function ImperienClient() {
             (70-80vh), dass Jahres-Regler und Abspiel-Buttons erst nach dem
             Scrollen sichtbar wurden. Jetzt deutlich kompakter, damit beides
             ohne Scrollen auf den Bildschirm passt. */}
-        <div className="relative h-[42vh] min-h-[280px] max-h-[440px] w-full overflow-hidden border border-border bg-surface-elevated sm:h-[52vh] sm:max-h-[520px]">
+        <div className="relative h-[44vh] min-h-[280px] max-h-[460px] w-full overflow-hidden border border-border bg-surface-elevated sm:h-[56vh] sm:max-h-[620px]">
           <div ref={mapContainerRef} className="absolute inset-0" />
           {(!leafletReady || (isLoadingBorders && !hasRenderedBorders)) && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/70">
