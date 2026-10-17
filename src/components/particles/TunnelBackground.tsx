@@ -300,6 +300,7 @@ function initTunnel(canvas: HTMLCanvasElement, lite: boolean): () => void {
   var fc = 0, ps = 0, last = performance.now(), time = 0, raf = 0, alive = true;
   function loop(now){
     if (!alive) return;
+    if (document.documentElement.dataset.bgpause) { last = now; raf = requestAnimationFrame(loop); return; }
     if (lite && (fc++ & 1)) { raf = requestAnimationFrame(loop); return; }
     var dt = Math.min(.05, (now - last)/1000); last = now; if (reduce) dt *= .3; time += dt;
     var y = window.scrollY || document.documentElement.scrollTop || 0, max = Math.max(1, document.documentElement.scrollHeight - innerHeight);
