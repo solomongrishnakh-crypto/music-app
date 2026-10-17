@@ -88,30 +88,30 @@ export const EXTRA: Extra[] = RAW.map(([id, v, u, en, de, kind, color, alias]) =
 }));
 
 export const KIND_TX: Record<Kind, Tx> = {
-  star: { de: "Stern", en: "Star", hi: "तारा", zh: "恒星", ko: "별", ja: "恒星", es: "Estrella", fr: "Étoile", tr: "Yıldız", ru: "Звезда", pt: "Estrela", ar: "نجم", el: "Άστρο" },
-  planet: { de: "Planet", en: "Planet", hi: "ग्रह", zh: "行星", ko: "행성", ja: "惑星", es: "Planeta", fr: "Planète", tr: "Gezegen", ru: "Планета", pt: "Planeta", ar: "كوكب", el: "Πλανήτης" },
-  nebula: { de: "Nebel", en: "Nebula", hi: "नीहारिका", zh: "星云", ko: "성운", ja: "星雲", es: "Nebulosa", fr: "Nébuleuse", tr: "Bulutsu", ru: "Туманность", pt: "Nebulosa", ar: "سديم", el: "Νεφέλωμα" },
-  cluster: { de: "Sternhaufen", en: "Star cluster", hi: "तारा समूह", zh: "星团", ko: "성단", ja: "星団", es: "Cúmulo", fr: "Amas d'étoiles", tr: "Yıldız kümesi", ru: "Скопление", pt: "Aglomerado", ar: "عنقود نجمي", el: "Σμήνος" },
-  galaxy: { de: "Galaxie", en: "Galaxy", hi: "आकाशगंगा", zh: "星系", ko: "은하", ja: "銀河", es: "Galaxia", fr: "Galaxie", tr: "Gökada", ru: "Галактика", pt: "Galáxia", ar: "مجرة", el: "Γαλαξίας" },
-  quasar: { de: "Quasar", en: "Quasar", hi: "क्वासर", zh: "类星体", ko: "퀘이사", ja: "クエーサー", es: "Cuásar", fr: "Quasar", tr: "Kuasar", ru: "Квазар", pt: "Quasar", ar: "كوازار", el: "Κβάζαρ" },
+  star: { de: "Stern", en: "Star", hi: "तारा", zh: "恒星", ko: "별", ja: "恒星", es: "Estrella", fr: "Étoile", tr: "Yıldız", ru: "Звезда", pt: "Estrela", ar: "نجم", el: "Άστρο", id: "Bintang", fa: "ستاره" },
+  planet: { de: "Planet", en: "Planet", hi: "ग्रह", zh: "行星", ko: "행성", ja: "惑星", es: "Planeta", fr: "Planète", tr: "Gezegen", ru: "Планета", pt: "Planeta", ar: "كوكب", el: "Πλανήτης", id: "Planet", fa: "سیاره" },
+  nebula: { de: "Nebel", en: "Nebula", hi: "नीहारिका", zh: "星云", ko: "성운", ja: "星雲", es: "Nebulosa", fr: "Nébuleuse", tr: "Bulutsu", ru: "Туманность", pt: "Nebulosa", ar: "سديم", el: "Νεφέλωμα", id: "Nebula", fa: "سحابی" },
+  cluster: { de: "Sternhaufen", en: "Star cluster", hi: "तारा समूह", zh: "星团", ko: "성단", ja: "星団", es: "Cúmulo", fr: "Amas d'étoiles", tr: "Yıldız kümesi", ru: "Скопление", pt: "Aglomerado", ar: "عنقود نجمي", el: "Σμήνος", id: "Gugus bintang", fa: "خوشه ستاره‌ای" },
+  galaxy: { de: "Galaxie", en: "Galaxy", hi: "आकाशगंगा", zh: "星系", ko: "은하", ja: "銀河", es: "Galaxia", fr: "Galaxie", tr: "Gökada", ru: "Галактика", pt: "Galáxia", ar: "مجرة", el: "Γαλαξίας", id: "Galaksi", fa: "کهکشان" },
+  quasar: { de: "Quasar", en: "Quasar", hi: "क्वासर", zh: "类星体", ko: "퀘이사", ja: "クエーサー", es: "Cuásar", fr: "Quasar", tr: "Kuasar", ru: "Квазар", pt: "Quasar", ar: "كوازار", el: "Κβάζαρ", id: "Kuasar", fa: "اختروش" },
   compact: {
     de: "Neutronenstern / Schwarzes Loch", en: "Neutron star / black hole", hi: "न्यूट्रॉन तारा / ब्लैक होल", zh: "中子星 / 黑洞", ko: "중성자별 / 블랙홀", ja: "中性子星 / ブラックホール",
-    es: "Estrella de neutrones / agujero negro", fr: "Étoile à neutrons / trou noir", tr: "Nötron yıldızı / kara delik", ru: "Нейтронная звезда / чёрная дыра", pt: "Estrela de nêutrons / buraco negro", ar: "نجم نيوتروني / ثقب أسود", el: "Αστέρας νετρονίων / μαύρη τρύπα",
+    es: "Estrella de neutrones / agujero negro", fr: "Étoile à neutrons / trou noir", tr: "Nötron yıldızı / kara delik", ru: "Нейтронная звезда / чёрная дыра", pt: "Estrela de nêutrons / buraco negro", ar: "نجم نيوتروني / ثقب أسود", el: "Αστέρας νετρονίων / μαύρη τρύπα", id: "Bintang neutron / lubang hitam", fa: "ستاره نوترونی / سیاه‌چاله",
   },
 };
 
 export const SEARCH_TX: { ph: Tx; none: Tx; ly: Tx } = {
   ph: {
     de: "Mehr suchen: Sterne, Nebel, Galaxien …", en: "Search more: stars, nebulae, galaxies …", hi: "और खोजें: तारे, नीहारिकाएँ, आकाशगंगाएँ …", zh: "搜索更多：恒星、星云、星系…", ko: "더 찾기: 별, 성운, 은하 …", ja: "もっと探す：恒星、星雲、銀河…",
-    es: "Buscar más: estrellas, nebulosas, galaxias …", fr: "Chercher plus : étoiles, nébuleuses, galaxies …", tr: "Daha fazla ara: yıldız, bulutsu, gökada …", ru: "Искать ещё: звёзды, туманности, галактики …", pt: "Procurar mais: estrelas, nebulosas, galáxias …", ar: "ابحث عن المزيد: نجوم، سدم، مجرات …", el: "Αναζήτηση: άστρα, νεφελώματα, γαλαξίες …",
+    es: "Buscar más: estrellas, nebulosas, galaxias …", fr: "Chercher plus : étoiles, nébuleuses, galaxies …", tr: "Daha fazla ara: yıldız, bulutsu, gökada …", ru: "Искать ещё: звёзды, туманности, галактики …", pt: "Procurar mais: estrelas, nebulosas, galáxias …", ar: "ابحث عن المزيد: نجوم، سدم، مجرات …", el: "Αναζήτηση: άστρα, νεφελώματα, γαλαξίες …", id: "Cari lebih lanjut: bintang, nebula, galaksi …", fa: "جستجوی بیشتر: ستاره‌ها، سحابی‌ها، کهکشان‌ها …",
   },
   none: {
     de: "Nichts gefunden", en: "Nothing found", hi: "कुछ नहीं मिला", zh: "没有找到", ko: "결과 없음", ja: "見つかりません",
-    es: "Sin resultados", fr: "Aucun résultat", tr: "Sonuç yok", ru: "Ничего не найдено", pt: "Nada encontrado", ar: "لا نتائج", el: "Δεν βρέθηκε",
+    es: "Sin resultados", fr: "Aucun résultat", tr: "Sonuç yok", ru: "Ничего не найдено", pt: "Nada encontrado", ar: "لا نتائج", el: "Δεν βρέθηκε", id: "Tidak ditemukan apa pun", fa: "چیزی یافت نشد",
   },
   ly: {
     de: "Lichtjahre", en: "light years", hi: "प्रकाश-वर्ष", zh: "光年", ko: "광년", ja: "光年",
-    es: "años luz", fr: "années-lumière", tr: "ışık yılı", ru: "св. лет", pt: "anos-luz", ar: "سنة ضوئية", el: "έτη φωτός",
+    es: "años luz", fr: "années-lumière", tr: "ışık yılı", ru: "св. лет", pt: "anos-luz", ar: "سنة ضوئية", el: "έτη φωτός", id: "tahun cahaya", fa: "سال نوری",
   },
 };
 
