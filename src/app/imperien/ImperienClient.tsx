@@ -22,6 +22,7 @@ import {
   preloadEmpiresData,
 } from "@/lib/history/empiresClient";
 import { lookupWikiInBrowser } from "@/lib/history/wikiClientLookup";
+import { wikiLookupName } from "@/data/empireWikiAliases";
 import { decodeRing } from "@/lib/history/empiresClient";
 import {
   PREHIST_COLORS,
@@ -155,6 +156,94 @@ function labelText(name: string): string {
   const m = name.match(/^(?:allegiance|vassalage|suzerainty|protectorate|tribute)\s+of\s+(.+?)\s+to\s+.+$/i);
   return m ? m[1] : name;
 }
+
+// Namen der Reiche in der gewählten Sprache (Nutzerwunsch 17.10.2026): die
+// Daten haben nur englische Namen. Die Übersetzung holt der Browser bei
+// Wikipedia (Sprachlinks des englischen Artikels), merkt sie sich im
+// Browser-Speicher und fällt sonst auf den englischen Namen zurück.
+const nameCache = new Map<string, string>();
+const nameStoreLoaded = new Set<string>();
+function loadNameStore(lang: string) {
+  if (nameStoreLoaded.has(lang)) return;
+  nameStoreLoaded.add(lang);
+  try {
+    const raw = localStorage.getItem("cn_names_v1_" + lang);
+    if (raw) {
+      const o = JSON.parse(raw) as Record<string, string>;
+      for (const k of Object.keys(o)) nameCache.set(lang + "|" + k, o[k]);
+    }
+  } catch {
+    /* Speicher nicht verfügbar */
+  }
+}
+function dispName(name: string, lang: string): string {
+  const base = labelText(name);
+  if (lang === "en") return base;
+  loadNameStore(lang);
+  const v = nameCache.get(lang + "|" + name);
+  return v ? v : base;
+}
+async function fetchNames(lang: string, names: string[]): Promise<boolean> {
+  if (lang === "en") return false;
+  loadNameStore(lang);
+  const todo = [...new Set(names)].filter((n) => !nameCache.has(lang + "|" + n));
+  let got = false;
+  for (let i = 0; i < todo.length; i += 40) {
+    const chunk = todo.slice(i, i + 40);
+    const titles = chunk.map((n) => wikiLookupName(labelText(n)));
+    try {
+      const url =
+        "https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=langlinks&lllimit=500&lllang=" +
+        encodeURIComponent(lang) +
+        "&titles=" +
+        encodeURIComponent(titles.join("|"));
+      const res = await fetch(url);
+      if (!res.ok) continue;
+      const data = await res.json();
+      const q = data?.query ?? {};
+      const norm = new Map<string, string>();
+      for (const x of q.normalized ?? []) norm.set(x.from, x.to);
+      const redir = new Map<string, string>();
+      for (const x of q.redirects ?? []) redir.set(x.from, x.to);
+      const byTitle = new Map<string, string>();
+      for (const pg of Object.values(q.pages ?? {}) as { title?: string; langlinks?: { "*"?: string }[] }[]) {
+        const raw = pg.langlinks?.[0]?.["*"] ?? "";
+        byTitle.set(pg.title ?? "", raw.replace(/\s*[（(][^)）]*[)）]\s*$/, ""));
+      }
+      chunk.forEach((n, k) => {
+        let t = titles[k];
+        if (norm.has(t)) t = norm.get(t) as string;
+        if (redir.has(t)) t = redir.get(t) as string;
+        const tr = byTitle.get(t) ?? "";
+        nameCache.set(lang + "|" + n, tr);
+        if (tr) got = true;
+      });
+    } catch {
+      /* offline o. ä.: später erneut versuchen */
+    }
+  }
+  if (got) {
+    try {
+      const o: Record<string, string> = {};
+      for (const [k, v] of nameCache) if (v && k.startsWith(lang + "|")) o[k.slice(lang.length + 1)] = v;
+      localStorage.setItem("cn_names_v1_" + lang, JSON.stringify(o));
+    } catch {
+      /* ignorieren */
+    }
+  }
+  return got;
+}
+
+// "Jahr" / "Los" über dem Zeitlineal (waren fest auf Deutsch; Übersetzungen
+// selbst geschrieben, nicht von Muttersprachlern geprüft).
+const YEAR_WORD: Record<string, string> = {
+  de: "Jahr", en: "Year", hi: "वर्ष", zh: "年份", ko: "연도", ja: "年",
+  es: "Año", fr: "Année", tr: "Yıl", ru: "Год", pt: "Ano", ar: "السنة", el: "Έτος",
+};
+const GO_WORD: Record<string, string> = {
+  de: "Los", en: "Go", hi: "जाएं", zh: "前往", ko: "이동", ja: "移動",
+  es: "Ir", fr: "OK", tr: "Git", ru: "Ок", pt: "Ir", ar: "اذهب", el: "Πάμε",
+};
 
 function isLite(): boolean {
   if (liteCache === null) {
@@ -1038,24 +1127,30 @@ export default function ImperienClient() {
       const vt = Math.max(p1.y, 0), vb = Math.min(p2.y, H);
       const vw = vr - vl, vh = vb - vt;
       if (vw <= 0 || vh <= 0) { hide.push(e); continue; }
-      const words = labelText(e.name).split(" ");
-      // Zeilenumbruch wie im Browser (Zeichenbreite ca. 0,66 em): so wird der
-      // Name auch in schmalen Reichen groß genug und bleibt darin.
+      const text = dispName(e.name, lang);
+      const wide = (c: string) => /[\u2e80-\u9fff\uac00-\ud7af\uff00-\uffef]/.test(c);
+      const cjk = wide(text);
+      const toks = cjk ? Array.from(text) : text.split(" ");
+      const gap = cjk ? 0 : 0.62;
+      const emOf = (tk: string) => Array.from(tk).reduce((a, c) => a + (wide(c) ? 1.02 : 0.62), 0);
+      // Zeilenumbruch wie im Browser: so wird der Name auch in schmalen
+      // Reichen groß genug und bleibt darin (CJK: jedes Zeichen 1 em breit).
       const tryFit = (f: number) => {
-        const maxChars = Math.floor((vw * 0.94) / (0.62 * f));
+        const maxEm = (vw * 0.94) / f;
         const lines: number[] = [];
         let cur = 0;
-        for (const wd of words) {
-          if (wd.length > maxChars) return null;
-          if (cur === 0) cur = wd.length;
-          else if (cur + 1 + wd.length <= maxChars) cur += 1 + wd.length;
-          else { lines.push(cur); cur = wd.length; }
+        for (const tk of toks) {
+          const w1 = emOf(tk);
+          if (w1 > maxEm) return null;
+          if (cur === 0) cur = w1;
+          else if (cur + gap + w1 <= maxEm) cur += gap + w1;
+          else { lines.push(cur); cur = w1; }
         }
         lines.push(cur);
         if (lines.length > 2) return null;
         const th = lines.length * f * 1.2;
         if (th > vh * 0.85) return null;
-        return { f, tw: Math.max(...lines) * 0.62 * f + f * 0.7, th };
+        return { f, tw: Math.max(...lines) * f + f * 0.7, th };
       };
       let base: { f: number; tw: number; th: number } | null = null;
       for (let f = maxFs; f >= minFs; f -= 0.5) {
@@ -1087,7 +1182,7 @@ export default function ImperienClient() {
       if (!el) continue;
       el.style.display = "";
       el.style.fontSize = q.f.toFixed(1) + "px";
-      el.style.letterSpacing = "0.02em";
+      el.style.letterSpacing = lang === "ar" ? "0" : "0.02em";
       el.style.whiteSpace = "normal";
       el.style.textAlign = "center";
       el.style.padding = "0";
@@ -1101,6 +1196,18 @@ export default function ImperienClient() {
     }
   }
   layoutLabelsRef.current = layoutLabels;
+
+  // Übersetzte Namen in die Beschriftungen übernehmen (nur wenn sich Text ändert).
+  function applyNames() {
+    const list = wantLabelRef.current;
+    for (const e of list) {
+      const txt = dispName(e.name, lang);
+      if (e.shownText === txt) continue;
+      e.shownText = txt;
+      e.fill.getTooltip?.()?.setContent?.(txt);
+    }
+    layoutLabels();
+  }
 
   // Zeichnet ein bereits geladenes GeoJSON auf die Karte — ausgelagert aus
   // dem Lade-Effekt, damit sowohl ein frischer Server-Fetch als auch ein
@@ -1170,7 +1277,8 @@ export default function ImperienClient() {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     function setLabel(e: any, permanent: boolean, className: string) {
       e.fill.unbindTooltip();
-      e.fill.bindTooltip(labelText(e.name), { permanent, direction: "center", className, opacity: 0.95 });
+      e.shownText = dispName(e.name, lang);
+      e.fill.bindTooltip(e.shownText, { permanent, direction: "center", className, opacity: 0.95 });
       if (e.point) e.fill.getTooltip?.()?.setLatLng?.(L.latLng(e.point[1], e.point[0]));
       e.labeled = permanent;
       e.labelClass = className;
@@ -1281,7 +1389,10 @@ export default function ImperienClient() {
     }
 
     wantLabelRef.current = wantLabel;
-    layoutLabels();
+    applyNames();
+    fetchNames(lang, wantLabel.map((e) => e.name)).then((changed) => {
+      if (changed) applyNames();
+    });
 
     setErrorMessage(null);
     setHasRenderedBorders(true);
@@ -2063,7 +2174,7 @@ export default function ImperienClient() {
               "Jahr" am Handy immer oben, und die Jahreszahl hat eine feste
               Mindestbreite → nichts verschiebt sich mehr. */}
           <div className="mb-2 flex flex-row items-center justify-between gap-2 sm:gap-3">
-            <p className="label-mono text-xs uppercase text-muted">Jahr</p>
+            <p className="label-mono text-xs uppercase text-muted">{YEAR_WORD[lang] ?? YEAR_WORD.en}</p>
             <div className="flex items-center gap-3">
               {/* Nutzerwunsch 20.09.2026: "option hinzufügen das man auch
                   manuel das jahr eingeben kann" — Zahl eintippen und mit
@@ -2088,7 +2199,7 @@ export default function ImperienClient() {
                   type="submit"
                   className="border border-border px-2.5 py-1 text-[11px] uppercase text-foreground transition-colors hover:border-accent hover:text-accent"
                 >
-                  Los
+                  {GO_WORD[lang] ?? GO_WORD.en}
                 </button>
               </form>
               <p className="whitespace-nowrap text-right font-display text-sm font-bold tabular-nums text-accent sm:min-w-[11rem] sm:text-xl">
