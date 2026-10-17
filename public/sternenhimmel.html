@@ -78,7 +78,7 @@ button.chip[aria-pressed="true"] { color: var(--ink); border-color: rgba(255, 90
 #wikiSrc { color: var(--muted); font-size: 11px; }
 #horizonBtn { position: fixed; z-index: 3; left: 50%; transform: translateX(-50%); top: calc(104px + env(safe-area-inset-top, 0px)); font: 500 13px/1 var(--font-sans); color: var(--ink); background: var(--glass); border: 1px solid var(--line); border-radius: 999px; padding: 9px 14px; cursor: pointer; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 #horizonBtn[hidden] { display: none; }
-#nightQuick { white-space: nowrap; position: fixed; z-index: 3; left: 50%; transform: translateX(-50%); top: calc(104px + env(safe-area-inset-top, 0px)); font: 500 13px/1 var(--font-sans); color: var(--ink); background: var(--glass); border: 1px solid var(--line); border-radius: 999px; padding: 9px 14px; cursor: pointer; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
+#nightQuick { white-space: nowrap; position: fixed; z-index: 3; left: 50%; transform: translateX(-50%); top: calc(104px + env(safe-area-inset-top, 0px)); font: 500 11px/1 var(--font-sans); color: var(--ink); background: var(--glass); border: 1px solid var(--line); border-radius: 999px; padding: 5px 10px; opacity: 0.85; cursor: pointer; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 #nightQuick[hidden] { display: none; }
 #sensorMsg { position: fixed; z-index: 3; left: 50%; transform: translateX(-50%); top: calc(64px + env(safe-area-inset-top, 0px)); font-size: 13px; color: var(--ink); background: rgba(255, 90, 77, 0.25); border: 1px solid rgba(255, 90, 77, 0.5); border-radius: 10px; padding: 6px 12px; max-width: calc(100% - 40px); text-align: center; }
 #dirDeg { display: none; }
@@ -2792,7 +2792,8 @@ function endPointer(e) {
       if (now - lastTap < 320 && hit) { zoomTo(hit); }
       lastTap = now;
       let h2 = hit;
-      if (!h2) {
+      if (!h2 && S.sel) { wikiKey = ""; } // 17.10.2026: leeren Raum antippen = Auswahl aufheben
+      else if (!h2) {
         // leerer Himmel angetippt → Sternbild an dieser Stelle zeigen
         setupCamera();
         const q = vecToAltAz(unproject(e.clientX, e.clientY));
