@@ -409,6 +409,20 @@ const TRANSLATIONS_SOURCE = {
     de: "Jahr eingeben", en: "Enter year", hi: "वर्ष दर्ज करें", zh: "输入年份", ko: "연도 입력", ja: "年を入力",
     es: "Introducir año", fr: "Saisir l'année", tr: "Yıl girin", ru: "Введите год", pt: "Inserir ano", ar: "أدخل السنة", el: "Εισαγωγή έτους",
   },
+  // Kurzwörter über dem Zeitlineal und Titel der Geschichte-Animation
+  // (Texte selbst geschrieben, nicht von Muttersprachlern geprüft).
+  empiresYearWord: {
+    de: "Jahr", en: "Year", hi: "वर्ष", zh: "年份", ko: "연도", ja: "年",
+    es: "Año", fr: "Année", tr: "Yıl", ru: "Год", pt: "Ano", ar: "السنة", el: "Έτος",
+  },
+  empiresGoWord: {
+    de: "Los", en: "Go", hi: "जाएं", zh: "前往", ko: "이동", ja: "移動",
+    es: "Ir", fr: "OK", tr: "Git", ru: "Ок", pt: "Ir", ar: "اذهب", el: "Πάμε",
+  },
+  empiresIntroTitle: {
+    de: "Weltgeschichte", en: "World History", hi: "विश्व इतिहास", zh: "世界历史", ko: "세계사", ja: "世界史",
+    es: "Historia universal", fr: "Histoire du monde", tr: "Dünya Tarihi", ru: "Всемирная история", pt: "História mundial", ar: "تاريخ العالم", el: "Παγκόσμια ιστορία",
+  },
   empiresYearSelect: {
     de: "Jahr auswählen", en: "Select year", hi: "वर्ष चुनें", zh: "选择年份", ko: "연도 선택", ja: "年を選択",
     es: "Seleccionar año", fr: "Sélectionner l'année", tr: "Yıl seçin", ru: "Выберите год", pt: "Selecionar ano", ar: "اختر السنة", el: "Επιλογή έτους",
