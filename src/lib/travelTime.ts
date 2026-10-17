@@ -65,7 +65,7 @@ export function travelHours(km: number, v: VehicleId): number {
 
 const NUM_LOCALE: Record<Lang, string> = {
   de: "de-DE", en: "en-US", es: "es-ES", fr: "fr-FR", pt: "pt-BR", tr: "tr-TR", ru: "ru-RU",
-  el: "el-GR", ar: "ar", hi: "hi-IN", zh: "zh-CN", ja: "ja-JP", ko: "ko-KR",
+  el: "el-GR", ar: "ar", hi: "hi-IN", zh: "zh-CN", ja: "ja-JP", ko: "ko-KR", id: "id-ID", fa: "fa-IR",
 };
 
 /** Spanisch/Französisch/Portugiesisch brauchen "de"/"d'" zwischen "Millionen" und Einheit. */
@@ -85,11 +85,11 @@ function compact(n: number, lang: Lang, sig: number): string {
 
 const KM: Record<Lang, string> = {
   de: "km", en: "km", es: "km", fr: "km", pt: "km", tr: "km", ru: "км", el: "km",
-  ar: "كم", hi: "किमी", zh: "公里", ja: "km", ko: "km",
+  ar: "كم", hi: "किमी", zh: "公里", ja: "km", ko: "km", id: "km", fa: "کیلومتر",
 };
 const KMH: Record<Lang, string> = {
   de: "km/h", en: "km/h", es: "km/h", fr: "km/h", pt: "km/h", tr: "km/sa", ru: "км/ч", el: "km/h",
-  ar: "كم/س", hi: "किमी/घंटा", zh: "公里/小时", ja: "km/h", ko: "km/h",
+  ar: "كم/س", hi: "किमी/घंटा", zh: "公里/小时", ja: "km/h", ko: "km/h", id: "km/jam", fa: "کیلومتر/ساعت",
 };
 const SUP = "⁰¹²³⁴⁵⁶⁷⁸⁹";
 
@@ -117,7 +117,7 @@ export function fmtSpeed(v: VehicleId, lang: Lang): string {
 /** Lichtjahre kurz: "4,25 Lj", "2,5 Mio. Lj" */
 const LY_ABBR: Record<Lang, string> = {
   de: "Lj", en: "ly", es: "a. l.", fr: "al", pt: "a.l.", tr: "ışık yılı", ru: "св. лет", el: "έτη φωτός",
-  ar: "سنة ضوئية", hi: "प्रकाश वर्ष", zh: "光年", ja: "光年", ko: "광년",
+  ar: "سنة ضوئية", hi: "प्रकाश वर्ष", zh: "光年", ja: "光年", ko: "광년", id: "tahun cahaya", fa: "سال نوری",
 };
 export function fmtLy(ly: number, lang: Lang): string {
   const n = new Intl.NumberFormat(NUM_LOCALE[lang], { notation: "compact", maximumFractionDigits: 2 }).format(ly);
