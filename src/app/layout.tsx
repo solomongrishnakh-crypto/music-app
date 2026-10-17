@@ -5,6 +5,7 @@ import { PlayerProvider } from "@/contexts/PlayerContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import LangRedirect from "@/components/LangRedirect";
 import ScrollKeeper from "@/components/ScrollKeeper";
+import FeedbackBox from "@/components/FeedbackBox";
 import PersistentPlayerBar from "@/components/player/PersistentPlayerBar";
 import { HOME_KEYWORDS } from "@/lib/seoKeywords";
 import Script from "next/script";
@@ -133,6 +134,7 @@ export default function RootLayout({
             <ScrollKeeper />
             {children}
             <PersistentPlayerBar />
+            <FeedbackBox />
           </PlayerProvider>
         </LanguageProvider>
         {/* Besucherzahlen (Vercel Web Analytics, ohne Cookies): wirkt, sobald
