@@ -27,7 +27,7 @@ export interface ClientWikiInfo {
   source: "wikipedia";
 }
 
-const SUPPORTED = ["de", "en", "hi", "zh", "ko", "ja", "es", "fr", "tr", "ru", "pt", "ar", "el"];
+const SUPPORTED = ["de", "en", "hi", "zh", "ko", "ja", "es", "fr", "tr", "ru", "pt", "ar", "el", "id", "fa"];
 
 const GENERIC_TYPE_WORDS = new Set([
   "empire", "emirate", "emirates", "kingdom", "dynasty", "khanate", "khaganate",
