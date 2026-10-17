@@ -20,13 +20,15 @@ export const LANGUAGES = [
   { code: "zh", flag: "🇨🇳", name: "中文" },
   { code: "ja", flag: "🇯🇵", name: "日本語" },
   { code: "ko", flag: "🇰🇷", name: "한국어" },
+  { code: "id", flag: "🇮🇩", name: "Bahasa Indonesia" },
+  { code: "fa", flag: "🇮🇷", name: "فارسی" },
 ] as const;
 
 export type Lang = (typeof LANGUAGES)[number]["code"];
 
 // Sprachen, die von rechts nach links geschrieben werden — Layout kippt
 // entsprechend (dir="rtl" auf <html>).
-const RTL_LANGS: Lang[] = ["ar"];
+const RTL_LANGS: Lang[] = ["ar", "fa"];
 
 const STORAGE_KEY = "centaurian-lang";
 const LANG_CODES = LANGUAGES.map((l) => l.code);
