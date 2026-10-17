@@ -17,7 +17,7 @@ import SizePicker, { type PickItem } from "./SizePicker";
  */
 
 type Kind = "ns" | "bh" | "dwarf" | "moon" | "planet" | "star" | "orbit" | "nebula" | "galaxy" | "cluster" | "universe";
-type Names = Record<Lang, string>;
+type Names = Omit<Record<Lang, string>, "id" | "fa"> & Partial<Record<"id" | "fa", string>>;
 
 interface Obj {
   id: string;
@@ -101,6 +101,8 @@ const UI: Record<Lang, UiText> = {
   zh: { title: "大小比较", hint: "拖动、滚动或使用滑块：从中子星到整个可观测宇宙。", diam: "直径", ratio: "≈ {x} 的 {n} 倍", ly: "光年", note: "真实直径，已取整。巨星、黑洞和遥远星系的数值不确定（约）。黑洞：事件视界。", approx: "约", kinds: K("中子星", "黑洞", "矮行星", "卫星", "行星", "恒星", "太阳系", "星云", "星系", "超星系团", "宇宙"), zoom: "旅程", compare: "比较", vol: "体积 ≈ {n} 倍——可容纳这么多个{x}", tiny: "{x}在这里小于 1 像素" },
   ja: { title: "大きさ比較", hint: "ドラッグ、スクロール、またはスライダーで：中性子星から観測可能な宇宙全体まで。", diam: "直径", ratio: "≈ {x}の{n}倍", ly: "光年", note: "実際の直径（概数）。巨星、ブラックホール、遠方銀河の値は不確かです（約）。ブラックホール：事象の地平面。", approx: "約", kinds: K("中性子星", "ブラックホール", "準惑星", "衛星", "惑星", "恒星", "太陽系", "星雲", "銀河", "超銀河団", "宇宙"), zoom: "旅", compare: "比較", vol: "体積 ≈ {n}倍 — {x}がこれだけ入ります", tiny: "{x}はここでは1ピクセル未満です" },
   ko: { title: "크기 비교", hint: "드래그, 스크롤 또는 슬라이더로: 중성자별부터 관측 가능한 우주 전체까지.", diam: "지름", ratio: "≈ {x}의 {n}배", ly: "광년", note: "실제 지름(반올림). 거성, 블랙홀, 먼 은하의 값은 불확실합니다(약). 블랙홀: 사건의 지평선.", approx: "약", kinds: K("중성자별", "블랙홀", "왜행성", "위성", "행성", "항성", "태양계", "성운", "은하", "초은하단", "우주"), zoom: "여행", compare: "비교", vol: "부피 ≈ {n}배 – {x}이(가) 이만큼 들어갑니다", tiny: "{x}은(는) 여기서 1픽셀보다 작습니다" },
+  id: { title: "Perbandingan ukuran", hint: "Seret, gulir, atau gunakan penggeser: dari bintang neutron hingga seluruh alam semesta teramati.", diam: "Diameter", ratio: "≈ {n}× ukuran {x}", ly: "tahun cahaya", note: "Diameter sebenarnya, dibulatkan. Nilai untuk bintang raksasa, lubang hitam, dan galaksi jauh tidak pasti (perkiraan). Lubang hitam: cakrawala peristiwa.", approx: "sekitar", kinds: K("Bintang neutron", "Lubang hitam", "Planet kerdil", "Satelit", "Planet", "Bintang", "Tata Surya", "Nebula", "Galaksi", "Adigugus", "Alam semesta"), zoom: "Perjalanan", compare: "Bandingkan", vol: "Volume ≈ {n}× – sebanyak itu {x} muat di dalamnya", tiny: "{x} lebih kecil dari 1 piksel di sini" },
+  fa: { title: "مقایسهٔ اندازه‌ها", hint: "بکشید، اسکرول کنید یا از لغزنده استفاده کنید: از ستارهٔ نوترونی تا کل کیهان قابل مشاهده.", diam: "قطر", ratio: "≈ {n} برابر {x}", ly: "سال نوری", note: "قطرهای واقعی، گرد شده. مقادیر ابرغول‌ها، سیاه‌چاله‌ها و کهکشان‌های دور نامطمئن است (تقریبی). سیاه‌چاله: افق رویداد.", approx: "حدود", kinds: K("ستارهٔ نوترونی", "سیاه‌چاله", "سیارهٔ کوتوله", "قمر", "سیاره", "ستاره", "منظومهٔ شمسی", "سحابی", "کهکشان", "ابرخوشه", "کیهان"), zoom: "سفر", compare: "مقایسه", vol: "حجم ≈ {n} برابر – به این تعداد {x} در آن جا می‌شود", tiny: "{x} اینجا کوچک‌تر از ۱ پیکسل است" },
 };
 
 const LY_KM = 9.461e12;
