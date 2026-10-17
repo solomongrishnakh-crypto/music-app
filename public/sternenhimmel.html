@@ -277,7 +277,7 @@ const LANG = (() => {
   return l;
 })();
 const TX = I18N[LANG];
-const tr = (k, v) => { let s = TX[k] ?? I18N.de[k] ?? k; if (v) for (const n in v) s = s.replace("{" + n + "}", v[n]); return s; };
+const tr = (k, v) => { let s = TX[k] ?? I18N.en[k] ?? I18N.de[k] ?? k; if (v) for (const n in v) s = s.replace("{" + n + "}", v[n]); return s; };
 document.documentElement.lang = LANG;
 if (LANG === "ar" || LANG === "fa") document.documentElement.dir = "rtl";
 document.title = "Centaurian · " + tr("title");
