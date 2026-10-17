@@ -28,6 +28,8 @@
 // 0,1° statt grob vereinfacht), dafür kompakt gespeichert: jeder Ring als
 // Differenzen ganzer Zahlen in 0,01°-Schritten (gleich große Datei).
 const DATA_URL = "/data/empires-v2.json";
+// Historical Basemaps (A. Ourednik, GPL-3.0): Völker/Kulturen/Reiche Amerikas und Afrikas.
+const EXTRA_URL = "/data/empires-extra-v1.json";
 
 /** Ring aus Differenz-Ganzzahlen (0,01°) zurück in [lng, lat]-Paare. */
 export function decodeRing(d: number[]): number[][] {
@@ -99,13 +101,20 @@ let cachedEntriesPromise: Promise<RawEmpireEntry[]> | null = null;
 
 function loadEntries(): Promise<RawEmpireEntry[]> {
   if (!cachedEntriesPromise) {
+    // Zusatzdaten (Amerika/Afrika: Völker, Kulturen, Reiche, die Cliopatria
+    // nicht abdeckt) — fehlt die Datei, läuft alles wie vorher weiter.
+    const extra: Promise<RawEmpireEntry[]> = fetch(EXTRA_URL)
+      .then((res) => (res.ok ? res.json() : []))
+      .then((d) => (Array.isArray(d) ? (d as RawEmpireEntry[]) : []))
+      .catch(() => []);
     cachedEntriesPromise = fetch(DATA_URL)
       .then((res) => {
         if (!res.ok) throw new Error(`Datensatz-Fehler (Status ${res.status})`);
         return res.json();
       })
-      .then((data) => {
-        const entries = Array.isArray(data) ? (data as RawEmpireEntry[]) : [];
+      .then(async (data) => {
+        const base = Array.isArray(data) ? (data as RawEmpireEntry[]) : [];
+        const entries = base.concat(await extra);
         for (const e of entries) {
           if (typeof e.n === "string") e.n = normalizeEmpireName(e.n);
         }
