@@ -922,6 +922,7 @@ export default function ImperienClient() {
     for (const d of suggestionMap.keys()) {
       const x = nz(d);
       if (x === q) continue;
+      if (/^(personal union|allegiance|alliance)/.test(x)) continue;
       if (x.startsWith(q)) starts.push(d);
       else if (x.split(/[\s\-']+/).some((w) => w.startsWith(q)) || (q.length >= 3 && x.includes(q))) inc.push(d);
     }
