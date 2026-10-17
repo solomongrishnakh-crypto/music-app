@@ -93,6 +93,9 @@ export default function FeedbackBox() {
   const field =
     "w-full rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-white placeholder-white/35 outline-none transition focus:border-accent/80 focus:bg-white/10";
   const pos = { bottom: "calc(env(safe-area-inset-bottom, 0px) + 84px)" } as const;
+  // Sternenhimmel-Seite: Button links neben dem Menue-Knopf, damit er das Menue nicht verdeckt
+  const sky = /\/sternenhimmel\/?$/.test(pathname);
+  const posBtn = sky ? ({ bottom: "calc(env(safe-area-inset-bottom, 0px) + 18px)", right: 72 } as const) : pos;
 
   if (!open) {
     return (
@@ -103,8 +106,8 @@ export default function FeedbackBox() {
           setOpen(true);
         }}
         aria-label={tx[0]}
-        className="fixed right-3 z-40 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white/85 shadow-[0_4px_24px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] backdrop-blur-xl transition hover:border-accent/70 hover:bg-white/15 hover:text-white"
-        style={pos}
+        className="fixed right-3 z-[3100] flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white/85 shadow-[0_4px_24px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] backdrop-blur-xl transition hover:border-accent/70 hover:bg-white/15 hover:text-white"
+        style={posBtn}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
           <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />
@@ -120,7 +123,7 @@ export default function FeedbackBox() {
       role="dialog"
       aria-label={tx[1]}
       dir={rtl ? "rtl" : "ltr"}
-      className="fixed right-3 z-50 w-[min(270px,calc(100vw-24px))] overflow-hidden rounded-2xl border border-white/20 bg-white/[0.08] text-white shadow-[0_8px_40px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.22)] backdrop-blur-2xl backdrop-saturate-150"
+      className="fixed right-3 z-[3200] w-[min(270px,calc(100vw-24px))] overflow-hidden rounded-2xl border border-white/20 bg-white/[0.08] text-white shadow-[0_8px_40px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.22)] backdrop-blur-2xl backdrop-saturate-150"
       style={pos}
     >
       <div className="h-px w-full bg-gradient-to-r from-transparent via-accent to-transparent" />
