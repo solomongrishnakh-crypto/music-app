@@ -35,7 +35,7 @@ interface WikiSummary {
 // automatisch auf Englisch zurückgefallen, und erst danach auf die
 // redaktionelle Fallback-Beschreibung (siehe empireFallbacks.ts).
 const SUPPORTED_WIKI_LANGS = [
-  "de", "en", "hi", "zh", "ko", "ja", "es", "fr", "tr", "ru", "pt", "ar", "el",
+  "de", "en", "hi", "zh", "ko", "ja", "es", "fr", "tr", "ru", "pt", "ar", "el", "id", "fa",
 ] as const;
 type WikiLang = (typeof SUPPORTED_WIKI_LANGS)[number];
 
