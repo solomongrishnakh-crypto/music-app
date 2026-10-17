@@ -1438,10 +1438,10 @@ export default function ImperienClient() {
           smoothFactor: isLite() ? 1.8 : 1.1,
           stroke: true,
           color: c,
-          weight: 4,
+          weight: feature.properties?.UMB ? 1 : 3,
           opacity: hl && !hl.has(name) ? 0.5 : 1,
           fillColor: c,
-          fillOpacity: hl && !hl.has(name) ? 0.5 : 1,
+          fillOpacity: feature.properties?.UMB ? 0 : hl && !hl.has(name) ? 0.5 : 1,
         });
         const border = L.polygon(latlngs, {
           renderer: borderRendererRef.current ?? undefined,
@@ -1449,6 +1449,7 @@ export default function ImperienClient() {
           interactive: false,
           smoothFactor: isLite() ? 1.8 : 1.1,
           ...bs(name, isMajor),
+          ...(feature.properties?.UMB ? { dashArray: "5 4", weight: 1.1, opacity: 0.7 } : {}),
         });
         const point = cachedLabelPoint(feature.geometry);
         const subjectTo: string = feature.properties?.SUBJECTO ?? "";
@@ -1483,7 +1484,7 @@ export default function ImperienClient() {
         if (e.styleKey !== sk) {
           e.styleKey = sk;
           const on = !hl || hl.has(name);
-          e.fill.setStyle({ fillOpacity: on ? 1 : 0.5, opacity: on ? 1 : 0.5 });
+          e.fill.setStyle({ fillOpacity: feature.properties?.UMB ? 0 : on ? 1 : 0.5, opacity: on ? 1 : 0.5 });
           e.border.setStyle(bs(name, isMajor));
         }
         if (e.labeled !== wants || (wants && e.labelClass !== labelClass)) {
