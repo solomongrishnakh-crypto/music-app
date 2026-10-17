@@ -1221,6 +1221,7 @@ export default function ImperienClient() {
   layoutLabelsRef.current = layoutLabels;
 
   // Übersetzte Namen in die Beschriftungen übernehmen (nur wenn sich Text ändert).
+  const applyNamesRef = useRef<() => void>(() => {});
   function applyNames() {
     const list = wantLabelRef.current;
     for (const e of list) {
@@ -1231,6 +1232,27 @@ export default function ImperienClient() {
     }
     layoutLabels();
   }
+
+  applyNamesRef.current = applyNames;
+
+  // Sprachwechsel: Beschriftungen sofort neu setzen (kuratierte/zwischengespeicherte
+  // Namen sofort, fehlende danach von Wikipedia nachladen).
+  useEffect(() => {
+    if (!leafletReady) return;
+    applyNamesRef.current();
+    const list = wantLabelRef.current;
+    let cancelled = false;
+    fetchNames(lang, list.map((e) => e.name)).then((changed) => {
+      if (changed && !cancelled) {
+        applyNamesRef.current();
+        setNameTick((x) => x + 1);
+      }
+    });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang, leafletReady]);
 
   // Zeichnet ein bereits geladenes GeoJSON auf die Karte — ausgelagert aus
   // dem Lade-Effekt, damit sowohl ein frischer Server-Fetch als auch ein
@@ -1415,7 +1437,7 @@ export default function ImperienClient() {
     applyNames();
     fetchNames(lang, wantLabel.map((e) => e.name)).then((changed) => {
       if (changed) {
-        applyNames();
+        applyNamesRef.current();
         setNameTick((x) => x + 1);
       }
     });
@@ -1481,7 +1503,7 @@ export default function ImperienClient() {
       lastDrawTimeRef.current = Date.now();
       const cached = bordersCacheRef.current.get(year);
       if (cached) {
-        renderBordersGeojson(cached);
+        renderBordersGeojsonRef.current(cached);
         return;
       }
       setIsLoadingBorders(true);
@@ -1489,7 +1511,7 @@ export default function ImperienClient() {
         .then((geojson) => {
           if (cancelled) return;
           bordersCacheRef.current.set(year, geojson);
-          renderBordersGeojson(geojson);
+          renderBordersGeojsonRef.current(geojson);
         })
         .catch(() => {
           if (!cancelled) {
@@ -1946,7 +1968,16 @@ export default function ImperienClient() {
             >
               Cliopatria
             </a>{" "}
-            (Seshat Global History Databank, CC BY 4.0), {t("empiresTiles")}:{" "}
+            (Seshat Global History Databank, CC BY 4.0),{" "}
+            <a
+              href="https://github.com/aourednik/historical-basemaps"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="underline decoration-dotted hover:text-accent"
+            >
+              Historical Basemaps
+            </a>{" "}
+            (A. Ourednik, GPL-3.0), {t("empiresTiles")}:{" "}
             <a
               href="https://www.esri.com"
               target="_blank"
