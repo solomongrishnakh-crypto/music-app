@@ -2446,6 +2446,12 @@ export default function ImperienClient() {
           >
             {t("empiresAllEmpires")} →
           </Link>
+          <Link
+            href={localePath("/imperien/werkzeuge")}
+            className="label-mono ms-3 mt-8 inline-block border border-border px-4 py-2.5 text-xs uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent"
+          >
+            {t("empiresTools")} →
+          </Link>
         </div>
       </div>
     </main>
