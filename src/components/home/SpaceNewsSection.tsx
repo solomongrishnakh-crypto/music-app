@@ -54,6 +54,7 @@ function CardThumbnail({ src, alt }: CardThumbnailProps) {
         src={src}
         alt={alt}
         loading="lazy"
+        decoding="async"
         className="h-full w-full object-cover opacity-85 transition-opacity group-hover:opacity-100"
         onError={() => setFailed(true)}
       />
@@ -151,7 +152,7 @@ export default function SpaceNewsSection() {
               {news.map((item, i) => (
                 <RevealCard
                   key={item.id}
-                  className="glass-card p-2"
+                  className="relative overflow-hidden border border-border/60 bg-surface-elevated/40 p-2 transition-colors hover:border-accent/50"
                   onClick={() => setSelected(i)}
                 >
                   {() => (
@@ -191,6 +192,14 @@ interface NewsDetailModalProps {
  * Artikel-Link, Autoren und Quelle, statt eines reinen Textblocks. */
 function NewsDetailModal({ article, onClose }: NewsDetailModalProps) {
   const { t } = useLanguage();
+  // Hintergrund beim Öffnen nicht mitscrollen/neu zeichnen lassen (Ruckel-Fix 17.10.2026).
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4"
@@ -214,6 +223,7 @@ function NewsDetailModal({ article, onClose }: NewsDetailModalProps) {
             <img
               src={article.imageUrl}
               alt={article.title}
+              decoding="async"
               className="h-full w-full object-cover"
             />
           </div>
