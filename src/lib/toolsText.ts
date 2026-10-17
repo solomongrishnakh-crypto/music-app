@@ -8,33 +8,33 @@ export type Tx = Record<Lang, string>;
 
 export const TOOLS_HEAD: Tx = {
   de: "Weltraum-Rechner", en: "Space calculators", hi: "अंतरिक्ष कैलकुलेटर", zh: "太空计算器", ko: "우주 계산기", ja: "宇宙の計算機",
-  es: "Calculadoras espaciales", fr: "Calculateurs spatiaux", tr: "Uzay hesaplayıcıları", ru: "Космические калькуляторы", pt: "Calculadoras espaciais", ar: "حاسبات الفضاء", el: "Υπολογιστές διαστήματος",
+  es: "Calculadoras espaciales", fr: "Calculateurs spatiaux", tr: "Uzay hesaplayıcıları", ru: "Космические калькуляторы", pt: "Calculadoras espaciais", ar: "حاسبات الفضاء", el: "Υπολογιστές διαστήματος", id: "Kalkulator antariksa", fa: "ماشین‌حساب‌های فضایی",
 };
 
 export const PLANET_TX = {
   title: {
     de: "Gewicht & Alter auf anderen Welten", en: "Weight & Age on Other Worlds", hi: "दूसरी दुनिया में आपका वज़न और उम्र", zh: "你在其他星球上的体重与年龄", ko: "다른 천체에서의 몸무게와 나이", ja: "他の天体での体重と年齢",
-    es: "Peso y edad en otros mundos", fr: "Poids et âge sur d'autres mondes", tr: "Başka Dünyalarda Kilo ve Yaş", ru: "Вес и возраст на других мирах", pt: "Peso e idade em outros mundos", ar: "وزنك وعمرك على عوالم أخرى", el: "Βάρος και ηλικία σε άλλους κόσμους",
+    es: "Peso y edad en otros mundos", fr: "Poids et âge sur d'autres mondes", tr: "Başka Dünyalarda Kilo ve Yaş", ru: "Вес и возраст на других мирах", pt: "Peso e idade em outros mundos", ar: "وزنك وعمرك على عوالم أخرى", el: "Βάρος και ηλικία σε άλλους κόσμους", id: "Berat & Usia di Dunia Lain", fa: "وزن و سن در دنیاهای دیگر",
   } as Tx,
   weight: {
     de: "Dein Gewicht (kg)", en: "Your weight (kg)", hi: "आपका वज़न (किग्रा)", zh: "你的体重（公斤）", ko: "몸무게 (kg)", ja: "体重（kg）",
-    es: "Tu peso (kg)", fr: "Ton poids (kg)", tr: "Kilonuz (kg)", ru: "Ваш вес (кг)", pt: "Seu peso (kg)", ar: "وزنك (كغ)", el: "Το βάρος σου (kg)",
+    es: "Tu peso (kg)", fr: "Ton poids (kg)", tr: "Kilonuz (kg)", ru: "Ваш вес (кг)", pt: "Seu peso (kg)", ar: "وزنك (كغ)", el: "Το βάρος σου (kg)", id: "Berat badan Anda (kg)", fa: "وزن شما (کیلوگرم)",
   } as Tx,
   birth: {
     de: "Dein Geburtsdatum", en: "Your date of birth", hi: "आपकी जन्म तिथि", zh: "你的出生日期", ko: "생년월일", ja: "生年月日",
-    es: "Tu fecha de nacimiento", fr: "Ta date de naissance", tr: "Doğum tarihiniz", ru: "Дата рождения", pt: "Sua data de nascimento", ar: "تاريخ ميلادك", el: "Η ημερομηνία γέννησής σου",
+    es: "Tu fecha de nacimiento", fr: "Ta date de naissance", tr: "Doğum tarihiniz", ru: "Дата рождения", pt: "Sua data de nascimento", ar: "تاريخ ميلادك", el: "Η ημερομηνία γέννησής σου", id: "Tanggal lahir Anda", fa: "تاریخ تولد شما",
   } as Tx,
   wCol: {
     de: "Gewicht", en: "Weight", hi: "वज़न", zh: "体重", ko: "몸무게", ja: "体重",
-    es: "Peso", fr: "Poids", tr: "Kilo", ru: "Вес", pt: "Peso", ar: "الوزن", el: "Βάρος",
+    es: "Peso", fr: "Poids", tr: "Kilo", ru: "Вес", pt: "Peso", ar: "الوزن", el: "Βάρος", id: "Berat", fa: "وزن",
   } as Tx,
   aCol: {
     de: "Alter", en: "Age", hi: "उम्र", zh: "年龄", ko: "나이", ja: "年齢",
-    es: "Edad", fr: "Âge", tr: "Yaş", ru: "Возраст", pt: "Idade", ar: "العمر", el: "Ηλικία",
+    es: "Edad", fr: "Âge", tr: "Yaş", ru: "Возраст", pt: "Idade", ar: "العمر", el: "Ηλικία", id: "Usia", fa: "سن",
   } as Tx,
   moon: {
     de: "Mond", en: "Moon", hi: "चंद्रमा", zh: "月球", ko: "달", ja: "月",
-    es: "Luna", fr: "Lune", tr: "Ay", ru: "Луна", pt: "Lua", ar: "القمر", el: "Σελήνη",
+    es: "Luna", fr: "Lune", tr: "Ay", ru: "Луна", pt: "Lua", ar: "القمر", el: "Σελήνη", id: "Bulan", fa: "ماه",
   } as Tx,
   note: {
     de: "Gewicht = was eine Waage dort anzeigen würde. Bei Gasplaneten gilt die 1-bar-Schicht am Äquator. Alter = deine gelebten Tage ÷ Dauer eines Planetenjahres. Quelle: NASA Planetary Fact Sheet.",
@@ -49,46 +49,46 @@ export const PLANET_TX = {
     ru: "Вес — это то, что показали бы там весы. Для газовых гигантов — уровень 1 бар на экваторе. Возраст = прожитые дни ÷ длительность года на планете. Источник: NASA Planetary Fact Sheet.",
     pt: "Peso = o que uma balança mostraria lá. Nos gigantes gasosos, o nível de 1 bar no equador. Idade = dias vividos ÷ duração de um ano do planeta. Fonte: NASA Planetary Fact Sheet.",
     ar: "الوزن = ما ستُظهره الميزان هناك. في الكواكب الغازية يُؤخذ مستوى ضغط 1 بار عند خط الاستواء. العمر = الأيام التي عشتها ÷ طول سنة الكوكب. المصدر: NASA Planetary Fact Sheet.",
-    el: "Βάρος = ό,τι θα έδειχνε εκεί μια ζυγαριά. Στους αέριους γίγαντες ισχύει το επίπεδο 1 bar στον ισημερινό. Ηλικία = ημέρες που έζησες ÷ διάρκεια ενός έτους του πλανήτη. Πηγή: NASA Planetary Fact Sheet.",
+    el: "Βάρος = ό,τι θα έδειχνε εκεί μια ζυγαριά. Στους αέριους γίγαντες ισχύει το επίπεδο 1 bar στον ισημερινό. Ηλικία = ημέρες που έζησες ÷ διάρκεια ενός έτους του πλανήτη. Πηγή: NASA Planetary Fact Sheet.", id: "Berat = yang akan ditunjukkan timbangan di sana. Untuk planet gas raksasa, pada tingkat tekanan 1 bar di khatulistiwa. Usia = jumlah hari yang Anda jalani ÷ panjang satu tahun planet. Sumber: NASA Planetary Fact Sheet.", fa: "وزن = آنچه یک ترازو آنجا نشان می‌دهد. برای غول‌های گازی، در تراز ۱ بار در استوا. سن = روزهایی که زندگی کرده‌اید ÷ طول یک سال آن سیاره. منبع: برگه اطلاعات سیارات ناسا.",
   } as Tx,
 };
 
 export const TRAVEL_TX = {
   title: {
     de: "Reisezeit-Rechner", en: "Travel Time Calculator", hi: "यात्रा-समय कैलकुलेटर", zh: "旅行时间计算器", ko: "여행 시간 계산기", ja: "旅行時間計算機",
-    es: "Calculadora de tiempo de viaje", fr: "Calculateur de temps de trajet", tr: "Yolculuk Süresi Hesaplayıcı", ru: "Калькулятор времени полёта", pt: "Calculadora de tempo de viagem", ar: "حاسبة زمن الرحلة", el: "Υπολογιστής χρόνου ταξιδιού",
+    es: "Calculadora de tiempo de viaje", fr: "Calculateur de temps de trajet", tr: "Yolculuk Süresi Hesaplayıcı", ru: "Калькулятор времени полёта", pt: "Calculadora de tempo de viagem", ar: "حاسبة زمن الرحلة", el: "Υπολογιστής χρόνου ταξιδιού", id: "Kalkulator Waktu Perjalanan", fa: "ماشین‌حساب زمان سفر",
   } as Tx,
   dest: {
     de: "Ziel", en: "Destination", hi: "गंतव्य", zh: "目的地", ko: "목적지", ja: "目的地",
-    es: "Destino", fr: "Destination", tr: "Hedef", ru: "Пункт назначения", pt: "Destino", ar: "الوجهة", el: "Προορισμός",
+    es: "Destino", fr: "Destination", tr: "Hedef", ru: "Пункт назначения", pt: "Destino", ar: "الوجهة", el: "Προορισμός", id: "Tujuan", fa: "مقصد",
   } as Tx,
   dist: {
     de: "Entfernung", en: "Distance", hi: "दूरी", zh: "距离", ko: "거리", ja: "距離",
-    es: "Distancia", fr: "Distance", tr: "Mesafe", ru: "Расстояние", pt: "Distância", ar: "المسافة", el: "Απόσταση",
+    es: "Distancia", fr: "Distance", tr: "Mesafe", ru: "Расстояние", pt: "Distância", ar: "المسافة", el: "Απόσταση", id: "Jarak", fa: "فاصله",
   } as Tx,
   milky: {
     de: "Zentrum der Milchstraße", en: "Milky Way center", hi: "आकाशगंगा का केंद्र", zh: "银河系中心", ko: "은하수 중심", ja: "天の川銀河の中心",
-    es: "Centro de la Vía Láctea", fr: "Centre de la Voie lactée", tr: "Samanyolu'nun merkezi", ru: "Центр Млечного Пути", pt: "Centro da Via Láctea", ar: "مركز درب التبانة", el: "Κέντρο του Γαλαξία",
+    es: "Centro de la Vía Láctea", fr: "Centre de la Voie lactée", tr: "Samanyolu'nun merkezi", ru: "Центр Млечного Пути", pt: "Centro da Via Láctea", ar: "مركز درب التبانة", el: "Κέντρο του Γαλαξία", id: "Pusat Bima Sakti", fa: "مرکز راه شیری",
   } as Tx,
   andromeda: {
     de: "Andromeda-Galaxie", en: "Andromeda Galaxy", hi: "एंड्रोमेडा आकाशगंगा", zh: "仙女座星系", ko: "안드로메다 은하", ja: "アンドロメダ銀河",
-    es: "Galaxia de Andrómeda", fr: "Galaxie d'Andromède", tr: "Andromeda Galaksisi", ru: "Галактика Андромеды", pt: "Galáxia de Andrômeda", ar: "مجرة المرأة المسلسلة", el: "Γαλαξίας της Ανδρομέδας",
+    es: "Galaxia de Andrómeda", fr: "Galaxie d'Andromède", tr: "Andromeda Galaksisi", ru: "Галактика Андромеды", pt: "Galáxia de Andrômeda", ar: "مجرة المرأة المسلسلة", el: "Γαλαξίας της Ανδρομέδας", id: "Galaksi Andromeda", fa: "کهکشان آندرومدا",
   } as Tx,
   walk: {
     de: "Zu Fuß", en: "On foot", hi: "पैदल", zh: "步行", ko: "도보", ja: "徒歩",
-    es: "A pie", fr: "À pied", tr: "Yürüyerek", ru: "Пешком", pt: "A pé", ar: "سيرًا على الأقدام", el: "Με τα πόδια",
+    es: "A pie", fr: "À pied", tr: "Yürüyerek", ru: "Пешком", pt: "A pé", ar: "سيرًا على الأقدام", el: "Με τα πόδια", id: "Berjalan kaki", fa: "پیاده",
   } as Tx,
   car: {
     de: "Auto", en: "Car", hi: "कार", zh: "汽车", ko: "자동차", ja: "車",
-    es: "Coche", fr: "Voiture", tr: "Araba", ru: "Автомобиль", pt: "Carro", ar: "سيارة", el: "Αυτοκίνητο",
+    es: "Coche", fr: "Voiture", tr: "Araba", ru: "Автомобиль", pt: "Carro", ar: "سيارة", el: "Αυτοκίνητο", id: "Mobil", fa: "خودرو",
   } as Tx,
   plane: {
     de: "Flugzeug", en: "Airliner", hi: "विमान", zh: "客机", ko: "여객기", ja: "旅客機",
-    es: "Avión", fr: "Avion de ligne", tr: "Uçak", ru: "Самолёт", pt: "Avião", ar: "طائرة ركاب", el: "Αεροπλάνο",
+    es: "Avión", fr: "Avion de ligne", tr: "Uçak", ru: "Самолёт", pt: "Avião", ar: "طائرة ركاب", el: "Αεροπλάνο", id: "Pesawat penumpang", fa: "هواپیمای مسافربری",
   } as Tx,
   light: {
     de: "Licht", en: "Light", hi: "प्रकाश", zh: "光", ko: "빛", ja: "光",
-    es: "Luz", fr: "Lumière", tr: "Işık", ru: "Свет", pt: "Luz", ar: "الضوء", el: "Φως",
+    es: "Luz", fr: "Lumière", tr: "Işık", ru: "Свет", pt: "Luz", ar: "الضوء", el: "Φως", id: "Cahaya", fa: "نور",
   } as Tx,
   note: {
     de: "Gerade Strecke bei konstanter Höchstgeschwindigkeit – ohne Beschleunigen, Bremsen oder Umwege. Planeten und Mond: aktueller Abstand zur Erde. Die Reise läuft in Echtzeit.",
@@ -103,14 +103,14 @@ export const TRAVEL_TX = {
     ru: "Прямая линия на постоянной максимальной скорости — без разгона, торможения и объездов. Планеты и Луна: текущее расстояние до Земли. Полёт идёт в реальном времени.",
     pt: "Linha reta em velocidade máxima constante, sem aceleração, frenagem ou desvios. Planetas e Lua: distância atual até a Terra. A viagem decorre em tempo real.",
     ar: "خط مستقيم بسرعة قصوى ثابتة، دون تسارع أو فرملة أو التفاف. الكواكب والقمر: المسافة الحالية إلى الأرض. تجري الرحلة في الوقت الفعلي.",
-    el: "Ευθεία διαδρομή με σταθερή μέγιστη ταχύτητα – χωρίς επιτάχυνση, πέδηση ή παρακάμψεις. Πλανήτες και Σελήνη: τρέχουσα απόσταση από τη Γη. Το ταξίδι εξελίσσεται σε πραγματικό χρόνο.",
+    el: "Ευθεία διαδρομή με σταθερή μέγιστη ταχύτητα – χωρίς επιτάχυνση, πέδηση ή παρακάμψεις. Πλανήτες και Σελήνη: τρέχουσα απόσταση από τη Γη. Το ταξίδι εξελίσσεται σε πραγματικό χρόνο.", id: "Garis lurus dengan kecepatan tertinggi konstan – tanpa percepatan, pengereman, atau jalan memutar. Planet dan Bulan: jarak saat ini dari Bumi. Perjalanan berlangsung secara real time.", fa: "خط مستقیم با بیشینه سرعت ثابت – بدون شتاب‌گیری، ترمز یا انحراف. سیارات و ماه: فاصله کنونی از زمین. سفر به‌صورت زنده انجام می‌شود.",
   } as Tx,
 };
 
 export const CAL_TX = {
   title: {
     de: "Kosmischer Kalender", en: "Cosmic Calendar", hi: "ब्रह्मांडीय कैलेंडर", zh: "宇宙历", ko: "우주 달력", ja: "宇宙カレンダー",
-    es: "Calendario cósmico", fr: "Calendrier cosmique", tr: "Kozmik Takvim", ru: "Космический календарь", pt: "Calendário cósmico", ar: "التقويم الكوني", el: "Κοσμικό ημερολόγιο",
+    es: "Calendario cósmico", fr: "Calendrier cosmique", tr: "Kozmik Takvim", ru: "Космический календарь", pt: "Calendário cósmico", ar: "التقويم الكوني", el: "Κοσμικό ημερολόγιο", id: "Kalender Kosmik", fa: "تقویم کیهانی",
   } as Tx,
   intro: {
     de: "Stell dir die gesamte Geschichte des Universums (13,8 Milliarden Jahre) als ein einziges Jahr vor: Der Urknall ist am 1. Januar um 0:00 Uhr, heute ist Silvester um Mitternacht.",
@@ -125,23 +125,23 @@ export const CAL_TX = {
     ru: "Представьте всю историю Вселенной (13,8 млрд лет) сжатой в один год: Большой взрыв происходит 1 января в 00:00, а сегодня — полночь 31 декабря.",
     pt: "Imagine toda a história do universo (13,8 bilhões de anos) comprimida em um único ano: o Big Bang acontece em 1.º de janeiro às 00:00 e hoje é 31 de dezembro à meia-noite.",
     ar: "تخيّل تاريخ الكون كله (13.8 مليار سنة) مضغوطًا في سنة واحدة: يحدث الانفجار العظيم في 1 يناير عند الساعة 00:00، واليوم هو منتصف ليل 31 ديسمبر.",
-    el: "Φαντάσου όλη την ιστορία του σύμπαντος (13,8 δισ. έτη) συμπιεσμένη σε ένα μόνο έτος: η Μεγάλη Έκρηξη γίνεται την 1η Ιανουαρίου στις 00:00 και σήμερα είναι παραμονή Πρωτοχρονιάς, μεσάνυχτα.",
+    el: "Φαντάσου όλη την ιστορία του σύμπαντος (13,8 δισ. έτη) συμπιεσμένη σε ένα μόνο έτος: η Μεγάλη Έκρηξη γίνεται την 1η Ιανουαρίου στις 00:00 και σήμερα είναι παραμονή Πρωτοχρονιάς, μεσάνυχτα.", id: "Bayangkan seluruh sejarah alam semesta (13,8 miliar tahun) dipadatkan dalam satu tahun: Big Bang terjadi pada 1 Januari pukul 00.00, dan hari ini adalah malam Tahun Baru tepat tengah malam.", fa: "تصور کنید تمام تاریخ جهان (۱۳٫۸ میلیارد سال) در یک سال فشرده شود: مه‌بانگ در اول ژانویه ساعت ۰۰:۰۰ رخ می‌دهد و امروز نیمه‌شب شب سال نو است.",
   } as Tx,
   year: {
     de: "Ganzes Jahr", en: "Whole year", hi: "पूरा साल", zh: "全年", ko: "1년 전체", ja: "1年間",
-    es: "Año completo", fr: "Année entière", tr: "Tüm yıl", ru: "Весь год", pt: "Ano inteiro", ar: "السنة كاملة", el: "Ολόκληρο έτος",
+    es: "Año completo", fr: "Année entière", tr: "Tüm yıl", ru: "Весь год", pt: "Ano inteiro", ar: "السنة كاملة", el: "Ολόκληρο έτος", id: "Satu tahun penuh", fa: "کل سال",
   } as Tx,
   day: {
     de: "Letzter Tag", en: "Last day", hi: "आख़िरी दिन", zh: "最后一天", ko: "마지막 날", ja: "最後の1日",
-    es: "Último día", fr: "Dernier jour", tr: "Son gün", ru: "Последний день", pt: "Último dia", ar: "اليوم الأخير", el: "Τελευταία μέρα",
+    es: "Último día", fr: "Dernier jour", tr: "Son gün", ru: "Последний день", pt: "Último dia", ar: "اليوم الأخير", el: "Τελευταία μέρα", id: "Hari terakhir", fa: "آخرین روز",
   } as Tx,
   minute: {
     de: "Letzte Minute", en: "Last minute", hi: "आख़िरी मिनट", zh: "最后一分钟", ko: "마지막 1분", ja: "最後の1分",
-    es: "Último minuto", fr: "Dernière minute", tr: "Son dakika", ru: "Последняя минута", pt: "Último minuto", ar: "الدقيقة الأخيرة", el: "Τελευταίο λεπτό",
+    es: "Último minuto", fr: "Dernière minute", tr: "Son dakika", ru: "Последняя минута", pt: "Último minuto", ar: "الدقيقة الأخيرة", el: "Τελευταίο λεπτό", id: "Menit terakhir", fa: "آخرین دقیقه",
   } as Tx,
   today: {
     de: "Heute", en: "Today", hi: "आज", zh: "今天", ko: "오늘", ja: "今日",
-    es: "Hoy", fr: "Aujourd'hui", tr: "Bugün", ru: "Сегодня", pt: "Hoje", ar: "اليوم", el: "Σήμερα",
+    es: "Hoy", fr: "Aujourd'hui", tr: "Bugün", ru: "Сегодня", pt: "Hoje", ar: "اليوم", el: "Σήμερα", id: "Hari ini", fa: "امروز",
   } as Tx,
   life: {
     de: "Ein Menschenleben von 80 Jahren dauert in diesem Kalender nur {s} Sekunden.",
@@ -156,7 +156,7 @@ export const CAL_TX = {
     ru: "В этом календаре человеческая жизнь в 80 лет длится всего {s} секунды.",
     pt: "Neste calendário, uma vida humana de 80 anos dura apenas {s} segundo.",
     ar: "في هذا التقويم، تستغرق حياة الإنسان البالغة 80 عامًا نحو {s} ثانية فقط.",
-    el: "Σε αυτό το ημερολόγιο, μια ανθρώπινη ζωή 80 ετών διαρκεί μόλις {s} δευτερόλεπτα.",
+    el: "Σε αυτό το ημερολόγιο, μια ανθρώπινη ζωή 80 ετών διαρκεί μόλις {s} δευτερόλεπτα.", id: "Hidup manusia selama 80 tahun hanya berlangsung {s} detik dalam kalender ini.", fa: "عمر ۸۰ ساله یک انسان در این تقویم فقط {s} ثانیه طول می‌کشد.",
   } as Tx,
   note: {
     de: "Zeitangaben sind gerundete Näherungen nach heutigem Forschungsstand.",
@@ -171,85 +171,85 @@ export const CAL_TX = {
     ru: "Даты — округлённые приближения по современным данным науки.",
     pt: "As datas são aproximações arredondadas, segundo a pesquisa atual.",
     ar: "التواريخ تقريبية ومقرّبة وفق أحدث الأبحاث.",
-    el: "Οι ημερομηνίες είναι στρογγυλεμένες προσεγγίσεις με βάση τη σύγχρονη έρευνα.",
+    el: "Οι ημερομηνίες είναι στρογγυλεμένες προσεγγίσεις με βάση τη σύγχρονη έρευνα.", id: "Tanggal-tanggal ini adalah perkiraan yang dibulatkan berdasarkan penelitian terkini.", fa: "تاریخ‌ها تقریب‌های گردشده بر پایه پژوهش‌های کنونی‌اند.",
   } as Tx,
 };
 
 /** Ereignisse des Kosmischen Kalenders: ago = Jahre vor heute. */
 export const CAL_EVENTS: { ago: number; n: Tx }[] = [
-  { ago: 13.8e9, n: { de: "Urknall", en: "Big Bang", hi: "महाविस्फोट (बिग बैंग)", zh: "宇宙大爆炸", ko: "빅뱅", ja: "ビッグバン", es: "Big Bang", fr: "Big Bang", tr: "Büyük Patlama", ru: "Большой взрыв", pt: "Big Bang", ar: "الانفجار العظيم", el: "Μεγάλη Έκρηξη" } },
-  { ago: 13.6e9, n: { de: "Erste Sterne leuchten", en: "The first stars ignite", hi: "पहले तारे जगमगाते हैं", zh: "第一批恒星点亮", ko: "첫 별이 빛나기 시작함", ja: "最初の星が輝く", es: "Se encienden las primeras estrellas", fr: "Les premières étoiles s'allument", tr: "İlk yıldızlar parlar", ru: "Загораются первые звёзды", pt: "As primeiras estrelas se acendem", ar: "تتوهج أولى النجوم", el: "Ανάβουν τα πρώτα άστρα" } },
-  { ago: 4.57e9, n: { de: "Sonne und Erde entstehen", en: "Sun and Earth form", hi: "सूर्य और पृथ्वी बनते हैं", zh: "太阳和地球形成", ko: "태양과 지구의 탄생", ja: "太陽と地球の誕生", es: "Se forman el Sol y la Tierra", fr: "Formation du Soleil et de la Terre", tr: "Güneş ve Dünya oluşur", ru: "Рождение Солнца и Земли", pt: "Formam-se o Sol e a Terra", ar: "تتشكّل الشمس والأرض", el: "Σχηματίζονται ο Ήλιος και η Γη" } },
-  { ago: 3.8e9, n: { de: "Erste Spuren von Leben", en: "First traces of life", hi: "जीवन के पहले निशान", zh: "最早的生命痕迹", ko: "생명의 첫 흔적", ja: "生命の最初の痕跡", es: "Primeras huellas de vida", fr: "Premières traces de vie", tr: "Yaşamın ilk izleri", ru: "Первые следы жизни", pt: "Primeiros vestígios de vida", ar: "أولى آثار الحياة", el: "Τα πρώτα ίχνη ζωής" } },
-  { ago: 2.4e9, n: { de: "Sauerstoff reichert sich in der Luft an", en: "Oxygen builds up in the air", hi: "हवा में ऑक्सीजन बढ़ती है", zh: "大气中氧气积累", ko: "대기에 산소가 쌓임", ja: "大気に酸素がたまる", es: "El oxígeno se acumula en el aire", fr: "L'oxygène s'accumule dans l'air", tr: "Havada oksijen birikir", ru: "В атмосфере накапливается кислород", pt: "O oxigênio se acumula no ar", ar: "يتراكم الأكسجين في الهواء", el: "Συσσωρεύεται οξυγόνο στην ατμόσφαιρα" } },
-  { ago: 1.8e9, n: { de: "Zellen mit Zellkern", en: "Cells with a nucleus", hi: "केंद्रक वाली कोशिकाएँ", zh: "出现有细胞核的细胞", ko: "세포핵을 가진 세포 등장", ja: "核をもつ細胞の出現", es: "Células con núcleo", fr: "Cellules à noyau", tr: "Çekirdekli hücreler", ru: "Клетки с ядром", pt: "Células com núcleo", ar: "خلايا ذات نواة", el: "Κύτταρα με πυρήνα" } },
-  { ago: 6e8, n: { de: "Erste vielzellige Tiere", en: "First multicellular animals", hi: "पहले बहुकोशिकीय जानवर", zh: "最早的多细胞动物", ko: "최초의 다세포 동물", ja: "最初の多細胞動物", es: "Primeros animales pluricelulares", fr: "Premiers animaux pluricellulaires", tr: "İlk çok hücreli hayvanlar", ru: "Первые многоклеточные животные", pt: "Primeiros animais multicelulares", ar: "أولى الحيوانات متعددة الخلايا", el: "Τα πρώτα πολυκύτταρα ζώα" } },
-  { ago: 5.39e8, n: { de: "Kambrische Explosion", en: "Cambrian explosion", hi: "कैम्ब्रियन विस्फोट", zh: "寒武纪生命大爆发", ko: "캄브리아기 대폭발", ja: "カンブリア爆発", es: "Explosión cámbrica", fr: "Explosion cambrienne", tr: "Kambriyen patlaması", ru: "Кембрийский взрыв", pt: "Explosão Cambriana", ar: "الانفجار الكمبري", el: "Καμβριανή έκρηξη" } },
-  { ago: 2.3e8, n: { de: "Dinosaurier erscheinen", en: "Dinosaurs appear", hi: "डायनासोर प्रकट होते हैं", zh: "恐龙出现", ko: "공룡의 등장", ja: "恐竜の登場", es: "Aparecen los dinosaurios", fr: "Apparition des dinosaures", tr: "Dinozorlar ortaya çıkar", ru: "Появляются динозавры", pt: "Surgem os dinossauros", ar: "ظهور الديناصورات", el: "Εμφανίζονται οι δεινόσαυροι" } },
-  { ago: 6.6e7, n: { de: "Dinosaurier sterben aus", en: "Dinosaurs go extinct", hi: "डायनासोर विलुप्त होते हैं", zh: "恐龙灭绝", ko: "공룡 멸종", ja: "恐竜の絶滅", es: "Se extinguen los dinosaurios", fr: "Extinction des dinosaures", tr: "Dinozorlar yok olur", ru: "Вымирание динозавров", pt: "Extinção dos dinossauros", ar: "انقراض الديناصورات", el: "Εξαφανίζονται οι δεινόσαυροι" } },
-  { ago: 2.8e6, n: { de: "Erste Menschen der Gattung Homo", en: "First humans of the genus Homo", hi: "होमो वंश के पहले मनुष्य", zh: "最早的人属（Homo）成员", ko: "호모속 최초의 인류", ja: "ヒト属（ホモ）の最初の人類", es: "Primeros humanos del género Homo", fr: "Premiers humains du genre Homo", tr: "Homo cinsinin ilk insanları", ru: "Первые люди рода Homo", pt: "Primeiros humanos do gênero Homo", ar: "أوائل البشر من جنس هومو", el: "Οι πρώτοι άνθρωποι του γένους Homo" } },
-  { ago: 3e5, n: { de: "Der moderne Mensch (Homo sapiens)", en: "Modern humans (Homo sapiens)", hi: "आधुनिक मानव (होमो सेपियन्स)", zh: "现代人（智人）", ko: "현생인류 (호모 사피엔스)", ja: "現生人類（ホモ・サピエンス）", es: "El ser humano moderno (Homo sapiens)", fr: "L'être humain moderne (Homo sapiens)", tr: "Modern insan (Homo sapiens)", ru: "Современный человек (Homo sapiens)", pt: "O ser humano moderno (Homo sapiens)", ar: "الإنسان الحديث (هومو سابينس)", el: "Ο σύγχρονος άνθρωπος (Homo sapiens)" } },
-  { ago: 1.2e4, n: { de: "Landwirtschaft beginnt", en: "Farming begins", hi: "खेती की शुरुआत", zh: "农业开始", ko: "농업의 시작", ja: "農業の始まり", es: "Comienza la agricultura", fr: "Début de l'agriculture", tr: "Tarım başlar", ru: "Начало земледелия", pt: "Começa a agricultura", ar: "بداية الزراعة", el: "Αρχίζει η γεωργία" } },
-  { ago: 5200, n: { de: "Erste Schrift", en: "First writing", hi: "पहली लिखावट", zh: "最早的文字", ko: "최초의 문자", ja: "最初の文字", es: "Primera escritura", fr: "Première écriture", tr: "İlk yazı", ru: "Первая письменность", pt: "Primeira escrita", ar: "أولى الكتابات", el: "Η πρώτη γραφή" } },
-  { ago: 4600, n: { de: "Pyramiden von Gizeh", en: "Pyramids of Giza", hi: "गीज़ा के पिरामिड", zh: "吉萨金字塔", ko: "기자의 피라미드", ja: "ギザのピラミッド", es: "Pirámides de Guiza", fr: "Pyramides de Gizeh", tr: "Giza Piramitleri", ru: "Пирамиды Гизы", pt: "Pirâmides de Gizé", ar: "أهرامات الجيزة", el: "Οι πυραμίδες της Γκίζας" } },
-  { ago: 2000, n: { de: "Beginn unserer Zeitrechnung", en: "Start of the common era", hi: "सामान्य युग की शुरुआत", zh: "公元纪年开始", ko: "서기 시작", ja: "西暦の始まり", es: "Inicio de la era común", fr: "Début de l'ère commune", tr: "Ortak çağın başlangıcı", ru: "Начало нашей эры", pt: "Início da era comum", ar: "بداية التقويم الميلادي", el: "Αρχή της κοινής χρονολόγησης" } },
-  { ago: 575, n: { de: "Gutenbergs Buchdruck", en: "Gutenberg's printing press", hi: "गुटेनबर्ग का छापाखाना", zh: "古腾堡印刷术", ko: "구텐베르크의 인쇄술", ja: "グーテンベルクの印刷術", es: "La imprenta de Gutenberg", fr: "L'imprimerie de Gutenberg", tr: "Gutenberg'in matbaası", ru: "Печатный станок Гутенберга", pt: "A prensa de Gutenberg", ar: "مطبعة غوتنبرغ", el: "Το τυπογραφείο του Γουτεμβέργιου" } },
-  { ago: 57, n: { de: "Erste Mondlandung", en: "First Moon landing", hi: "पहली चंद्र लैंडिंग", zh: "首次登月", ko: "첫 달 착륙", ja: "初の月面着陸", es: "Primer alunizaje", fr: "Premier alunissage", tr: "İlk Ay'a iniş", ru: "Первая высадка на Луну", pt: "Primeira alunissagem", ar: "أول هبوط على القمر", el: "Η πρώτη προσελήνωση" } },
+  { ago: 13.8e9, n: { de: "Urknall", en: "Big Bang", hi: "महाविस्फोट (बिग बैंग)", zh: "宇宙大爆炸", ko: "빅뱅", ja: "ビッグバン", es: "Big Bang", fr: "Big Bang", tr: "Büyük Patlama", ru: "Большой взрыв", pt: "Big Bang", ar: "الانفجار العظيم", el: "Μεγάλη Έκρηξη", id: "Big Bang", fa: "مه‌بانگ" } },
+  { ago: 13.6e9, n: { de: "Erste Sterne leuchten", en: "The first stars ignite", hi: "पहले तारे जगमगाते हैं", zh: "第一批恒星点亮", ko: "첫 별이 빛나기 시작함", ja: "最初の星が輝く", es: "Se encienden las primeras estrellas", fr: "Les premières étoiles s'allument", tr: "İlk yıldızlar parlar", ru: "Загораются первые звёзды", pt: "As primeiras estrelas se acendem", ar: "تتوهج أولى النجوم", el: "Ανάβουν τα πρώτα άστρα", id: "Bintang-bintang pertama menyala", fa: "نخستین ستاره‌ها روشن می‌شوند" } },
+  { ago: 4.57e9, n: { de: "Sonne und Erde entstehen", en: "Sun and Earth form", hi: "सूर्य और पृथ्वी बनते हैं", zh: "太阳和地球形成", ko: "태양과 지구의 탄생", ja: "太陽と地球の誕生", es: "Se forman el Sol y la Tierra", fr: "Formation du Soleil et de la Terre", tr: "Güneş ve Dünya oluşur", ru: "Рождение Солнца и Земли", pt: "Formam-se o Sol e a Terra", ar: "تتشكّل الشمس والأرض", el: "Σχηματίζονται ο Ήλιος και η Γη", id: "Matahari dan Bumi terbentuk", fa: "خورشید و زمین شکل می‌گیرند" } },
+  { ago: 3.8e9, n: { de: "Erste Spuren von Leben", en: "First traces of life", hi: "जीवन के पहले निशान", zh: "最早的生命痕迹", ko: "생명의 첫 흔적", ja: "生命の最初の痕跡", es: "Primeras huellas de vida", fr: "Premières traces de vie", tr: "Yaşamın ilk izleri", ru: "Первые следы жизни", pt: "Primeiros vestígios de vida", ar: "أولى آثار الحياة", el: "Τα πρώτα ίχνη ζωής", id: "Jejak kehidupan pertama", fa: "نخستین نشانه‌های حیات" } },
+  { ago: 2.4e9, n: { de: "Sauerstoff reichert sich in der Luft an", en: "Oxygen builds up in the air", hi: "हवा में ऑक्सीजन बढ़ती है", zh: "大气中氧气积累", ko: "대기에 산소가 쌓임", ja: "大気に酸素がたまる", es: "El oxígeno se acumula en el aire", fr: "L'oxygène s'accumule dans l'air", tr: "Havada oksijen birikir", ru: "В атмосфере накапливается кислород", pt: "O oxigênio se acumula no ar", ar: "يتراكم الأكسجين في الهواء", el: "Συσσωρεύεται οξυγόνο στην ατμόσφαιρα", id: "Oksigen menumpuk di udara", fa: "اکسیژن در هوا انباشته می‌شود" } },
+  { ago: 1.8e9, n: { de: "Zellen mit Zellkern", en: "Cells with a nucleus", hi: "केंद्रक वाली कोशिकाएँ", zh: "出现有细胞核的细胞", ko: "세포핵을 가진 세포 등장", ja: "核をもつ細胞の出現", es: "Células con núcleo", fr: "Cellules à noyau", tr: "Çekirdekli hücreler", ru: "Клетки с ядром", pt: "Células com núcleo", ar: "خلايا ذات نواة", el: "Κύτταρα με πυρήνα", id: "Sel berinti", fa: "یاخته‌های دارای هسته" } },
+  { ago: 6e8, n: { de: "Erste vielzellige Tiere", en: "First multicellular animals", hi: "पहले बहुकोशिकीय जानवर", zh: "最早的多细胞动物", ko: "최초의 다세포 동물", ja: "最初の多細胞動物", es: "Primeros animales pluricelulares", fr: "Premiers animaux pluricellulaires", tr: "İlk çok hücreli hayvanlar", ru: "Первые многоклеточные животные", pt: "Primeiros animais multicelulares", ar: "أولى الحيوانات متعددة الخلايا", el: "Τα πρώτα πολυκύτταρα ζώα", id: "Hewan multiseluler pertama", fa: "نخستین جانوران چندیاخته‌ای" } },
+  { ago: 5.39e8, n: { de: "Kambrische Explosion", en: "Cambrian explosion", hi: "कैम्ब्रियन विस्फोट", zh: "寒武纪生命大爆发", ko: "캄브리아기 대폭발", ja: "カンブリア爆発", es: "Explosión cámbrica", fr: "Explosion cambrienne", tr: "Kambriyen patlaması", ru: "Кембрийский взрыв", pt: "Explosão Cambriana", ar: "الانفجار الكمبري", el: "Καμβριανή έκρηξη", id: "Ledakan Kambrium", fa: "انفجار کامبرین" } },
+  { ago: 2.3e8, n: { de: "Dinosaurier erscheinen", en: "Dinosaurs appear", hi: "डायनासोर प्रकट होते हैं", zh: "恐龙出现", ko: "공룡의 등장", ja: "恐竜の登場", es: "Aparecen los dinosaurios", fr: "Apparition des dinosaures", tr: "Dinozorlar ortaya çıkar", ru: "Появляются динозавры", pt: "Surgem os dinossauros", ar: "ظهور الديناصورات", el: "Εμφανίζονται οι δεινόσαυροι", id: "Dinosaurus muncul", fa: "دایناسورها پدید می‌آیند" } },
+  { ago: 6.6e7, n: { de: "Dinosaurier sterben aus", en: "Dinosaurs go extinct", hi: "डायनासोर विलुप्त होते हैं", zh: "恐龙灭绝", ko: "공룡 멸종", ja: "恐竜の絶滅", es: "Se extinguen los dinosaurios", fr: "Extinction des dinosaures", tr: "Dinozorlar yok olur", ru: "Вымирание динозавров", pt: "Extinção dos dinossauros", ar: "انقراض الديناصورات", el: "Εξαφανίζονται οι δεινόσαυροι", id: "Dinosaurus punah", fa: "دایناسورها منقرض می‌شوند" } },
+  { ago: 2.8e6, n: { de: "Erste Menschen der Gattung Homo", en: "First humans of the genus Homo", hi: "होमो वंश के पहले मनुष्य", zh: "最早的人属（Homo）成员", ko: "호모속 최초의 인류", ja: "ヒト属（ホモ）の最初の人類", es: "Primeros humanos del género Homo", fr: "Premiers humains du genre Homo", tr: "Homo cinsinin ilk insanları", ru: "Первые люди рода Homo", pt: "Primeiros humanos do gênero Homo", ar: "أوائل البشر من جنس هومو", el: "Οι πρώτοι άνθρωποι του γένους Homo", id: "Manusia pertama dari genus Homo", fa: "نخستین انسان‌های سرده هومو" } },
+  { ago: 3e5, n: { de: "Der moderne Mensch (Homo sapiens)", en: "Modern humans (Homo sapiens)", hi: "आधुनिक मानव (होमो सेपियन्स)", zh: "现代人（智人）", ko: "현생인류 (호모 사피엔스)", ja: "現生人類（ホモ・サピエンス）", es: "El ser humano moderno (Homo sapiens)", fr: "L'être humain moderne (Homo sapiens)", tr: "Modern insan (Homo sapiens)", ru: "Современный человек (Homo sapiens)", pt: "O ser humano moderno (Homo sapiens)", ar: "الإنسان الحديث (هومو سابينس)", el: "Ο σύγχρονος άνθρωπος (Homo sapiens)", id: "Manusia modern (Homo sapiens)", fa: "انسان امروزی (هوموساپینس)" } },
+  { ago: 1.2e4, n: { de: "Landwirtschaft beginnt", en: "Farming begins", hi: "खेती की शुरुआत", zh: "农业开始", ko: "농업의 시작", ja: "農業の始まり", es: "Comienza la agricultura", fr: "Début de l'agriculture", tr: "Tarım başlar", ru: "Начало земледелия", pt: "Começa a agricultura", ar: "بداية الزراعة", el: "Αρχίζει η γεωργία", id: "Pertanian dimulai", fa: "آغاز کشاورزی" } },
+  { ago: 5200, n: { de: "Erste Schrift", en: "First writing", hi: "पहली लिखावट", zh: "最早的文字", ko: "최초의 문자", ja: "最初の文字", es: "Primera escritura", fr: "Première écriture", tr: "İlk yazı", ru: "Первая письменность", pt: "Primeira escrita", ar: "أولى الكتابات", el: "Η πρώτη γραφή", id: "Tulisan pertama", fa: "نخستین خط" } },
+  { ago: 4600, n: { de: "Pyramiden von Gizeh", en: "Pyramids of Giza", hi: "गीज़ा के पिरामिड", zh: "吉萨金字塔", ko: "기자의 피라미드", ja: "ギザのピラミッド", es: "Pirámides de Guiza", fr: "Pyramides de Gizeh", tr: "Giza Piramitleri", ru: "Пирамиды Гизы", pt: "Pirâmides de Gizé", ar: "أهرامات الجيزة", el: "Οι πυραμίδες της Γκίζας", id: "Piramida Giza", fa: "اهرام جیزه" } },
+  { ago: 2000, n: { de: "Beginn unserer Zeitrechnung", en: "Start of the common era", hi: "सामान्य युग की शुरुआत", zh: "公元纪年开始", ko: "서기 시작", ja: "西暦の始まり", es: "Inicio de la era común", fr: "Début de l'ère commune", tr: "Ortak çağın başlangıcı", ru: "Начало нашей эры", pt: "Início da era comum", ar: "بداية التقويم الميلادي", el: "Αρχή της κοινής χρονολόγησης", id: "Awal tarikh Masehi", fa: "آغاز دوران میلادی" } },
+  { ago: 575, n: { de: "Gutenbergs Buchdruck", en: "Gutenberg's printing press", hi: "गुटेनबर्ग का छापाखाना", zh: "古腾堡印刷术", ko: "구텐베르크의 인쇄술", ja: "グーテンベルクの印刷術", es: "La imprenta de Gutenberg", fr: "L'imprimerie de Gutenberg", tr: "Gutenberg'in matbaası", ru: "Печатный станок Гутенберга", pt: "A prensa de Gutenberg", ar: "مطبعة غوتنبرغ", el: "Το τυπογραφείο του Γουτεμβέργιου", id: "Mesin cetak Gutenberg", fa: "ماشین چاپ گوتنبرگ" } },
+  { ago: 57, n: { de: "Erste Mondlandung", en: "First Moon landing", hi: "पहली चंद्र लैंडिंग", zh: "首次登月", ko: "첫 달 착륙", ja: "初の月面着陸", es: "Primer alunizaje", fr: "Premier alunissage", tr: "İlk Ay'a iniş", ru: "Первая высадка на Луну", pt: "Primeira alunissagem", ar: "أول هبوط على القمر", el: "Η πρώτη προσελήνωση", id: "Pendaratan pertama di Bulan", fa: "نخستین فرود بر ماه" } },
 ];
 
 /** Live-Reise im Reisezeit-Rechner (Nutzerwunsch 15.10.2026). */
 export const JOURNEY_TX = {
   start: {
     de: "Reise starten", en: "Start journey", hi: "यात्रा शुरू करें", zh: "开始旅行", ko: "여행 시작", ja: "旅を始める",
-    es: "Iniciar viaje", fr: "Démarrer le voyage", tr: "Yolculuğu başlat", ru: "Начать полёт", pt: "Iniciar viagem", ar: "ابدأ الرحلة", el: "Έναρξη ταξιδιού",
+    es: "Iniciar viaje", fr: "Démarrer le voyage", tr: "Yolculuğu başlat", ru: "Начать полёт", pt: "Iniciar viagem", ar: "ابدأ الرحلة", el: "Έναρξη ταξιδιού", id: "Mulai perjalanan", fa: "شروع سفر",
   } as Tx,
   stop: {
     de: "Stopp", en: "Stop", hi: "रोकें", zh: "停止", ko: "정지", ja: "停止",
-    es: "Detener", fr: "Arrêter", tr: "Durdur", ru: "Стоп", pt: "Parar", ar: "إيقاف", el: "Διακοπή",
+    es: "Detener", fr: "Arrêter", tr: "Durdur", ru: "Стоп", pt: "Parar", ar: "إيقاف", el: "Διακοπή", id: "Berhenti", fa: "توقف",
   } as Tx,
   reset: {
     de: "Zurücksetzen", en: "Reset", hi: "रीसेट", zh: "重置", ko: "초기화", ja: "リセット",
-    es: "Reiniciar", fr: "Réinitialiser", tr: "Sıfırla", ru: "Сбросить", pt: "Reiniciar", ar: "إعادة ضبط", el: "Επαναφορά",
+    es: "Reiniciar", fr: "Réinitialiser", tr: "Sıfırla", ru: "Сбросить", pt: "Reiniciar", ar: "إعادة ضبط", el: "Επαναφορά", id: "Atur ulang", fa: "بازنشانی",
   } as Tx,
   duration: {
     de: "Gesamtdauer", en: "Total duration", hi: "कुल अवधि", zh: "总时长", ko: "총 소요 시간", ja: "所要時間",
-    es: "Duración total", fr: "Durée totale", tr: "Toplam süre", ru: "Общее время", pt: "Duração total", ar: "المدة الكلية", el: "Συνολική διάρκεια",
+    es: "Duración total", fr: "Durée totale", tr: "Toplam süre", ru: "Общее время", pt: "Duração total", ar: "المدة الكلية", el: "Συνολική διάρκεια", id: "Total durasi", fa: "مدت کل",
   } as Tx,
   arrival: {
     de: "Ankunft", en: "Arrival", hi: "आगमन", zh: "到达时间", ko: "도착", ja: "到着",
-    es: "Llegada", fr: "Arrivée", tr: "Varış", ru: "Прибытие", pt: "Chegada", ar: "الوصول", el: "Άφιξη",
+    es: "Llegada", fr: "Arrivée", tr: "Varış", ru: "Прибытие", pt: "Chegada", ar: "الوصول", el: "Άφιξη", id: "Kedatangan", fa: "رسیدن",
   } as Tx,
   go: {
     de: "Los", en: "Go", hi: "चलो", zh: "出发", ko: "출발", ja: "出発",
-    es: "¡Ya!", fr: "Partir", tr: "Başla", ru: "Поехали", pt: "Partir", ar: "انطلق", el: "Πάμε",
+    es: "¡Ya!", fr: "Partir", tr: "Başla", ru: "Поехали", pt: "Partir", ar: "انطلق", el: "Πάμε", id: "Jalan", fa: "برو",
   } as Tx,
   custom: {
     de: "Eigene Geschwindigkeit", en: "Custom speed", hi: "अपनी गति", zh: "自定义速度", ko: "직접 입력한 속도", ja: "好きな速度",
-    es: "Velocidad propia", fr: "Vitesse personnalisée", tr: "Özel hız", ru: "Своя скорость", pt: "Velocidade própria", ar: "سرعة مخصصة", el: "Δική σου ταχύτητα",
+    es: "Velocidad propia", fr: "Vitesse personnalisée", tr: "Özel hız", ru: "Своя скорость", pt: "Velocidade própria", ar: "سرعة مخصصة", el: "Δική σου ταχύτητα", id: "Kecepatan kustom", fa: "سرعت دلخواه",
   } as Tx,
   traveled: {
     de: "Zurückgelegt", en: "Travelled", hi: "तय की गई दूरी", zh: "已行进", ko: "이동 거리", ja: "進んだ距離",
-    es: "Recorrido", fr: "Parcouru", tr: "Alınan yol", ru: "Пройдено", pt: "Percorrido", ar: "المسافة المقطوعة", el: "Διανύθηκαν",
+    es: "Recorrido", fr: "Parcouru", tr: "Alınan yol", ru: "Пройдено", pt: "Percorrido", ar: "المسافة المقطوعة", el: "Διανύθηκαν", id: "Sudah ditempuh", fa: "طی‌شده",
   } as Tx,
   remaining: {
     de: "Verbleibend", en: "Remaining", hi: "शेष दूरी", zh: "剩余", ko: "남은 거리", ja: "残り",
-    es: "Restante", fr: "Restant", tr: "Kalan", ru: "Осталось", pt: "Restante", ar: "المتبقي", el: "Απομένουν",
+    es: "Restante", fr: "Restant", tr: "Kalan", ru: "Осталось", pt: "Restante", ar: "المتبقي", el: "Απομένουν", id: "Tersisa", fa: "باقی‌مانده",
   } as Tx,
   elapsed: {
     de: "Reisezeit", en: "Travel time", hi: "यात्रा का समय", zh: "旅行时间", ko: "경과 시간", ja: "経過時間",
-    es: "Tiempo de viaje", fr: "Durée du trajet", tr: "Yolculuk süresi", ru: "Время в пути", pt: "Tempo de viagem", ar: "زمن الرحلة", el: "Χρόνος ταξιδιού",
+    es: "Tiempo de viaje", fr: "Durée du trajet", tr: "Yolculuk süresi", ru: "Время в пути", pt: "Tempo de viagem", ar: "زمن الرحلة", el: "Χρόνος ταξιδιού", id: "Waktu perjalanan", fa: "زمان سفر",
   } as Tx,
   lapse: {
     de: "Zeitraffer", en: "Time-lapse", hi: "टाइम-लैप्स", zh: "快进", ko: "배속", ja: "早送り",
-    es: "Aceleración", fr: "Accéléré", tr: "Hızlandırma", ru: "Ускорение", pt: "Aceleração", ar: "تسريع الوقت", el: "Επιτάχυνση",
+    es: "Aceleración", fr: "Accéléré", tr: "Hızlandırma", ru: "Ускорение", pt: "Aceleração", ar: "تسريع الوقت", el: "Επιτάχυνση", id: "Percepatan waktu", fa: "شتاب زمانی",
   } as Tx,
   arrived: {
     de: "Angekommen!", en: "Arrived!", hi: "पहुँच गए!", zh: "已抵达！", ko: "도착!", ja: "到着！",
-    es: "¡Llegaste!", fr: "Arrivé !", tr: "Vardınız!", ru: "Прибыли!", pt: "Chegou!", ar: "وصلت!", el: "Φτάσατε!",
+    es: "¡Llegaste!", fr: "Arrivé !", tr: "Vardınız!", ru: "Прибыли!", pt: "Chegou!", ar: "وصلت!", el: "Φτάσατε!", id: "Sudah tiba!", fa: "رسیدیم!",
   } as Tx,
   speed: {
     de: "Geschwindigkeit", en: "Speed", hi: "गति", zh: "速度", ko: "속도", ja: "速度",
-    es: "Velocidad", fr: "Vitesse", tr: "Hız", ru: "Скорость", pt: "Velocidade", ar: "السرعة", el: "Ταχύτητα",
+    es: "Velocidad", fr: "Vitesse", tr: "Hız", ru: "Скорость", pt: "Velocidade", ar: "السرعة", el: "Ταχύτητα", id: "Kecepatan", fa: "سرعت",
   } as Tx,
 };
 
@@ -257,31 +257,31 @@ export const JOURNEY_TX = {
 export const JOURNEY2_TX = {
   s1: {
     de: "Wohin?", en: "Where to?", hi: "कहाँ जाना है?", zh: "去哪里？", ko: "어디로?", ja: "どこへ？",
-    es: "¿A dónde?", fr: "Où aller ?", tr: "Nereye?", ru: "Куда?", pt: "Para onde?", ar: "إلى أين؟", el: "Πού;",
+    es: "¿A dónde?", fr: "Où aller ?", tr: "Nereye?", ru: "Куда?", pt: "Para onde?", ar: "إلى أين؟", el: "Πού;", id: "Ke mana?", fa: "به کجا؟",
   } as Tx,
   s2: {
     de: "Wie schnell?", en: "How fast?", hi: "कितनी तेज़?", zh: "多快？", ko: "얼마나 빠르게?", ja: "どのくらいの速さ？",
-    es: "¿A qué velocidad?", fr: "À quelle vitesse ?", tr: "Ne kadar hızlı?", ru: "Как быстро?", pt: "Qual velocidade?", ar: "بأي سرعة؟", el: "Πόσο γρήγορα;",
+    es: "¿A qué velocidad?", fr: "À quelle vitesse ?", tr: "Ne kadar hızlı?", ru: "Как быстро?", pt: "Qual velocidade?", ar: "بأي سرعة؟", el: "Πόσο γρήγορα;", id: "Secepat apa?", fa: "با چه سرعتی؟",
   } as Tx,
   s3: {
     de: "Deine Reise", en: "Your journey", hi: "आपकी यात्रा", zh: "你的旅程", ko: "나의 여행", ja: "あなたの旅",
-    es: "Tu viaje", fr: "Ton voyage", tr: "Yolculuğun", ru: "Твой полёт", pt: "Sua viagem", ar: "رحلتك", el: "Το ταξίδι σου",
+    es: "Tu viaje", fr: "Ton voyage", tr: "Yolculuğun", ru: "Твой полёт", pt: "Sua viagem", ar: "رحلتك", el: "Το ταξίδι σου", id: "Perjalanan Anda", fa: "سفر شما",
   } as Tx,
   sirius: {
     de: "Sirius", en: "Sirius", hi: "व्याध (सिरियस)", zh: "天狼星", ko: "시리우스", ja: "シリウス",
-    es: "Sirio", fr: "Sirius", tr: "Sirius", ru: "Сириус", pt: "Sirius", ar: "الشعرى اليمانية", el: "Σείριος",
+    es: "Sirio", fr: "Sirius", tr: "Sirius", ru: "Сириус", pt: "Sirius", ar: "الشعرى اليمانية", el: "Σείριος", id: "Sirius", fa: "شعرای یمانی",
   } as Tx,
   betel: {
     de: "Beteigeuze", en: "Betelgeuse", hi: "आर्द्रा (बेटेलगेस)", zh: "参宿四", ko: "베텔게우스", ja: "ベテルギウス",
-    es: "Betelgeuse", fr: "Bételgeuse", tr: "Betelgeuse", ru: "Бетельгейзе", pt: "Betelgeuse", ar: "منكب الجوزاء", el: "Μπετελγκέζ",
+    es: "Betelgeuse", fr: "Bételgeuse", tr: "Betelgeuse", ru: "Бетельгейзе", pt: "Betelgeuse", ar: "منكب الجوزاء", el: "Μπετελγκέζ", id: "Betelgeuse", fa: "ابط‌الجوزاء",
   } as Tx,
   neutron: {
     de: "Neutronenstern", en: "Neutron star", hi: "न्यूट्रॉन तारा", zh: "中子星", ko: "중성자별", ja: "中性子星",
-    es: "Estrella de neutrones", fr: "Étoile à neutrons", tr: "Nötron yıldızı", ru: "Нейтронная звезда", pt: "Estrela de nêutrons", ar: "نجم نيوتروني", el: "Αστέρας νετρονίων",
+    es: "Estrella de neutrones", fr: "Étoile à neutrons", tr: "Nötron yıldızı", ru: "Нейтронная звезда", pt: "Estrela de nêutrons", ar: "نجم نيوتروني", el: "Αστέρας νετρονίων", id: "Bintang neutron", fa: "ستاره نوترونی",
   } as Tx,
   bh: {
     de: "Schwarzes Loch", en: "Black hole", hi: "ब्लैक होल", zh: "黑洞", ko: "블랙홀", ja: "ブラックホール",
-    es: "Agujero negro", fr: "Trou noir", tr: "Kara delik", ru: "Чёрная дыра", pt: "Buraco negro", ar: "ثقب أسود", el: "Μαύρη τρύπα",
+    es: "Agujero negro", fr: "Trou noir", tr: "Kara delik", ru: "Чёрная дыра", pt: "Buraco negro", ar: "ثقب أسود", el: "Μαύρη τρύπα", id: "Lubang hitam", fa: "سیاه‌چاله",
   } as Tx,
   approx: {
     de: "Sterne, Neutronenstern und Schwarzes Loch: gerundete Entfernungen der nächsten bekannten Beispiele (Sirius, PSR J0437, Gaia BH1).",
@@ -296,6 +296,6 @@ export const JOURNEY2_TX = {
     ru: "Звёзды, нейтронная звезда и чёрная дыра: округлённые расстояния до ближайших известных примеров (Сириус, PSR J0437, Gaia BH1).",
     pt: "Estrelas, estrela de nêutrons e buraco negro: distâncias arredondadas dos exemplos conhecidos mais próximos (Sirius, PSR J0437, Gaia BH1).",
     ar: "النجوم والنجم النيوتروني والثقب الأسود: مسافات تقريبية لأقرب الأمثلة المعروفة (الشعرى، PSR J0437، Gaia BH1).",
-    el: "Αστέρες, αστέρας νετρονίων και μαύρη τρύπα: στρογγυλεμένες αποστάσεις των κοντινότερων γνωστών παραδειγμάτων (Σείριος, PSR J0437, Gaia BH1).",
+    el: "Αστέρες, αστέρας νετρονίων και μαύρη τρύπα: στρογγυλεμένες αποστάσεις των κοντινότερων γνωστών παραδειγμάτων (Σείριος, PSR J0437, Gaia BH1).", id: "Bintang, bintang neutron, dan lubang hitam: jarak yang dibulatkan dari contoh terdekat yang diketahui (Sirius, PSR J0437, Gaia BH1).", fa: "ستاره‌ها، ستاره نوترونی و سیاه‌چاله: فاصله‌های گردشده نزدیک‌ترین نمونه‌های شناخته‌شده (شعرای یمانی، PSR J0437، Gaia BH1).",
   } as Tx,
 };
