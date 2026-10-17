@@ -9,6 +9,7 @@ import CosmicCalendar from "@/components/history/CosmicCalendar";
 import REICH_SLUGS from "@/data/reiche/slugs.json";
 import Spinner from "@/components/ui/Spinner";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
+import { toolTexts } from "@/lib/history/toolsText";
 import { useLanguage, type Lang } from "@/contexts/LanguageContext";
 import type { TranslationKey } from "@/lib/translations";
 import { translateLanguageValue } from "@/lib/languageNameTranslations";
@@ -1988,6 +1989,26 @@ export default function ImperienClient() {
             </a>
             , {t("empiresDescriptions")}: Wikipedia.
           </p>
+
+          <Link
+            href={localePath("/imperien/werkzeuge")}
+            className="group relative mt-4 block max-w-2xl overflow-hidden rounded-xl border border-accent/40 bg-gradient-to-br from-accent/15 via-surface-elevated to-transparent p-4 shadow-[0_0_30px_-10px_var(--accent)] backdrop-blur transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-[0_0_40px_-8px_var(--accent)] sm:p-5"
+          >
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="label-mono text-[10px] uppercase tracking-widest text-accent">NEU</p>
+                <p className="font-display mt-1 text-base font-bold uppercase tracking-tight text-foreground sm:text-lg">
+                  {t("empiresTools")}
+                </p>
+              </div>
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-accent/60 text-accent transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1">→</span>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              {[toolTexts(lang).tCompare, toolTexts(lang).tRecords, toolTexts(lang).tYear, toolTexts(lang).tQuiz].map((x, i) => (
+                <span key={i} className="label-mono rounded-full border border-border bg-background/40 px-3 py-1 text-[10px] uppercase tracking-wide text-foreground sm:text-xs">{x}</span>
+              ))}
+            </div>
+          </Link>
 
           <form
             onSubmit={handleSearchSubmit}
