@@ -103,11 +103,14 @@ export default function FeedbackBox() {
           setOpen(true);
         }}
         aria-label={tx[0]}
-        className="fixed left-3 z-40 flex h-9 items-center gap-2 rounded-full border border-accent/40 bg-black/70 px-3 text-[10px] uppercase tracking-[0.18em] text-white/80 backdrop-blur transition hover:border-accent hover:text-white"
+        className="fixed right-3 z-40 flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white/85 shadow-[0_4px_24px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] backdrop-blur-xl transition hover:border-accent/70 hover:bg-white/15 hover:text-white"
         style={pos}
       >
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
-        {tx[0]}
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />
+          <path d="M8.5 11h7M8.5 14h4" />
+        </svg>
+        <span className="absolute right-0.5 top-0.5 h-2 w-2 animate-pulse rounded-full bg-accent" />
       </button>
     );
   }
@@ -117,7 +120,7 @@ export default function FeedbackBox() {
       role="dialog"
       aria-label={tx[1]}
       dir={rtl ? "rtl" : "ltr"}
-      className="fixed left-3 z-50 w-[min(300px,calc(100vw-24px))] overflow-hidden rounded-xl border border-accent/40 bg-[#07070f]/90 text-white shadow-[0_0_28px_rgba(255,70,70,0.18)] backdrop-blur-md"
+      className="fixed right-3 z-50 w-[min(270px,calc(100vw-24px))] overflow-hidden rounded-2xl border border-white/20 bg-white/[0.08] text-white shadow-[0_8px_40px_rgba(0,0,0,0.45),inset_0_1px_0_rgba(255,255,255,0.22)] backdrop-blur-2xl backdrop-saturate-150"
       style={pos}
     >
       <div className="h-px w-full bg-gradient-to-r from-transparent via-accent to-transparent" />
