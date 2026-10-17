@@ -60,6 +60,7 @@ interface RawEmpireEntry {
   t: number; // ToYear
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   g: any; // geometry (GeoJSON Polygon/MultiPolygon)
+  u?: boolean; // Sammel-Umriss (Name stand in Klammern)
 }
 
 export interface EmpiresYearRange {
@@ -69,7 +70,7 @@ export interface EmpiresYearRange {
 
 export interface EmpireGeojsonFeature {
   type: "Feature";
-  properties: { NAME: string; SUBJECTO: string };
+  properties: { NAME: string; SUBJECTO: string; UMB?: boolean };
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   geometry: any;
 }
@@ -116,7 +117,11 @@ function loadEntries(): Promise<RawEmpireEntry[]> {
         const base = Array.isArray(data) ? (data as RawEmpireEntry[]) : [];
         const entries = base.concat(await extra);
         for (const e of entries) {
-          if (typeof e.n === "string") e.n = normalizeEmpireName(e.n);
+          if (typeof e.n === "string") {
+            const t = e.n.trim();
+            if (t.startsWith("(") && t.endsWith(")")) e.u = true;
+            e.n = normalizeEmpireName(e.n);
+          }
         }
         return entries;
       });
@@ -182,7 +187,7 @@ export async function getEmpiresForYear(year: number): Promise<EmpireFeatureColl
       if (Array.isArray(e.g)) e.g = decodeGeometry(e.g); // einmalig, dann im Speicher
       features.push({
         type: "Feature",
-        properties: { NAME: e.n, SUBJECTO: "" },
+        properties: { NAME: e.n, SUBJECTO: "", UMB: !!e.u },
         geometry: e.g,
       });
     }
