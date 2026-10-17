@@ -273,7 +273,78 @@ function hashString(str: string): number {
   return hash;
 }
 
+// Nutzerwunsch 17.10.2026: "keine grenze mit ähnlichen farben" — grenzen zwei
+// Reiche aneinander und haben ähnliche Farben, bekommt das kleinere (spätere)
+// eine deutlich andere. Sonst bleibt die feste Namensfarbe.
+const colorOverride = new Map<string, string>();
+const PALETTE_HL = COLOR_PALETTE.map((c) => {
+  const m = /hsl\((\d+), 55%, (\d+)%\)/.exec(c);
+  return { h: m ? +m[1] : 0, l: m ? +m[2] : 50 };
+});
+function colorDist(a: number, b: number): number {
+  const A = PALETTE_HL[a];
+  const B = PALETTE_HL[b];
+  let dh = Math.abs(A.h - B.h);
+  if (dh > 180) dh = 360 - dh;
+  return dh + Math.abs(A.l - B.l) * 1.2;
+}
+const bboxCache = new WeakMap<object, number[]>();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function geomBBox(g: any): number[] {
+  const c = bboxCache.get(g);
+  if (c) return c;
+  let x0 = 180, y0 = 90, x1 = -180, y1 = -90;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const walk = (a: any) => {
+    if (!Array.isArray(a)) return;
+    if (typeof a[0] === "number") {
+      if (a[0] < x0) x0 = a[0];
+      if (a[0] > x1) x1 = a[0];
+      if (a[1] < y0) y0 = a[1];
+      if (a[1] > y1) y1 = a[1];
+    } else for (const b of a) walk(b);
+  };
+  walk(g?.coordinates);
+  const r = [x0, y0, x1, y1];
+  bboxCache.set(g, r);
+  return r;
+}
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function assignColors(feats: any[]) {
+  colorOverride.clear();
+  const N = COLOR_PALETTE.length;
+  const placed: { box: number[]; idx: number; name: string }[] = [];
+  const done = new Map<string, number>();
+  for (const f of feats) {
+    const name: string = f.properties.NAME;
+    const box = geomBBox(f.geometry);
+    let idx = done.get(name);
+    if (idx === undefined) {
+      const nb: number[] = [];
+      for (const p of placed) {
+        if (p.name !== name && p.box[0] <= box[2] + 0.5 && p.box[2] >= box[0] - 0.5 && p.box[1] <= box[3] + 0.5 && p.box[3] >= box[1] - 0.5) nb.push(p.idx);
+      }
+      const base = hashString(name) % N;
+      idx = base;
+      if (nb.length && Math.min(...nb.map((n) => colorDist(base, n))) < 60) {
+        let bestScore = -1;
+        for (let k = 0; k < N; k++) {
+          const c = (base + k) % N;
+          const s = Math.min(...nb.map((n) => colorDist(c, n)));
+          if (s > bestScore + 0.01) { bestScore = s; idx = c; }
+          if (s >= 90) break;
+        }
+      }
+      done.set(name, idx);
+      if (idx !== base) colorOverride.set(name, COLOR_PALETTE[idx]);
+    }
+    placed.push({ box, idx, name });
+  }
+}
+
 function getStableColor(name: string): string {
+  const o = colorOverride.get(name);
+  if (o) return o;
   const existing = stableColorByName.get(name);
   if (existing) return existing;
   const color = COLOR_PALETTE[hashString(name) % COLOR_PALETTE.length];
@@ -1281,6 +1352,7 @@ export default function ImperienClient() {
     const sortedFeatures = features
       .filter((f) => f?.geometry && (f?.properties?.NAME ?? "").trim().length > 0)
       .sort((a, b) => cachedArea(b.geometry) - cachedArea(a.geometry));
+    assignColors(sortedFeatures);
 
     // Nur eine mit dem Zoom wachsende Anzahl der (nach echter Fläche)
     // größten Gebiete bekommt eine feste Beschriftung (Nutzerkorrekturen
@@ -1380,7 +1452,7 @@ export default function ImperienClient() {
         });
         const point = cachedLabelPoint(feature.geometry);
         const subjectTo: string = feature.properties?.SUBJECTO ?? "";
-        e = { fill, border, name, geom: feature.geometry, labelLL: null, isMajor, labeled: false, labelClass: "", point, styleKey: `${!hl || hl.has(name)}|${isMajor}` };
+        e = { fill, border, name, geom: feature.geometry, labelLL: null, isMajor, labeled: false, labelClass: "", point, color: c, styleKey: `${!hl || hl.has(name)}|${isMajor}` };
         const entry = e;
         // Name in die echte Mitte der Fläche ("Pole of Inaccessibility") —
         // bei JEDEM Öffnen gesetzt, Leaflet springt sonst zum ersten Teilstück.
@@ -1401,6 +1473,12 @@ export default function ImperienClient() {
         added = true;
       } else {
         e.isMajor = isMajor;
+        const nc = getStableColor(name);
+        if (e.color !== nc) {
+          e.color = nc;
+          e.fill.setStyle({ color: nc, fillColor: nc });
+          e.border.setStyle(bs(name, isMajor));
+        }
         const sk = `${!hl || hl.has(name)}|${isMajor}`;
         if (e.styleKey !== sk) {
           e.styleKey = sk;
