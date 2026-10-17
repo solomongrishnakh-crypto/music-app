@@ -34,7 +34,7 @@ export function findConst(slug: string): Constellation | undefined {
 
 const NUM_LOCALE: Record<Lang, string> = {
   de: "de-DE", en: "en-US", es: "es-ES", fr: "fr-FR", pt: "pt-BR", tr: "tr-TR", ru: "ru-RU",
-  el: "el-GR", ar: "ar", hi: "hi-IN", zh: "zh-CN", ja: "ja-JP", ko: "ko-KR",
+  el: "el-GR", ar: "ar", hi: "hi-IN", zh: "zh-CN", ja: "ja-JP", ko: "ko-KR", id: "id-ID", fa: "fa-IR",
 };
 
 export function constName(c: Constellation, lang: Lang): string {
