@@ -69,6 +69,31 @@ const OBJECTS: Obj[] = [
   { id: "universe", d: 8.8e23, kind: "universe", color: "#6d8cff", approx: true, photo: ["thumb/6/69/NASA-HS201427a-HubbleUltraDeepField2014-20140603.jpg/1920px-NASA-HS201427a-HubbleUltraDeepField2014-20140603.jpg", 1.03], name: N("Beobachtbares Universum", "Observable universe", "Universo observable", "Univers observable", "Universo observável", "Gözlemlenebilir evren", "Наблюдаемая Вселенная", "Παρατηρήσιμο σύμπαν", "الكون المرئي", "अवलोकनीय ब्रह्मांड", "可观测宇宙", "観測可能な宇宙", "관측 가능한 우주") },
 ];
 
+// Nur im Vergleich (nicht in der Reise): weitere bekannte Sterne und Zwergplaneten (17.10.2026).
+// Durchmesser gerundet; bei Riesensternen und Eis-Zwergen sind die Werte unsicher (approx).
+const EXTRA: Obj[] = [
+  { id: "siriusb", d: 11700, kind: "star", color: "#e6efff", name: "Sirius B" },
+  { id: "barnard", d: 273000, kind: "star", color: "#ff7a4a", name: "Barnard's Star" },
+  { id: "acena", d: 1700000, kind: "star", color: "#ffe9a8", name: "Alpha Centauri A" },
+  { id: "procyon", d: 2860000, kind: "star", color: "#fff1d6", name: "Procyon A" },
+  { id: "vega", d: 3600000, kind: "star", color: "#dbe6ff", approx: true, name: "Vega" },
+  { id: "pollux", d: 12600000, kind: "star", color: "#ffb36b", name: "Pollux" },
+  { id: "aldebaran", d: 61500000, kind: "star", color: "#ff9a5c", name: "Aldebaran" },
+  { id: "polaris", d: 64000000, kind: "star", color: "#fff0c8", approx: true, name: "Polaris" },
+  { id: "canopus", d: 98800000, kind: "star", color: "#fff4d8", approx: true, name: "Canopus" },
+  { id: "deneb", d: 282000000, kind: "star", color: "#e3ecff", approx: true, name: "Deneb" },
+  { id: "antares", d: 946000000, kind: "star", color: "#ff4a2e", approx: true, name: "Antares" },
+  { id: "vycma", d: 1975000000, kind: "star", color: "#ff3b24", approx: true, name: "VY Canis Majoris" },
+  { id: "eris", d: 2326, kind: "dwarf", color: "#e6e3dc", name: "Eris" },
+  { id: "haumea", d: 1632, kind: "dwarf", color: "#cfd3d8", approx: true, name: "Haumea" },
+  { id: "makemake", d: 1430, kind: "dwarf", color: "#c98d6b", approx: true, name: "Makemake" },
+  { id: "gonggong", d: 1230, kind: "dwarf", color: "#a4513f", approx: true, name: "Gonggong" },
+  { id: "quaoar", d: 1110, kind: "dwarf", color: "#8a5a44", approx: true, name: "Quaoar" },
+  { id: "sedna", d: 995, kind: "dwarf", color: "#b0402c", approx: true, name: "Sedna" },
+  { id: "orcus", d: 910, kind: "dwarf", color: "#8d8a86", approx: true, name: "Orcus" },
+];
+const CMP_ALL: Obj[] = [...OBJECTS, ...EXTRA];
+
 interface UiText {
   title: string;
   hint: string;
@@ -447,7 +472,7 @@ function ensureRot(o: Obj, texSrc?: CanvasImageSource) {
 
 // Körper, deren echte Karte nur eine Falschfarben-Höhenkarte ist: hier gilt
 // immer die realistische eigene Oberfläche (Ceres, Nutzerkorrektur 15.10.2026).
-const PROC_ONLY = new Set(["ceres"]);
+const PROC_ONLY = new Set(["ceres", "eris", "haumea", "makemake", "gonggong", "quaoar", "orcus", "sedna"]);
 
 // Start-Ruckeln (Nutzer 15.10.2026): Alle Oberflächen (Sterne, Planeten) wurden im
 // ersten Bild auf einmal berechnet → ~1,6 s Stillstand. Jetzt höchstens ein
@@ -666,7 +691,7 @@ const normS = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerC
  */
 export function SizeTable({ ids, labels }: { ids: string[]; labels: { obj: string; diam: string; ratio: string } }) {
   const { lang } = useLanguage();
-  const rows = ids.map((id) => OBJECTS.find((o) => o.id === id)).filter((o): o is Obj => !!o);
+  const rows = ids.map((id) => CMP_ALL.find((o) => o.id === id)).filter((o): o is Obj => !!o);
   const earth = OBJECTS.find((o) => o.id === "earth")?.d ?? 12742;
   const nf = (n: number) => {
     try {
@@ -746,7 +771,7 @@ export default function SizeComparison({ index }: { index: string }) {
   useEffect(() => {
     if (typeof window === "undefined") return;
     const q = new URLSearchParams(window.location.search);
-    const ia = OBJECTS.findIndex((o) => o.id === q.get("a")), ib = OBJECTS.findIndex((o) => o.id === q.get("b"));
+    const ia = CMP_ALL.findIndex((o) => o.id === q.get("a")), ib = CMP_ALL.findIndex((o) => o.id === q.get("b"));
     if (ia < 0 || ib < 0 || ia === ib) return;
     setCmpA(ia); setCmpB(ib); setMode("cmp");
     const t = window.setTimeout(() => document.getElementById("groessenvergleich")?.scrollIntoView({ behavior: "smooth", block: "start" }), 700);
@@ -756,7 +781,7 @@ export default function SizeComparison({ index }: { index: string }) {
   useEffect(() => {
     if (mode !== "cmp" || typeof window === "undefined") return;
     const u = new URL(window.location.href);
-    u.searchParams.set("a", OBJECTS[cmpA].id); u.searchParams.set("b", OBJECTS[cmpB].id);
+    u.searchParams.set("a", CMP_ALL[cmpA].id); u.searchParams.set("b", CMP_ALL[cmpB].id);
     window.history.replaceState(null, "", u.toString());
   }, [mode, cmpA, cmpB]);
 
@@ -872,7 +897,7 @@ export default function SizeComparison({ index }: { index: string }) {
         dirty.current = true;
       }
       const [ia, ib] = cmpRef.current;
-      const A = OBJECTS[ia], B = OBJECTS[ib], lng = langRef.current;
+      const A = CMP_ALL[ia], B = CMP_ALL[ib], lng = langRef.current;
       const dA = A.d, dB = B.d, gap = 0.08 * (dA + dB), Wd = dA + gap + dB;
       const big = Math.max(dA, dB), small = Math.min(dA, dB);
       const kfit = Math.min((H * 0.78) / big, (W * 0.9) / Wd);
@@ -1243,12 +1268,12 @@ export default function SizeComparison({ index }: { index: string }) {
   };
 
   const pickItems = useMemo<PickItem[]>(
-    () => OBJECTS.map((x, i) => ({
+    () => CMP_ALL.map((x, i) => ({
       i,
       label: objName(x, lang),
       sub: ui.kinds[x.kind],
       hay: normS(objName(x, lang) + " " + objName(x, "en") + " " + objName(x, "de") + " " + x.id + " " + ui.kinds[x.kind]),
-    })),
+    })).sort((p, q) => CMP_ALL[p.i].d - CMP_ALL[q.i].d),
     [lang, ui],
   );
 
@@ -1257,7 +1282,7 @@ export default function SizeComparison({ index }: { index: string }) {
   const ratioText = prev ? ui.ratio.replace("{n}", fmt(o.d / prev.d, lang)).replace("{x}", objName(prev, lang)) : "";
   const [l1, l2] = sizeLines(o, lang, ui);
 
-  const A = OBJECTS[cmpA], B = OBJECTS[cmpB];
+  const A = CMP_ALL[cmpA], B = CMP_ALL[cmpB];
   const big = A.d >= B.d ? A : B, small = A.d >= B.d ? B : A;
   const cmpRatio = big.d / small.d;
   const cmpText = objName(big, lang) + ": " + ui.ratio.replace("{n}", fmt(cmpRatio, lang)).replace("{x}", objName(small, lang));
@@ -1281,14 +1306,14 @@ export default function SizeComparison({ index }: { index: string }) {
       aria-expanded={pick === n}
       className={"flex w-0 min-w-0 flex-1 items-center justify-between gap-1 border bg-background px-2 py-1.5 text-left text-xs text-foreground " + (pick === n ? "border-accent" : "border-border")}
     >
-      <span className="truncate">{objName(OBJECTS[val], lang)}</span>
+      <span className="truncate">{objName(CMP_ALL[val], lang)}</span>
       <span aria-hidden="true" className="text-muted">⌕</span>
     </button>
   );
   const shareCmp = async () => {
     const sh = SHARE_TXT[lang] ?? SHARE_TXT.en;
-    const url = window.location.origin + window.location.pathname + "?a=" + OBJECTS[cmpA].id + "&b=" + OBJECTS[cmpB].id;
-    const title = objName(OBJECTS[cmpA], lang) + " vs " + objName(OBJECTS[cmpB], lang);
+    const url = window.location.origin + window.location.pathname + "?a=" + CMP_ALL[cmpA].id + "&b=" + CMP_ALL[cmpB].id;
+    const title = objName(CMP_ALL[cmpA], lang) + " vs " + objName(CMP_ALL[cmpB], lang);
     if (typeof navigator.share === "function") { try { await navigator.share({ title, url }); } catch { /* abgebrochen */ } return; }
     try { await navigator.clipboard.writeText(url); setShared(true); window.setTimeout(() => setShared(false), 2000); } catch { window.prompt(sh[0], url); }
   };
@@ -1301,7 +1326,6 @@ export default function SizeComparison({ index }: { index: string }) {
       <div className="mb-2 flex gap-2">
         {tab("zoom", ui.zoom)}
         {tab("cmp", ui.compare)}
-        {tab("all", ui3.all)}
       </div>
       <div ref={wrapRef} className={"relative h-64 w-full select-none sm:h-80 " + (mode === "cmp" ? "touch-none" : "touch-pan-y")}>
         <canvas ref={canvasRef} className={"absolute inset-0 h-full w-full " + (mode === "zoom" ? "cursor-grab active:cursor-grabbing" : mode === "all" ? "cursor-pointer" : "cursor-move")} />
