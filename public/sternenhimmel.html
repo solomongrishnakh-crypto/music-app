@@ -686,6 +686,7 @@ let cam = null;
 // Nutzerwunsch 06.10.2026: nicht weiter herauszoomen als die normale
 // Handykamera (1×-Hauptkamera ≈ 72° Bildhöhe im Hochformat) — kein „0,5×“.
 const MAX_FOV = 72 * DEG;
+const MIN_FOV = 0.1 * DEG; // 17.10.2026: bis dicht an den Planeten zoomen (Monde)
 function setupCamera() {
   const f = enu(S.az, S.alt);
   let r = [Math.cos(S.az), -Math.sin(S.az), 0];
@@ -1022,7 +1023,7 @@ function drawFigures(fade, dt) {
       ctx.setTransform(DPR, 0, 0, DPR, 0, 0); ctx.clip(sky, "evenodd");
       ctx.setTransform(DPR * ma, DPR * mb, DPR * mc, DPR * md, DPR * me, DPR * mf);
     }
-    ctx.globalAlpha = S.atmo ? A : A;
+    ctx.globalAlpha = A * 0.62; // 17.10.2026: ueber dem Horizont etwas durchsichtiger, Sterne besser erkennbar
     ctx.drawImage(tex, 0, 0, f.w, f.h);
     ctx.restore();
   }
@@ -1223,6 +1224,71 @@ const DIRS = TX.dirs;
 
 function simJd() { return jdNow() + S.dayOffset + S.offsetMin / 1440; }
 
+// ---------------- Bekannte Monde (17.10.2026) ----------------
+// Vereinfachte Kreisbahnen; Galilei-Monde nach mittleren Laengen (Meeus), die anderen Phasen sind symbolisch.
+const MOON_LANGS = ["de", "en", "hi", "zh", "ko", "ja", "es", "fr", "tr", "ru", "pt", "ar", "el", "id", "fa"];
+const MOON_DEFS = [
+  { id: "io", p: "jupiter", a: 421800, L0: 106.07719, n: 203.4889558, r: 1821.6, d: 3643, m: 0.015, t: "−143", c: "#e0c65a", nm: ["Io", "Io", "आयो", "木卫一", "이오", "イオ", "Ío", "Io", "Io", "Ио", "Io", "آيو", "Ιώ", "Io", "آیو"] },
+  { id: "europa", p: "jupiter", a: 671100, L0: 175.73161, n: 101.3747247, r: 1560.8, d: 3122, m: 0.008, t: "−160", c: "#d9d2c3", nm: ["Europa", "Europa", "यूरोपा", "木卫二", "에우로파", "エウロパ", "Europa", "Europe", "Europa", "Европа", "Europa", "أوروبا", "Ευρώπη", "Europa", "اروپا"] },
+  { id: "ganymede", p: "jupiter", a: 1070400, L0: 120.55883, n: 50.3176092, r: 2634.1, d: 5268, m: 0.0248, t: "−163", c: "#9a8f80", nm: ["Ganymed", "Ganymede", "गैनिमीड", "木卫三", "가니메데", "ガニメデ", "Ganímedes", "Ganymède", "Ganymede", "Ганимед", "Ganimedes", "غانيميد", "Γανυμήδης", "Ganymede", "گانیمد"] },
+  { id: "callisto", p: "jupiter", a: 1882700, L0: 84.44868, n: 21.5710715, r: 2410.3, d: 4821, m: 0.018, t: "−139", c: "#6a5f53", nm: ["Kallisto", "Callisto", "कैलिस्टो", "木卫四", "칼리스토", "カリスト", "Calisto", "Callisto", "Callisto", "Каллисто", "Calisto", "كاليستو", "Καλλιστώ", "Kalisto", "کالیستو"] },
+  { id: "titan", p: "saturn", a: 1221870, L0: 163, n: 22.5769768, r: 2574.7, d: 5150, m: 0.0225, t: "−179", c: "#d49a3a", nm: ["Titan", "Titan", "टाइटन", "土卫六", "타이탄", "タイタン", "Titán", "Titan", "Titan", "Титан", "Titã", "تيتان", "Τιτάνας", "Titan", "تیتان"] },
+  { id: "enceladus", p: "saturn", a: 238020, L0: 20, n: 262.7318996, r: 252.1, d: 504, m: 0.000018, t: "−198", c: "#f1f5f9", nm: ["Enceladus", "Enceladus", "एन्सेलेडस", "土卫二", "엔셀라두스", "エンケラドゥス", "Encélado", "Encelade", "Enceladus", "Энцелад", "Encélado", "إنسيلادوس", "Εγκέλαδος", "Enceladus", "انسلادوس"] },
+  { id: "triton", p: "neptune", a: 354760, L0: 250, n: -61.2572638, r: 1353.4, d: 2707, m: 0.00358, t: "−235", c: "#d9c6c0", nm: ["Triton", "Triton", "ट्राइटन", "海卫一", "트리톤", "トリトン", "Tritón", "Triton", "Triton", "Тритон", "Tritão", "تريتون", "Τρίτωνας", "Triton", "تریتون"] },
+];
+const MOON_OPEN = { jupiter: 0.05, saturn: 0.4, neptune: 0.3 };
+const MOON_BY_ID = {};
+let MOON_WANT = null;
+for (const m of MOON_DEFS) { MOON_BY_ID[m.id] = m; const Pd = Math.abs(360 / m.n); BODY_FACTS[m.id] = { k: "moon", d: m.d, m: m.m, rot: [Pd, "days", m.n < 0], orb: [Pd, "days"], temp: m.t }; }
+function moonName(m) { const i = MOON_LANGS.indexOf(LANG); return (i >= 0 && m.nm[i]) || m.nm[1]; }
+function addMoons(list, earth, jd) {
+  if (MOON_WANT && !(S.sel && S.sel.type === "body" && S.sel.id === MOON_WANT)) MOON_WANT = null;
+  const all = S.fov < 1.2 * DEG;
+  for (const md of MOON_DEFS) {
+    const sel = S.sel && S.sel.type === "body" && S.sel.id === md.id;
+    if (!all && !sel && MOON_WANT !== md.id) continue;
+    const par = list.find((x) => x.id === md.p);
+    if (!par) continue;
+    const pv = helio(md.p, jd);
+    const qx = pv[0] - earth[0], qy = pv[1] - earth[1], qz = pv[2] - earth[2];
+    const ql = Math.hypot(qx, qy, qz), hl = Math.hypot(qx, qy) || 1;
+    const lamE = Math.atan2(-qy, -qx);
+    const th = (md.L0 + md.n * (jd - 2451545)) * DEG - lamE;
+    const ex = -qy / hl, ey = qx / hl;
+    const rx = qx / ql, ry = qy / ql, rz = qz / ql;
+    const nx = -rz * ey, ny = rz * ex, nz = rx * ey - ry * ex;
+    const eastKm = -md.a * Math.sin(th), depthKm = md.a * Math.cos(th);
+    const northKm = depthKm * (MOON_OPEN[md.p] || 0.05);
+    const k = 1 / KM_PER_AU;
+    const q = eclToRaDec(qx + (ex * eastKm + nx * northKm) * k, qy + (ey * eastKm + ny * northKm) * k, qz + nz * northKm * k);
+    list.push({ id: md.id, moonOf: md.p, name: moonName(md), alt: md.nm[1], kind: tr("moon"), ra: q.ra, dec: q.dec, distKm: par.distKm, color: md.c, mag: 6, radiusDeg: 0, rKm: md.r, front: depthKm >= 0, zoomFov: 3.2 * md.a / par.distKm });
+  }
+}
+function wantMoon(h) {
+  if (h && h.type === "body" && MOON_BY_ID[h.id]) {
+    MOON_WANT = h.id; bodies = computeBodies(simJd());
+    for (const b of bodies) { b.v = eqToEnu(b.ra, b.sd, b.cd, [0, 0, 0]); b.alt = Math.asin(b.v[2]); }
+  }
+}
+function drawMoonDisc(b, x, y, pxPerRad, sun, baseA) {
+  const R = Math.max(2.4, b.rKm / b.distKm * pxPerRad);
+  b.pr = Math.max(R, 5);
+  if (!b.front) {
+    const pb = bodies.find((q) => q.id === b.moonOf);
+    if (pb && pb.sx != null && Math.hypot(x - pb.sx, y - pb.sy) < (pb.pr || 0) * 0.97) { b.sx = null; return; }
+  }
+  let dx = -0.6, dy = -0.8;
+  const an = sun ? screenAngleTo(b, x, y, sun.ra, sun.dec) : null;
+  if (an != null) { dx = Math.cos(an); dy = Math.sin(an); }
+  const c = hexRgb(b.color);
+  const lit = (m) => "rgb(" + Math.min(255, Math.round(c[0] * m)) + "," + Math.min(255, Math.round(c[1] * m)) + "," + Math.min(255, Math.round(c[2] * m)) + ")";
+  ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = 0.25 * baseA;
+  ctx.drawImage(tinted(c[0], c[1], c[2]), x - R * 2.2, y - R * 2.2, R * 4.4, R * 4.4);
+  ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = baseA;
+  const g = ctx.createRadialGradient(x + dx * R * 0.45, y + dy * R * 0.45, R * 0.1, x + dx * R * 0.1, y + dy * R * 0.1, R * 1.15);
+  g.addColorStop(0, lit(1.2)); g.addColorStop(0.55, lit(0.85)); g.addColorStop(1, lit(0.12));
+  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, R, 0, 6.2832); ctx.fill();
+}
 function computeBodies(jd) {
   const earth = helio("earth", jd);
   const list = [];
@@ -1261,6 +1327,7 @@ function computeBodies(jd) {
       list.push({ id: "iss", iss: true, name: "ISS", kind: tr("spaceStation"), ra: tp.ra, dec: tp.dec, distKm: tp.dist, color: "#cfe8ff", mag: st.lit ? -3 : 99, radiusDeg: 0, lit: st.lit, altKm: st.alt, vel: st.v });
     }
   }
+  addMoons(list, earth, jd);
   for (const b of list) { b.sd = Math.sin(b.dec); b.cd = Math.cos(b.dec); }
   return list;
 }
@@ -1489,6 +1556,8 @@ function draw() {
       ctx.strokeStyle = "rgba(201,182,255,0.55)"; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.arc(P.x, P.y, 5, 0, 6.2832); ctx.stroke();
       b.pr = 5;
+    } else if (b.moonOf) {
+      drawMoonDisc(b, P.x, P.y, pxPerDeg / DEG, sun, baseA);
     } else if (planetIconR(b.id) >= 3) {
       drawPlanetDisc(b, P.x, P.y, planetIconR(b.id), sun, baseA);
     } else {
@@ -1508,7 +1577,7 @@ function draw() {
   }
   // Laufbahn des angetippten Planeten / Mondes
   if (S.sel && S.sel.type === "body" && S.sel.id === "iss") drawIssTrack(jd);
-  else if (S.sel && S.sel.type === "body" && S.sel.id !== "sun" && S.sel.id !== "moon") drawTrack(S.sel.id, jd);
+  else if (S.sel && S.sel.type === "body" && S.sel.id !== "sun" && S.sel.id !== "moon" && !MOON_BY_ID[S.sel.id]) drawTrack(S.sel.id, jd);
      if (S.sel && S.sel.type === "body" && (S.sel.id === "sun" || S.sel.id === "moon")) drawSunPath(S.sel.id, jd);
 
   // Boden mit Horizontlinie
@@ -1827,7 +1896,12 @@ const PL_SIZE = { mercury: 1.6, venus: 2.4, mars: 2.0, jupiter: 3.1, saturn: 2.6
 function planetIconR(id) {
   const f = S.fov / DEG;
   if (f > 30 || !PL_SIZE[id]) return 0; // erst ab ~2,5× Zoom als Scheibe, vorher Lichtpunkt wie mit bloßem Auge
-  return Math.min(24, PL_SIZE[id] * Math.pow(70 / f, 0.62) * 1.25);
+  let r = Math.min(24, PL_SIZE[id] * Math.pow(70 / f, 0.62) * 1.25);
+  if (f < 1.2) { // 17.10.2026: ganz nah -> echte Winkelgroesse, damit die Monde sichtbar werden
+    const bb = bodies.find((x) => x.id === id), F = BODY_FACTS[id];
+    if (bb && F && F.d) { const tr2 = F.d / 2 / bb.distKm * cam.scale, t = Math.max(0, Math.min(1, (f - 0.5) / 0.7)); r = Math.min(160, r * t + Math.max(6, tr2) * (1 - t)); }
+  }
+  return r;
 }
 function hash2(ix, iy, sd) { let h = Math.imul(ix, 374761393) ^ Math.imul(iy, 668265263) ^ Math.imul(sd, 1274126177); h = Math.imul(h ^ (h >>> 13), 1274126177); return ((h ^ (h >>> 16)) >>> 0) / 4294967296; }
 function vnoise(x, y, sd) { const ix = Math.floor(x), iy = Math.floor(y), fx = x - ix, fy = y - iy, u = fx * fx * (3 - 2 * fx), v = fy * fy * (3 - 2 * fy); const a = hash2(ix, iy, sd), b = hash2(ix + 1, iy, sd), c = hash2(ix, iy + 1, sd), d = hash2(ix + 1, iy + 1, sd); return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; }
@@ -2403,7 +2477,7 @@ function fillInfo() {
       rows.push([tr("issState"), tr(b.lit ? "issLit" : "issShadow")]);
       rows.push([tr("issCrew"), tr("issCrewText")]);
     } else if (b.id !== "sun" && b.id !== "moon") {
-      const p = helio(b.id, jd), e = helio("earth", jd);
+      const p = helio(b.moonOf || b.id, jd), e = helio("earth", jd);
       const rS = Math.hypot(p[0], p[1], p[2]);
       rows.push([tr("sunDist"), `${nf0.format(rS * KM_PER_AU / 1e6)} ${tr("e6km")} · ${nf.format(rS)} ${tr("au")}`]);
       // beleuchteter Anteil (Phase) aus dem Winkel Sonne–Planet–Erde
@@ -2418,7 +2492,7 @@ function fillInfo() {
       rows.push([tr("elong"), `${nf0.format(el)}°`]);
     }
     if (!b.iss) {
-      const rs = riseSet(b.id, jd);
+      const rs = riseSet(b.moonOf || b.id, jd);
       rows.push([tr("rise"), rs.rise ? fmtJdTime(rs.rise) : tr("noRise")]);
       rows.push([tr("set"), rs.set ? fmtJdTime(rs.set) : tr("noSet")]);
     }
@@ -2427,7 +2501,7 @@ function fillInfo() {
     if (F.m) rows.push([tr("mass"), tr("xEarth", { n: F.m >= 10 ? nf0.format(F.m) : F.m >= 0.1 ? nf.format(F.m) : F.m.toLocaleString(LANG, { maximumSignificantDigits: 2 }) })]);
     if (F.mo) rows.push([tr("moons"), F.mo]);
     if (F.rot) rows.push([tr("rotation"), `${nf.format(F.rot[0])} ${tr(F.rot[1])}${F.rot[2] ? " (" + tr("retro") + ")" : ""}`]);
-    if (F.orb) rows.push([tr(b.id === "moon" ? "orbitEarth" : "orbitTime"), `${nf.format(F.orb[0])} ${tr(F.orb[1])}`]);
+    if (F.orb) rows.push([tr(b.id === "moon" ? "orbitEarth" : "orbitTime") + (b.moonOf ? " · " + tr("p_" + b.moonOf) : ""), `${nf.format(F.orb[0])} ${tr(F.orb[1])}`]);
     if (F.temp) rows.push([tr("temp"), `${F.temp} °C`]);
     if (b.dwarf) { rows.push([tr("brightness"), `${nf.format(b.mag)} mag`]); rows.push([tr("visibleWith"), tr(b.mag <= 6 ? "eye" : b.mag <= 9.5 ? "binoculars" : "telescope")]); }
     if (b.id === "sun") { rows.push([tr("starType"), `${tr("mainSeq")} (G2V)`]); rows.push([tr("age"), tr("sunAge")]); }
@@ -2535,7 +2609,7 @@ function fillInfo() {
 // Kurze Einführung (Einleitung des Artikels) in der eingestellten Sprache,
 // live von Wikipedia (CC BY-SA 4.0, mit Quellenangabe und Link). Gesucht
 // wird über den englischen Titel und den Sprachlink → passender Artikel.
-const BODY_WIKI = { sun: "Sun", moon: "Moon", mercury: "Mercury (planet)", venus: "Venus", mars: "Mars", jupiter: "Jupiter", saturn: "Saturn", uranus: "Uranus", neptune: "Neptune", pluto: "Pluto", ceres: "Ceres (dwarf planet)", haumea: "Haumea", makemake: "Makemake", eris: "Eris (dwarf planet)", iss: "International Space Station" };
+const BODY_WIKI = { sun: "Sun", moon: "Moon", mercury: "Mercury (planet)", venus: "Venus", mars: "Mars", jupiter: "Jupiter", saturn: "Saturn", uranus: "Uranus", neptune: "Neptune", pluto: "Pluto", ceres: "Ceres (dwarf planet)", haumea: "Haumea", makemake: "Makemake", eris: "Eris (dwarf planet)", iss: "International Space Station", io: "Io (moon)", europa: "Europa (moon)", ganymede: "Ganymede (moon)", callisto: "Callisto (moon)", titan: "Titan (moon)", enceladus: "Enceladus", triton: "Triton (moon)" };
 const WIKI_CACHE = new Map();
 let wikiKey = "";
 function wikiCandidates(s) {
@@ -2760,7 +2834,7 @@ canvas.addEventListener("pointermove", (e) => {
     const [p, q] = [...pointers.values()];
     const d = Math.hypot(p.x - q.x, p.y - q.y);
     moveT = performance.now();
-    S.fov = Math.max(4 * DEG, Math.min(MAX_FOV, pinch.fov * pinch.d / Math.max(1, d)));
+    S.fov = Math.max(MIN_FOV, Math.min(MAX_FOV, pinch.fov * pinch.d / Math.max(1, d)));
     return;
   }
   if (!drag) return;
@@ -2819,14 +2893,14 @@ canvas.addEventListener("wheel", (e) => {
   e.preventDefault();
   const f = Math.exp(Math.max(-100, Math.min(100, e.deltaY)) * 0.0015);
   moveT = performance.now();
-  S.fov = Math.max(4 * DEG, Math.min(MAX_FOV, S.fov * f));
+  S.fov = Math.max(MIN_FOV, Math.min(MAX_FOV, S.fov * f));
 }, { passive: false });
 function zoomTo(hit) {
   let v;
   if (hit.type === "body") v = bodies.find((b) => b.id === hit.id)?.v; else v = eqToEnu(hit.ra, Math.sin(hit.dec), Math.cos(hit.dec), [0, 0, 0]);
   if (!v) return;
   const t = vecToAltAz(v);
-  anim = { az0: S.az, alt0: S.alt, fov0: S.fov, az1: S.az + wrap(t.az - S.az), alt1: t.alt, fov1: hit.dsoFov ? hit.dsoFov : hit.wide ? 55 * DEG : Math.min(S.fov, hit.id === "moon" || hit.id === "sun" ? 3 * DEG : 25 * DEG), t0: performance.now() };
+  anim = { az0: S.az, alt0: S.alt, fov0: S.fov, az1: S.az + wrap(t.az - S.az), alt1: t.alt, fov1: hit.dsoFov ? hit.dsoFov : (hit.type === "body" && MOON_BY_ID[hit.id]) ? Math.max(MIN_FOV * 1.5, (bodies.find((b) => b.id === hit.id) || {}).zoomFov || 0.5 * DEG) : hit.wide ? 55 * DEG : Math.min(S.fov, hit.id === "moon" || hit.id === "sun" ? 3 * DEG : 25 * DEG), t0: performance.now() };
 }
 const wrap = (a) => { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; };
 let anim = null;
@@ -3026,7 +3100,8 @@ const norm = (t) => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,
 let staticIndex = null;
 function searchIndex() {
   const out = [];
-  for (const b of bodies) out.push({ label: b.name, alt: (I18N.en["p_" + b.id] || "") + " " + (b.dwarf ? I18N.en.dwarfPlanet + " " + tr("dwarfPlanet") : ""), kind: b.kind, hit: { type: "body", id: b.id } });
+  for (const b of bodies) out.push({ label: b.name, alt: (I18N.en["p_" + b.id] || b.alt || "") + " " + (b.dwarf ? I18N.en.dwarfPlanet + " " + tr("dwarfPlanet") : ""), kind: b.kind, hit: { type: "body", id: b.id } });
+  for (const m of MOON_DEFS) if (!bodies.some((x) => x.id === m.id)) out.push({ label: moonName(m), alt: m.nm[1] + " " + (I18N.en["p_" + m.p] || m.p), kind: tr("moon") + " · " + tr("p_" + m.p), hit: { type: "body", id: m.id } });
   if (!staticIndex) staticIndex = buildStaticIndex();
   return out.concat(staticIndex);
 }
@@ -3059,7 +3134,7 @@ qEl.oninput = () => {
       playSel(h);
       if (h.type === "const") { S.selConst = h.id; S.sel = h; document.getElementById("info").hidden = false; fillInfo(); zoomTo({ type: "star", ra: h.ra, dec: h.dec, wide: true }); return; }
       if (h.type === "dso") { const o = DSOS.find((x) => x.id === h.id); S.sel = h; document.getElementById("info").hidden = false; fillInfo(); zoomTo({ type: "star", ra: h.ra, dec: h.dec, dsoFov: Math.min(40, Math.max(0.8, (o.a / 60) * 3.5)) * DEG }); return; }
-      S.sel = h; document.getElementById("info").hidden = false; fillInfo(); zoomTo(h);
+      S.sel = h; wantMoon(h); document.getElementById("info").hidden = false; fillInfo(); zoomTo(h);
     };
     li.appendChild(bt); resEl.appendChild(li);
   }
@@ -3092,7 +3167,7 @@ function frame(now) {
     if (keys.has("ArrowLeft")) S.az -= r; if (keys.has("ArrowRight")) S.az += r;
     if (keys.has("ArrowUp")) S.alt += r; if (keys.has("ArrowDown")) S.alt -= r;
     if (keys.has("+") || keys.has("=")) S.fov *= Math.exp(-0.002 * dt); if (keys.has("-")) S.fov *= Math.exp(0.002 * dt);
-    S.fov = Math.max(4 * DEG, Math.min(MAX_FOV, S.fov)); clampAlt();
+    S.fov = Math.max(MIN_FOV, Math.min(MAX_FOV, S.fov)); clampAlt();
   }
   S.az = (S.az + 2 * Math.PI) % (2 * Math.PI);
   const lost = S.atmo && S.alt < -(S.fov * 0.5 + 6 * DEG);
