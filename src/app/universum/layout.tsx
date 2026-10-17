@@ -39,7 +39,7 @@ const JSON_LD = {
   description: DESCRIPTION,
   applicationCategory: "EducationalApplication",
   operatingSystem: "Web",
-  inLanguage: ["de", "en", "es", "fr", "tr", "ru", "pt", "ar", "el", "hi", "zh", "ko", "ja"],
+  inLanguage: ["de", "en", "es", "fr", "tr", "ru", "pt", "ar", "el", "hi", "zh", "ko", "ja", "id", "fa"],
   isAccessibleForFree: true,
   offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
   about: ["Sonnensystem", "Planeten", "Universum", "Astronomie"],
