@@ -7,6 +7,7 @@ interface Item {
   id: string;
   ts: string;
   type: string;
+  name?: string;
   message: string;
   email?: string;
   page?: string;
@@ -109,6 +110,7 @@ export default function FeedbackAdminPage() {
               <article key={it.id} style={{ border: "1px solid #333", borderRadius: 10, padding: 14, background: "rgba(255,255,255,.04)" }}>
                 <div style={{ display: "flex", gap: 10, flexWrap: "wrap", fontSize: 12, opacity: 0.85, marginBottom: 8 }}>
                   <strong style={{ color: color[it.type] || "#fff" }}>{label[it.type] || it.type}</strong>
+                  {it.name && <strong>{it.name}</strong>}
                   <span>{new Date(it.ts).toLocaleString("de-DE")}</span>
                   {it.page && <span>Seite: {it.page}</span>}
                   {it.lang && <span>Sprache: {it.lang}</span>}
