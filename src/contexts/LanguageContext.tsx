@@ -152,7 +152,9 @@ export function LanguageProvider({
   );
 
   const t = useCallback(
-    (key: TranslationKey) => TRANSLATIONS[key]?.[lang] ?? TRANSLATIONS[key]?.en ?? TRANSLATIONS[key]?.de ?? key,
+    // Nutzerwunsch 18.10.2026: kein führendes "// " mehr in Überschriften.
+    (key: TranslationKey) =>
+      String(TRANSLATIONS[key]?.[lang] ?? TRANSLATIONS[key]?.en ?? TRANSLATIONS[key]?.de ?? key).replace(/^\/\/\s*/, ""),
     [lang]
   );
 
