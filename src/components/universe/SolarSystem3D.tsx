@@ -269,6 +269,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
   const onSelectRef = useRef(onSelectPlanet);
   onSelectRef.current = onSelectPlanet;
   const selectedRef = useRef<string | null>(selectedId ?? null);
+  const selAtRef = useRef(typeof performance !== "undefined" ? performance.now() : 0); // wann die Auswahl gesetzt wurde (für das Blinken)
 
   // Brücke zwischen React (Buttons, Auswahl) und der Render-Schleife
   const apiRef = useRef<{
@@ -328,6 +329,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
   // Auswahl von außen (Klick, Tabelle) → Kamera zentriert den Körper
   useEffect(() => {
     selectedRef.current = selectedId ?? null;
+    selAtRef.current = performance.now();
     if (selectedId) apiRef.current?.focus(selectedId, false);
     else apiRef.current?.unfollow();
   }, [selectedId]);
@@ -1287,6 +1289,26 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
           ctx.strokeStyle = `rgba(255,90,77,${0.55 + pulse * 0.35})`;
           ctx.lineWidth = 1.5;
           ctx.stroke();
+          // Nutzerwunsch 18.10.2026 ("Eris soll blinzeln, damit man sieht: da ist Eris"):
+          // in den ersten Sekunden nach der Auswahl wandern Sonar-Ringe nach außen
+          // und der Punkt blinkt — danach bleibt nur der ruhige Ring.
+          const age = now - selAtRef.current;
+          if (age < 9000) {
+            const fade = Math.min(1, (9000 - age) / 1500);
+            for (let k = 0; k < 3; k++) {
+              const ph = (age / 1400 + k / 3) % 1;
+              ctx.beginPath();
+              ctx.arc(x, y, b.pxR + 8 + ph * 44, 0, Math.PI * 2);
+              ctx.strokeStyle = `rgba(255,90,77,${(1 - ph) * 0.85 * fade})`;
+              ctx.lineWidth = 2;
+              ctx.stroke();
+            }
+            const blink = Math.sin(age / 130) > 0 ? 1 : 0.15;
+            ctx.beginPath();
+            ctx.arc(x, y, Math.max(b.pxR, 2.5) + 1.5, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255,90,77,${blink * fade})`;
+            ctx.fill();
+          }
         }
         const name = localize(b.data.name, langRef.current);
         const dwarf = b.data.kind === "dwarf";
