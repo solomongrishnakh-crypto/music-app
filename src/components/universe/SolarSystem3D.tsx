@@ -279,6 +279,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
     zoomBy: (factor: number) => void;
     setScale: (m: ScaleMode) => void;
     unfollow: () => void;
+    reset: () => void;
   } | null>(null);
 
   // ---------------- Abstände / Annäherungen (wie 2D-Ansicht) ----------------
@@ -787,6 +788,14 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
       unfollow: () => {
         followId = null;
       },
+      // Ansicht zurücksetzen (Gesamtansicht, Sonne im Zentrum)
+      reset: () => {
+        flight = null;
+        zoomGoal = null;
+        followId = null;
+        lastFollow.set(NaN, NaN, NaN);
+        resetView();
+      },
     };
 
     // Benutzer greift ein → laufenden Kameraflug abbrechen
@@ -978,7 +987,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
       const r = camera.position.distanceTo(controls.target);
       const newR = Math.min(controls.maxDistance, Math.max(minDistFor(followed), (r * pinch.dist) / st.dist));
       camera.updateMatrixWorld();
-      dollyTo(newR, st.cx, st.cy, !!followed);
+      dollyTo(newR, st.cx, st.cy, true); // Pinch immer auf die Bildmitte: der Drehpunkt wandert nicht weg
       pinch = st;
     }
     function onTouchUp(e: PointerEvent) {
@@ -1484,6 +1493,15 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
             className="label-mono border border-border bg-background/80 whitespace-nowrap px-4 py-1.5 text-base uppercase leading-none text-muted transition-colors hover:border-accent hover:text-accent sm:px-2 sm:py-1 sm:text-[10px]"
           >
             +
+          </button>
+          <button
+            type="button"
+            onClick={() => apiRef.current?.reset()}
+            aria-label="Reset"
+            title="Reset"
+            className="label-mono border border-border bg-background/80 whitespace-nowrap px-4 py-1.5 text-base uppercase leading-none text-muted transition-colors hover:border-accent hover:text-accent sm:px-2 sm:py-1 sm:text-[10px]"
+          >
+            ⟲
           </button>
           <input
             type="date"
