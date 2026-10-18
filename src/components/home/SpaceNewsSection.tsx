@@ -150,7 +150,7 @@ export default function SpaceNewsSection() {
           >
             ▶
           </span>
-          // {t("spaceNewsLabel")}
+          {t("spaceNewsLabel")}
           {!isLoading && news.length > 0 && (
             <span className="text-muted">({news.length})</span>
           )}
@@ -249,7 +249,7 @@ function NewsDetailModal({ article, onClose }: NewsDetailModalProps) {
         )}
 
         <p className="label-mono text-xs uppercase text-accent">
-          // {article.newsSite}
+          {article.newsSite}
         </p>
         <h3 className="font-display mt-2 text-base font-bold uppercase leading-snug text-foreground sm:text-lg">
           {article.title}
