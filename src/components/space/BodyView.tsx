@@ -82,7 +82,7 @@ export default function BodyView({ b, lang }: { b: PlanetData; lang: Lang }) {
         <span>/</span>
         <Link href={langPath("/sonnensystem", lang)} className="hover:text-accent">{T.crumbSolar}</Link>
       </nav>
-      <p className="label-mono text-xs uppercase text-accent">// {kindLabel(b, lang)}</p>
+      <p className="label-mono text-xs uppercase text-accent">{kindLabel(b, lang)}</p>
       <h1 className="font-display mt-2 text-3xl font-bold text-foreground sm:text-5xl">{name}</h1>
 
       <div className="mt-6 grid gap-6 sm:grid-cols-[1fr_1.2fr]">
