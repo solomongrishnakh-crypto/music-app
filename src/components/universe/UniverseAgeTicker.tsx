@@ -97,7 +97,7 @@ function AgeUnit({
     : value.toLocaleString("en-US", { minimumIntegerDigits: digits, useGrouping: false });
   return (
     <div
-      className={`relative flex min-w-0 flex-col items-center overflow-hidden border border-accent/25 bg-gradient-to-b from-surface-elevated/70 to-black/40 px-1.5 py-1.5 backdrop-blur-sm sm:px-2 sm:py-2 ${
+      className={`relative flex min-w-0 flex-col items-center overflow-hidden rounded-lg border border-accent/25 bg-gradient-to-b from-surface-elevated/70 to-black/40 px-1.5 py-1.5 backdrop-blur-sm sm:px-2 sm:py-2 ${
         wide ? "basis-full sm:basis-auto sm:flex-[2.4]" : "flex-1"
       }`}
     >
@@ -135,11 +135,11 @@ export default function UniverseAgeTicker() {
   if (!breakdown) {
     // Platzhalter mit fester Höhe, damit beim ersten Render (vor dem
     // useEffect) kein Layout-Sprung entsteht.
-    return <div className="mb-10 h-[128px] sm:h-[92px]" />;
+    return <div className="h-[150px] sm:h-[110px]" />;
   }
 
   return (
-    <div className="relative mb-10 border border-border/60 bg-black/20 p-2.5 sm:p-3">
+    <div className="relative overflow-hidden rounded-xl border border-accent/40 bg-gradient-to-br from-accent/15 via-surface-elevated to-transparent p-3 shadow-[0_0_30px_-10px_var(--accent)] backdrop-blur sm:p-4">
       <div className="mb-2 flex items-center gap-2">
         <span
           className={`h-1.5 w-1.5 rounded-full bg-accent transition-opacity duration-300 ${
