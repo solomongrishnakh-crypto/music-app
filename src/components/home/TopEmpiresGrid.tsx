@@ -74,7 +74,7 @@ export default function TopEmpiresGrid() {
 
       {selectedIndex !== null && (
         <DetailModal
-          eyebrow="// Große Imperien der Geschichte"
+          eyebrow="Große Imperien der Geschichte"
           title={TOP_EMPIRES[selectedIndex].name}
           meta={TOP_EMPIRES[selectedIndex].peak}
           paragraphs={TOP_EMPIRES[selectedIndex].details}
