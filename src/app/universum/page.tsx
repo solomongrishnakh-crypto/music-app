@@ -1382,7 +1382,9 @@ export default function UniversumPage() {
   // Direktlink ?fact=<n> (aus der Suche): Fakten-Karte aufklappen und hinscrollen
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const n = Number(new URLSearchParams(window.location.search).get("fact"));
+    const raw = new URLSearchParams(window.location.search).get("fact");
+    if (raw === null || raw.trim() === "") return;
+    const n = Number(raw);
     if (!Number.isInteger(n) || n < 0 || n >= UNIVERSE_FACTS.length) return;
     setFactsOpen(true);
     setSelectedFact(n);
