@@ -6,7 +6,7 @@ import { homeText } from "@/lib/homeText";
 import type { CosmosHit, CosmosKind } from "@/lib/cosmosSearch";
 
 const ICON: Record<CosmosKind, string> = {
-  planet: "🪐", dwarf: "🌑", sun: "☀️", probe: "🛰️", constellation: "✨", star: "⭐", empire: "🏛️",
+  planet: "🪐", dwarf: "🌑", sun: "☀️", probe: "🛰️", constellation: "✨", star: "⭐", empire: "🏛️", dso: "🌌", fact: "📊",
 };
 
 const yr = (y: number) => (y < 0 ? `−${-y}` : `${y}`);
@@ -18,6 +18,7 @@ export default function CosmosResults({ hits }: { hits: CosmosHit[] }) {
   if (hits.length === 0) return null;
 
   function sub(x: CosmosHit): string {
+    if (x.kind === "dso" || x.kind === "fact") return x.sub ?? "";
     const label = h[x.kind === "constellation" ? "constellation" : x.kind];
     if (x.kind === "star") return `${label} · ${x.mag?.toFixed(1)} mag · ${x.ly} ${h.ly} · ${h.inConst} ${x.inConst}`;
     if (x.kind === "empire" && x.from !== undefined && x.to !== undefined) return `${label} · ${yr(x.from)} – ${yr(x.to)}`;
