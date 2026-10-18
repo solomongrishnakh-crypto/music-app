@@ -57,7 +57,7 @@ const JSON_LD = {
   isPartOf: { "@type": "WebSite", name: "Centaurian", url: "https://centaurianspace.com" },
 };
 
-type Props = { searchParams: Promise<{ c?: string | string[]; p?: string | string[] }> };
+type Props = { searchParams: Promise<{ c?: string | string[]; p?: string | string[]; d?: string | string[] }> };
 
 /** ?c=Ori (Link von einer Sternbild-Seite) → an die Ansicht weitergeben */
 function constParam(raw: string | string[] | undefined): string {
@@ -72,10 +72,17 @@ function planetParam(raw: string | string[] | undefined, sep: string): string {
   return v && PLANET_PARAM.test(v) ? `${sep}p=${v}` : "";
 }
 
+/** ?d=M31 (Link aus der Suche) → Galaxie/Nebel/Sternhaufen auswählen */
+function dsoParam(raw: string | string[] | undefined, sep: string): string {
+  const v = Array.isArray(raw) ? raw[0] : raw;
+  return v && /^[A-Za-z0-9 ]{1,12}$/.test(v) ? `${sep}d=${encodeURIComponent(v)}` : "";
+}
+
 export default async function SternenhimmelPage({ searchParams }: Props) {
   const sp = await searchParams;
   const c0 = constParam(sp.c);
-  const c = c0 + planetParam(sp.p, c0 ? "&" : "?");
+  const c1 = c0 + planetParam(sp.p, c0 ? "&" : "?");
+  const c = c1 + dsoParam(sp.d, c1 ? "&" : "?");
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
