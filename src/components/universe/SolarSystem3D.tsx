@@ -46,6 +46,8 @@ interface Props {
   className?: string;
   /** Wird aufgerufen, wenn WebGL nicht verfügbar ist (→ 2D-Ansicht). */
   onWebglError?: () => void;
+  /** Kleine Vorschau-Box: ohne Bedienung/Beschriftung, Kamera kreist langsam. */
+  preview?: boolean;
 }
 
 type ScaleMode = "compact" | "real";
@@ -249,7 +251,7 @@ interface BodyObj {
   minPx: number;
 }
 
-export default function SolarSystem3D({ onSelectPlanet, selectedId, className = "", onWebglError }: Props) {
+export default function SolarSystem3D({ onSelectPlanet, selectedId, className = "", onWebglError, preview = false }: Props) {
   const { lang, t } = useLanguage();
   const containerRef = useRef<HTMLDivElement>(null);
   const glCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -355,7 +357,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
       onWebglError?.();
       return;
     }
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.75);
+    const dpr = Math.min(window.devicePixelRatio || 1, preview ? 1.5 : 1.75);
     renderer.setPixelRatio(dpr);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.autoClear = false;
@@ -701,8 +703,9 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
     }
     function resetView() {
       // Neptun-Bahn (kompakt ≈ 22 Einheiten, echt 30 AE) passt ins Bild
-      defaultDist = fitDistance(real ? 33 : 25) * 0.95;
-      const el = 32 * DEG;
+      // Vorschau: näher heran (bis ca. Saturn-Bahn), flacherer Blick → Planeten größer
+      defaultDist = fitDistance(preview ? 13 : real ? 33 : 25) * 0.95;
+      const el = (preview ? 24 : 32) * DEG;
       controls.target.set(0, 0, 0);
       camera.position.set(0, -defaultDist * Math.cos(el), defaultDist * Math.sin(el));
       controls.maxDistance = real ? 1200 : 220;
@@ -893,6 +896,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
     const keys = new Set<string>();
     const KEYS = new Set(["w", "a", "s", "d", "q", "e", "r", "f", "+", "-", "=", "arrowup", "arrowdown", "arrowleft", "arrowright"]);
     function onKeyDown(e: KeyboardEvent) {
+      if (preview) return;
       const el = e.target as HTMLElement | null;
       if (el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable)) return;
       const k = e.key.toLowerCase();
@@ -1082,11 +1086,20 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
     // --- Render-Schleife ---
     let raf = 0;
     let last = performance.now();
+    // Vorschau: nur rechnen, solange sichtbar (spart Akku)
+    let visible = true;
+    const io = preview ? new IntersectionObserver((es) => { visible = es[0]?.isIntersecting ?? true; }) : null;
+    io?.observe(container);
+    controls.enabled = !preview;
     const sunView = new THREE.Vector3();
     const labelRects: [number, number, number, number][] = [];
 
     function frame(now: number) {
       raf = requestAnimationFrame(frame);
+      if (preview && !visible) {
+        last = now;
+        return;
+      }
       const dt = Math.min(100, now - last);
       last = now;
 
@@ -1145,6 +1158,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
       controls.minDistance = minDistFor(flight ? null : followed);
       controls.zoomToCursor = !followed; // beim Mitfliegen Pinch genau auf den Körper
       controls.update();
+      if (preview) orbitBy(dt * 0.00006, 0); // langsames Kreisen
 
       // Deutlich verschoben (Rechtsklick/2 Finger/WASD) → Mitfliegen
       // beenden. Kleine Abweichungen (z. B. beim Pinchen) bleiben einfach
@@ -1238,7 +1252,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
       renderer.clearDepth();
       renderer.render(scene, camera);
 
-      drawLabels(now);
+      if (!preview) drawLabels(now);
 
       // Datum
       const dl = dateLabelRef.current;
@@ -1355,6 +1369,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
       texAlive = false;
       window.clearTimeout(texTimer);
       cancelAnimationFrame(raf);
+      io?.disconnect();
       ro.disconnect();
       container.removeEventListener("wheel", onWheel, { capture: true });
       canvas.removeEventListener("pointerdown", onPointerDown);
@@ -1382,10 +1397,10 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
   }, []);
 
   return (
-    <div ref={containerRef} className={`relative h-full w-full overflow-hidden bg-black ${className}`}>
+    <div ref={containerRef} className={`relative h-full w-full overflow-hidden bg-black ${preview ? "pointer-events-none" : ""} ${className}`}>
       <canvas ref={glCanvasRef} className="absolute inset-0 h-full w-full cursor-grab touch-none" aria-label={t("solarSystemVisAria")} />
       <canvas ref={labelCanvasRef} className="pointer-events-none absolute inset-0 h-full w-full" aria-hidden="true" />
-      {showDistances && (
+      {!preview && showDistances && (
         <div className="absolute inset-x-2 top-2 z-10 max-h-[55%] overflow-y-auto border border-border bg-background/90 p-3 backdrop-blur-sm sm:left-auto sm:right-3 sm:top-3 sm:w-[25rem]">
           <p className="label-mono text-[10px] uppercase text-accent">{t("solarDistances")}</p>
           <table className="mt-2 w-full border-collapse text-left text-[11px]">
@@ -1442,6 +1457,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
           <p className="mt-2 text-[9px] text-muted">{t("solarDistanceNote")}</p>
         </div>
       )}
+      {!preview && (
       <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-wrap items-end justify-between gap-2 p-2 sm:p-3">
         <div className="label-mono text-[10px] uppercase text-muted">
           <span ref={dateLabelRef} className="text-foreground" />
@@ -1514,6 +1530,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
           </button>
         </div>
       </div>
+      )}
     </div>
   );
 }
