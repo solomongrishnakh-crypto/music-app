@@ -118,7 +118,7 @@ export default function BodyView({ b, lang }: { b: PlanetData; lang: Lang }) {
 
       <div className="mt-6 flex flex-wrap gap-3">
         <Link
-          href={langPath("/universum", lang)}
+          href={`${langPath("/universum", lang)}?solar=${encodeURIComponent(b.id)}`}
           className="inline-block border border-accent px-4 py-2.5 text-sm uppercase tracking-wide text-accent transition-colors hover:bg-accent hover:text-black"
         >
           ▶ {T.open3d}
