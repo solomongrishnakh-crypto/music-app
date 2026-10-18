@@ -371,7 +371,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
     const tex = (c: HTMLCanvasElement, srgb = true) => {
       const tx = new THREE.CanvasTexture(c);
       if (srgb) tx.colorSpace = THREE.SRGBColorSpace;
-      tx.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+      tx.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
       disposables.push(tx);
       return tx;
     };
@@ -519,6 +519,12 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
           emissive: new THREE.Color(data.color),
           emissiveIntensity: 0,
         });
+        // Relief: Helligkeit der Textur als Höhenkarte → Krater/Gebirge werfen
+        // bei Streiflicht feine Schatten (nur Felskörper)
+        if (data.kind === "dwarf" || data.id === "mercury" || data.id === "mars" || data.id === "moon") {
+          m.bumpMap = m.map;
+          m.bumpScale = 1.2;
+        }
         mesh = new THREE.Mesh(big ? sphereGeo : lowSphereGeo, m);
         materials.push(m);
         if (data.id === "haumea") mesh.scale.set(1, 0.73, 0.44); // stark abgeplattet (echt ~2100×1680×1074 km)
@@ -656,7 +662,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
     const controls = new OrbitControls(camera, canvas);
     controls.enableDamping = true;
     controls.dampingFactor = 0.075;
-    controls.rotateSpeed = 0.55;
+    controls.rotateSpeed = 0.75; // 1 Finger: direkter als vorher (0.55)
     controls.panSpeed = 0.9;
     controls.zoomSpeed = 1; // Pinch 1:1 — der Inhalt folgt genau den Fingern
     controls.screenSpacePanning = true;
@@ -824,7 +830,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
       const moved = Math.hypot(e.clientX - down.x, e.clientY - down.y);
       const dt = performance.now() - down.t;
       down = null;
-      if (moved > 6 || dt > 500) return;
+      if (moved > (e.pointerType === "touch" ? 12 : 6) || dt > 500) return;
       const rect = canvas!.getBoundingClientRect();
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -962,12 +968,9 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
       const followed = followId ? (byId.get(followId) ?? null) : null;
       // 1) verschieben (beim Mitfliegen erst ab deutlicher Bewegung beendet)
       if (!followed) panPixels(st.cx - pinch.cx, st.cy - pinch.cy, true);
-      // 2) drehen um den Blickpunkt
-      let dAng = st.ang - pinch.ang;
-      if (dAng > Math.PI) dAng -= Math.PI * 2;
-      if (dAng < -Math.PI) dAng += Math.PI * 2;
-      if (Math.abs(dAng) > 0.002) orbitBy(dAng, 0);
-      // 3) zoomen: Inhalt folgt genau den Fingern (1:1)
+      // (Finger-Verdrehen dreht NICHT mehr mit: beim Pinch drehte sich die
+      // Ansicht ungewollt mit — Nutzer 18.10.2026. Drehen = 1 Finger.)
+      // 2) zoomen: Inhalt folgt genau den Fingern (1:1)
       const r = camera.position.distanceTo(controls.target);
       const newR = Math.min(controls.maxDistance, Math.max(minDistFor(followed), (r * pinch.dist) / st.dist));
       camera.updateMatrixWorld();
@@ -1454,7 +1457,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
             type="button"
             onClick={() => apiRef.current?.zoomBy(1 / 1.8)}
             aria-label="−"
-            className="label-mono border border-border bg-background/80 whitespace-nowrap px-2 py-1 text-[10px] uppercase text-muted transition-colors hover:border-accent hover:text-accent"
+            className="label-mono border border-border bg-background/80 whitespace-nowrap px-4 py-1.5 text-base uppercase leading-none text-muted transition-colors hover:border-accent hover:text-accent sm:px-2 sm:py-1 sm:text-[10px]"
           >
             −
           </button>
@@ -1462,7 +1465,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
             type="button"
             onClick={() => apiRef.current?.zoomBy(1.8)}
             aria-label="+"
-            className="label-mono border border-border bg-background/80 whitespace-nowrap px-2 py-1 text-[10px] uppercase text-muted transition-colors hover:border-accent hover:text-accent"
+            className="label-mono border border-border bg-background/80 whitespace-nowrap px-4 py-1.5 text-base uppercase leading-none text-muted transition-colors hover:border-accent hover:text-accent sm:px-2 sm:py-1 sm:text-[10px]"
           >
             +
           </button>
