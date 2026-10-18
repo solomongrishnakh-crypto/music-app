@@ -63,6 +63,10 @@ interface PlayerContextValue {
   // bleibt sonst "immer unten" sichtbar, wie vom Nutzer gewünscht).
   heroActive: boolean;
   setHeroActive: (active: boolean) => void;
+  // Tipp auf die untere Leiste: Now-Playing-Ansicht auf der Startseite öffnen
+  heroRequested: boolean;
+  requestHero: () => void;
+  clearHeroRequest: () => void;
 }
 
 const PlayerContext = createContext<PlayerContextValue | null>(null);
@@ -77,6 +81,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [heroActive, setHeroActive] = useState(false);
+  const [heroRequested, setHeroRequested] = useState(false);
+  const requestHero = useCallback(() => setHeroRequested(true), []);
+  const clearHeroRequest = useCallback(() => setHeroRequested(false), []);
   const controlsRef = useRef<{ toggle: () => void; seek: (seconds: number) => void } | null>(
     null
   );
@@ -191,6 +198,9 @@ export function PlayerProvider({ children }: { children: ReactNode }) {
         registerControls,
         heroActive,
         setHeroActive,
+        heroRequested,
+        requestHero,
+        clearHeroRequest,
       }}
     >
       {children}
