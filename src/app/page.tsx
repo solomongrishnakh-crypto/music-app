@@ -63,7 +63,7 @@ export default function Home() {
   // Fenster oben im Blick (die Seite springt nach oben), und ein Tipp auf die
   // untere Player-Leiste öffnet es wieder.
   function scrollToTop() {
-    window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 60);
+    window.setTimeout(() => window.scrollTo(0, 0), 60);
   }
 
   useEffect(() => {
