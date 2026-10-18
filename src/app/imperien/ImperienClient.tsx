@@ -2051,7 +2051,7 @@ export default function ImperienClient() {
         </div>
 
         <header className="mb-4 border-b border-border pb-4">
-          <p className="label-mono text-xs uppercase text-muted">// {t("navEmpiresLabel")}</p>
+          <p className="label-mono text-xs uppercase text-muted">{t("navEmpiresLabel")}</p>
           <h1 className="font-display mt-2 text-2xl font-bold uppercase tracking-tight text-foreground sm:text-4xl">
             {t("empiresTitle")}
           </h1>
@@ -2513,7 +2513,7 @@ export default function ImperienClient() {
             Lineal oben bringt einen zurück zu den Reichen. */}
         <div className="hud-card mt-2 border border-border p-3 sm:p-4">
           <div className="mb-2 flex items-baseline justify-between gap-2">
-            <p className="label-mono text-xs uppercase text-accent">// {t("prehistTitle")}</p>
+            <p className="label-mono text-xs uppercase text-accent">{t("prehistTitle")}</p>
             {preYear !== null && (
               <button
                 type="button"
