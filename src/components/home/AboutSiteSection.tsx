@@ -33,19 +33,20 @@ export default function AboutSiteSection() {
       <SectionHeading index="02" label={t("aboutLabel")} />
       {/* Nutzerwunsch 03.10.2026: Beschreibung verbessert — kurzer Einstieg,
           die vier Bereiche als Liste, Rechtliches als kleine Notiz */}
-      <div className="hud-card grid grid-cols-1 overflow-hidden sm:grid-cols-[2fr_3fr]">
-        <div className="relative h-56 overflow-hidden bg-black sm:h-auto sm:min-h-[22rem]">
+      <div className="relative grid grid-cols-1 overflow-hidden rounded-2xl border border-accent/40 bg-gradient-to-br from-accent/15 via-surface-elevated to-transparent shadow-[0_0_30px_-10px_var(--accent)] backdrop-blur sm:grid-cols-[2fr_3fr]">
+        <div className="relative h-56 overflow-hidden border-b border-accent/20 bg-black sm:h-auto sm:min-h-[22rem] sm:border-b-0 sm:border-r">
           {/* Nutzerwunsch 15.10.2026: statt des Partikel-Porträts das Centaurian-Logo (statisch, spart Leistung) */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src="/branding/logo.jpg" alt="Centaurian" className="absolute inset-0 h-full w-full object-contain" loading="lazy" decoding="async" />
+          <span aria-hidden="true" className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-accent/10" />
         </div>
-        <div className="flex flex-col justify-center gap-4 p-5 sm:p-7">
-          <p className="text-sm leading-relaxed text-foreground/90">{t("aboutLead")}</p>
-          <ul className="grid gap-2">
+        <div className="flex flex-col justify-center gap-4 p-5 sm:gap-5 sm:p-7">
+          <p className="text-[15px] font-medium leading-relaxed text-foreground sm:text-base">{t("aboutLead")}</p>
+          <ul className="grid gap-2.5 sm:grid-cols-2">
             {(["aboutF1", "aboutF2", "aboutF3", "aboutF4"] as const).map((k, i) => {
               const [head, ...rest] = t(k).split(" — ");
               return (
-                <li key={k} className="about-row">
+                <li key={k} className="about-row rounded-xl border border-border/70 bg-background/40 p-3">
                   <span className="about-idx">{String(i + 1).padStart(2, "0")}</span>
                   <span className="text-xs leading-snug text-muted">
                     <span className="font-semibold uppercase tracking-wide text-foreground">{head}</span>
@@ -55,7 +56,7 @@ export default function AboutSiteSection() {
               );
             })}
           </ul>
-          <p className="flex items-start gap-2 border-t border-border pt-3 text-[11px] leading-relaxed text-muted">
+          <p className="flex items-start gap-2 rounded-xl border border-border/70 bg-background/30 p-3 text-[11px] leading-relaxed text-muted">
             <svg viewBox="0 0 24 24" className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" fill="none" stroke="currentColor" strokeWidth={1.8} aria-hidden="true">
               <path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.4 7.5 9.5 4.3-1.1 7.5-4.9 7.5-9.5V6L12 3Z" />
               <path d="m8.8 12.2 2.2 2.2 4.2-4.4" />
