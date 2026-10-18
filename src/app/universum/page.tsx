@@ -1477,6 +1477,9 @@ export default function UniversumPage() {
         </section>
 
         <section className="mb-6">
+          <div className="mb-3">
+            <UniverseAgeTicker />
+          </div>
           <button
             type="button"
             onClick={() => setFactsOpen((o) => !o)}
@@ -1496,7 +1499,6 @@ export default function UniversumPage() {
               ▾
             </span>
           </button>
-        <UniverseAgeTicker />
         {factsOpen && (
         <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {UNIVERSE_FACTS.map((fact, i) => {
