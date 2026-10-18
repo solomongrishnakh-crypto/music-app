@@ -191,7 +191,7 @@ export default function AiNewsSection() {
                     <div className="flex min-w-0 flex-1 flex-col p-3 sm:p-4">
                       <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                         <p className="label-mono truncate text-[10px] uppercase text-accent">
-                          // {item.source}
+                          {item.source}
                           {author ? ` · ${author}` : ""}
                         </p>
                         <p className="label-mono hidden text-[10px] uppercase text-muted sm:block">
@@ -228,7 +228,7 @@ export default function AiNewsSection() {
 
           {!isLoading && news.length === 0 && !errorMessage && (
             <p className="label-mono text-xs uppercase text-muted">
-              // {t("noNewsAvailable")}
+              {t("noNewsAvailable")}
             </p>
           )}
         </div>
