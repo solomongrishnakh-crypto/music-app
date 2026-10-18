@@ -7,7 +7,7 @@ import { BASE_URL, OG_LOCALE, PAGE_SEO, hreflang, isPrefixedLang, langPath } fro
  * Sternenhimmel in einer anderen Sprache: dieselbe Ansicht
  * (public/sternenhimmel.html), aber mit fester Sprache über ?lang=.
  */
-type Props = { params: Promise<{ lang: string }>; searchParams: Promise<{ c?: string | string[]; p?: string | string[] }> };
+type Props = { params: Promise<{ lang: string }>; searchParams: Promise<{ c?: string | string[]; p?: string | string[]; d?: string | string[] }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params;
@@ -36,8 +36,10 @@ export default async function LangSternenhimmel({ params, searchParams }: Props)
   const sp = await searchParams;
   const cv = Array.isArray(sp.c) ? sp.c[0] : sp.c;
   const pv = Array.isArray(sp.p) ? sp.p[0] : sp.p;
+  const dv = Array.isArray(sp.d) ? sp.d[0] : sp.d;
   const c = (cv && /^[A-Za-z]{3}$/.test(cv) ? `&c=${cv}` : "")
-    + (pv && /^(mercury|venus|mars|jupiter|saturn|uranus|neptune|moon)$/.test(pv) ? `&p=${pv}` : "");
+    + (pv && /^(mercury|venus|mars|jupiter|saturn|uranus|neptune|moon)$/.test(pv) ? `&p=${pv}` : "")
+    + (dv && /^[A-Za-z0-9 ]{1,12}$/.test(dv) ? `&d=${encodeURIComponent(dv)}` : "");
   const l = isPrefixedLang(lang) ? lang : "en";
   const seo = PAGE_SEO.sternenhimmel[l];
   const jsonLd = {
