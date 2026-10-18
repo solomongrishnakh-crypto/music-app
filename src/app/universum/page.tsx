@@ -1379,6 +1379,16 @@ export default function UniversumPage() {
     }
   }, []);
 
+  // Direktlink ?fact=<n> (aus der Suche): Fakten-Karte aufklappen und hinscrollen
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const n = Number(new URLSearchParams(window.location.search).get("fact"));
+    if (!Number.isInteger(n) || n < 0 || n >= UNIVERSE_FACTS.length) return;
+    setFactsOpen(true);
+    setSelectedFact(n);
+    window.setTimeout(() => document.getElementById("fact-" + n)?.scrollIntoView({ behavior: "smooth", block: "center" }), 600);
+  }, []);
+
   // Direktlink #maschine (z. B. von der Seite "Maschine der Ewigkeit"): zur Maschine scrollen.
   useEffect(() => {
     if (typeof window === "undefined" || window.location.hash !== "#maschine") return;
@@ -1495,6 +1505,7 @@ export default function UniversumPage() {
             return (
               <article
                 key={i}
+                id={"fact-" + i}
                 className={
                   "overflow-hidden rounded-2xl border bg-surface-elevated/50 transition-colors duration-300 " +
                   (open
