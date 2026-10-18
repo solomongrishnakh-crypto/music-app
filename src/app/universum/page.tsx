@@ -1365,7 +1365,19 @@ export default function UniversumPage() {
   const [selectedFact, setSelectedFact] = useState<number | null>(null);
   const [factsOpen, setFactsOpen] = useState(false);
   const [showSolarSystem, setShowSolarSystem] = useState(false);
+  const [solarFocus, setSolarFocus] = useState<string | null>(null);
   const { t, lang, localePath } = useLanguage();
+
+  // Nutzerwunsch 18.10.2026: "View in the 3D solar system" auf einer Körper-Seite
+  // (z. B. Eris) öffnet direkt das Sonnensystem, zentriert und blinkend auf diesen Körper.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const id = new URLSearchParams(window.location.search).get("solar");
+    if (id && /^[a-z0-9-]{1,30}$/.test(id)) {
+      setSolarFocus(id);
+      setShowSolarSystem(true);
+    }
+  }, []);
 
   // Direktlink #maschine (z. B. von der Seite "Maschine der Ewigkeit"): zur Maschine scrollen.
   useEffect(() => {
@@ -1549,7 +1561,7 @@ export default function UniversumPage() {
         </nav>
 
         {showSolarSystem && (
-          <SolarSystemModal onClose={() => setShowSolarSystem(false)} />
+          <SolarSystemModal initialId={solarFocus} onClose={() => { setShowSolarSystem(false); setSolarFocus(null); }} />
         )}
       </div>
     </main>
