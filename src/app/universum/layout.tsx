@@ -58,7 +58,7 @@ const FAQ_LD = {
       name: "Was ist die Maschine der Ewigkeit?",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "Eine 3D-Zahnrad-Maschine, die symbolisch seit dem Urknall läuft. Jedes Zahnrad treibt das nächste an, aber sechsmal langsamer: das erste dreht sich in etwa 3 Sekunden, das zweite in etwa 20 Sekunden, das dritte in etwa 2 Minuten. Das letzte Zahnrad braucht für eine einzige Umdrehung 13,8 Milliarden Jahre – so lange, wie das Universum existiert. Eine rote Markierung zeigt, wie weit sich jedes Rad seit dem Urknall gedreht hat.",
+        text: "Eine 3D-Zahnrad-Maschine, die symbolisch seit dem Urknall läuft. Jedes Zahnrad treibt das nächste an, aber sechsmal langsamer: das erste dreht sich in etwa 3 Sekunden, das zweite in etwa 18 Sekunden, das dritte in etwa 2 Minuten. Das letzte Zahnrad braucht für eine einzige Umdrehung 13,8 Milliarden Jahre – so lange, wie das Universum existiert. Eine rote Markierung zeigt, wie weit sich jedes Rad seit dem Urknall gedreht hat.",
       },
     },
     {
