@@ -132,7 +132,7 @@ export default function ConstView({ c, lang }: { c: Constellation; lang: Lang })
         <span>/</span>
         <Link href={langPath("/sternbilder", lang)} className="hover:text-accent">{T.crumbSky}</Link>
       </nav>
-      <p className="label-mono text-xs uppercase text-accent">// {T.kind}</p>
+      <p className="label-mono text-xs uppercase text-accent">{T.kind}</p>
       <h1 className="font-display mt-2 text-3xl font-bold text-foreground sm:text-5xl">{v.name}</h1>
       {subName(c, lang) && <p className="mt-1 text-sm text-muted">{subName(c, lang)}</p>}
 
