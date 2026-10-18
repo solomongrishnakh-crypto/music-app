@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Song } from "@/types/music";
 import { usePlayer } from "@/contexts/PlayerContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { usePathname, useRouter } from "next/navigation";
 
 /**
  * YoutubePlayer
@@ -104,8 +105,18 @@ export default function YoutubePlayer({
   onPrevious,
   hasPrevious,
 }: YoutubePlayerProps) {
-  const { reportProgress, registerControls, heroActive } = usePlayer();
-  const { t } = useLanguage();
+  const { reportProgress, registerControls, heroActive, requestHero } = usePlayer();
+  const { t, localePath } = useLanguage();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  // Tipp auf Titel/Interpret in der unteren Leiste: zurück zur großen
+  // Now-Playing-Ansicht auf der Startseite (Nutzerwunsch 18.10.2026).
+  function openNowPlaying() {
+    requestHero();
+    const onHome = pathname === "/" || /^\/[a-z]{2}$/.test(pathname ?? "");
+    if (!onHome) router.push(localePath("/"));
+  }
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YTPlayerInstance | null>(null);
   const onEndedRef = useRef(onEnded);
@@ -303,12 +314,17 @@ export default function YoutubePlayer({
       >
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-1 px-4 py-2 sm:px-8">
         <div className="flex items-center gap-3">
-          <div className="min-w-0 flex-1">
+          <button
+            type="button"
+            onClick={openNowPlaying}
+            disabled={!song}
+            className="min-w-0 flex-1 text-start"
+          >
             <p className="truncate text-xs font-medium uppercase text-foreground">
               {song?.title ?? t("noSongSelected")}
             </p>
             <p className="truncate text-[11px] text-muted">{song?.artist ?? ""}</p>
-          </div>
+          </button>
 
           {/* Vor/Zurück auch in der überall sichtbaren Mini-Leiste, nicht
               nur im großen Now-Playing-Bereich — funktioniert dadurch auch
