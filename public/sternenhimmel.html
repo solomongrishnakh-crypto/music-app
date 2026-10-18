@@ -3413,6 +3413,17 @@ function playSel(h) { if (h) fxT0 = performance.now(); if (h) sfx(h.type === "st
     S.sel = { type: "body", id }; document.getElementById("info").hidden = false; fillInfo(); zoomTo({ type: "body", id });
   }, 800);
 })();
+// Sprungziel aus der Suche: ?d=M31 → Galaxie/Nebel/Sternhaufen auswählen und hinschwenken
+(() => {
+  const id = new URLSearchParams(location.search).get("d");
+  const o = id && DSOS.find((x) => x.id === id);
+  if (!o) return;
+  setTimeout(() => {
+    const h = { type: "dso", id: o.id, ra: o.rad, dec: o.decr };
+    S.sel = h; document.getElementById("info").hidden = false; fillInfo();
+    zoomTo({ type: "star", ra: h.ra, dec: h.dec, dsoFov: Math.min(40, Math.max(0.8, ((o.a || 10) / 60) * 3.5)) * DEG });
+  }, 900);
+})();
 requestAnimationFrame(frame);
 </script>
 <script src="sky-extras.js"></script>
