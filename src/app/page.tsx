@@ -59,6 +59,22 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [showHero]);
 
+  // Nutzerwunsch 18.10.2026: Beim Antippen eines Songs bleibt das Now-Playing-
+  // Fenster oben im Blick (die Seite springt nach oben), und ein Tipp auf die
+  // untere Player-Leiste öffnet es wieder.
+  function scrollToTop() {
+    window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 60);
+  }
+
+  useEffect(() => {
+    if (player.heroRequested && player.currentSong) {
+      setShowHero(true);
+      player.clearHeroRequest();
+      scrollToTop();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player.heroRequested, player.currentSong]);
+
   // Suche: zuerst Planeten, Sterne, Sternbilder und Imperien (sofort, lokal).
   // Musik wird nur gesucht, wenn nichts Kosmisches passt oder der Nutzer den
   // kleinen "Auch nach Musik suchen"-Knopf drückt (Nutzerwunsch 14.10.2026:
@@ -127,11 +143,13 @@ export default function Home() {
   function handlePlay(song: Song) {
     player.play(song, results.length > 0 ? results : undefined);
     setShowHero(true);
+    scrollToTop();
   }
 
   function handleShufflePlayFavorites() {
     player.playRandomFavorite();
     setShowHero(true);
+    scrollToTop();
   }
 
   function handleBackToHome() {
@@ -176,7 +194,7 @@ export default function Home() {
               <span aria-hidden="true"><TypedWordmark speed={90} /></span>
             </h1>
             <p className="mx-auto mt-3 max-w-xl text-xs text-muted sm:text-sm">
-              // {ht.subtitle}
+              {ht.subtitle}
             </p>
           </header>
         )}
