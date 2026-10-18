@@ -2247,7 +2247,7 @@ export default function ImperienClient() {
                 )}
                 <div className="mt-3">
                   <p className="label-mono text-xs uppercase text-accent">
-                    // {selected.prehistoric
+                    {selected.prehistoric
                       ? t("prehistResult")
                       : selected.viaSearch
                       ? t("empiresResultSearch")
