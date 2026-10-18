@@ -125,12 +125,17 @@ const ATMOSPHERE: Record<string, string> = {
  */
 export default function SolarSystem(props: SolarSystemProps) {
   const [webglFailed, setWebglFailed] = useState(false);
-  if ((props.mode ?? "full") === "full" && !webglFailed) {
+  const mode = props.mode ?? "full";
+  // Vorschau-Box (Nutzerwunsch 18.10.2026: "moderner und realistischer"):
+  // dieselbe echte 3D-Szene wie im Vollbild, nur ohne Bedienung; ohne WebGL
+  // bleibt die 2D-Zeichnung.
+  if (!webglFailed) {
     return (
       <SolarSystem3D
         onSelectPlanet={props.onSelectPlanet}
         selectedId={props.selectedId}
         className={props.className}
+        preview={mode === "compact"}
         onWebglError={() => setWebglFailed(true)}
       />
     );
