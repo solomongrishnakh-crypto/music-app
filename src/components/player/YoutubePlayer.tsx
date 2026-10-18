@@ -114,8 +114,10 @@ export default function YoutubePlayer({
   // Now-Playing-Ansicht auf der Startseite (Nutzerwunsch 18.10.2026).
   function openNowPlaying() {
     requestHero();
-    const onHome = pathname === "/" || /^\/[a-z]{2}$/.test(pathname ?? "");
-    if (!onHome) router.push(localePath("/"));
+    const path = pathname ?? "/";
+    const m = path.match(/^\/([a-z]{2})(?:\/|$)/);
+    const onHome = path === "/" || (m !== null && path === "/" + m[1]);
+    if (!onHome) router.push(m ? "/" + m[1] : localePath("/"));
   }
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<YTPlayerInstance | null>(null);
