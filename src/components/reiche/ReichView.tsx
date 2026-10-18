@@ -175,7 +175,7 @@ export default function ReichView({ r, lang }: { r: Reich; lang: Lang }) {
         <Link href={langPath("/imperien/reiche", lang)} className="hover:text-accent">{T.crumbAll}</Link>
       </nav>
 
-      <p className="label-mono text-xs uppercase text-accent">// {T.eras[eraIndex(r.from)]}</p>
+      <p className="label-mono text-xs uppercase text-accent">{T.eras[eraIndex(r.from)]}</p>
       <h1 className="font-display mt-2 text-2xl font-bold text-foreground sm:text-4xl">{name}</h1>
       {showEn && (
         <p className="mt-1 text-sm text-muted">
