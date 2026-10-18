@@ -8,6 +8,8 @@ import { localize } from "@/lib/i18n";
 
 interface SolarSystemModalProps {
   onClose: () => void;
+  /** Körper, auf den die Kamera beim Öffnen fliegt und der blinkt (z. B. "eris"). */
+  initialId?: string | null;
 }
 
 /**
@@ -19,9 +21,10 @@ interface SolarSystemModalProps {
  * weil hier zusätzlich die Canvas-Visualisierung + Planeten-Klick-Panel
  * reinpassen müssen.
  */
-export default function SolarSystemModal({ onClose }: SolarSystemModalProps) {
+export default function SolarSystemModal({ onClose, initialId = null }: SolarSystemModalProps) {
   const { t, lang } = useLanguage();
   const [selected, setSelected] = useState<PlanetData | null>(null);
+  const [beacon, setBeacon] = useState<string | null>(initialId);
   const [imageFailed, setImageFailed] = useState(false);
 
   useEffect(() => {
@@ -81,7 +84,7 @@ export default function SolarSystemModal({ onClose }: SolarSystemModalProps) {
       </div>
 
       <div className="relative min-h-0 flex-1">
-        <SolarSystem mode="full" onSelectPlanet={setSelected} selectedId={selected?.id ?? null} />
+        <SolarSystem mode="full" onSelectPlanet={(p) => { setBeacon(null); setSelected(p); }} selectedId={selected?.id ?? beacon} />
 
         {selected && (
           <div className="absolute inset-x-0 bottom-0 max-h-[68%] overflow-y-auto border-t border-border bg-background/95 p-3 backdrop-blur-sm sm:max-h-[55%] sm:p-6">
