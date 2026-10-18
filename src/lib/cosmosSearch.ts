@@ -5,7 +5,7 @@ import type { Lang } from "@/contexts/LanguageContext";
  * (Nutzerwunsch 14.10.2026). Läuft komplett im Browser über die vorhandenen
  * Datensätze; die großen Daten werden erst bei der ersten Suche geladen.
  */
-export type CosmosKind = "planet" | "dwarf" | "sun" | "probe" | "constellation" | "star" | "empire";
+export type CosmosKind = "planet" | "dwarf" | "sun" | "probe" | "constellation" | "star" | "empire" | "dso" | "fact";
 
 export interface CosmosHit {
   key: string;
@@ -17,6 +17,8 @@ export interface CosmosHit {
   inConst?: string;
   from?: number;
   to?: number;
+  /** Untertitel für Galaxien/Nebel (Katalogname + Helligkeit) und Fakten-Karten (Wert) */
+  sub?: string;
   score: number;
 }
 
@@ -112,17 +114,21 @@ interface ConstRow {
 }
 
 async function load() {
-  const [bodies, consts, reiche, names] = await Promise.all([
+  const [bodies, consts, reiche, names, dsoMod, factMod] = await Promise.all([
     import("@/components/space/bodies"),
     import("@/data/sternbilder.json"),
     import("@/data/reiche/index.json"),
     import("@/lib/history/reicheNames"),
+    import("@/data/dsoSearch.json"),
+    import("@/data/factsSearch.json"),
   ]);
   return {
     bodies: bodies.SPACE_BODIES,
     consts: (consts.default as unknown as ConstRow[]),
     reiche: reiche.default as unknown as { slug: string; en: string; de: string | null; from: number; to: number; peakArea: number }[],
     reichNameL: names.reichNameL,
+    dso: dsoMod.default as unknown as { id: string; m: number; f?: number; n?: Record<string, string> }[],
+    facts: factMod.default as unknown as { i: number; l: Record<string, string>; v: Record<string, string> }[],
   };
 }
 
@@ -140,7 +146,7 @@ export async function searchCosmos(query: string, lang: Lang): Promise<CosmosHit
     const s = score(q, names);
     if (!s) continue;
     const kind: CosmosKind = b.kind === "star" ? "sun" : b.kind === "dwarf" ? "dwarf" : b.kind === "probe" ? "probe" : "planet";
-    hits.push({ key: "b:" + b.id, kind, title: b.name[lang] ?? b.name.en ?? b.name.de, href: "/sonnensystem/" + b.id, score: s + 5 });
+    hits.push({ key: "b:" + b.id, kind, title: b.name[lang] ?? b.name.en ?? b.name.de, href: "/sonnensystem/" + b.id, score: s + 5 + (kind === "sun" ? 10 : kind === "planet" ? 8 : 0) });
   }
 
   for (const c of d.consts) {
@@ -159,11 +165,32 @@ export async function searchCosmos(query: string, lang: Lang): Promise<CosmosHit
     if (s) hits.push({ key: "e:" + r.slug, kind: "empire", title, href: "/imperien/reich/" + r.slug, from: r.from, to: r.to, score: s - 1 + Math.min(1, (r.peakArea ?? 0) / 3e7) });
   }
 
+  // Galaxien, Nebel, Sternhaufen (Nutzerwunsch 18.10.2026: Suche verstärken) — Namen in allen Sprachen
+  for (const o of d.dso) {
+    const s = score(q, [...Object.values(o.n ?? {}), o.id]);
+    if (!s) continue;
+    hits.push({
+      key: "d:" + o.id,
+      kind: "dso",
+      title: (o.n && (o.n[lang] ?? o.n.en)) || o.id,
+      href: "/sternenhimmel?d=" + encodeURIComponent(o.id),
+      sub: `${o.id} · ${o.m.toFixed(1)} mag`,
+      score: s + (o.f ? 6 : 0) - 2,
+    });
+  }
+
+  // Fakten-Karten aus "Universum in Zahlen"
+  for (const f of d.facts) {
+    const s = score(q, Object.values(f.l));
+    if (!s) continue;
+    hits.push({ key: "f:" + f.i, kind: "fact", title: f.l[lang] ?? f.l.en, href: "/universum?fact=" + f.i, sub: f.v[lang] ?? f.v.en, score: s - 3 });
+  }
+
   hits.sort((a, b) => b.score - a.score);
   const per: Partial<Record<CosmosKind, number>> = {};
   const out: CosmosHit[] = [];
   for (const h of hits) {
-    const lim = h.kind === "star" ? 4 : h.kind === "empire" ? 6 : 5;
+    const lim = h.kind === "star" ? 4 : h.kind === "empire" ? 6 : h.kind === "fact" ? 3 : 5;
     per[h.kind] = (per[h.kind] ?? 0) + 1;
     if (per[h.kind]! > lim) continue;
     out.push(h);
