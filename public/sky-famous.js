@@ -212,4 +212,14 @@
     host.parentNode.insertBefore(el, host);
   }
   window.FAM = { draw, labels, pick, screen, index, mark, info, box, wiki: (s) => { const o = BY.get(s.id); return o && o.wiki ? [o.wiki] : []; }, has: (id) => BY.has(id) };
+  // Sprungziel von den eigenen Objekt-Seiten: ?d=ton618 → Objekt auswählen und hinschwenken
+  (() => {
+    const id = new URLSearchParams(location.search).get("d"), o = id && BY.get(id);
+    if (!o) return;
+    setTimeout(() => {
+      const h = hit(o);
+      S.sel = h; document.getElementById("info").hidden = false; fillInfo();
+      zoomTo({ type: "star", ra: h.ra, dec: h.dec, dsoFov: h.dsoFov });
+    }, 1000);
+  })();
 })();

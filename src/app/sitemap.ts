@@ -3,6 +3,7 @@ import { REICHE_INDEX } from "@/lib/history/reiche";
 import { ALL_LANGS, BASE_URL, hreflang, langPath } from "@/lib/seoI18n";
 import { SPACE_BODIES } from "@/components/space/bodies";
 import { CONSTELLATIONS } from "@/components/space/ConstView";
+import { FAMOUS } from "@/lib/famousObjects";
 import { DESTS, VEHICLES, travelPath } from "@/lib/travelTime";
 
 /**
@@ -34,6 +35,12 @@ function withLangs(path: string, priority: number, changeFrequency: Entry["chang
   }));
 }
 
+/** Nur Deutsch + Englisch (diese Seiten gibt es nicht in allen 15 Sprachen). */
+function deEn(path: string, priority: number): Entry[] {
+  const languages = { de: BASE_URL + langPath(path, "de"), en: BASE_URL + langPath(path, "en"), "x-default": BASE_URL + langPath(path, "en") };
+  return (["de", "en"] as const).map((l) => ({ url: BASE_URL + langPath(path, l), lastModified: SKY_UPDATED, changeFrequency: "monthly" as const, priority, alternates: { languages } }));
+}
+
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     ...withLangs("/", 1, "weekly"),
@@ -51,6 +58,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...withLangs("/geburtstag", 0.8, "monthly"),
     ...DESTS.flatMap((d) => VEHICLES.flatMap((v) => withLangs(travelPath(d, v), 0.6, "yearly"))),
     ...withLangs("/maschine-der-ewigkeit", 0.7, "yearly"),
+    ...deEn("/objekte", 0.8),
+    ...FAMOUS.flatMap((o) => deEn(`/objekte/${o.id}`, 0.8)),
     ...withLangs("/sternbilder", 0.7, "monthly"),
     ...CONSTELLATIONS.flatMap((c) => withLangs(`/sternbilder/${c.slug}`, 0.6, "yearly")),
   ];

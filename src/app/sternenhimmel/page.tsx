@@ -111,6 +111,9 @@ export default async function SternenhimmelPage({ searchParams }: Props) {
           <li>In 13 Sprachen verfügbar, ohne Anmeldung und ohne App-Installation.</li>
         </ul>
         <p>
+          <Link href="/objekte">Berühmte Objekte: Schwarze Löcher, Riesensterne und Nebel mit Fakten und Fotos</Link>
+        </p>
+        <p>
           <Link href="/himmel-heute">Himmel heute: welche Planeten man heute Nacht sieht, Mondphase und nächste Ereignisse</Link>
         </p>
       </section>
