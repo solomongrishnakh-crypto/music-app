@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { LANGUAGES } from "@/contexts/LanguageContext";
+import { toIntlSlugs } from "@/lib/slugs";
 
 /**
  * Wer eine andere Sprache gewählt hat, soll NIE auf einer deutschen Seite
@@ -22,7 +23,7 @@ export default function LangRedirect() {
       const stored = window.localStorage.getItem("centaurian-lang");
       if (!stored || stored === "de") return;
       if (!LANGUAGES.some((l) => l.code === stored)) return;
-      window.location.replace(`/${stored}${pathname}${search}${hash}`);
+      window.location.replace(`/${stored}${toIntlSlugs(pathname)}${search}${hash}`);
     } catch {
       /* kein localStorage: bei der deutschen Seite bleiben */
     }

@@ -8,6 +8,7 @@
  * Nutzern weltweit die passende Version an.
  */
 import type { Lang } from "@/contexts/LanguageContext";
+import { toIntlSlugs } from "@/lib/slugs";
 
 export const BASE_URL = "https://centaurianspace.com";
 
@@ -23,7 +24,7 @@ export function isPrefixedLang(v: string): v is PrefixedLang {
 /** Pfad in einer Sprache: ("/imperien", "en") → "/en/imperien"; Deutsch ohne Präfix. */
 export function langPath(path: string, lang: Lang): string {
   if (lang === "de") return path;
-  return path === "/" ? `/${lang}` : `/${lang}${path}`;
+  return path === "/" ? `/${lang}` : `/${lang}${toIntlSlugs(path)}`;
 }
 
 /** hreflang-Liste für eine Seite (alle 13 Sprachen + x-default = Englisch). */

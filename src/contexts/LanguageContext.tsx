@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { TRANSLATIONS, type TranslationKey } from "@/lib/translations";
+import { toDeSlugs, toIntlSlugs } from "@/lib/slugs";
 
 // Nutzerwunsch 20.09.2026: "füge mehr sprachen wie hindi, chinesich,
 // koreanisch, japanisch, spanisch, französich, türkisch, russisch,
@@ -128,8 +129,8 @@ export function LanguageProvider({
       if (forcedLang) {
         if (next === forcedLang) return;
         const { pathname, search, hash } = window.location;
-        const base = pathname.replace(new RegExp(`^/${forcedLang}(?=/|$)`), "") || "/";
-        const target = next === "de" ? base : `/${next}${base === "/" ? "" : base}`;
+        const base = toDeSlugs(pathname.replace(new RegExp(`^/${forcedLang}(?=/|$)`), "") || "/");
+        const target = next === "de" ? base : `/${next}${base === "/" ? "" : toIntlSlugs(base)}`;
         window.location.assign(target + search + hash);
         return;
       }
@@ -146,7 +147,7 @@ export function LanguageProvider({
       const l = forcedLang ?? (hydrated ? lang : "de");
       if (l === "de") return path;
       if (!path.startsWith("/") || path.startsWith("//")) return path;
-      return path === "/" ? `/${l}` : `/${l}${path}`;
+      return path === "/" ? `/${l}` : `/${l}${toIntlSlugs(path)}`;
     },
     [forcedLang, hydrated, lang]
   );

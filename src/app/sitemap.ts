@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 import { REICHE_INDEX } from "@/lib/history/reiche";
-import { ALL_LANGS, BASE_URL, hreflang } from "@/lib/seoI18n";
+import { ALL_LANGS, BASE_URL, hreflang, langPath } from "@/lib/seoI18n";
 import { SPACE_BODIES } from "@/components/space/bodies";
 import { CONSTELLATIONS } from "@/components/space/ConstView";
 import { DESTS, VEHICLES, travelPath } from "@/lib/travelTime";
@@ -17,7 +17,7 @@ function withLangs(path: string, priority: number, changeFrequency: Entry["chang
   const languages: Record<string, string> = {};
   for (const [k, v] of Object.entries(hreflang(path))) languages[k] = BASE_URL + v;
   return ALL_LANGS.map((l) => ({
-    url: BASE_URL + (l === "de" ? path : path === "/" ? `/${l}` : `/${l}${path}`),
+    url: BASE_URL + langPath(path, l),
     lastModified: now,
     changeFrequency,
     priority: l === "de" || l === "en" ? priority : Math.max(0.3, priority - 0.1),

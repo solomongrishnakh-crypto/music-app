@@ -1,4 +1,5 @@
 import type { NextConfig } from "next";
+import { SLUG_PAIRS } from "./src/lib/slugs";
 
 const isDev = process.env.NODE_ENV !== "production";
 
@@ -74,14 +75,33 @@ const nextConfig: NextConfig = {
   },
   // Google fragt zuerst /favicon.ico ab: dort das Logo (ohne Schrift) ausliefern.
   async rewrites() {
-    return [{ source: "/favicon.ico", destination: "/icon.png" }];
+    // Englische Adressen für alle Sprachen: /en/empires → intern /en/imperien.
+    const langs = "en|es|fr|pt|tr|ru|el|ar|hi|zh|ja|ko|id|fa";
+    return [
+      { source: "/favicon.ico", destination: "/icon.png" },
+      ...SLUG_PAIRS.map(([de, en]) => ({
+        source: `/:lang(${langs})${en}/:rest*`,
+        destination: `/:lang${de}/:rest*`,
+      })),
+      ...SLUG_PAIRS.map(([de, en]) => ({
+        source: `/:lang(${langs})${en}`,
+        destination: `/:lang${de}`,
+      })),
+    ];
   },
 
   // Umzug auf die neue Domain (16.10.2026): die alte Adresse leitet dauerhaft um.
   // Ausnahme: die Dateien, die die Android-App (TWA) auf der alten Adresse braucht.
   async redirects() {
     const old = [{ type: "host" as const, value: "centaurian.vercel.app" }];
+    const langs = "en|es|fr|pt|tr|ru|el|ar|hi|zh|ja|ko|id|fa";
+    // Alte Adressen mit deutschem Namen (/en/imperien) → neue (/en/empires).
+    const oldSlugs = SLUG_PAIRS.flatMap(([de, en]) => [
+      { source: `/:lang(${langs})${de}`, destination: `/:lang${en}`, permanent: true },
+      { source: `/:lang(${langs})${de}/:rest+`, destination: `/:lang${en}/:rest+`, permanent: true },
+    ]);
     return [
+      ...oldSlugs,
       { source: "/", has: old, destination: "https://centaurianspace.com/", permanent: true },
       {
         source: "/:path((?!.well-known/assetlinks|download/).+)",
