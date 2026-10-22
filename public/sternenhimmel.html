@@ -64,7 +64,7 @@ button.chip[aria-pressed="true"] { color: var(--ink); border-color: rgba(255, 90
 #info dl { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 0; font-size: 14px; font-variant-numeric: tabular-nums; }
 #info dt { color: var(--muted); }
 #info dd { margin: 0; }
-#infoNote { margin: 10px 0 0; font-size: 14px; line-height: 1.45; color: var(--ink); opacity: 0.9; }
+#infoNote { margin: 10px 0 0; font-size: 14px; line-height: 1.45; color: var(--ink); opacity: 0.9; white-space: pre-line; }
 #info .close { position: absolute; top: 8px; right: 8px; width: 34px; height: 34px; border-radius: 50%; background: rgba(255,255,255,0.08); border: 1px solid var(--line); color: var(--ink); font-size: 22px; line-height: 1; cursor: pointer; z-index: 2; }
 #info .close:hover { border-color: var(--accent); color: var(--accent); }
 /* Wissen aus Wikipedia (Nutzerwunsch 03.10.2026: viele kurze Infos beim Antippen) */
@@ -2884,12 +2884,14 @@ function fillInfo() {
     const Tk = bv != null ? bvTemp(bv) + 273 : 0;
     if (Tk) rows.push([tr("surface"), `≈ ${nf0.format(Math.round((Tk - 273) / 100) * 100)} °C`]);
     // physikalische Größen aus Helligkeit, Entfernung und Temperatur (Näherung)
+    let phys = null;
     if (ly && Tk) {
       const M = s.mag - 5 * Math.log10(ly / 3.26156 / 10);
       const x = Math.log10(Tk) - 4;
       const BC = -8.499 * x ** 4 + 13.421 * x ** 3 - 8.131 * x * x - 3.901 * x - 0.438; // Reed 1998
       const L = Math.pow(10, 0.4 * (4.74 - (M + BC)));
       const R = Math.sqrt(L) * Math.pow(5772 / Tk, 2);
+      phys = { L, R };
       const fx = (v) => (v >= 100 ? nf0.format(Math.round(v / (v >= 1000 ? 100 : 10)) * (v >= 1000 ? 100 : 10)) : v >= 10 ? nf0.format(v) : nf.format(v));
       rows.push([tr("absMag"), `${nf.format(M)} mag`]);
       rows.push([tr("luminosity"), tr("xSun", { n: fx(L) })]);
@@ -2903,6 +2905,8 @@ function fillInfo() {
     rows.push([tr("visibleWith"), tr(s.mag <= 6 ? "eye" : s.mag <= 9.5 ? "binoculars" : "telescope")]);
     if (c && c.vr && c.vr[1] - c.vr[0] >= 0.25) rows.push([tr("variable"), `${nf.format(c.vr[0])} – ${nf.format(c.vr[1])} mag`]);
     if (s.con) rows.push([tr("constellation"), s.con]);
+    // Beschreibung aus den echten Daten (22.10.2026) – für alle Sterne ohne eigene kuratierte Notiz
+    if (!note && window.describeStar) { try { note = describeStar({ name: s.name || s.des || (c && c.hip ? "HIP " + c.hip : ""), hip: c && c.hip, mag: s.mag, con: s.con, ly, sp, Tk, phys, sim, vr: c && c.vr }); } catch (e) {} }
     const ne = document.getElementById("infoNote");
     ne.hidden = !note; if (ne.textContent !== note) ne.textContent = note;
   }
@@ -3766,4 +3770,5 @@ requestAnimationFrame(frame);
 <script src="sky-extras.js"></script>
 <script src="sky-voyager.js"></script>
 <script src="sky-kepler.js"></script>
+<script src="sky-stardesc.js"></script>
 <script src="sky-famous.js"></script>
