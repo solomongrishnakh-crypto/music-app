@@ -60,6 +60,9 @@ export const ORBITS: Record<string, OrbitElements> = {
 const VOYAGER_POS = [-32.16063166073721, -136.8088759764654, 98.98387558141307] as const;
 const VOYAGER_VEL = [-1.19548863719881e-3, -7.861182549675848e-3, 5.678441447426493e-3] as const;
 
+/** Voyager 2 (JPL Horizons, Ekliptik J2000, Sonne im Zentrum, AE und AE/Tag) — Stand EPOCH_JD, aus dem Horizons-Wert vom 22.10.2026 zurückgerechnet. */
+const VOYAGER2_POS = [39.88541707676249, -105.45356009031174, -89.69024301374685] as const;
+const VOYAGER2_VEL = [0.00242766034271667, -0.005394432980263372, -0.006535806892013976] as const;
 export type Vec3 = [number, number, number];
 
 export function dateToJd(date: Date): number {
@@ -104,6 +107,14 @@ export function bodyPosition(id: string, jd: number): Vec3 | null {
       VOYAGER_POS[0] + VOYAGER_VEL[0] * dt,
       VOYAGER_POS[1] + VOYAGER_VEL[1] * dt,
       VOYAGER_POS[2] + VOYAGER_VEL[2] * dt,
+    ];
+  }
+  if (id === "voyager2") {
+    const dt = jd - EPOCH_JD;
+    return [
+      VOYAGER2_POS[0] + VOYAGER2_VEL[0] * dt,
+      VOYAGER2_POS[1] + VOYAGER2_VEL[1] * dt,
+      VOYAGER2_POS[2] + VOYAGER2_VEL[2] * dt,
     ];
   }
   const o = ORBITS[id];

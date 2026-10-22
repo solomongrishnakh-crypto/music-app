@@ -234,6 +234,103 @@ export function cachedCanvas(key: string, make: () => HTMLCanvasElement): HTMLCa
   return c;
 }
 
+/**
+ * Echte Oberflächenkarte aus dem Netz laden (22.10.2026, Nutzerwunsch: "eine Seite von Pluto sieht
+ * realistisch aus, die andere nicht"). Beispiel: NASA-Weltkarte von New Horizons über Wikimedia
+ * Commons (gemeinfrei). Ersetzt die rechnerische Textur, sobald sie da ist; bis dahin (oder ohne
+ * Netz) bleibt die berechnete Textur sichtbar. `post` darf Lücken im Bild füllen.
+ */
+export function loadRealSurface(
+  key: string,
+  url: string,
+  width: number,
+  post?: (c: HTMLCanvasElement) => void
+): Promise<HTMLCanvasElement | null> {
+  return new Promise((resolve) => {
+    if (typeof Image === "undefined") return resolve(null);
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.referrerPolicy = "no-referrer";
+    img.onload = () => {
+      try {
+        const c = document.createElement("canvas");
+        c.width = width;
+        c.height = Math.round(width / 2);
+        const ctx = c.getContext("2d");
+        if (!ctx) return resolve(null);
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+        post?.(c);
+        CANVAS_CACHE.set(key, c);
+        resolve(c);
+      } catch {
+        resolve(null);
+      }
+    };
+    img.onerror = () => resolve(null);
+    img.src = url;
+  });
+}
+
+/**
+ * Karte von Pluto: Der Südpol lag bei der Vorbeiflug im Dunkeln (nie fotografiert) → schwarzer
+ * Streifen unten. Hier wird er spaltenweise mit der Farbe des letzten bekannten Randes gefüllt und
+ * nach unten zu einem dunklen Rotbraun abgetönt (leicht gekörnt), damit keine harte Kante bleibt.
+ */
+export function fillUnlitSouth(c: HTMLCanvasElement) {
+  const ctx = c.getContext("2d");
+  if (!ctx) return;
+  const w = c.width, h = c.height;
+  const img = ctx.getImageData(0, 0, w, h);
+  const d = img.data;
+  const lum = (x: number, y: number) => {
+    const i = (y * w + x) * 4;
+    return d[i] + d[i + 1] + d[i + 2];
+  };
+  // letzte helle Zeile je Spalte (von oben); danach beginnt das Unbekannte
+  const last = new Float32Array(w);
+  for (let x = 0; x < w; x++) {
+    let y = h - 1;
+    while (y > h * 0.25 && lum(x, y) < 40) y--;
+    last[x] = y;
+  }
+  // glätten (Ränder sind zackig) und leicht nach oben ziehen, um Randpixel zu verschlucken
+  const sm = new Float32Array(w);
+  const R = 5;
+  for (let x = 0; x < w; x++) {
+    let m = Infinity;
+    for (let k = -R; k <= R; k++) m = Math.min(m, last[(x + k + w) % w]);
+    sm[x] = m - 3;
+  }
+  const dark: [number, number, number] = [74, 52, 44];
+  let seed = 7;
+  const rnd = () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed / 4294967296;
+  };
+  for (let x = 0; x < w; x++) {
+    const y0 = Math.max(1, Math.floor(sm[x]));
+    // Randfarbe: Mittel der 6 Zeilen darüber
+    let r = 0, g = 0, b = 0;
+    for (let k = 1; k <= 6; k++) {
+      const i = ((y0 - k) * w + x) * 4;
+      r += d[i]; g += d[i + 1]; b += d[i + 2];
+    }
+    r /= 6; g /= 6; b /= 6;
+    for (let y = y0; y < h; y++) {
+      const t = Math.min(1, (y - y0) / Math.max(8, (h - y0) * 0.85));
+      const k = t * t * (3 - 2 * t);
+      const n = (rnd() - 0.5) * 14;
+      const i = (y * w + x) * 4;
+      d[i] = r + (dark[0] - r) * k + n;
+      d[i + 1] = g + (dark[1] - g) * k + n * 0.8;
+      d[i + 2] = b + (dark[2] - b) * k + n * 0.7;
+      d[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+}
+
 export function hasCachedCanvas(key: string): boolean {
   return CANVAS_CACHE.has(key);
 }

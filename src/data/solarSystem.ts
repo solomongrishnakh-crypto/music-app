@@ -733,6 +733,42 @@ export const VOYAGER1: PlanetData = {
 };
 
 /**
+ * Voyager 2 — die einzige Sonde, die Uranus und Neptun besucht hat (Nutzerwunsch 22.10.2026:
+ * "adde voyager 2 in 3d sonnensystem"). Die Position kommt live aus den echten JPL-Horizons-
+ * Bahndaten (siehe orbits.ts); die Zahlen hier gelten für Oktober 2026.
+ */
+export const VOYAGER2: PlanetData = {
+  ...VOYAGER1,
+  id: "voyager2",
+  name: {
+    de: "Voyager 2", en: "Voyager 2", id: "Voyager 2", fa: "وویجر ۲", hi: "वॉयजर 2", zh: "旅行者2号", ko: "보이저 2호", ja: "ボイジャー2号",
+    es: "Voyager 2", fr: "Voyager 2", tr: "Voyager 2", ru: "Вояджер-2", pt: "Voyager 2", ar: "فوييجر 2", el: "Voyager 2",
+  },
+  distanceAu: 144,
+  color: "#dce6f2",
+  glowColor: "rgba(220,230,242,0.5)",
+  facts: {
+    distance: {
+      de: "≈ 144 AE (≈ 21,6 Mrd. km)", en: "≈ 144 AU (≈ 21.6 billion km)", hi: "≈ 144 AU (≈ 21.6 अरब किमी)", zh: "约144天文单位（约216亿公里）", ko: "약 144 AU (약 216억 km)", ja: "約144 AU（約216億km）",
+      es: "≈ 144 UA (≈ 21.600 millones de km)", fr: "≈ 144 ua (≈ 21,6 milliards de km)", tr: "≈ 144 AB (≈ 21,6 milyar km)", ru: "≈ 144 а.е. (≈ 21,6 млрд км)", pt: "≈ 144 UA (≈ 21,6 mil milhões de km)", ar: "≈ 144 و.ف (≈ 21.6 مليار كم)", el: "≈ 144 AU (≈ 21,6 δισ. χλμ.)",
+    },
+    period: {
+      de: "20. August 1977", en: "August 20, 1977", hi: "20 अगस्त 1977", zh: "1977年8月20日", ko: "1977년 8월 20일", ja: "1977年8月20日",
+      es: "20 de agosto de 1977", fr: "20 août 1977", tr: "20 Ağustos 1977", ru: "20 августа 1977", pt: "20 de agosto de 1977", ar: "20 أغسطس 1977", el: "20 Αυγούστου 1977",
+    },
+    diameter: VOYAGER1.facts.diameter,
+    moons: {
+      de: "≈ 15 km/s relativ zur Sonne", en: "≈ 15 km/s relative to the Sun", hi: "सूर्य के सापेक्ष ≈ 15 किमी/सेकंड", zh: "相对太阳约15公里/秒", ko: "태양 기준 약 15km/s", ja: "太陽に対して約15km/秒",
+      es: "≈ 15 km/s respecto al Sol", fr: "≈ 15 km/s par rapport au Soleil", tr: "Güneş'e göre ≈ 15 km/sn", ru: "≈ 15 км/с относительно Солнца", pt: "≈ 15 km/s em relação ao Sol", ar: "≈ 15 كم/ث بالنسبة للشمس", el: "≈ 15 χλμ./δευτ. ως προς τον Ήλιο",
+    },
+  },
+  description: {
+    de: "Voyager 2 startete am 20. August 1977, also zwei Wochen vor Voyager 1, und ist die einzige Sonde, die alle vier Riesenplaneten besucht hat: Jupiter (1979), Saturn (1981), Uranus (Januar 1986) und Neptun (August 1989). Alle Nahaufnahmen von Uranus und Neptun stammen bis heute von ihr. Am 5. November 2018 verließ sie die Heliosphäre und ist seitdem im interstellaren Raum, als zweite Sonde nach Voyager 1. Anders als Voyager 1 fliegt sie nach Süden, weit unterhalb der Ebene der Planetenbahnen, und trägt wie ihre Schwester eine 'Golden Record' mit Klängen, Musik und Grüßen der Erde. Ein Funksignal braucht inzwischen rund 20 Stunden für die einfache Strecke. Die Position hier folgt den echten Bahndaten von NASA/JPL (Horizons) und ändert sich mit dem gewählten Datum.",
+    en: "Voyager 2 launched on August 20, 1977, two weeks before Voyager 1, and is the only probe that has visited all four giant planets: Jupiter (1979), Saturn (1981), Uranus (January 1986) and Neptune (August 1989). Every close-up image of Uranus and Neptune still comes from it. On November 5, 2018 it left the heliosphere and has been in interstellar space ever since, the second probe after Voyager 1. Unlike Voyager 1 it heads south, far below the plane of the planetary orbits, and like its sister carries a 'Golden Record' with sounds, music and greetings from Earth. A radio signal now needs about 20 hours one way. The position shown here follows the real orbital data from NASA/JPL (Horizons) and changes with the chosen date.",
+  },
+};
+
+/**
  * Die Sonne selbst — anklickbar für ein Info-Panel mit echtem Foto
  * (Nutzerwunsch 20.09.2026: "mehr infos mit echten bildern bei planeten
  * und sonne").
@@ -805,4 +841,4 @@ export const SUN: PlanetData = {
   },
 };
 
-export const ALL_BODIES: PlanetData[] = [...PLANETS, ...DWARF_PLANETS, VOYAGER1];
+export const ALL_BODIES: PlanetData[] = [...PLANETS, ...DWARF_PLANETS, VOYAGER1, VOYAGER2];

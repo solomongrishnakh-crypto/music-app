@@ -17,7 +17,7 @@ import {
   orbitPath,
   type Vec3,
 } from "@/lib/astro/orbits";
-import { cachedCanvas, earthCloudsCanvas, glowCanvas, hasCachedCanvas, saturnRingCanvas, sunCanvas, surfaceCanvas } from "./planetTextures";
+import { cachedCanvas, earthCloudsCanvas, fillUnlitSouth, glowCanvas, hasCachedCanvas, loadRealSurface, saturnRingCanvas, sunCanvas, surfaceCanvas } from "./planetTextures";
 
 /**
  * Echte 3D-Ansicht des Sonnensystems (three.js + OrbitControls).
@@ -531,6 +531,22 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
         mesh = new THREE.Mesh(big ? sphereGeo : lowSphereGeo, m);
         materials.push(m);
         if (data.id === "haumea") mesh.scale.set(1, 0.73, 0.44); // stark abgeplattet (echt ~2100×1680×1074 km)
+        // Pluto: echte New-Horizons-Weltkarte (NASA, gemeinfrei) statt Zufallsmuster; die Rückseite
+        // sah vorher unrealistisch aus. Bis sie geladen ist (oder ohne Netz) bleibt die berechnete Textur.
+        if (data.id === "pluto") {
+          const plutoTex = m.map as THREE.Texture;
+          m.bumpScale = 0.5;
+          loadRealSurface(
+            "s:pluto",
+            "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ad/Pluto_color_mapmosaic.jpg/1920px-Pluto_color_mapmosaic.jpg",
+            1536,
+            fillUnlitSouth
+          ).then((c) => {
+            if (!c || !texAlive) return;
+            plutoTex.image = c;
+            plutoTex.needsUpdate = true;
+          });
+        }
 
         if (data.id === "earth") {
           const cm = new THREE.MeshStandardMaterial({
@@ -653,13 +669,17 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
     }
 
     // Voyager: gestrichelte Linie von der Sonne (zeigt, wie weit draußen sie ist)
-    const voyLineGeo = new THREE.BufferGeometry();
-    voyLineGeo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(6), 3));
-    const voyLineMat = new THREE.LineDashedMaterial({ color: 0xffffff, transparent: true, opacity: 0.22, dashSize: 1, gapSize: 1 });
-    const voyLine = new THREE.Line(voyLineGeo, voyLineMat);
-    voyLine.frustumCulled = false;
-    scene.add(voyLine);
-    disposables.push(voyLineGeo, voyLineMat);
+    // (Voyager 1 und Voyager 2, je eine Linie)
+    const voyLines = ["voyager1", "voyager2"].map((id) => {
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(6), 3));
+      const mat = new THREE.LineDashedMaterial({ color: 0xffffff, transparent: true, opacity: 0.22, dashSize: 1, gapSize: 1 });
+      const line = new THREE.Line(geo, mat);
+      line.frustumCulled = false;
+      scene.add(line);
+      disposables.push(geo, mat);
+      return { id, geo, mat, line };
+    });
 
     // --- Kamera-Steuerung ---
     const controls = new OrbitControls(camera, canvas);
@@ -1235,18 +1255,19 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
         b.orbitMat.uniforms.uBase.value = sel === b.data.id ? 0.35 : dwarf ? 0.09 : 0.15;
       }
 
-      // Voyager-Linie
-      const voy = byId.get("voyager1");
-      if (voy) {
-        const arr = voyLineGeo.attributes.position.array as Float32Array;
+      // Voyager-Linien
+      for (const vl of voyLines) {
+        const voy = byId.get(vl.id);
+        if (!voy) continue;
+        const arr = vl.geo.attributes.position.array as Float32Array;
         arr[3] = voy.pos.x;
         arr[4] = voy.pos.y;
         arr[5] = voy.pos.z;
-        voyLineGeo.attributes.position.needsUpdate = true;
-        voyLine.computeLineDistances();
+        vl.geo.attributes.position.needsUpdate = true;
+        vl.line.computeLineDistances();
         const dash = Math.max(1e-6, camDist * 0.012);
-        voyLineMat.dashSize = dash;
-        voyLineMat.gapSize = dash * 1.3;
+        vl.mat.dashSize = dash;
+        vl.mat.gapSize = dash * 1.3;
       }
 
       sunView.set(0, 0, 0).applyMatrix4(camera.matrixWorldInverse);

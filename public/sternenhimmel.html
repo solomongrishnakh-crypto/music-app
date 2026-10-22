@@ -1307,6 +1307,81 @@ function wantMoon(h) {
     for (const b of bodies) { b.v = eqToEnu(b.ra, b.sd, b.cd, [0, 0, 0]); b.alt = Math.asin(b.v[2]); }
   }
 }
+// ---------------- Realistische Monde (22.10.2026) ----------------
+// Statt einer einfarbigen Kugel bekommt jeder große Mond eine eigene Oberfläche, die nach echten
+// Aufnahmen nachgebaut ist (3D-Rauschen + Krater direkt auf der Kugel, ohne Bilddateien):
+// Io gelb mit Vulkanen, Europa hell mit braunen Rissen, Ganymed zweifarbig mit hellen Strahlenkratern,
+// Callisto dunkel und voller Krater, Titan orange Dunsthülle, Enceladus weiß mit blauen Tigerstreifen,
+// Triton rosa mit dunklen Streifen. Je Mond einmal berechnet und gemerkt.
+const MOON_SPR = {};
+function mHash(ix, iy, iz, seed) { let h = Math.imul(ix, 374761393) ^ Math.imul(iy, 668265263) ^ Math.imul(iz, 1274126177) ^ Math.imul(seed + 1, 1013904223); h = Math.imul(h ^ (h >>> 13), 1274126177); h ^= h >>> 16; return (h >>> 0) / 4294967296; }
+function mNoise(x, y, z, seed) {
+  const ix = Math.floor(x), iy = Math.floor(y), iz = Math.floor(z), fx = x - ix, fy = y - iy, fz = z - iz;
+  const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy), sz = fz * fz * (3 - 2 * fz);
+  const c = (a, b, d) => mHash(ix + a, iy + b, iz + d, seed), l = (a, b, t) => a + (b - a) * t;
+  return l(l(l(c(0, 0, 0), c(1, 0, 0), sx), l(c(0, 1, 0), c(1, 1, 0), sx), sy), l(l(c(0, 0, 1), c(1, 0, 1), sx), l(c(0, 1, 1), c(1, 1, 1), sx), sy), sz);
+}
+function mFbm(x, y, z, seed, oct) { let a = 0.5, s = 0, f = 1, n = 0; for (let i = 0; i < oct; i++) { s += a * mNoise(x * f, y * f, z * f, seed + i * 7); n += a; f *= 2.03; a *= 0.5; } return s / n; }
+function mRnd(seed) { let t = seed >>> 0; return () => { t = (Math.imul(t, 1664525) + 1013904223) >>> 0; return t / 4294967296; }; }
+function mUnit(r) { const z = r() * 2 - 1, a = r() * 6.2832, q = Math.sqrt(1 - z * z); return [q * Math.cos(a), q * Math.sin(a), z]; }
+function mMix(a, b, t) { t = t < 0 ? 0 : t > 1 ? 1 : t; return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]; }
+const MOON_LOOK = {
+  io: { seed: 11, craters: 0, col: (p, n, n2) => { let c = mMix([236, 214, 96], [247, 236, 168], n); c = mMix(c, [214, 128, 40], Math.max(0, n2 - 0.55) * 3.2); return c; },
+        spots: 16, spotCol: [38, 30, 26], ring: [192, 70, 44] },
+  europa: { seed: 23, craters: 14, col: (p, n, n2) => mMix([226, 218, 202], [240, 235, 224], n), lineae: [150, 100, 70], lineaeN: 15 },
+  ganymede: { seed: 37, craters: 90, col: (p, n, n2) => { const t = n2 > 0.52 ? 1 : n2 < 0.44 ? 0 : (n2 - 0.44) / 0.08; return mMix(mMix([104, 94, 82], [124, 114, 100], n), mMix([168, 160, 148], [188, 180, 166], n), t); }, rays: 7 },
+  callisto: { seed: 41, craters: 260, col: (p, n, n2) => mMix([66, 58, 50], [102, 92, 80], n), bright: 18 },
+  titan: { seed: 53, craters: 0, col: (p, n, n2) => { let c = mMix([208, 146, 54], [222, 164, 70], n); const lat = Math.abs(p[2]); if (lat > 0.8) c = mMix(c, [150, 98, 40], (lat - 0.8) * 4); return c; } },
+  enceladus: { seed: 61, craters: 40, col: (p, n, n2) => mMix([238, 244, 248], [252, 254, 255], n), stripes: [150, 196, 222] },
+  triton: { seed: 71, craters: 10, col: (p, n, n2) => { let c = mMix([226, 206, 200], [240, 226, 220], n); c = mMix(c, [176, 146, 140], Math.max(0, n2 - 0.5) * 2.2 * (p[2] < 0.1 ? 1 : 0.4)); return c; }, streaks: 16 },
+};
+function moonSurface(id) {
+  if (MOON_SPR[id] !== undefined) return MOON_SPR[id];
+  const L = MOON_LOOK[id];
+  if (!L) return (MOON_SPR[id] = null);
+  const S = 168, cv = document.createElement("canvas"); cv.width = cv.height = S;
+  const cx = cv.getContext("2d"), img = cx.createImageData(S, S), d = img.data, r = mRnd(L.seed * 977);
+  const crs = []; for (let i = 0; i < (L.craters || 0); i++) crs.push({ c: mUnit(r), r: 0.03 + Math.pow(r(), 3.2) * 0.34, br: 0 });
+  const bright = []; for (let i = 0; i < (L.bright || 0); i++) bright.push({ c: mUnit(r), r: 0.02 + r() * 0.035 });
+  const rays = []; for (let i = 0; i < (L.rays || 0); i++) rays.push({ c: mUnit(r), r: 0.03 + r() * 0.05, ph: r() * 6 });
+  const spots = []; for (let i = 0; i < (L.spots || 0); i++) spots.push({ c: mUnit(r), r: 0.025 + r() * 0.05 });
+  const lines = []; for (let i = 0; i < (L.lineaeN || L.stripes && 5 || L.streaks || 0); i++) lines.push({ n: mUnit(r), w: 0.006 + r() * 0.016, ph: r() * 50, a: 0.4 + r() * 0.5 });
+  // Drehung, damit eine „interessante“ Seite zur Erde zeigt
+  const ry = 0.9 + L.seed * 0.07, cY = Math.cos(ry), sY = Math.sin(ry);
+  for (let py = 0; py < S; py++) for (let px = 0; px < S; px++) {
+    const nx = (px + 0.5) / S * 2 - 1, ny = (py + 0.5) / S * 2 - 1, rr = nx * nx + ny * ny, o = (py * S + px) * 4;
+    if (rr > 1) { d[o + 3] = 0; continue; }
+    const z = Math.sqrt(1 - rr), X = nx, Y = -ny;
+    const p = [X * cY + z * sY, Y, -X * sY + z * cY]; // Punkt auf der Kugel (Mondsystem)
+    const f = 2.2, n = mFbm(p[0] * f, p[1] * f, p[2] * f, L.seed, 5), n2 = mFbm(p[0] * 1.2 + 9, p[1] * 1.2, p[2] * 1.2, L.seed + 3, 4);
+    let c = L.col(p, n, n2), shade = 1;
+    for (const k of crs) {
+      const dd = p[0] * k.c[0] + p[1] * k.c[1] + p[2] * k.c[2]; if (dd < 0.7) continue;
+      const a = Math.acos(Math.min(1, dd)) / k.r;
+      if (a < 1.4) { if (a < 1) shade *= 1 - 0.16 * (1 - a * a) * (id === "callisto" ? 1.2 : 1); const rim = Math.exp(-Math.pow((a - 1) / 0.14, 2)); shade *= 1 + 0.13 * rim; }
+    }
+    for (const k of bright) { const dd = p[0] * k.c[0] + p[1] * k.c[1] + p[2] * k.c[2]; if (dd < 0.9) continue; const a = Math.acos(Math.min(1, dd)) / k.r; if (a < 1.8) c = mMix(c, [214, 208, 196], (1.8 - a) / 1.8 * 0.8); }
+    for (const k of rays) { const dd = p[0] * k.c[0] + p[1] * k.c[1] + p[2] * k.c[2]; if (dd < 0.2) continue; const a = Math.acos(Math.min(1, dd)); if (a < k.r) c = mMix(c, [236, 234, 226], 0.9 * (1 - a / k.r)); else if (a < 0.7) { const dir = Math.atan2(p[1] - k.c[1] * dd, p[0] - k.c[0] * dd); const ray = Math.pow(Math.max(0, Math.sin(dir * 5 + k.ph)), 6); c = mMix(c, [200, 196, 186], ray * 0.4 * (1 - a / 0.7)); } }
+    for (const k of spots) { const dd = p[0] * k.c[0] + p[1] * k.c[1] + p[2] * k.c[2]; if (dd < 0.9) continue; const a = Math.acos(Math.min(1, dd)) / k.r; if (a < 1) c = mMix(c, L.spotCol, 0.95 * (1 - a * a)); else if (a < 2.4 && L.ring) c = mMix(c, L.ring, 0.5 * (1 - (a - 1) / 1.4)); }
+    if (L.lineae || L.stripes || L.streaks) {
+      for (const k of lines) {
+        const dp = Math.abs(p[0] * k.n[0] + p[1] * k.n[1] + p[2] * k.n[2]);
+        const wob = (mNoise(p[0] * 5 + k.ph, p[1] * 5, p[2] * 5, 5) - 0.5) * 0.06;
+        const w = k.w; const seg = Math.min(1, Math.max(0, (mNoise(p[0] * 4 + k.ph, p[1] * 4 - k.ph, p[2] * 4, 17) - 0.42) / 0.18)); const t = (1 - Math.min(1, Math.abs(dp + wob) / w)) * seg;
+        if (t > 0) {
+          if (L.lineae) c = mMix(c, L.lineae, t * k.a * (0.6 + mNoise(p[0] * 9, p[1] * 9, p[2] * 9, 9) * 0.5));
+          else if (L.stripes) { if (p[2] < -0.45) c = mMix(c, L.stripes, t * 0.9); }
+          else c = mMix(c, [70, 56, 56], t * 0.55 * (p[2] < 0.15 ? 1 : 0.4));
+        }
+      }
+    }
+    // Randverdunklung (Kugelform) – die Beleuchtung folgt beim Zeichnen
+    const limb = 0.55 + 0.45 * Math.pow(z, 0.45);
+    d[o] = Math.max(0, Math.min(255, c[0] * shade * limb)); d[o + 1] = Math.max(0, Math.min(255, c[1] * shade * limb)); d[o + 2] = Math.max(0, Math.min(255, c[2] * shade * limb)); d[o + 3] = 255;
+  }
+  cx.putImageData(img, 0, 0);
+  return (MOON_SPR[id] = cv);
+}
 function drawMoonDisc(b, x, y, pxPerRad, sun, baseA) {
   const R = Math.max(2.4, b.rKm / b.distKm * pxPerRad);
   b.pr = Math.max(R, 5);
@@ -1322,9 +1397,20 @@ function drawMoonDisc(b, x, y, pxPerRad, sun, baseA) {
   ctx.globalCompositeOperation = "lighter"; ctx.globalAlpha = 0.25 * baseA;
   ctx.drawImage(tinted(c[0], c[1], c[2]), x - R * 2.2, y - R * 2.2, R * 4.4, R * 4.4);
   ctx.globalCompositeOperation = "source-over"; ctx.globalAlpha = baseA;
-  const g = ctx.createRadialGradient(x + dx * R * 0.45, y + dy * R * 0.45, R * 0.1, x + dx * R * 0.1, y + dy * R * 0.1, R * 1.15);
-  g.addColorStop(0, lit(1.2)); g.addColorStop(0.55, lit(0.85)); g.addColorStop(1, lit(0.12));
-  ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, R, 0, 6.2832); ctx.fill();
+  const spr = R >= 5 ? moonSurface(b.id) : null;
+  if (spr) {
+    // Oberfläche + Licht von der Sonne (Terminator): dunkle Seite weich abgeschattet
+    ctx.drawImage(spr, x - R, y - R, R * 2, R * 2);
+    ctx.save(); ctx.beginPath(); ctx.arc(x, y, R, 0, 6.2832); ctx.clip();
+    const sh = ctx.createLinearGradient(x + dx * R, y + dy * R, x - dx * R, y - dy * R);
+    sh.addColorStop(0, "rgba(0,0,0,0)"); sh.addColorStop(0.5, "rgba(0,0,6,0.08)"); sh.addColorStop(0.8, "rgba(0,0,10,0.6)"); sh.addColorStop(1, "rgba(0,0,12,0.9)");
+    ctx.fillStyle = sh; ctx.fillRect(x - R - 1, y - R - 1, R * 2 + 2, R * 2 + 2);
+    ctx.restore();
+  } else {
+    const g = ctx.createRadialGradient(x + dx * R * 0.45, y + dy * R * 0.45, R * 0.1, x + dx * R * 0.1, y + dy * R * 0.1, R * 1.15);
+    g.addColorStop(0, lit(1.2)); g.addColorStop(0.55, lit(0.85)); g.addColorStop(1, lit(0.12));
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(x, y, R, 0, 6.2832); ctx.fill();
+  }
 }
 function computeBodies(jd) {
   const earth = helio("earth", jd);
