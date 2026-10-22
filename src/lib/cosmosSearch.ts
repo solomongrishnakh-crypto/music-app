@@ -1,5 +1,17 @@
 import type { Lang } from "@/contexts/LanguageContext";
 
+/** Zusätzliche Suchwörter für die berühmten Objekte (eigene Seiten unter /objekte). */
+const FAMOUS_ALIAS: Record<string, string[]> = {
+  sgra: ["sgr a*", "sagittarius a", "schwarzes loch milchstrasse", "galaktisches zentrum", "milky way black hole", "galactic center"],
+  ton618: ["ton 618", "ton618", "quasar", "groesstes schwarzes loch", "biggest black hole"],
+  uyscuti: ["uy scuti", "groesster stern", "largest star", "riesenstern"],
+  vycma: ["vy canis majoris", "vy cma", "hypergigant", "hypergiant", "grosser hund"],
+  etacar: ["eta carinae", "eta car", "homunculus", "hypernova"],
+  r136a1: ["r136a1", "r136", "massereichster stern", "most massive star", "tarantelnebel"],
+  cygx1: ["cygnus x-1", "cygnus x1", "cyg x-1", "schwarzes loch schwan", "black hole"],
+  proxima: ["proxima centauri", "proxima b", "naechster stern", "nearest star", "alpha centauri"],
+};
+
 /**
  * Suche über Himmelskörper, Sternbilder, benannte Sterne und Imperien
  * (Nutzerwunsch 14.10.2026). Läuft komplett im Browser über die vorhandenen
@@ -114,13 +126,14 @@ interface ConstRow {
 }
 
 async function load() {
-  const [bodies, consts, reiche, names, dsoMod, factMod] = await Promise.all([
+  const [bodies, consts, reiche, names, dsoMod, factMod, famMod] = await Promise.all([
     import("@/components/space/bodies"),
     import("@/data/sternbilder.json"),
     import("@/data/reiche/index.json"),
     import("@/lib/history/reicheNames"),
     import("@/data/dsoSearch.json"),
     import("@/data/factsSearch.json"),
+    import("@/lib/famousObjects"),
   ]);
   return {
     bodies: bodies.SPACE_BODIES,
@@ -128,6 +141,7 @@ async function load() {
     reiche: reiche.default as unknown as { slug: string; en: string; de: string | null; from: number; to: number; peakArea: number }[],
     reichNameL: names.reichNameL,
     dso: dsoMod.default as unknown as { id: string; m: number; f?: number; n?: Record<string, string> }[],
+    famous: famMod.FAMOUS,
     facts: factMod.default as unknown as { i: number; l: Record<string, string>; v: Record<string, string> }[],
   };
 }
@@ -177,6 +191,26 @@ export async function searchCosmos(query: string, lang: Lang): Promise<CosmosHit
       sub: `${o.id} · ${o.m.toFixed(1)} mag`,
       score: s + (o.f ? 6 : 0) - 2,
     });
+  }
+
+  // Berühmte Einzelobjekte: eigene Seiten (de/en), sonst direkt im Sternenhimmel
+  for (const o of d.famous) {
+    const s = score(q, [o.de.name, o.en.name, o.id, ...(FAMOUS_ALIAS[o.id] ?? [])]);
+    if (!s) continue;
+    hits.push({
+      key: "o:" + o.id,
+      kind: "dso",
+      title: lang === "de" ? o.de.name : o.en.name,
+      href: lang === "de" || lang === "en" ? "/objekte/" + o.id : "/sternenhimmel?d=" + o.id,
+      sub: (lang === "de" ? o.de : o.en).kind,
+      score: s + 12,
+    });
+  }
+
+  // Kepler-Exoplaneten (die Daten stecken im Sternenhimmel, dort per Suche)
+  {
+    const s = score(q, ["kepler", "exoplanet", "exoplaneten", "exoplanets", "kepler-452b", "kepler 452b", "kepler-186f"]);
+    if (s) hits.push({ key: "k:kepler", kind: "star", title: "Kepler", href: "/sternenhimmel", sub: lang === "de" ? "Über 2.700 Exoplaneten im Sternenhimmel · dort nach dem Namen suchen" : "Over 2,700 exoplanets in the night sky · search the name there", score: s + 10 });
   }
 
   // Fakten-Karten aus "Universum in Zahlen"

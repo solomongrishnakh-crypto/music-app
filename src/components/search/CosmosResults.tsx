@@ -20,6 +20,7 @@ export default function CosmosResults({ hits }: { hits: CosmosHit[] }) {
   function sub(x: CosmosHit): string {
     if (x.kind === "dso" || x.kind === "fact") return x.sub ?? "";
     const label = h[x.kind === "constellation" ? "constellation" : x.kind];
+    if (x.key === "k:kepler") return x.sub ?? "";
     if (x.kind === "star") return `${label} · ${x.mag?.toFixed(1)} mag · ${x.ly} ${h.ly} · ${h.inConst} ${x.inConst}`;
     if (x.kind === "empire" && x.from !== undefined && x.to !== undefined) return `${label} · ${yr(x.from)} – ${yr(x.to)}`;
     return label;
