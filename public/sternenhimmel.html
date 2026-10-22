@@ -3370,16 +3370,12 @@ let sensorAz = null, sensorAlt = null, sensorRoll = 0, absSeen = false;
 // sein". Komplette Drehmatrix aus alpha/beta/gamma (W3C, Ost-Nord-Oben):
 // Blickrichtung = Rückseite des Handys, Bild-oben = Oberkante des Displays
 // (bei Querformat entsprechend gedreht) → daraus Richtung UND Neigung.
-function onOrient(e) {
-  // Android: "deviceorientationabsolute" (Kompass) + "deviceorientation" (relativ).
-  // Nur ein absolutes Ereignis MIT Werten zählt (manche Browser, z. B. Brave,
-  // schicken es leer) – sonst blieben wir bei leeren Daten hängen.
-  const isAbs = e.type === "deviceorientationabsolute" || e.absolute === true;
-  if (isAbs && e.alpha != null) absSeen = true;
-  else if (!isAbs && absSeen) return;
-  let alpha = e.alpha;
-  if (typeof e.webkitCompassHeading === "number") alpha = 360 - e.webkitCompassHeading;
-  if (alpha == null || e.beta == null || e.gamma == null) return;
+// Gegen das Driften (Nutzerwunsch 22.10.2026): der Kompass (Magnetfeld) allein
+// schwankt und wandert, der reine Gyro (relatives Ereignis) ist ruhig, kennt aber
+// kein Nord. Darum: Bewegung kommt vom Gyro, der Kompass korrigiert nur den festen
+// Versatz sehr langsam (Zeitkonstante ~8 s) – wie bei Star Walk & Co.
+let absP = null, relP = null, relT = 0, yawOff = null, offT = 0;
+function parseOrient(e, alpha) {
   const a = alpha * DEG, b = e.beta * DEG, g = e.gamma * DEG;
   const cA = Math.cos(a), sA = Math.sin(a), cB = Math.cos(b), sB = Math.sin(b), cG = Math.cos(g), sG = Math.sin(g);
   // Geräteachsen in Weltkoordinaten (Spalten der Drehmatrix)
@@ -3389,14 +3385,39 @@ function onOrient(e) {
   const F = [-Z[0], -Z[1], -Z[2]];                                     // Kamera-Richtung
   const ang = ((screen.orientation && screen.orientation.angle) || window.orientation || 0) * DEG;
   const Us = [0, 1, 2].map((i) => Math.cos(ang) * Y[i] + Math.sin(ang) * X[i]); // Bild-oben
-  updateMagDecl();
-  sensorAz = Math.atan2(F[0], F[1]) + magDecl * DEG; // magnetisch → geografisch Nord
-  sensorAlt = Math.asin(Math.max(-1, Math.min(1, F[2])));
+  const az = Math.atan2(F[0], F[1]);
+  const alt = Math.asin(Math.max(-1, Math.min(1, F[2])));
   // Rollwinkel: Bild-oben gegenüber dem "geraden" Kamera-oben um die Blickachse
-  const f = enu(sensorAz, sensorAlt), r0 = [Math.cos(sensorAz), -Math.sin(sensorAz), 0];
+  const f = enu(az, alt), r0 = [Math.cos(az), -Math.sin(az), 0];
   const u0 = [r0[1] * f[2] - r0[2] * f[1], r0[2] * f[0] - r0[0] * f[2], r0[0] * f[1] - r0[1] * f[0]];
   const cx = [u0[1] * Us[2] - u0[2] * Us[1], u0[2] * Us[0] - u0[0] * Us[2], u0[0] * Us[1] - u0[1] * Us[0]];
-  sensorRoll = Math.atan2(cx[0] * f[0] + cx[1] * f[1] + cx[2] * f[2], u0[0] * Us[0] + u0[1] * Us[1] + u0[2] * Us[2]);
+  const roll = Math.atan2(cx[0] * f[0] + cx[1] * f[1] + cx[2] * f[2], u0[0] * Us[0] + u0[1] * Us[1] + u0[2] * Us[2]);
+  return { az, alt, roll };
+}
+function onOrient(e) {
+  // "Absolut" = Kompass-Ereignis (Android: deviceorientationabsolute, iOS: webkitCompassHeading).
+  // Ein absolutes Ereignis ohne Werte (z. B. Brave) zählt nicht.
+  const hasCompass = typeof e.webkitCompassHeading === "number";
+  const isAbs = e.type === "deviceorientationabsolute" || e.absolute === true || hasCompass;
+  let alpha = hasCompass ? 360 - e.webkitCompassHeading : e.alpha;
+  if (alpha == null || e.beta == null || e.gamma == null) return;
+  const P = parseOrient(e, alpha), now = performance.now();
+  let use = P;
+  if (isAbs) absP = P; else { relP = P; relT = now; }
+  if (absP && relP) {
+    // Versatz Kompass–Gyro nur bei frischen Werten und nicht beim Blick steil nach oben/unten
+    if (isAbs && now - relT < 300 && Math.abs(P.alt) < 65 * DEG && Math.abs(relP.alt) < 65 * DEG) {
+      const d = wrap(P.az - relP.az);
+      if (yawOff === null) yawOff = d; else yawOff += wrap(d - yawOff) * (1 - Math.exp(-Math.min(500, now - offT) / 8000));
+      offT = now;
+    }
+    if (!isAbs) use = { az: P.az + (yawOff || 0), alt: P.alt, roll: P.roll };
+    else if (now - relT < 300) return; // Gyro liefert die Bewegung, der Kompass nur den Versatz
+  }
+  updateMagDecl();
+  sensorAz = use.az + magDecl * DEG; // magnetisch → geografisch Nord
+  sensorAlt = use.alt;
+  sensorRoll = use.roll;
 }
 // Knopf „Zum Horizont“, wenn man steil nach unten oder oben schaut
 const horizonBtn = document.getElementById("horizonBtn");
@@ -3417,7 +3438,7 @@ document.getElementById("tSensor").onclick = async () => {
       if (r !== "granted") throw new Error("denied");
     }
   } catch { msg.hidden = false; msg.textContent = tr("sensorDenied"); setTimeout(() => { if (!S.sensor) msg.hidden = true; }, 9000); return; }
-  sensorAz = null; absSeen = false;
+  sensorAz = null; absSeen = false; absP = null; relP = null; yawOff = null;
   window.addEventListener("deviceorientationabsolute", onOrient);
   window.addEventListener("deviceorientation", onOrient);
   S.sensor = true; btn.setAttribute("aria-pressed", "true");
