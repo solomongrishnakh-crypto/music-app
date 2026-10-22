@@ -1476,7 +1476,7 @@ export default function UniversumPage() {
         </div>
         </section>
 
-        <section className="mb-6">
+        <section className="mb-3">
           <div className="mb-3">
             <UniverseAgeTicker />
           </div>
@@ -1484,7 +1484,7 @@ export default function UniversumPage() {
             type="button"
             onClick={() => setFactsOpen((o) => !o)}
             aria-expanded={factsOpen}
-            className="group mb-3 flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-surface-elevated/60 px-4 py-3 text-start transition-colors hover:border-accent"
+            className="group mb-3 flex w-full items-center justify-between gap-3 rounded-xl border border-accent/40 bg-gradient-to-br from-accent/15 via-surface-elevated to-transparent shadow-[0_0_30px_-10px_var(--accent)] backdrop-blur transition-all hover:border-accent hover:shadow-[0_0_40px_-8px_var(--accent)] px-4 py-3 text-start"
           >
             <span className="min-w-0">
               <span className="label-mono block text-[10px] uppercase tracking-widest text-accent">05 · {UNIVERSE_FACTS.length}</span>
@@ -1550,7 +1550,7 @@ export default function UniversumPage() {
 
         {/* Nutzerwunsch 17.10.2026: Kosmischer Kalender auch unter "Universum in Zahlen" */}
         <div className="mb-10">
-          <CosmicCalendar index="06" />
+          <CosmicCalendar index="06" className="mt-0" />
         </div>
 
         <SpaceNewsSection />

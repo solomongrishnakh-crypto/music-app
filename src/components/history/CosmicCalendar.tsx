@@ -48,7 +48,7 @@ function agoText(ago: number, lang: Lang): string {
   }
 }
 
-export default function CosmicCalendar({ index = "01" }: { index?: string }) {
+export default function CosmicCalendar({ index = "01", className = "mt-10" }: { index?: string; className?: string }) {
   const { lang } = useLanguage();
   const [scale, setScale] = useState<Scale>("year");
   const [open, setOpen] = useState(false);
@@ -65,12 +65,12 @@ export default function CosmicCalendar({ index = "01" }: { index?: string }) {
   const rows = [...CAL_EVENTS.map((e) => ({ ago: e.ago, name: localize(e.n, lang) })), { ago: 0, name: localize(CAL_TX.today, lang) }];
 
   return (
-    <section className="mt-10">
+    <section className={className}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="group flex w-full items-center justify-between gap-3 rounded-xl border border-border bg-surface-elevated/60 px-4 py-3 text-start backdrop-blur transition-colors hover:border-accent"
+        className="group flex w-full items-center justify-between gap-3 rounded-xl border border-accent/40 bg-gradient-to-br from-accent/15 via-surface-elevated to-transparent shadow-[0_0_30px_-10px_var(--accent)] backdrop-blur transition-all hover:border-accent hover:shadow-[0_0_40px_-8px_var(--accent)] px-4 py-3 text-start"
       >
         <span className="min-w-0">
           <span className="label-mono block text-[10px] uppercase tracking-widest text-accent">{index} · {rows.length}</span>
