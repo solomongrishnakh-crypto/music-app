@@ -230,6 +230,15 @@ export default function YoutubePlayer({
   // 18.09.2026: "falls jemand aus browser(handy) raus geht sollte man auch
   // nächste spielen können. also music soll auch im hintergrund spielen
   // können").
+  // Der Sternenhimmel (iframe) liest diese Markierung und dimmt seine eigene Musik, solange hier Musik läuft.
+  useEffect(() => {
+    const w = window as unknown as { __cenPlaying?: boolean };
+    w.__cenPlaying = isPlaying;
+    return () => {
+      w.__cenPlaying = false;
+    };
+  }, [isPlaying]);
+
   useEffect(() => {
     if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
     if (!song) {
