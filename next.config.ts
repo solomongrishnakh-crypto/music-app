@@ -46,7 +46,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline' https://unpkg.com",
       "img-src 'self' data: https:",
       "media-src 'self' https://commons.wikimedia.org https://upload.wikimedia.org",
-      "connect-src 'self' https://www.googleapis.com https://api.spaceflightnewsapi.net https://techcrunch.com https://unpkg.com https://*.wikipedia.org https://geocoding-api.open-meteo.com",
+      "connect-src 'self' https://www.googleapis.com https://api.spaceflightnewsapi.net https://techcrunch.com https://unpkg.com https://*.wikipedia.org https://geocoding-api.open-meteo.com https://simbad.cds.unistra.fr",
       // SoundCloud-Player (Musik im Sternenhimmel, 06.10.2026)
       "frame-src 'self' https://www.youtube.com https://w.soundcloud.com",
       "font-src 'self' data:",
