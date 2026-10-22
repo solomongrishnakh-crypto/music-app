@@ -680,6 +680,8 @@ interface CmpView {
   xa: number; // Bildschirmposition (px) der Mitte des Ankerobjekts
   yc: number; // Bildschirmhöhe (px) der Objektmitten
   z: number; // Zoom relativ zur Gesamtansicht
+  ox?: number; // Versatz des kleineren Objekts (in Weltlängen, wächst mit dem Zoom)
+  oy?: number;
   free?: boolean; // Nutzer hat die Ansicht verschoben: nicht mehr automatisch einpassen
 }
 
@@ -752,9 +754,9 @@ export default function SizeComparison({ index }: { index: string }) {
   const cmpRef = useRef<[number, number]>([cmpA, cmpB]);
   const dirty = useRef(true);
   const view = useRef<CmpView>({ anchor: 0, xa: 0, yc: 0, z: 1 });
-  const fit = useRef({ zmax: 12, kfit: 1, delta: 0, W: 0, H: 0, sx: -1, sy: 0 });
+  const fit = useRef({ zmax: 12, kfit: 1, delta: 0, W: 0, H: 0, sx: -1, sy: 0, hx: -1e9, hy: -1e9, hr: 0, k: 1 });
   const resetView = useRef(true);
-  const api = useRef({ zoomBy: (_f: number) => {}, setZ: (_s: number) => {}, reset: () => {}, center: () => {} });
+  const api = useRef({ zoomBy: (_f: number) => {}, setZ: (_s: number) => {}, reset: () => {} });
   // Direktlink aus dem Sternenhimmel (#groessenvergleich): zur Sektion scrollen,
   // sobald die Seite aufgebaut ist.
   useEffect(() => {
@@ -801,7 +803,7 @@ export default function SizeComparison({ index }: { index: string }) {
     if (!cvs || !wrap) return;
     const g = cvs.getContext("2d");
     if (!g) return;
-    let raf = 0, W = 0, H = 0, D = 1, lastShown = -1, visible = true, lastDraw = 0, lastZs = -1, parkA = -1;
+    let raf = 0, W = 0, H = 0, D = 1, lastShown = -1, visible = true, lastDraw = 0, lastZs = -1, parkA = -1, lastCk = "", objDrag = -1;
     ANIM.reduce = typeof window.matchMedia === "function" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     // Übersicht: Kugeln drehen sich nur auf starken PCs (viele Kerne, kein Touch); sonst stehen sie still
     // (Nutzerwunsch 15.10.2026, schont Handy-Akku und verhindert Ruckeln).
@@ -906,7 +908,9 @@ export default function SizeComparison({ index }: { index: string }) {
       const v = view.current;
       const zmax = Math.max(12, Math.min(1e24, (W * 4) / (small * kfit)));
       fit.current.zmax = zmax; fit.current.kfit = kfit; fit.current.delta = delta;
-      if (resetView.current) { v.z = 1; v.anchor = 0; v.free = false; resetView.current = false; }
+      const ckey = ia + "-" + ib;
+      if (ckey !== lastCk) { lastCk = ckey; v.ox = 0; v.oy = 0; }
+      if (resetView.current) { v.z = 1; v.anchor = 0; v.free = false; v.ox = 0; v.oy = 0; resetView.current = false; }
       if (v.z <= 1.0000001 && !v.free) { v.z = 1; v.anchor = 0; v.xa = W / 2 + (cA - Wd / 2) * kfit; v.yc = H * 0.47; }
       v.z = Math.min(v.z, zmax);
       const k = kfit * v.z;
@@ -916,7 +920,12 @@ export default function SizeComparison({ index }: { index: string }) {
       const near: 0 | 1 = Math.abs(xA - W / 2) <= Math.abs(xB - W / 2) ? 0 : 1;
       if (near !== v.anchor) { v.anchor = near; v.xa = near === 0 ? xA : xB; }
       const cy = v.yc, ra = (dA * k) / 2, rb = (dB * k) / 2;
-      fit.current.sx = dA <= dB ? xA : xB; fit.current.sy = cy;
+      // Das kleinere Objekt lässt sich frei verschieben (z. B. die Sonne vor Stephenson 2-18 legen)
+      const smallIsA = dA <= dB, ox = (v.ox || 0) * k, oy = (v.oy || 0) * k;
+      const xA2 = xA + (smallIsA ? ox : 0), xB2 = xB + (smallIsA ? 0 : ox);
+      const cyA = cy + (smallIsA ? oy : 0), cyB = cy + (smallIsA ? 0 : oy);
+      fit.current.sx = smallIsA ? xA2 : xB2; fit.current.sy = smallIsA ? cyA : cyB;
+      fit.current.hx = fit.current.sx; fit.current.hy = fit.current.sy; fit.current.hr = smallIsA ? ra : rb; fit.current.k = k;
       requestSprite(A, ready); requestSprite(B, ready);
       const taken: [number, number, number][] = [];
       g.textAlign = "center";
@@ -930,7 +939,7 @@ export default function SizeComparison({ index }: { index: string }) {
       };
       const ratio = big / small;
       const after: (() => void)[] = []; // Markierungen und Namen kommen über beide Objekte
-      ([[A, xA, ra], [B, xB, rb]] as [Obj, number, number][]).forEach(([o, x, r]) => {
+      ((smallIsA ? [[B, xB2, rb, cyB], [A, xA2, ra, cyA]] : [[A, xA2, ra, cyA], [B, xB2, rb, cyB]]) as [Obj, number, number, number][]).forEach(([o, x, r, cy]) => {
         const ext = r * (o.ring ? 2.3 : o.photo ? o.photo[1] : 1) + 80;
         if (x + ext < 0 || x - ext > W) return;
         if (r >= 0.5) drawObj(g, o, x, cy, r, W, H);
@@ -1037,8 +1046,6 @@ export default function SizeComparison({ index }: { index: string }) {
       dirty.current = true;
     };
     api.current = {
-      // Kleineres Objekt (z. B. die Sonne) in die Bildmitte holen
-      center: () => { const v = view.current, fi = fit.current; v.xa += W / 2 - fi.sx; v.yc += H / 2 - fi.sy; v.free = true; dirty.current = true; },
       // Regler/Tasten zoomen auf das kleinere Objekt (wenn sichtbar), sonst auf die Bildmitte
       // Der Zoompunkt folgt dem kleineren Objekt, bleibt aber am Bildschirm "geklemmt" statt
       // zwischen Objekt und Bildmitte umzuschalten (das ließ die Ansicht springen, Nutzer 15.10.2026).
@@ -1199,7 +1206,11 @@ export default function SizeComparison({ index }: { index: string }) {
         cvs.setPointerCapture(e.pointerId);
         return;
       }
-      ptrs.set(e.pointerId, lp(e));
+      const p0 = lp(e);
+      const fi = fit.current;
+      // Antippen des kleineren Objekts: es wird einzeln verschoben (nicht die ganze Ansicht)
+      if (ptrs.size === 0 && Math.hypot(p0.x - fi.hx, p0.y - fi.hy) <= Math.max(fi.hr, 32)) objDrag = e.pointerId;
+      ptrs.set(e.pointerId, p0);
       cvs.setPointerCapture(e.pointerId);
       if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch = Math.hypot(a.x - b.x, a.y - b.y); }
     };
@@ -1214,6 +1225,12 @@ export default function SizeComparison({ index }: { index: string }) {
       const p = ptrs.get(e.pointerId);
       if (!p) return;
       const n = lp(e);
+      if (objDrag === e.pointerId && ptrs.size === 1) {
+        const vv = view.current, kk = fit.current.k || 1;
+        vv.ox = (vv.ox || 0) + (n.x - p.x) / kk; vv.oy = (vv.oy || 0) + (n.y - p.y) / kk;
+        ptrs.set(e.pointerId, n); dirty.current = true;
+        return;
+      }
       if (ptrs.size === 1) { const vv = view.current; if (vv.z <= 1.0000001 && !vv.free) { vv.free = true; vv.z = 1; } vv.xa += n.x - p.x; vv.yc += n.y - p.y; }
       ptrs.set(e.pointerId, n);
       if (ptrs.size === 2) {
@@ -1224,7 +1241,7 @@ export default function SizeComparison({ index }: { index: string }) {
       }
       dirty.current = true;
     };
-    const up = (e: PointerEvent) => { drag = null; ptrs.delete(e.pointerId); pinch = 0; };
+    const up = (e: PointerEvent) => { drag = null; if (objDrag === e.pointerId) objDrag = -1; ptrs.delete(e.pointerId); pinch = 0; };
     const wheel = (e: WheelEvent) => {
       if (modeRef.current === "all") return; // Seite normal scrollen lassen
       e.preventDefault();
@@ -1395,7 +1412,6 @@ export default function SizeComparison({ index }: { index: string }) {
               aria-label={ui2.zoomL}
             />
             <button type="button" className={sbtn} aria-label="+" onClick={() => api.current.zoomBy(1.8)}>+</button>
-            <button type="button" className="h-8 shrink-0 border border-border px-2 text-[10px] uppercase text-foreground transition-colors hover:border-accent hover:text-accent" onClick={() => api.current.center()} aria-label={lang === "de" ? "Kleineres Objekt zentrieren" : "Center the smaller object"}>⌖ {lang === "de" ? "Mitte" : "Center"}</button>
             <button type="button" className="h-8 shrink-0 border border-border px-2 text-[10px] uppercase text-foreground transition-colors hover:border-accent hover:text-accent" onClick={() => api.current.reset()}>{ui2.reset}</button>
             <button type="button" className="h-8 shrink-0 border border-border px-2 text-[10px] uppercase text-foreground transition-colors hover:border-accent hover:text-accent" onClick={shareCmp}>{shared ? "✓ " + (SHARE_TXT[lang] ?? SHARE_TXT.en)[1] : "⇪ " + (SHARE_TXT[lang] ?? SHARE_TXT.en)[0]}</button>
           </div>
