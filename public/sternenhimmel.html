@@ -2674,66 +2674,20 @@ function pillarsBox(s) {
 // ---------------- Bildergalerie (22.10.2026): echte Fotos aus der Wikipedia/Commons-Bildliste ----------------
 // Für jedes gewählte Objekt (Planet, Mond, Sonne, Galaxie, Nebel, Stern …) ein Knopf „Bilder“. Die Bilder
 // kommen aus den Artikeln (Wikipedia media-list) — also NASA/ESA/ESO-Fotos mit Bildunterschrift und Link zur Quelle.
-const GAL_EXTRA = {
-  mars: ["Exploration of Mars", "Geology of Mars", "Curiosity (rover)"],
-  moon: ["Apollo 11", "Apollo 17", "Geology of the Moon"],
-  venus: ["Atmosphere of Venus", "Geology of Venus"],
-  mercury: ["Geology of Mercury", "MESSENGER"],
-  jupiter: ["Atmosphere of Jupiter", "Great Red Spot", "Juno (spacecraft)"],
-  saturn: ["Rings of Saturn", "Cassini–Huygens"],
-  uranus: ["Rings of Uranus"], neptune: ["Rings of Neptune"],
-  pluto: ["Geology of Pluto", "New Horizons"],
-  sun: ["Solar prominence", "Solar eclipse", "Sunspot", "Corona"],
-  titan: ["Titan (moon)"]
-};
+// Nur geprüfte echte Fotos (NASA Image and Video Library). 22.10.2026: Handliste statt automatischem Filter,
+// weil Wikipedia/Commons trotz Filter Zeichnungen, Karten und Diagramme durchließ. Jede ID wurde einzeln angesehen.
+const GAL_CUR = {"mars": [["PIA24173", "Curiosity selfie"], ["PIA16026", "Curiosity rover shadow"], ["PIA20332", "Rock layers, Curiosity"], ["PIA19400", "Blue sunset on Mars"], ["PIA23202", "Sunset, Curiosity"], ["PIA07453", "Martian landscape"], ["PIA22210", "Mars horizon"], ["GSFC_20171208_Archive_e000332", "Mars, Hubble"], ["PIA24542", "Perseverance selfie"]], "mercury": [["PIA12264", "Mercury crescent, MESSENGER"], ["PIA12051", "Mercury, MESSENGER"]], "jupiter": [["PIA04866", "Jupiter, Cassini"], ["PIA21773", "Great Red Spot, Juno"], ["PIA21395", "Storm, Juno"], ["PIA21778", "Cloud bands, Juno"], ["PIA21376", "Jupiter, Juno"], ["PIA01262", "Jupiter, Cassini"]], "saturn": [["PIA06193", "Saturn, Cassini"], ["PIA17199", "Rings of Saturn"], ["PIA21901", "Rings, Cassini"], ["PIA17122", "Hexagon at the north pole"], ["PIA01464", "Saturn, Hubble"]], "uranus": [["PIA18182", "Uranus, Voyager 2"], ["PIA00143", "Uranus crescent"], ["PIA00346", "Uranus crescent"]], "neptune": [["PIA01492", "Neptune, Voyager 2"], ["PIA02210", "Neptune, Voyager 2"], ["PIA00052", "Great Dark Spot"], ["PIA01539", "Neptune crescent"]], "pluto": [["PIA20202", "Pluto, New Horizons"], ["PIA21026", "Pluto surface"], ["PIA21863", "Pluto surface"], ["PIA19964", "Pluto, backlit haze"], ["PIA19947", "Pluto landscape"], ["PIA20198", "Pluto ice plains"], ["PIA19944", "Pluto terrain"]], "moon": [["as08-14-2506", "Moon, Apollo 8"], ["as16-120-19187", "Earth over the lunar horizon"], ["PIA15515", "Lunar surface, LRO"], ["as17-140-21496", "Boulder, Apollo 17"], ["KSC-AS-11-40-5902", "Lunar module, Apollo 11"], ["as15-85-11437", "Lunar rover, Apollo 15"]], "sun": [["GSFC_20171208_Archive_e000963", "Sun, SDO"], ["GSFC_20171208_Archive_e001838", "Active region, SDO"], ["GSFC_20171208_Archive_e001115", "Solar flare region, SDO"], ["AFRC2017-0233-005", "Total solar eclipse"], ["PIA03149", "Sun, SOHO"], ["PIA22645", "Sun, SDO"], ["PIA21106", "Solar surface"]], "io": [["PIA03530", "Io, Galileo"], ["PIA25885", "Io, Juno"], ["PIA25697", "Io, Juno"]], "europa": [["PIA00294", "Europa surface"], ["PIA00723", "Europa, Galileo"]], "ganymede": [["PIA24681", "Ganymede, Juno"], ["PIA00521", "Ganymede surface"]], "callisto": [["PIA03456", "Callisto, Galileo"]], "titan": [["PIA14602", "Titan, Cassini"], ["PIA17180", "Titan crescent"], ["PIA21625", "Titan, backlit"], ["PIA21624", "Titan, Cassini"]], "enceladus": [["PIA17129", "Enceladus, Cassini"], ["PIA14599", "Enceladus crescent"], ["PIA08954", "Enceladus, backlit"], ["PIA11683", "Enceladus and Saturn"], ["PIA11688", "Enceladus plumes"]], "triton": [["PIA02247", "Triton crescent"], ["PIA02246", "Triton, Voyager 2"], ["PIA01994", "Triton, Voyager 2"]], "ceres": [["PIA19167", "Ceres, Dawn"], ["PIA20187", "Ceres surface"], ["PIA19889", "Occator Crater"], ["PIA20653", "Bright spots, Ceres"]], "M1": [["PIA03606", "Crab Nebula, Hubble"], ["GSFC_20171208_Archive_e002159", "Crab Nebula"]], "M51": [["GSFC_20171208_Archive_e001925", "Whirlpool Galaxy, Hubble"]], "M104": [["0700064", "Sombrero Galaxy, Spitzer"], ["PIA15226", "Sombrero Galaxy"]], "M57": [["PIA14443", "Ring Nebula, Hubble"]], "NGC 7293": [["PIA03678", "Helix Nebula, Hubble"], ["PIA18164", "Helix Nebula"]], "NGC 3372": [["GSFC_20171208_Archive_e002076", "Carina Nebula, Hubble"]]};
 const GAL_TX = {
-  de: { btn: "Bilder", title: "Bilder", none: "Keine Bilder gefunden.", load: "Lade Bilder …", src: "Quelle: Wikipedia / Wikimedia Commons. Bilder von NASA, ESA, ESO u. a.; Urheber und Lizenz stehen auf der Commons-Seite." },
-  en: { btn: "Photos", title: "Photos", none: "No photos found.", load: "Loading photos …", src: "Source: Wikipedia / Wikimedia Commons. Images by NASA, ESA, ESO and others; author and licence are on the Commons page." }
+  de: { btn: "Bilder", title: "Bilder", none: "Keine Bilder gefunden.", load: "Lade Bilder …", src: "Quelle: NASA Image and Video Library (images.nasa.gov). Echte Aufnahmen von NASA, ESA und Partnern." },
+  en: { btn: "Photos", title: "Photos", none: "No photos found.", load: "Loading photos …", src: "Source: NASA Image and Video Library (images.nasa.gov). Real photographs by NASA, ESA and partners." }
 };
-const GAL_CACHE = new Map();
-function galSkip(t) { return /\.(svg|gif|webm|ogv|ogg|oga|mp3|pdf)$/i.test(t) || /(icon|logo|symbol|flag|pictogram|ambox|question_book|commons-|wikiquote|wikinews|portal|stub|edit-clear|increase|decrease|steady|red_pog|crystal|folder)/i.test(t); }
-async function galFetch(title) {
-  const r = await fetch("https://en.wikipedia.org/api/rest_v1/page/media-list/" + encodeURIComponent(title.replace(/ /g, "_")));
-  if (!r.ok) return [];
-  const j = await r.json(), out = [];
-  for (const it of j.items || []) {
-    if (it.type !== "image" || !it.title || galSkip(it.title) || !it.srcset || !it.srcset.length) continue;
-    const ss = it.srcset.map((x) => "https:" + x.src.replace(/^https?:/, ""));
-    out.push({ file: it.title.replace(/^File:/, ""), cap: ((it.caption && it.caption.text) || "").trim(), thumb: ss[0], big: ss[ss.length - 1] });
-  }
-  return out;
+function galList(s) {
+  const k = (s.type === "body" || s.type === "dso") ? s.id : "";
+  const a = GAL_CUR[k] || [];
+  const u = (id, z) => "https://images-assets.nasa.gov/image/" + id + "/" + id + "~" + z + ".jpg";
+  return a.map(([id, cap]) => ({ id, cap, thumb: u(id, "small"), tf: [u(id, "thumb"), u(id, "medium")], big: u(id, "large"), bf: [u(id, "medium"), u(id, "orig"), u(id, "small")], page: "https://images.nasa.gov/details/" + id }));
 }
-async function galLoad(s) {
-  const base = wikiCandidates(s), ex = s.type === "body" ? (GAL_EXTRA[s.id] || []) : [];
-  const titles = [...base.slice(0, 3), ...ex];
-  const seen = new Set(), all = [];
-  const res = await Promise.all(titles.map((t) => galFetch(t).catch(() => [])));
-  for (const list of res) for (const x of list) { if (seen.has(x.file)) continue; seen.add(x.file); all.push(x); }
-  // Nur echte Aufnahmen (22.10.2026: "nimm fiktive Bilder weg"): Künstlerzeichnungen, Karten, Diagramme,
-  // Größenvergleiche, Simulationen und Texturen fliegen raus — nach Dateiname, Bildunterschrift und
-  // den Commons-Kategorien/-Beschreibung (über die Wikipedia-API abgefragt).
-  const cand = all.slice(0, 100);
-  const meta = new Map();
-  try {
-    for (let i = 0; i < cand.length; i += 40) {
-      const part = cand.slice(i, i + 40);
-      const q = "action=query&prop=imageinfo&iiprop=extmetadata&iiextmetadatafilter=Categories|ImageDescription|ObjectName&format=json&formatversion=2&origin=*&titles=" + encodeURIComponent(part.map((x) => "File:" + x.file).join("|"));
-      const r = await fetch("https://en.wikipedia.org/w/api.php?" + q);
-      if (!r.ok) continue;
-      const j = await r.json();
-      for (const pg of (j.query && j.query.pages) || []) {
-        const em = pg.imageinfo && pg.imageinfo[0] && pg.imageinfo[0].extmetadata;
-        if (em) meta.set(String(pg.title || "").replace(/^File:/, "").replace(/_/g, " "), Object.values(em).map((v) => (v && v.value) || "").join(" "));
-      }
-    }
-  } catch (e) { /* ohne Metadaten nur nach Name/Bildunterschrift filtern */ }
-  const fake = /artist|illustrat|concept|impression|render|simulat|diagram|\bmaps?\b|topograph|chart|\bgraph|comparison|compar|size[ _]|relative|infographic|animat|schematic|\bmodel\b|cross[- ]section|interior|annotat|labell?ed|sketch|painting|drawing|fiction|\bcgi\b|computer[- ]generated|synthetic|texture|artwork|hypothetic|speculat|timeline|poster|stamp|cartoon|symbol|astrolog|alchem|engraving|manuscript|space art|in art\b|in popular culture|in fiction/i;
-  const real = cand.filter((x) => {
-    const m = meta.get(x.file.replace(/_/g, " ")) || "";
-    return !fake.test(x.file.replace(/[_.]/g, " ") + " " + x.cap + " " + m);
-  });
-  return real.slice(0, 48);
-}
+function galFall(im, list, onfail) { let i = 0; im.onerror = () => { if (i < list.length) im.src = list[i++]; else { im.onerror = null; onfail && onfail(); } }; }
 function galOpen(s) {
   const L = GAL_TX[LANG] || GAL_TX.en;
   let ov = document.getElementById("galOv"); if (ov) ov.remove();
@@ -2752,28 +2706,24 @@ function galOpen(s) {
   big.style.cssText = "position:fixed;inset:0;z-index:60;background:rgba(0,0,0,.94);display:none;flex-direction:column;align-items:center;justify-content:center;padding:16px;box-sizing:border-box";
   const bi = document.createElement("img"); bi.style.cssText = "max-width:100%;max-height:72vh;object-fit:contain;border-radius:6px";
   const bc = document.createElement("div"); bc.style.cssText = "color:#fff;font-size:13px;line-height:1.45;max-width:640px;margin-top:12px;text-align:center;opacity:.9";
-  const bl = document.createElement("a"); bl.target = "_blank"; bl.rel = "noopener"; bl.textContent = "Commons ↗"; bl.style.cssText = "color:#9fc2ff;font-size:13px;margin-top:8px";
+  const bl = document.createElement("a"); bl.target = "_blank"; bl.rel = "noopener"; bl.textContent = "NASA ↗"; bl.style.cssText = "color:#9fc2ff;font-size:13px;margin-top:8px";
   big.append(bi, bc, bl); big.onclick = (e) => { if (e.target !== bl) big.style.display = "none"; }; ov.appendChild(big);
-  const ck = s.type + ":" + (s.id || s.key || s.name);
-  const show = (list) => {
-    msg.remove();
-    if (!list.length) { const n = document.createElement("p"); n.textContent = L.none; n.style.cssText = "color:#fff;opacity:.7;text-align:center"; ov.insertBefore(n, grid); return; }
-    for (const x of list) {
-      const f = document.createElement("figure"); f.style.cssText = "margin:0;cursor:pointer";
-      const im = document.createElement("img"); im.loading = "lazy"; im.referrerPolicy = "no-referrer"; im.alt = x.cap || x.file; im.src = x.thumb;
-      im.style.cssText = "display:block;width:100%;height:120px;object-fit:cover;border-radius:8px;background:#0a0e24";
-      im.onerror = () => f.remove();
-      f.appendChild(im);
-      f.onclick = () => { bi.src = x.big; bc.textContent = x.cap || x.file.replace(/_/g, " ").replace(/\.\w+$/, ""); bl.href = "https://commons.wikimedia.org/wiki/File:" + encodeURIComponent(x.file.replace(/ /g, "_")); big.style.display = "flex"; };
-      grid.appendChild(f);
-    }
-  };
-  if (GAL_CACHE.has(ck)) show(GAL_CACHE.get(ck));
-  else galLoad(s).then((l) => { GAL_CACHE.set(ck, l); if (document.getElementById("galOv") === ov) show(l); }).catch(() => { if (document.getElementById("galOv") === ov) show([]); });
+  const list = galList(s);
+  msg.remove();
+  if (!list.length) { const n = document.createElement("p"); n.textContent = L.none; n.style.cssText = "color:#fff;opacity:.7;text-align:center"; ov.insertBefore(n, grid); return; }
+  for (const x of list) {
+    const f = document.createElement("figure"); f.style.cssText = "margin:0;cursor:pointer";
+    const im = document.createElement("img"); im.loading = "lazy"; im.referrerPolicy = "no-referrer"; im.alt = x.cap; im.src = x.thumb;
+    im.style.cssText = "display:block;width:100%;height:120px;object-fit:cover;border-radius:8px;background:#0a0e24";
+    galFall(im, x.tf, () => f.remove());
+    f.appendChild(im);
+    f.onclick = () => { galFall(bi, x.bf); bi.src = x.big; bc.textContent = x.cap; bl.href = x.page; big.style.display = "flex"; };
+    grid.appendChild(f);
+  }
 }
 function galleryBtn(s) {
   let b = document.getElementById("galBtn");
-  if (!s || !wikiCandidates(s).length) { if (b) b.remove(); return; }
+  if (!s || !galList(s).length) { if (b) b.remove(); return; }
   const key = LANG + ":" + s.type + ":" + (s.id || s.key || s.name);
   if (b && b.dataset.key === key) return;
   if (b) b.remove();
