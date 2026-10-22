@@ -2302,7 +2302,15 @@ export default function ImperienClient() {
                     <p className="mt-1 text-xs text-muted">
                       {t("empiresLanguageLabel")}{" "}
                       {info.language
-                        ? translateLanguageValue(info.language, lang)
+                        ? translateLanguageValue(
+                            // Abbasiden: Arabisch blieb Sprache von Verwaltung und
+                            // Wissenschaft; als Literatursprache entsteht Neupersisch
+                            // im Osten (Samaniden, ab ca. 9./10. Jh.) — daher erst ab 900.
+                            selected.name === "Abbasid Caliphate" && currentYear >= 900
+                              ? "Arabisch, Persisch (Literatur)"
+                              : info.language,
+                            lang
+                          )
                         : t("empiresLanguageUnknown")}
                     </p>
                   )}

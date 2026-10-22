@@ -36,7 +36,7 @@ export const LANGUAGE_WORD_EN: Record<string, string> = {
   Kaukasussprachen: "Caucasian languages", Khitanisch: "Khitan", Khmer: "Khmer", Kikongo: "Kikongo",
   Kiptschakisch: "Kipchak", Kirchensprache: "liturgical language", Klassisches: "Classical",
   Koine: "Koine", Koreanisch: "Korean", Kreol: "Creole", Krimtatarisch: "Crimean Tatar",
-  Kultur: "culture", Kumanisch: "Cuman", Kurdisch: "Kurdish", Kutai: "Kutai", Latein: "Latin",
+  Kultur: "culture", Literatur: "literature", Kumanisch: "Cuman", Kurdisch: "Kurdish", Kutai: "Kutai", Latein: "Latin",
   Maba: "Maba", Maguindanaon: "Maguindanaon", Makassarisch: "Makassarese", Malaiisch: "Malay",
   Mandinka: "Mandinka", Mandschurisch: "Manchu", Marathi: "Marathi", Maya: "Mayan",
   Meroitisch: "Meroitic", Mittelchinesisch: "Middle Chinese", Mittelenglisch: "Middle English",
@@ -87,6 +87,7 @@ const CONN: Record<string, string[]> = {
   Hofsprache: ["lengua cortesana", "langue de cour", "língua da corte", "saray dili", "придворный язык", "γλώσσα της αυλής", "لغة البلاط", "दरबारी भाषा", "宫廷语言", "宮廷語", "궁정어"],
   Turksprache: ["lengua túrquica", "langue turque", "língua túrquica", "Türk dili", "тюркский язык", "τουρκική γλώσσα", "لغة تركية", "तुर्क भाषा", "突厥语", "テュルク語", "튀르크어"],
   Turksprachen: ["lenguas túrquicas", "langues turques", "línguas túrquicas", "Türk dilleri", "тюркские языки", "τουρκικές γλώσσες", "اللغات التركية", "तुर्क भाषाएँ", "突厥语族", "テュルク諸語", "튀르크어족"],
+  Literatur: ["literatura", "littérature", "literatura", "edebiyat", "литература", "λογοτεχνία", "الأدب", "साहित्य", "文学", "文学", "문학"],
   und: ["y", "et", "e", "ve", "и", "και", "و", "और", "和", "と", "및"],
   später: ["posterior", "plus tard", "depois", "daha sonra", "позднее", "αργότερα", "لاحقًا", "बाद में", "后来", "後に", "이후"],
   Dialekt: ["dialecto", "dialecte", "dialeto", "lehçe", "диалект", "διάλεκτος", "لهجة", "बोली", "方言", "方言", "방언"],
@@ -118,6 +119,22 @@ function isoName(code: string, lang: string): string | null {
  * englischen Wörterbuch. Wörter ohne Eintrag bleiben unverändert stehen.
  */
 export function translateLanguageValue(value: string, targetLang: string): string {
+  return tagPersian(translateWords(value, targetLang), targetLang);
+}
+
+// Nutzerwunsch 23.10.2026: "Dari ist doch Persisch ... auch bei Tadschikisch" —
+// Dari und Tadschikisch sind Varietäten des Persischen; das steht jetzt dabei
+// ("Dari (Persisch)"). Greift auch auf Wikidata-Labels in der UI-Sprache.
+function tagPersian(text: string, lang: string): string {
+  const persian = lang === "de" ? "Persisch" : isoName("fa", lang) ?? "Persian";
+  const names =
+    "Dari|Tajik|Tadschikisch|tayiko|tadjik|tajique|Tacikçe|Tacik|дари|таджикский|δαρί|τατζικικά|दरी|ताजिक|达利语|塔吉克语|ダリー語|タジク語|다리어|타지크어|دری|تاجیکی|الدرية|الطاجيكية";
+  // Ohne Lookbehind (ältere Safari-Versionen kennen es nicht).
+  const re = new RegExp(`(^|[^\\p{L}(])(${names})(?![\\p{L}])(?!\\s*\\()`, "giu");
+  return text.replace(re, (_m, pre: string, nm: string) => `${pre}${nm} (${persian})`);
+}
+
+function translateWords(value: string, targetLang: string): string {
   if (targetLang === "de") return value;
   const ci = CONN_ORDER.indexOf(targetLang);
   return value.replace(/[A-Za-zÀ-ÿ'ʻ.]+/g, (word) => {
