@@ -14,6 +14,7 @@ export const SLUG_PAIRS: ReadonlyArray<readonly [string, string]> = [
   ["/sonnensystem", "/solar-system"],
   ["/sternbilder", "/constellations"],
   ["/objekte", "/objects"],
+  ["/datenschutz", "/privacy"],
   ["/sternenhimmel", "/night-sky"],
   ["/universum", "/universe"],
   ["/geburtstag", "/birthday"],

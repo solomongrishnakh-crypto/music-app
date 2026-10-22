@@ -24,10 +24,11 @@
 
 import SectionHeading from "@/components/ui/SectionHeading";
 import { ContactIcons } from "@/components/home/ContactSection";
+import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function AboutSiteSection() {
-  const { t } = useLanguage();
+  const { t, lang, localePath } = useLanguage();
   return (
     <section className="mx-auto mt-16 w-full max-w-6xl sm:mt-24">
       <SectionHeading index="02" label={t("aboutLabel")} />
@@ -67,6 +68,7 @@ export default function AboutSiteSection() {
             <span className="label-mono text-[10px] uppercase tracking-wide text-muted">{t("contactsLabel")}</span>
             <ContactIcons />
           </div>
+          <Link href={localePath("/datenschutz")} className="text-[11px] text-muted underline hover:text-accent">{lang === "de" ? "Datenschutzerklärung" : "Privacy policy"}</Link>
         </div>
       </div>
     </section>
