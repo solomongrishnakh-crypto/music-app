@@ -3450,6 +3450,15 @@ document.getElementById("tSensor").onclick = async () => {
   setTimeout(() => { if (S.sensor && sensorAz === null) msg.textContent = tr("noSensor"); else if (S.sensor) msg.hidden = true; }, 1500);
 };
 
+// ?g=1 (Link „Sternenhimmel mit Gyroskop“ aus dem Sonnensystem): Lagesensor gleich starten.
+// iOS verlangt dafür eine Berührung (Erlaubnis-Dialog), Android startet sofort.
+if (new URLSearchParams(location.search).get("g") === "1") {
+  const startG = () => { if (!S.sensor) document.getElementById("tSensor").click(); };
+  if (typeof DeviceOrientationEvent !== "undefined" && typeof DeviceOrientationEvent.requestPermission === "function") {
+    window.addEventListener("pointerup", startG, { once: true });
+  } else setTimeout(startG, 800);
+}
+
 // ---------------- Knöpfe in den Ecken + Suche ----------------
 const sheets = { timeBtn: "timeSheet", menuBtn: "menuSheet", searchBtn: "searchSheet", pill: "locSheet" };
 function openSheet(btnId) {

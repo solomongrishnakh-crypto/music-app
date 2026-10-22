@@ -6,6 +6,7 @@ import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import { ALL_BODIES, SUN, type PlanetData } from "@/data/solarSystem";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { localize } from "@/lib/i18n";
+import { langPath } from "@/lib/seoI18n";
 import {
   EPOCH_JD,
   ORBITS,
@@ -1567,6 +1568,13 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
           >
             {scaleMode === "real" ? t("solarScaleCompact") : t("solarScaleReal")}
           </button>
+          {/* Nutzerwunsch 23.10.2026: direkt zur Sternenhimmel-Ansicht mit Gyroskop (?g=1 startet den Lagesensor) */}
+          <a
+            href={`${langPath("/sternenhimmel", lang)}?g=1`}
+            className="label-mono whitespace-nowrap border border-border bg-background/80 px-2 py-1 text-[10px] uppercase text-muted transition-colors hover:border-accent hover:text-accent"
+          >
+            ✦ {t("solarGyroSky")}
+          </a>
         </div>
       </div>
       )}

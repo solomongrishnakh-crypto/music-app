@@ -342,6 +342,11 @@ const TRANSLATIONS_SOURCE = {
     es: "Ir a esta fecha", fr: "Aller à cette date", tr: "Bu tarihe git", ru: "Перейти к этой дате", pt: "Ir para esta data", ar: "الانتقال إلى هذا التاريخ", el: "Μετάβαση σε αυτή την ημερομηνία",
     id: "Lompat ke tanggal ini", fa: "رفتن به این تاریخ",
   },
+  solarGyroSky: {
+    de: "Sternenhimmel mit Gyroskop", en: "Night sky with gyroscope", hi: "जाइरोस्कोप के साथ तारों भरा आकाश", zh: "陀螺仪星空", ko: "자이로스코프 별하늘", ja: "ジャイロで星空",
+    es: "Cielo nocturno con giroscopio", fr: "Ciel étoilé avec gyroscope", tr: "Jiroskoplu yıldızlı gökyüzü", ru: "Звёздное небо с гироскопом", pt: "Céu estrelado com giroscópio", ar: "السماء بالجيروسكوب", el: "Έναστρος ουρανός με γυροσκόπιο",
+    id: "Langit malam dengan giroskop", fa: "آسمان شب با ژیروسکوپ",
+  },
   solarDistances: {
     de: "Abstand zur Erde", en: "Distance from Earth", hi: "पृथ्वी से दूरी", zh: "与地球的距离", ko: "지구와의 거리", ja: "地球からの距離",
     es: "Distancia a la Tierra", fr: "Distance à la Terre", tr: "Dünya'ya uzaklık", ru: "Расстояние до Земли", pt: "Distância da Terra", ar: "المسافة عن الأرض", el: "Απόσταση από τη Γη",

@@ -7,7 +7,7 @@ import { BASE_URL, OG_LOCALE, PAGE_SEO, hreflang, isPrefixedLang, langPath } fro
  * Sternenhimmel in einer anderen Sprache: dieselbe Ansicht
  * (public/sternenhimmel.html), aber mit fester Sprache über ?lang=.
  */
-type Props = { params: Promise<{ lang: string }>; searchParams: Promise<{ c?: string | string[]; p?: string | string[]; d?: string | string[] }> };
+type Props = { params: Promise<{ lang: string }>; searchParams: Promise<{ c?: string | string[]; p?: string | string[]; d?: string | string[]; g?: string | string[] }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params;
@@ -40,6 +40,8 @@ export default async function LangSternenhimmel({ params, searchParams }: Props)
   const c = (cv && /^[A-Za-z]{3}$/.test(cv) ? `&c=${cv}` : "")
     + (pv && /^(mercury|venus|mars|jupiter|saturn|uranus|neptune|moon)$/.test(pv) ? `&p=${pv}` : "")
     + (dv && /^[A-Za-z0-9 ]{1,12}$/.test(dv) ? `&d=${encodeURIComponent(dv)}` : "");
+  const gv = Array.isArray(sp.g) ? sp.g[0] : sp.g;
+  const cg = c + (gv === "1" ? "&g=1" : "");
   const l = isPrefixedLang(lang) ? lang : "en";
   const seo = PAGE_SEO.sternenhimmel[l];
   const jsonLd = {
@@ -64,7 +66,7 @@ export default async function LangSternenhimmel({ params, searchParams }: Props)
         <Link href={langPath("/himmel-heute", l)}>{skyTodayTexts(l).title}</Link>
       </p>
       <iframe
-        src={`/sternenhimmel.html?lang=${l}${c}`}
+        src={`/sternenhimmel.html?lang=${l}${cg}`}
         title={seo.title}
         allow="geolocation; accelerometer; gyroscope; magnetometer; fullscreen; autoplay; encrypted-media"
         className="fixed inset-0 z-[3000] h-[100dvh] w-full border-0 bg-[#06082a]"

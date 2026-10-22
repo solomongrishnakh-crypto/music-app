@@ -57,7 +57,7 @@ const JSON_LD = {
   isPartOf: { "@type": "WebSite", name: "Centaurian", url: "https://centaurianspace.com" },
 };
 
-type Props = { searchParams: Promise<{ c?: string | string[]; p?: string | string[]; d?: string | string[] }> };
+type Props = { searchParams: Promise<{ c?: string | string[]; p?: string | string[]; d?: string | string[]; g?: string | string[] }> };
 
 /** ?c=Ori (Link von einer Sternbild-Seite) → an die Ansicht weitergeben */
 function constParam(raw: string | string[] | undefined): string {
@@ -82,7 +82,9 @@ export default async function SternenhimmelPage({ searchParams }: Props) {
   const sp = await searchParams;
   const c0 = constParam(sp.c);
   const c1 = c0 + planetParam(sp.p, c0 ? "&" : "?");
-  const c = c1 + dsoParam(sp.d, c1 ? "&" : "?");
+  const c2 = c1 + dsoParam(sp.d, c1 ? "&" : "?");
+  // ?g=1 (Link aus dem Sonnensystem) → Lagesensor automatisch starten
+  const c = c2 + (sp.g === "1" ? `${c2 ? "&" : "?"}g=1` : "");
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(JSON_LD) }} />
