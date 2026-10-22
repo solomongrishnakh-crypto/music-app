@@ -2709,7 +2709,30 @@ async function galLoad(s) {
   const seen = new Set(), all = [];
   const res = await Promise.all(titles.map((t) => galFetch(t).catch(() => [])));
   for (const list of res) for (const x of list) { if (seen.has(x.file)) continue; seen.add(x.file); all.push(x); }
-  return all.slice(0, 48);
+  // Nur echte Aufnahmen (22.10.2026: "nimm fiktive Bilder weg"): Künstlerzeichnungen, Karten, Diagramme,
+  // Größenvergleiche, Simulationen und Texturen fliegen raus — nach Dateiname, Bildunterschrift und
+  // den Commons-Kategorien/-Beschreibung (über die Wikipedia-API abgefragt).
+  const cand = all.slice(0, 100);
+  const meta = new Map();
+  try {
+    for (let i = 0; i < cand.length; i += 40) {
+      const part = cand.slice(i, i + 40);
+      const q = "action=query&prop=imageinfo&iiprop=extmetadata&iiextmetadatafilter=Categories|ImageDescription|ObjectName&format=json&formatversion=2&origin=*&titles=" + encodeURIComponent(part.map((x) => "File:" + x.file).join("|"));
+      const r = await fetch("https://en.wikipedia.org/w/api.php?" + q);
+      if (!r.ok) continue;
+      const j = await r.json();
+      for (const pg of (j.query && j.query.pages) || []) {
+        const em = pg.imageinfo && pg.imageinfo[0] && pg.imageinfo[0].extmetadata;
+        if (em) meta.set(String(pg.title || "").replace(/^File:/, "").replace(/_/g, " "), Object.values(em).map((v) => (v && v.value) || "").join(" "));
+      }
+    }
+  } catch (e) { /* ohne Metadaten nur nach Name/Bildunterschrift filtern */ }
+  const fake = /artist|illustrat|concept|impression|render|simulat|diagram|\bmaps?\b|topograph|chart|\bgraph|comparison|compar|size[ _]|relative|infographic|animat|schematic|\bmodel\b|cross[- ]section|interior|annotat|labell?ed|sketch|painting|drawing|fiction|\bcgi\b|computer[- ]generated|synthetic|texture|artwork|hypothetic|speculat|timeline|poster|stamp|cartoon|symbol|astrolog|alchem|engraving|manuscript|space art|in art\b|in popular culture|in fiction/i;
+  const real = cand.filter((x) => {
+    const m = meta.get(x.file.replace(/_/g, " ")) || "";
+    return !fake.test(x.file.replace(/[_.]/g, " ") + " " + x.cap + " " + m);
+  });
+  return real.slice(0, 48);
 }
 function galOpen(s) {
   const L = GAL_TX[LANG] || GAL_TX.en;
