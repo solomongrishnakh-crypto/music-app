@@ -12,8 +12,17 @@ import { DESTS, VEHICLES, travelPath } from "@/lib/travelTime";
  */
 type Entry = MetadataRoute.Sitemap[number];
 
+/**
+ * lastmod: echte, stabile Daten statt „jetzt bei jedem Build“ — Google
+ * ignoriert lastmod, wenn es immer sich selbst ändert. Nur Seiten, die sich
+ * wirklich geändert haben, bekommen ein neueres Datum.
+ */
+const LAUNCH = new Date("2026-10-07T00:00:00Z"); // alle 15 Sprachen online
+const SKY_UPDATED = new Date("2026-10-22T00:00:00Z"); // Kepler, Venus, berühmte Objekte
+const FRESH = new Set(["/", "/sternenhimmel"]);
+
 function withLangs(path: string, priority: number, changeFrequency: Entry["changeFrequency"]): Entry[] {
-  const now = new Date();
+  const now = path === "/himmel-heute" ? new Date(new Date().toISOString().slice(0, 10) + "T00:00:00Z") : FRESH.has(path) ? SKY_UPDATED : LAUNCH;
   const languages: Record<string, string> = {};
   for (const [k, v] of Object.entries(hreflang(path))) languages[k] = BASE_URL + v;
   return ALL_LANGS.map((l) => ({

@@ -101,6 +101,13 @@ export default async function SternenhimmelPage({ searchParams }: Props) {
           <li>Stern, Planet oder Sternbild antippen: Entfernung, Lichtlaufzeit, Sterntyp, Temperatur, Helligkeit und Wissen aus Wikipedia.</li>
           <li>Planeten mit Abstand zur Erde, Phase, Auf- und Untergang.</li>
           <li>Suche nach Sternen, Planeten und Sternbildern, weltweite Ortswahl und Zeitreise.</li>
+          <li>
+            Berühmte Objekte: Sagittarius A* (das Schwarze Loch der Milchstraße), TON 618, UY Scuti, VY Canis Majoris,
+            Eta Carinae, R136a1, Cygnus X-1, Proxima Centauri, Andromeda-Galaxie, Orionnebel, Plejaden, Krebsnebel,
+            Antennen-Galaxien, Stephans Quintett, Hoags Objekt und viele mehr, mit echten Fotos von NASA, ESA und Hubble.
+          </li>
+          <li>Kepler-Exoplaneten: über 2.700 bestätigte Planeten bei fast 2.000 Sternen, an der echten Position am Himmel.</li>
+          <li>Venus mit Originalfotos der sowjetischen Venera-Sonden, von Magellan und Akatsuki.</li>
           <li>In 13 Sprachen verfügbar, ohne Anmeldung und ohne App-Installation.</li>
         </ul>
         <p>
