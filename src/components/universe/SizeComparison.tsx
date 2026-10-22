@@ -680,6 +680,7 @@ interface CmpView {
   xa: number; // Bildschirmposition (px) der Mitte des Ankerobjekts
   yc: number; // Bildschirmhöhe (px) der Objektmitten
   z: number; // Zoom relativ zur Gesamtansicht
+  free?: boolean; // Nutzer hat die Ansicht verschoben: nicht mehr automatisch einpassen
 }
 
 const normS = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -753,7 +754,7 @@ export default function SizeComparison({ index }: { index: string }) {
   const view = useRef<CmpView>({ anchor: 0, xa: 0, yc: 0, z: 1 });
   const fit = useRef({ zmax: 12, kfit: 1, delta: 0, W: 0, H: 0, sx: -1, sy: 0 });
   const resetView = useRef(true);
-  const api = useRef({ zoomBy: (_f: number) => {}, setZ: (_s: number) => {}, reset: () => {} });
+  const api = useRef({ zoomBy: (_f: number) => {}, setZ: (_s: number) => {}, reset: () => {}, center: () => {} });
   // Direktlink aus dem Sternenhimmel (#groessenvergleich): zur Sektion scrollen,
   // sobald die Seite aufgebaut ist.
   useEffect(() => {
@@ -905,8 +906,8 @@ export default function SizeComparison({ index }: { index: string }) {
       const v = view.current;
       const zmax = Math.max(12, Math.min(1e24, (W * 4) / (small * kfit)));
       fit.current.zmax = zmax; fit.current.kfit = kfit; fit.current.delta = delta;
-      if (resetView.current) { v.z = 1; v.anchor = 0; resetView.current = false; }
-      if (v.z <= 1.0000001) { v.z = 1; v.anchor = 0; v.xa = W / 2 + (cA - Wd / 2) * kfit; v.yc = H * 0.47; }
+      if (resetView.current) { v.z = 1; v.anchor = 0; v.free = false; resetView.current = false; }
+      if (v.z <= 1.0000001 && !v.free) { v.z = 1; v.anchor = 0; v.xa = W / 2 + (cA - Wd / 2) * kfit; v.yc = H * 0.47; }
       v.z = Math.min(v.z, zmax);
       const k = kfit * v.z;
       const xA = v.anchor === 0 ? v.xa : v.xa - delta * k;
@@ -1036,6 +1037,8 @@ export default function SizeComparison({ index }: { index: string }) {
       dirty.current = true;
     };
     api.current = {
+      // Kleineres Objekt (z. B. die Sonne) in die Bildmitte holen
+      center: () => { const v = view.current, fi = fit.current; v.xa += W / 2 - fi.sx; v.yc += H / 2 - fi.sy; v.free = true; dirty.current = true; },
       // Regler/Tasten zoomen auf das kleinere Objekt (wenn sichtbar), sonst auf die Bildmitte
       // Der Zoompunkt folgt dem kleineren Objekt, bleibt aber am Bildschirm "geklemmt" statt
       // zwischen Objekt und Bildmitte umzuschalten (das ließ die Ansicht springen, Nutzer 15.10.2026).
@@ -1211,7 +1214,7 @@ export default function SizeComparison({ index }: { index: string }) {
       const p = ptrs.get(e.pointerId);
       if (!p) return;
       const n = lp(e);
-      if (ptrs.size === 1 && view.current.z > 1) { view.current.xa += n.x - p.x; view.current.yc += n.y - p.y; }
+      if (ptrs.size === 1) { const vv = view.current; if (vv.z <= 1.0000001 && !vv.free) { vv.free = true; vv.z = 1; } vv.xa += n.x - p.x; vv.yc += n.y - p.y; }
       ptrs.set(e.pointerId, n);
       if (ptrs.size === 2) {
         const [a, b] = [...ptrs.values()], dist = Math.hypot(a.x - b.x, a.y - b.y);
@@ -1392,6 +1395,7 @@ export default function SizeComparison({ index }: { index: string }) {
               aria-label={ui2.zoomL}
             />
             <button type="button" className={sbtn} aria-label="+" onClick={() => api.current.zoomBy(1.8)}>+</button>
+            <button type="button" className="h-8 shrink-0 border border-border px-2 text-[10px] uppercase text-foreground transition-colors hover:border-accent hover:text-accent" onClick={() => api.current.center()} aria-label={lang === "de" ? "Kleineres Objekt zentrieren" : "Center the smaller object"}>⌖ {lang === "de" ? "Mitte" : "Center"}</button>
             <button type="button" className="h-8 shrink-0 border border-border px-2 text-[10px] uppercase text-foreground transition-colors hover:border-accent hover:text-accent" onClick={() => api.current.reset()}>{ui2.reset}</button>
             <button type="button" className="h-8 shrink-0 border border-border px-2 text-[10px] uppercase text-foreground transition-colors hover:border-accent hover:text-accent" onClick={shareCmp}>{shared ? "✓ " + (SHARE_TXT[lang] ?? SHARE_TXT.en)[1] : "⇪ " + (SHARE_TXT[lang] ?? SHARE_TXT.en)[0]}</button>
           </div>
