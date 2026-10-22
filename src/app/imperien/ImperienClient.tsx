@@ -1155,7 +1155,18 @@ export default function ImperienClient() {
     map.on("moveend zoomend", () => {
       if (!pauseWantedRef.current) delete docEl.dataset.bgpause;
     });
-    map.on("moveend", () => layoutLabelsRef.current());
+    // Nach dem Verschieben: neu sichtbare Gebiete bekommen ihren Namen.
+    let moveT: number | undefined;
+    map.on("moveend", () => {
+      layoutLabelsRef.current();
+      window.clearTimeout(moveT);
+      moveT = window.setTimeout(() => {
+        const year = lastRenderedYearRef.current;
+        if (year === null) return;
+        const cached = bordersCacheRef.current.get(year);
+        if (cached) renderBordersGeojsonRef.current(cached);
+      }, 200);
+    });
     map.on("zoomend", () => {
       const year = lastRenderedYearRef.current;
       if (year === null) return;
@@ -1216,9 +1227,9 @@ export default function ImperienClient() {
     const size = map.getSize();
     const W = size.x;
     const H = size.y;
-    const minFs = 7.5;
-    const maxFs = 12;
-    const pad = 6;
+    const minFs = 7;
+    const maxFs = 12.5;
+    const pad = 3;
     const placed: number[][] = [];
     const shownTexts = new Set<string>();
     const hit = (l: number, t: number, r: number, b: number) =>
@@ -1262,7 +1273,7 @@ export default function ImperienClient() {
         }
         lines.push(cur);
         if (lines.length > 2) return null;
-        const th = lines.length * f * 1.2;
+        const th = lines.length * f * 1.15;
         if (th > vh * 0.85) return null;
         return { f, tw: Math.max(...lines) * f + f * 0.7, th };
       };
@@ -1297,11 +1308,11 @@ export default function ImperienClient() {
       if (!el) continue;
       el.style.display = "";
       el.style.fontSize = q.f.toFixed(1) + "px";
-      el.style.letterSpacing = lang === "ar" ? "0" : "0.02em";
+      el.style.letterSpacing = lang === "ar" ? "0" : "0.01em";
       el.style.whiteSpace = "normal";
       el.style.textAlign = "center";
       el.style.padding = "0";
-      el.style.lineHeight = "1.2";
+      el.style.lineHeight = "1.15";
       el.style.width = Math.ceil(q.tw) + "px";
     }
     for (const q of plan) {
@@ -1377,19 +1388,26 @@ export default function ImperienClient() {
     // Nur eine mit dem Zoom wachsende Anzahl der (nach echter Fläche)
     // größten Gebiete bekommt eine feste Beschriftung (Nutzerkorrekturen
     // 20.09.2026: "zu dicht" / "namen sollen früher sichtbar sein").
-    const zoom = map.getZoom?.() ?? 2;
-    let labelLimit: number;
+    // Nutzerwunsch 22.10.2026: Namen nach dem SICHTBAREN Ausschnitt wählen
+    // (nicht die weltweit größten N), sonst fehlen Namen im gezoomten Bild.
+    // Wer auf dem Bildschirm zu klein ist oder überlappt, fliegt im Layout raus.
     const lite = isLite();
-    if (zoom <= 2) labelLimit = lite ? 16 : 30;
-    else if (zoom === 3) labelLimit = lite ? 30 : 50;
-    else if (zoom === 4) labelLimit = lite ? 50 : 80;
-    else if (zoom === 5) labelLimit = lite ? 76 : 120;
-    else if (zoom === 6) labelLimit = lite ? 110 : 180;
-    else labelLimit = lite ? 170 : Infinity;
     const hl = highlightRef.current;
-    const permanentLabelNames = new Set(
-      sortedFeatures.slice(0, labelLimit).map((f) => f.properties?.NAME)
-    );
+    const vp = map.getSize();
+    const budget = lite ? 80 : 150;
+    const permanentLabelNames = new Set<string>();
+    for (const f of sortedFeatures) {
+      if (permanentLabelNames.size >= budget) break;
+      const nm = f.properties?.NAME as string;
+      if (permanentLabelNames.has(nm)) continue;
+      const bb = cachedMainBox(f.geometry, cachedLabelPoint(f.geometry));
+      if (!bb) continue;
+      const p1 = map.latLngToContainerPoint([bb[3], bb[0]]);
+      const p2 = map.latLngToContainerPoint([bb[1], bb[2]]);
+      const vw = Math.min(p2.x, vp.x) - Math.max(p1.x, 0);
+      const vh = Math.min(p2.y, vp.y) - Math.max(p1.y, 0);
+      if (vw >= 28 && vh >= 11) permanentLabelNames.add(nm);
+    }
     // Beschriftungsgröße wie im Atlas: die größten Reiche etwas größer.
     const bigLabelNames = new Set(sortedFeatures.slice(0, 6).map((f) => f.properties?.NAME));
 
