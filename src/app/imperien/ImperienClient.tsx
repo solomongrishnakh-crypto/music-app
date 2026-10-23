@@ -26,6 +26,7 @@ import { lookupWikiInBrowser } from "@/lib/history/wikiClientLookup";
 import { wikiLookupName } from "@/data/empireWikiAliases";
 import { reichNameL } from "@/lib/history/reicheNames";
 import reicheIndex from "@/data/reiche/index.json";
+import { SEAS } from "@/data/seas";
 import { decodeRing } from "@/lib/history/empiresClient";
 import {
   PREHIST_COLORS,
@@ -1792,6 +1793,46 @@ export default function ImperienClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leafletReady, preYear, currentYear, lang]);
 
+  // Meere/Ozeane: Name anklicken -> Herkunft des Namens (Nutzerwunsch 23.10.2026).
+  useEffect(() => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const L = (window as any).L;
+    if (!leafletReady || !mapRef.current || !L) return;
+    const map = mapRef.current;
+    if (!map.getPane("seas")) {
+      const sp = map.createPane("seas");
+      sp.style.zIndex = "450";
+    }
+    const group = L.layerGroup().addTo(map);
+    const esc = (x: string) => x.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] as string);
+    const minZ = [1, 3, 4];
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const markers = SEAS.map((s: any) => {
+      const name = lang === "de" ? s.de : s.en;
+      const text = lang === "de" ? s.tde : s.ten;
+      const m = L.marker([s.lat, s.lng], {
+        pane: "seas",
+        icon: L.divIcon({ className: `sea-label sea-r${s.rank}`, html: `<span>${esc(name)}</span>`, iconSize: [0, 0] }),
+      });
+      m.bindPopup(`<b>${esc(name)}</b><br>${esc(text)}`, { maxWidth: 260 });
+      return { m, rank: s.rank as number };
+    });
+    const sync = () => {
+      const z = map.getZoom();
+      for (const { m, rank } of markers) {
+        const on = z >= minZ[rank];
+        if (on && !group.hasLayer(m)) group.addLayer(m);
+        else if (!on && group.hasLayer(m)) group.removeLayer(m);
+      }
+    };
+    sync();
+    map.on("zoomend", sync);
+    return () => {
+      map.off("zoomend", sync);
+      map.removeLayer(group);
+    };
+  }, [leafletReady, lang]);
+
   // Ausführliche Info (Wikipedia) nachladen, sobald ein Gebiet angeklickt wurde.
   useEffect(() => {
     if (!selected) {
@@ -2009,6 +2050,16 @@ export default function ImperienClient() {
           letter-spacing: 0.06em;
           text-shadow: 0 1px 2px #000, 0 0 6px #000, 0 0 12px #000;
         }
+        .sea-label { pointer-events: auto; cursor: pointer; }
+        .sea-label span {
+          display: block; transform: translate(-50%, -50%); white-space: nowrap;
+          font-family: var(--font-mono, monospace); font-style: italic;
+          color: #cfe8ff; letter-spacing: 0.08em;
+          text-shadow: 0 1px 2px #000, 0 0 6px #000, 0 0 10px #000;
+        }
+        .sea-r0 span { font-size: 14px; letter-spacing: 0.25em; text-transform: uppercase; }
+        .sea-r1 span { font-size: 11px; letter-spacing: 0.15em; }
+        .sea-r2 span { font-size: 10px; }
         .leaflet-tooltip.prehist-label {
           font-size: 10px;
           font-style: italic;
