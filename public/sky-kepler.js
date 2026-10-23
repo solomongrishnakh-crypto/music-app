@@ -6,7 +6,7 @@
 (() => {
   const DE = LANG === "de";
   const T = DE ? {
-    planets: "Planeten", exo: "Exoplanet", star: "Kepler-Stern", sys: "System", dist: "Entfernung", mag: "Helligkeit", nPl: "Planeten im System",
+    planets: "Planeten", exo: "Exoplanet", star: "Kepler-Stern", star2: "Stern mit Exoplaneten", sys: "System", dist: "Entfernung", mag: "Helligkeit", nPl: "Planeten im System",
     starType: "Sterntyp", temp: "Oberfläche", rad: "Radius", mass: "Masse", ly: "Lichtjahre", suns: "Sonnen", earth: "Erde", days: "Tage", au: "AE",
     art: "Künstlerische 3D-Darstellung, berechnet aus echten Daten (Radius, Temperatur). Keine Fotografie – so sieht der Planet nicht zwingend aus.",
     src: "Daten: NASA Exoplanet Archive", open: "Im Archiv ansehen ↗", unknown: "unbekannt", drag: "Ziehen zum Drehen",
@@ -14,7 +14,7 @@
     t_sub: "Kleiner Gesteinsplanet", t_earth: "Erdgroßer Planet", t_super: "Super-Erde", t_mini: "Mini-Neptun", t_nep: "Neptun-ähnlicher Planet", t_gas: "Gasriese", t_hot: "Heißer Jupiter",
     eye: "Teleskop nötig", cls: { O: "blauer Riese", B: "blauweißer Stern", A: "weißer Stern", F: "gelbweißer Stern", G: "gelber Stern (sonnenähnlich)", K: "orangefarbener Stern", M: "roter Zwerg" },
   } : {
-    planets: "Planets", exo: "Exoplanet", star: "Kepler star", sys: "System", dist: "Distance", mag: "Brightness", nPl: "Planets in system",
+    planets: "Planets", exo: "Exoplanet", star: "Kepler star", star2: "Star with exoplanets", sys: "System", dist: "Distance", mag: "Brightness", nPl: "Planets in system",
     starType: "Star type", temp: "Surface", rad: "Radius", mass: "Mass", ly: "light-years", suns: "Suns", earth: "Earth", days: "days", au: "AU",
     art: "Artist's 3D view computed from real data (radius, temperature). Not a photograph – the planet does not necessarily look like this.",
     src: "Data: NASA Exoplanet Archive", open: "View in archive ↗", unknown: "unknown", drag: "Drag to rotate",
@@ -42,14 +42,17 @@
   }
   const spClass = (T0) => (T0 >= 30000 ? "O" : T0 >= 10000 ? "B" : T0 >= 7500 ? "A" : T0 >= 6000 ? "F" : T0 >= 5200 ? "G" : T0 >= 3700 ? "K" : "M");
 
-  function build(d) {
-    HOSTS = d.map((r) => {
+  function build(d, ext) {
+    const add = d.map((r) => {
       const ra = r[2] * DEG, dec = r[3] * DEG;
-      const h = { id: r[0], alias: r[1], ra, dec, sd: Math.sin(dec), cd: Math.cos(dec), pc: r[4], mag: r[5] != null ? r[5] : 15.2, magKnown: r[5] != null, teff: r[6], srad: r[7], smass: r[8], f: 0 };
+      const h = { ext: false, hide: false, id: r[0], alias: r[1], ra, dec, sd: Math.sin(dec), cd: Math.cos(dec), pc: r[4], mag: r[5] != null ? r[5] : 15.2, magKnown: r[5] != null, teff: r[6], srad: r[7], smass: r[8], f: 0 };
       h.col = tempRgb(h.teff);
-      h.pl = r[9].map((p) => ({ name: p[0], l: p[1], r: p[2], per: p[3], a: p[4], eqt: p[5], m: p[6], yr: p[7] }));
+      h.pl = r[9].map((p) => ({ name: p[0], l: p[1], r: p[2], per: p[3], a: p[4], eqt: p[5], m: p[6], yr: p[7], fac: p[8] || null }));
+      if (ext) { h.ext = true; h.hide = h.mag < 6.3; } // helle Sterne sind schon im Sternkatalog
       return h;
     });
+    HOSTS = ext ? HOSTS.concat(add.filter((h) => !BY.has(h.id))) : add;
+    idx = null;
     BY = new Map(HOSTS.map((h) => [h.id, h]));
     SORTED = HOSTS.slice().sort((a, b) => a.mag - b.mag);
     ready = true;
@@ -57,11 +60,15 @@
   function load() {
     if (ready || loading) return;
     loading = true;
-    fetch("/kepler-data.json").then((r) => r.json()).then((d) => { build(d); loading = false; }).catch(() => { loading = false; });
+    fetch("/kepler-data.json").then((r) => r.json()).then((d) => {
+      build(d); loading = false;
+      // weitere Exoplaneten (nicht Kepler) danach nachladen
+      fetch("/api/exo").then((r) => r.json()).then((e) => { if (Array.isArray(e) && e.length) build(e, true); }).catch(() => { /* ohne weiter */ });
+    }).catch(() => { loading = false; });
   }
   setTimeout(load, 2500);
 
-  const hit = (h, letter) => ({ type: "kep", id: h.id, ra: h.ra, dec: h.dec, mag: h.mag, name: h.id, kind: T.star, pl: letter || null, dsoFov: 0.45 * DEG });
+  const hit = (h, letter) => ({ type: "kep", id: h.id, ra: h.ra, dec: h.dec, mag: h.mag, name: h.id, kind: h.ext ? T.star2 : T.star, pl: letter || null, dsoFov: 0.45 * DEG });
 
   // ---- Himmel ----
   function limMag() { return 8.4 + 3.3 * Math.log10(72 / Math.max(S.fov / DEG, 0.06)); }
@@ -85,7 +92,7 @@
     frameNo++;
     const lim = limMag();
     ctx.save(); ctx.globalCompositeOperation = "lighter";
-    for (const h of SORTED) { if (h.mag > lim) break; h.f = frameNo; drawDot(h, fade, lim, false); }
+    for (const h of SORTED) { if (h.mag > lim) break; if (h.hide) continue; h.f = frameNo; drawDot(h, fade, lim, false); }
     ctx.restore();
     // gesuchte Systeme bleiben auf jeder Zoomstufe markiert
     const ids = new Set(found); if (S.sel && S.sel.type === "kep") ids.add(S.sel.id);
@@ -113,7 +120,7 @@
       const h = q.h;
       if (!q.found && !(showAll && h.mag < limMag() - 0.5)) continue;
       if (!q.found && ++n > 40) break;
-      const lab = h.id + (h.pl.length > 1 ? " · " + h.pl.length : "");
+      const lab = (h.ext ? "★ " : "") + h.id + (h.pl.length > 1 ? " · " + h.pl.length : "");
       const w = ctx.measureText(lab).width, y = q.y + 18;
       if (!free(q.x - w / 2, y - 7, w, 14)) continue;
       ctx.fillStyle = q.found ? `rgba(150,230,255,${0.95 * fade})` : `rgba(200,215,255,${0.75 * fade})`;
@@ -140,7 +147,7 @@
     const out = [];
     for (const h of HOSTS) for (const p of h.pl) {
       const nm = p.name, plain = nm.replace(/[-\s]/g, "");
-      out.push({ label: nm, alt: nm.replace(/-/g, " ") + " " + plain + " " + h.alias + " exoplanet kepler", kind: T.exo + " · " + T.star, hit: { ...hit(h, p.l), name: nm }, fam: FAMOUS.indexOf(nm) });
+      out.push({ label: nm, alt: nm.replace(/-/g, " ") + " " + plain + " " + h.alias + (h.ext ? " exoplanet" : " exoplanet kepler"), kind: T.exo + " · " + (h.ext ? T.star2 : T.star), hit: { ...hit(h, p.l), name: nm }, fam: FAMOUS.indexOf(nm) });
     }
     out.sort((a, b) => (b.fam >= 0 ? 1000 - b.fam : 0) - (a.fam >= 0 ? 1000 - a.fam : 0));
     idx = out; return out;
@@ -179,7 +186,8 @@
         else if (p.a >= lo2 && p.a <= hi2) out.push(`Er liegt am Rand der habitablen Zone seines Sterns (großzügig gerechnet ${fmt(lo2)}–${fmt(hi2)} AE). Ob es Wasser oder Leben gibt, ist nicht bekannt.`);
         else out.push(`Die habitable Zone seines Sterns liegt berechnet bei ${fmt(lo)}–${fmt(hi)} AE – der Planet ${p.a < lo ? "ist dafür zu nah am Stern" : "ist dafür zu weit entfernt"}.`);
       }
-      out.push(`Entdeckt${p.yr ? " " + p.yr : ""} mit dem Kepler-Weltraumteleskop der NASA, das winzige Helligkeitsabfälle beim Vorbeiziehen von Planeten vor ihrem Stern misst. Der Planet ist bestätigt.`);
+      if (h.ext) out.push(`Entdeckt${p.yr ? " " + p.yr : ""}${p.fac ? " (" + p.fac + ")" : ""}. Der Planet ist bestätigt.`);
+      else out.push(`Entdeckt${p.yr ? " " + p.yr : ""} mit dem Kepler-Weltraumteleskop der NASA, das winzige Helligkeitsabfälle beim Vorbeiziehen von Planeten vor ihrem Stern misst. Der Planet ist bestätigt.`);
     } else {
       out.push(`${p.name} is a planet outside our Solar System (an exoplanet). It orbits the star ${h.id}${con ? " in the constellation " + con : ""}${ly ? ", about " + nf0.format(Math.round(ly / (ly > 1000 ? 10 : 1)) * (ly > 1000 ? 10 : 1)) + " light-years from Earth" : ""}.`);
       if (p.r != null) out.push(`Its radius is ${fmt(p.r)} Earth radii (≈ ${nf0.format(p.r * 6371)} km)${p.r > 8 ? ", about " + fmt(p.r / 11.21) + " Jupiter radii" : ""}.`);
@@ -195,7 +203,8 @@
         else if (p.a >= lo2 && p.a <= hi2) out.push(`It lies at the edge of the habitable zone of its star (generous estimate ${fmt(lo2)}–${fmt(hi2)} AU). Whether it has water or life is unknown.`);
         else out.push(`The calculated habitable zone of its star is ${fmt(lo)}–${fmt(hi)} AU – the planet is ${p.a < lo ? "too close to the star" : "too far from the star"} for it.`);
       }
-      out.push(`Discovered${p.yr ? " in " + p.yr : ""} by NASA's Kepler space telescope, which measures tiny dips in a star's brightness when a planet passes in front of it. The planet is confirmed.`);
+      if (h.ext) out.push(`Discovered${p.yr ? " in " + p.yr : ""}${p.fac ? " (" + p.fac + ")" : ""}. The planet is confirmed.`);
+      else out.push(`Discovered${p.yr ? " in " + p.yr : ""} by NASA's Kepler space telescope, which measures tiny dips in a star's brightness when a planet passes in front of it. The planet is confirmed.`);
     }
     return out;
   }
@@ -216,7 +225,7 @@
     rows.push([DE ? "Sichtbar mit" : "Visible with", h.mag <= 6 ? tr("eye") : h.mag <= 9.5 ? tr("binoculars") : tr("telescope")]);
     const con = conOf(h); if (con) rows.push([tr("constellation"), con]);
     const pl = h.pl.find((q) => q.l === s.pl);
-    return { name: pl && s.pl ? pl.name : h.id, kind: (pl && s.pl ? T.exo + " · " : "") + T.star + (sp ? " · " + T.cls[sp] : ""), rows, v: eqToEnu(h.ra, h.sd, h.cd, [0, 0, 0]) };
+    return { name: pl && s.pl ? pl.name : h.id, kind: (pl && s.pl ? T.exo + " · " : "") + (h.ext ? T.star2 : T.star) + (sp ? " · " + T.cls[sp] : ""), rows, v: eqToEnu(h.ra, h.sd, h.cd, [0, 0, 0]) };
   }
 
   // ---- 3D-Planet (künstlerisch, berechnet) ----
