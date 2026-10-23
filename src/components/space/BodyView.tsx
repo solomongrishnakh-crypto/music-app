@@ -116,6 +116,32 @@ export default function BodyView({ b, lang }: { b: PlanetData; lang: Lang }) {
 
       <p className="mt-8 leading-relaxed text-foreground/90">{localize(b.description, lang)}</p>
 
+      {b.gallery && b.gallery.length > 0 && (
+        <section className="mt-8">
+          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+            {b.gallery.map((g) => (
+              <li key={g.file}>
+                <a
+                  href={`https://commons.wikimedia.org/wiki/File:${g.file}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://commons.wikimedia.org/wiki/Special:FilePath/${g.file}?width=400`}
+                    alt={localize(g.cap, lang)}
+                    loading="lazy"
+                    className="hud-card aspect-square w-full border border-border bg-black object-cover"
+                  />
+                  <span className="mt-1 block text-[11px] leading-snug text-muted">{localize(g.cap, lang)}</span>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <div className="mt-6 flex flex-wrap gap-3">
         <Link
           href={`${langPath("/universum", lang)}?solar=${encodeURIComponent(b.id)}`}

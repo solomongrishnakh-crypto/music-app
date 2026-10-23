@@ -38,6 +38,8 @@ export interface PlanetData {
   description: LocalizedText;
   /** Echtes Foto (Nutzerwunsch 20.09.2026: "mehr infos mit echten bildern bei planeten und sonne"). */
   image?: string;
+  /** Weitere echte Bilder (Wikimedia Commons, gemeinfrei/CC) mit Bildunterschrift. */
+  gallery?: { file: string; cap: LocalizedText }[];
 }
 
 function commonsFile(filename: string): string {
@@ -768,6 +770,105 @@ export const VOYAGER2: PlanetData = {
   },
 };
 
+
+/**
+ * Weitere Raumsonden außerhalb der Planetenbahnen (Nutzerwunsch 23.10.2026:
+ * "gibt es noch eine Sonde, die weit ist wie Voyager — mach mit Bildern und
+ * Daten, auch im Sonnensystem"). Positionen aus JPL Horizons (siehe orbits.ts),
+ * Texte in Deutsch und Englisch (andere Sprachen fallen auf Englisch zurück).
+ */
+const PROBE_LABELS: PlanetData["factLabels"] = [
+  { de: "Entfernung zur Sonne (Okt. 2026)", en: "Distance from the Sun (Oct 2026)" },
+  { de: "Gestartet", en: "Launched" },
+  { de: "Antenne", en: "Antenna" },
+  { de: "Geschwindigkeit", en: "Speed" },
+];
+
+export const NEWHORIZONS: PlanetData = {
+  ...VOYAGER1,
+  id: "newhorizons",
+  name: { de: "New Horizons", en: "New Horizons", ru: "Новые горизонты", zh: "新视野号", ja: "ニュー・ホライズンズ", ko: "뉴허라이즌스", ar: "نيو هورايزنز", fa: "نیوهورایزنز", hi: "न्यू हॉराइज़न्स" },
+  distanceAu: 66,
+  color: "#ffd9a0",
+  glowColor: "rgba(255,217,160,0.5)",
+  factLabels: PROBE_LABELS,
+  facts: {
+    distance: { de: "≈ 66 AE (≈ 9,8 Mrd. km)", en: "≈ 66 AU (≈ 9.8 billion km)" },
+    period: { de: "19. Januar 2006", en: "January 19, 2006" },
+    diameter: { de: "2,1 m (Antenne)", en: "2.1 m (antenna)" },
+    moons: { de: "≈ 13,6 km/s relativ zur Sonne", en: "≈ 13.6 km/s relative to the Sun" },
+  },
+  image: commonsFile("New_Horizons_1.jpg"),
+  description: {
+    de: "New Horizons ist die einzige Sonde, die Pluto besucht hat – am 14. Juli 2015 flog sie in rund 12.500 km Abstand vorbei und zeigte erstmals Berge aus Wassereis und das herzförmige Gebiet Sputnik Planitia. Zuvor nutzte sie 2007 die Schwerkraft des Jupiters für einen Schub. Am 1. Januar 2019 folgte der Vorbeiflug am Kuipergürtel-Objekt Arrokoth (damals „Ultima Thule“), dem entferntesten Himmelskörper, der bis dahin aus der Nähe erkundet wurde. Die Sonde fliegt weiter durch den Kuipergürtel und sendet noch immer Daten. An Bord sind auch Teile der Asche von Clyde Tombaugh, dem Entdecker des Pluto. Anders als bei Voyager läuft sie noch im Sonnensystem, hat aber schon die doppelte Neptun-Entfernung hinter sich.",
+    en: "New Horizons is the only probe that has visited Pluto. On July 14, 2015 it flew past at about 12,500 km and revealed mountains of water ice and the heart-shaped region Sputnik Planitia. In 2007 it used Jupiter's gravity for a speed boost. On January 1, 2019 it flew by the Kuiper Belt object Arrokoth (then nicknamed 'Ultima Thule'), the most distant world explored up close at that time. The probe keeps flying through the Kuiper Belt and still sends data. Aboard are some of the ashes of Clyde Tombaugh, who discovered Pluto. Unlike the Voyagers it is still inside the Solar System, but already about twice as far out as Neptune.",
+  },
+  gallery: [
+    { file: "New_Horizons_spacecraft_model_1.png", cap: { de: "New Horizons (Modell)", en: "New Horizons (model)" } },
+    { file: "Nh-pluto_charon_color_final.png", cap: { de: "Pluto und Charon, 2015", en: "Pluto and Charon, 2015" } },
+    { file: "Jupiter_taken_by_New_Horizons_probe_(2007-01-08).jpg", cap: { de: "Jupiter, 2007", en: "Jupiter, 2007" } },
+    { file: "UltimaThule_CA06_color_20190516.png", cap: { de: "Arrokoth, 2019", en: "Arrokoth, 2019" } },
+  ],
+};
+
+export const PIONEER10: PlanetData = {
+  ...VOYAGER1,
+  id: "pioneer10",
+  name: { de: "Pioneer 10", en: "Pioneer 10", ru: "Пионер-10", zh: "先驱者10号", ja: "パイオニア10号", ko: "파이어니어 10호", ar: "بايونير 10", fa: "پایونیر ۱۰", hi: "पायनियर 10" },
+  distanceAu: 142,
+  color: "#e8d9b8",
+  glowColor: "rgba(232,217,184,0.5)",
+  factLabels: [
+    PROBE_LABELS![0],
+    PROBE_LABELS![1],
+    PROBE_LABELS![2],
+    PROBE_LABELS![3],
+  ],
+  facts: {
+    distance: { de: "≈ 142 AE (≈ 21 Mrd. km)", en: "≈ 142 AU (≈ 21 billion km)" },
+    period: { de: "2. März 1972", en: "March 2, 1972" },
+    diameter: { de: "2,7 m (Antenne)", en: "2.7 m (antenna)" },
+    moons: { de: "≈ 11,9 km/s relativ zur Sonne", en: "≈ 11.9 km/s relative to the Sun" },
+  },
+  image: commonsFile("An_artist's_impression_of_a_Pioneer_spacecraft_on_its_way_to_interstellar_space.jpg"),
+  description: {
+    de: "Pioneer 10 war die erste Sonde, die den Asteroidengürtel durchquerte, und die erste, die Jupiter besuchte (3. Dezember 1973, rund 130.000 km Abstand). Sie lieferte die ersten Nahaufnahmen des Planeten und maß dessen gewaltige Strahlung. 1983 überquerte sie die Bahn des Neptun. Das letzte schwache Signal kam am 23. Januar 2003, seitdem gibt es keinen Kontakt mehr – sie fliegt stumm weiter, ungefähr in Richtung des Sterns Aldebaran im Stier, den sie in etwa zwei Millionen Jahren erreichen würde. An Bord ist die Pioneer-Plakette, eine Botschaft an mögliche Außerirdische von Carl Sagan, Frank Drake und Linda Salzman Sagan. Die Position hier ist berechnet (JPL Horizons), nicht gemessen.",
+    en: "Pioneer 10 was the first probe to cross the asteroid belt and the first to visit Jupiter (December 3, 1973, at about 130,000 km). It returned the first close-ups of the planet and measured its intense radiation. In 1983 it crossed the orbit of Neptune. The last faint signal arrived on January 23, 2003; there has been no contact since – it keeps flying silently, roughly toward the star Aldebaran in Taurus, which it would reach in about two million years. Aboard is the Pioneer plaque, a message for possible extraterrestrials by Carl Sagan, Frank Drake and Linda Salzman Sagan. The position shown here is calculated (JPL Horizons), not measured.",
+  },
+  gallery: [
+    { file: "Pioneer_10-11_spacecraft.jpg", cap: { de: "Pioneer-Sonde (Pioneer 10 und 11 sind baugleich)", en: "Pioneer spacecraft (Pioneer 10 and 11 are identical)" } },
+    { file: "Pioneer10-plaque.jpg", cap: { de: "Die Pioneer-Plakette", en: "The Pioneer plaque" } },
+    { file: "Pioneer_10_Jupiter_1974_GPN-2000-001698.jpg", cap: { de: "Jupiter, aufgenommen von Pioneer 10", en: "Jupiter, taken by Pioneer 10" } },
+    { file: "Artist-_Rick_Guidice_Pioneer_(10)_passing_Jupiter_(ARC-1973-AC73-4247).jpg", cap: { de: "Pioneer 10 bei Jupiter (Illustration)", en: "Pioneer 10 at Jupiter (illustration)" } },
+  ],
+};
+
+export const PIONEER11: PlanetData = {
+  ...PIONEER10,
+  id: "pioneer11",
+  name: { de: "Pioneer 11", en: "Pioneer 11", ru: "Пионер-11", zh: "先驱者11号", ja: "パイオニア11号", ko: "파이어니어 11호", ar: "بايونير 11", fa: "پایونیر ۱۱", hi: "पायनियर 11" },
+  distanceAu: 118,
+  color: "#d8cdb0",
+  glowColor: "rgba(216,205,176,0.5)",
+  facts: {
+    distance: { de: "≈ 118 AE (≈ 17,6 Mrd. km)", en: "≈ 118 AU (≈ 17.6 billion km)" },
+    period: { de: "6. April 1973", en: "April 6, 1973" },
+    diameter: PIONEER10.facts.diameter,
+    moons: { de: "≈ 11,1 km/s relativ zur Sonne", en: "≈ 11.1 km/s relative to the Sun" },
+  },
+  image: commonsFile("Pioneer_11_Image_of_Saturn_and_Its_Moon_Titan.jpg"),
+  description: {
+    de: "Pioneer 11 flog am 3. Dezember 1974 an Jupiter vorbei (rund 43.000 km über den Wolken) und nutzte dessen Schwerkraft, um quer durchs Sonnensystem zu Saturn zu schwenken. Am 1. September 1979 wurde sie die erste Sonde am Saturn, in nur rund 21.000 km Abstand von den Wolkenobergrenzen. Sie entdeckte den dünnen F-Ring und zeigte, dass Saturns Magnetfeld sehr regelmäßig ist. Der letzte normale Kontakt war im September 1995, danach brach die Verbindung ab. Heute fliegt sie in Richtung des Sternbilds Adler. Wie Pioneer 10 trägt sie eine Plakette mit einer Botschaft an Außerirdische. Die Position hier ist berechnet (JPL Horizons), nicht gemessen.",
+    en: "Pioneer 11 flew past Jupiter on December 3, 1974 (about 43,000 km above the clouds) and used its gravity to swing across the Solar System to Saturn. On September 1, 1979 it became the first probe at Saturn, passing about 21,000 km above the cloud tops. It discovered the thin F ring and showed that Saturn's magnetic field is very regular. The last routine contact was in September 1995; the connection was lost afterwards. Today it flies toward the constellation Aquila. Like Pioneer 10 it carries a plaque with a message for extraterrestrials. The position shown here is calculated (JPL Horizons), not measured.",
+  },
+  gallery: [
+    { file: "Pioneer_10-11_spacecraft.jpg", cap: { de: "Pioneer-Sonde (Pioneer 10 und 11 sind baugleich)", en: "Pioneer spacecraft (Pioneer 10 and 11 are identical)" } },
+    { file: "Pioneer_11_Image_of_Saturn_and_Its_Moon_Titan.jpg", cap: { de: "Saturn und Titan, Pioneer 11, 1979", en: "Saturn and Titan, Pioneer 11, 1979" } },
+    { file: "Pioneer11_Saturn_rings.jpg", cap: { de: "Saturnringe, Pioneer 11", en: "Saturn's rings, Pioneer 11" } },
+    { file: "An_artist's_impression_of_the_encounter_between_Pioneer_11_and_Saturn.jpg", cap: { de: "Pioneer 11 bei Saturn (Illustration)", en: "Pioneer 11 at Saturn (illustration)" } },
+  ],
+};
+
 /**
  * Die Sonne selbst — anklickbar für ein Info-Panel mit echtem Foto
  * (Nutzerwunsch 20.09.2026: "mehr infos mit echten bildern bei planeten
@@ -841,4 +942,4 @@ export const SUN: PlanetData = {
   },
 };
 
-export const ALL_BODIES: PlanetData[] = [...PLANETS, ...DWARF_PLANETS, VOYAGER1, VOYAGER2];
+export const ALL_BODIES: PlanetData[] = [...PLANETS, ...DWARF_PLANETS, VOYAGER1, VOYAGER2, NEWHORIZONS, PIONEER10, PIONEER11];

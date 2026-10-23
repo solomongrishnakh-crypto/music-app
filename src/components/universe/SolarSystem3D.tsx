@@ -671,7 +671,7 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
 
     // Voyager: gestrichelte Linie von der Sonne (zeigt, wie weit draußen sie ist)
     // (Voyager 1 und Voyager 2, je eine Linie)
-    const voyLines = ["voyager1", "voyager2"].map((id) => {
+    const voyLines = ["voyager1", "voyager2", "newhorizons", "pioneer10", "pioneer11"].map((id) => {
       const geo = new THREE.BufferGeometry();
       geo.setAttribute("position", new THREE.BufferAttribute(new Float32Array(6), 3));
       const mat = new THREE.LineDashedMaterial({ color: 0xffffff, transparent: true, opacity: 0.22, dashSize: 1, gapSize: 1 });

@@ -63,6 +63,12 @@ const VOYAGER_VEL = [-1.19548863719881e-3, -7.861182549675848e-3, 5.678441447426
 /** Voyager 2 (JPL Horizons, Ekliptik J2000, Sonne im Zentrum, AE und AE/Tag) — Stand EPOCH_JD, aus dem Horizons-Wert vom 22.10.2026 zurückgerechnet. */
 const VOYAGER2_POS = [39.88541707676249, -105.45356009031174, -89.69024301374685] as const;
 const VOYAGER2_VEL = [0.00242766034271667, -0.005394432980263372, -0.006535806892013976] as const;
+/** New Horizons, Pioneer 10, Pioneer 11 (JPL Horizons, Ekliptik J2000, Sonne im Zentrum, AE und AE/Tag) — Stand EPOCH_JD. Flug praktisch geradlinig. */
+const PROBES: Record<string, { p: readonly [number, number, number]; v: readonly [number, number, number] }> = {
+  newhorizons: { p: [20.84104038231505, -62.26142341019754, 2.28995203316894], v: [3.065525536096683e-3, -7.213339226210434e-3, 2.838786480056105e-4] },
+  pioneer10: { p: [24.06964926989196, 139.6635488012244, 7.391724737317654], v: [7.086069642320345e-4, 6.798182713802539e-3, 3.482821106134572e-4] },
+  pioneer11: { p: [29.08234362620209, -110.7568172418941, 28.22640568707866], v: [2.331824354489246e-3, -5.830907467448025e-3, 1.404247187092030e-3] },
+};
 export type Vec3 = [number, number, number];
 
 export function dateToJd(date: Date): number {
@@ -116,6 +122,11 @@ export function bodyPosition(id: string, jd: number): Vec3 | null {
       VOYAGER2_POS[1] + VOYAGER2_VEL[1] * dt,
       VOYAGER2_POS[2] + VOYAGER2_VEL[2] * dt,
     ];
+  }
+  const pr = PROBES[id];
+  if (pr) {
+    const dt = jd - EPOCH_JD;
+    return [pr.p[0] + pr.v[0] * dt, pr.p[1] + pr.v[1] * dt, pr.p[2] + pr.v[2] * dt];
   }
   const o = ORBITS[id];
   if (!o) return null;
