@@ -77,6 +77,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -353,7 +354,7 @@ private const val HIDE_FB_JS =
         "if(typeof cn==='string'&&cn.indexOf('z-[3100]')>=0&&cn.indexOf('fixed')>=0&&cn.indexOf('rounded-full')>=0)" +
         "bt[q].style.setProperty('display','none','important');}"
 
-private fun nativeJs(hideNews: Boolean, newsOnly: Boolean = false): String =
+private fun nativeJs(hideNews: Boolean, anim: Boolean): String =
     "(function(){var css='.app-fab,.app-drawer,.app-scrim,#langBox,#langStrip,#fbLink,#newsLink{display:none!important}" +
         "button[aria-haspopup=listbox]{display:none!important}';" +
         "function inj(d){try{if(!d||!d.head||d.getElementById('cn-native'))return;var s=d.createElement('style');" +
@@ -366,7 +367,7 @@ private fun nativeJs(hideNews: Boolean, newsOnly: Boolean = false): String =
         "var hh=(location.hash||'').replace('#','');if(hh==='space-news'||hh==='maschine'){var el=document.getElementById(hh);if(el){for(var p=el;p&&p!==document.body;p=p.parentElement){var ch=p.parentElement?p.parentElement.children:[];for(var k=0;k<ch.length;k++){var c=ch[k];if(c===p||c.tagName==='SCRIPT'||c.tagName==='STYLE'||c.tagName==='CANVAS')continue;if(getComputedStyle(c).position==='fixed')continue;c.style.setProperty('display','none','important');}}el.style.setProperty('margin-top','8px','important');}}" +
         (if (hideNews) "var nw=document.getElementById('space-news');if(nw)nw.style.setProperty('display','none','important');" else "") +
         "}catch(e){}}" +
-        "all();bk();var n=0;var iv=setInterval(function(){all();bk();if(++n>500)clearInterval(iv);},500);})()"
+        animJs(anim) + ";all();bk();var n=0;var iv=setInterval(function(){all();bk();if(++n>500)clearInterval(iv);},500);})()"
 
 // ---------------------------------------------------------------- Activity
 class MainActivity : ComponentActivity() {
@@ -415,7 +416,7 @@ private fun AppRoot() {
     val ctx = LocalContext.current
     val prefs = remember { ctx.getSharedPreferences("cn", Context.MODE_PRIVATE) }
     var lang by remember { mutableStateOf(initialLang(ctx)) }
-    var screen by remember { mutableStateOf<Screen>(startScreenFor(ctx, initialLang(ctx) == "de")) }
+    var screen by remember { mutableStateOf<Screen>(Screen.Home) }
     var webBack by remember { mutableStateOf<Screen>(Screen.Home) }
     var anim by remember { mutableStateOf(prefs.getBoolean("anim", true)) }
     val drawer = rememberDrawerState(DrawerValue.Closed)
@@ -446,7 +447,7 @@ private fun AppRoot() {
     }
     val showBg = screen is Screen.Settings || screen is Screen.Info || screen is Screen.Tools
     Box(Modifier.fillMaxSize().background(BgDark)) {
-        if (showBg) ParticleBackground(Modifier.fillMaxSize())
+        if (showBg && anim) ParticleBackground(Modifier.fillMaxSize())
         ModalNavigationDrawer(
             drawerState = drawer,
             gesturesEnabled = drawer.currentValue == DrawerValue.Open || drawer.targetValue == DrawerValue.Open,
@@ -454,6 +455,7 @@ private fun AppRoot() {
                 ModalDrawerSheet(drawerContainerColor = Color(0xFF060203)) {
                     DrawerContent(
                         lang,
+                        anim,
                         onHome = { screen = Screen.Home; scope.launch { drawer.close() } },
                         onOpen = { openSection(it) },
                         onTools = { go(Screen.Tools) },
@@ -472,7 +474,7 @@ private fun AppRoot() {
             }
             when (val s = screen) {
                 is Screen.Home -> {}
-                is Screen.Web -> androidx.compose.runtime.key(s.path) { WebScreen(s, lang, onBack = { screen = webBack }) }
+                is Screen.Web -> androidx.compose.runtime.key(s.path) { WebScreen(s, lang, anim, onBack = { screen = webBack }) }
                 is Screen.Settings -> SettingsScreen(
                     lang,
                     anim = anim,
@@ -509,10 +511,15 @@ private fun AppRoot() {
 }
 
 // ---------------------------------------------------------------- Startseite = echte Webseite
+private fun animJs(on: Boolean): String =
+    "(function(){try{var o=document.getElementById('cn-anim');if(o)o.remove();" + (if (on) "" else
+        "var s=document.createElement('style');s.id='cn-anim';s.textContent='canvas{display:none!important}html,body{background:#000!important}';(document.head||document.documentElement).appendChild(s);") +
+        "}catch(e){}})()"
+
 private fun homeJs(anim: Boolean): String =
     "(function(){var css='.app-fab,.app-drawer,.app-scrim{display:none!important}" +
         "button[aria-haspopup=listbox]{display:none!important}a[href\$=apk]{display:none!important}" +
-        (if (anim) "" else "canvas{display:none!important}") + "';" +
+        "';" +
         "var n=0;function run(){try{if(!document.getElementById('cn-native')&&document.head){var s=document.createElement('style');" +
         "s.id='cn-native';s.textContent=css;document.head.appendChild(s);}" +
         "var kk=document.getElementById('kontakte');if(kk)kk.style.setProperty('display','none','important');" +
@@ -521,6 +528,7 @@ private fun homeJs(anim: Boolean): String =
         "var d=document.querySelectorAll('.dl-pill');for(var i=0;i<d.length;i++){var q=d[i].parentElement||d[i];q.style.setProperty('display','none','important');}" +
         HIDE_FB_JS + "}catch(x){}}" +
         "run();var iv=setInterval(function(){run();if(++n>60)clearInterval(iv);},500);" +
+        animJs(anim) + ";" +
         "var tm=null;try{new MutationObserver(function(){if(tm)return;tm=setTimeout(function(){tm=null;run();},200);}).observe(document.documentElement,{childList:true,subtree:true});}catch(x){}})()"
 
 /** Die Startseite der Webseite 1:1 (Design, Suche, Musik) in der App. Bleibt am Leben, damit Musik weiterlaeuft. */
@@ -532,6 +540,10 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
     var progress by remember { mutableStateOf(0) }
     var failed by remember { mutableStateOf(false) }
     val de = lang == "de"
+    val langNow by rememberUpdatedState(lang)
+    val animNow by rememberUpdatedState(anim)
+    LaunchedEffect(lang) { web?.loadUrl(siteUrl("/", lang)) }
+    LaunchedEffect(anim) { web?.evaluateJavascript(animJs(anim), null) }
     BackHandler(enabled = visible && canBack) { web?.goBack() }
     LaunchedEffect(searchReq) {
         val r = searchReq ?: return@LaunchedEffect
@@ -564,7 +576,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
             LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth().height(2.dp), color = Accent, trackColor = Color.Transparent)
         }
         Box(Modifier.fillMaxSize().navigationBarsPadding()) {
-            androidx.compose.runtime.key(lang, anim) {
+            run {
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
                     factory = { c ->
@@ -594,7 +606,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
 
                                 override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                                     failed = false
-                                    view?.evaluateJavascript("try{localStorage.setItem('centaurian-lang','$lang');}catch(e){}", null)
+                                    view?.evaluateJavascript("try{localStorage.setItem('centaurian-lang','$langNow');}catch(e){}", null)
                                 }
 
                                 override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
@@ -602,7 +614,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
                                 }
 
                                 override fun onPageFinished(view: WebView?, url: String?) {
-                                    view?.evaluateJavascript(homeJs(anim), null)
+                                    view?.evaluateJavascript(homeJs(animNow), null)
                                 }
 
                                 override fun onRenderProcessGone(view: WebView?, detail: android.webkit.RenderProcessGoneDetail?): Boolean {
@@ -758,6 +770,7 @@ private fun HomeScreen(lang: String, onMenu: () -> Unit, onOpen: (Section) -> Un
 @Composable
 private fun DrawerContent(
     lang: String,
+    anim: Boolean,
     onHome: () -> Unit,
     onOpen: (Section) -> Unit,
     onTools: () -> Unit,
@@ -770,7 +783,7 @@ private fun DrawerContent(
     val de = lang == "de"
     var q by remember { mutableStateOf("") }
     Box(Modifier.fillMaxSize()) {
-        ParticleBackground(Modifier.fillMaxSize())
+        if (anim) ParticleBackground(Modifier.fillMaxSize())
         Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = 12.dp)) {
             Row(Modifier.fillMaxWidth().clickable { onHome() }.padding(horizontal = 18.dp, vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Image(painterResource(R.mipmap.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(40.dp))
@@ -840,7 +853,7 @@ private fun DrawerRow(tag: String, title: String, active: Boolean, onClick: () -
 // ---------------------------------------------------------------- Web-Ansicht
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-private fun WebScreen(s: Screen.Web, lang: String, onBack: () -> Unit) {
+private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBack: () -> Unit) {
     val ctx = LocalContext.current
     val activity = ctx as MainActivity
     var progress by remember { mutableStateOf(0) }
@@ -910,7 +923,7 @@ private fun WebScreen(s: Screen.Web, lang: String, onBack: () -> Unit) {
                                     "try{localStorage.setItem('centaurian-lang','$lang');localStorage.setItem('cn_app_mode','1');}catch(e){}",
                                     null,
                                 )
-                                view?.evaluateJavascript(nativeJs(s.path == "/universum", s.path.endsWith("#space-news")), null)
+                                view?.evaluateJavascript(nativeJs(s.path == "/universum", anim), null)
                                 val js = s.afterJs
                                 if (js != null) {
                                     Handler(Looper.getMainLooper()).postDelayed({ view?.evaluateJavascript(js, null) }, 1500)
@@ -1001,7 +1014,6 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
     val de = lang == "de"
     var langOpen by remember { mutableStateOf(false) }
     val prefs = remember { ctx.getSharedPreferences("cn", Context.MODE_PRIVATE) }
-    var startKey by remember { mutableStateOf(prefs.getString("start", "home") ?: "home") }
     var keepOn by remember { mutableStateOf(prefs.getBoolean("keepon", false)) }
     val cur = LANGS.first { it.code == lang }
     val version = try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName ?: "" } catch (_: Exception) { "" }
@@ -1035,18 +1047,8 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                 }
             }
 
-            GroupTitle(if (de) "Anzeige & Start" else "Display & start")
+            GroupTitle(if (de) "Anzeige" else "Display")
             Card {
-                val so = START_OPTS.firstOrNull { it.first == startKey } ?: START_OPTS[0]
-                SettingsRow(
-                    if (de) "Startbereich" else "Start area",
-                    if (de) "Was beim Öffnen der App zuerst erscheint" else "What opens first when you start the app",
-                    if (de) so.second.first else so.second.second,
-                ) {
-                    val i = START_OPTS.indexOfFirst { it.first == startKey }
-                    startKey = START_OPTS[(i + 1) % START_OPTS.size].first
-                    prefs.edit().putString("start", startKey).apply()
-                }
                 SettingsRow(
                     if (de) "Hintergrund-Animation" else "Background animation",
                     if (de) "Aus spart Akku und läuft flüssiger" else "Off saves battery and runs smoother",
