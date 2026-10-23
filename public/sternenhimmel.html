@@ -1281,13 +1281,24 @@ function moonOrbLabel(pid) { return (MOON_ORB[LANG] || MOON_ORB.en).replace("{p}
 function moonName(m) { const i = MOON_LANGS.indexOf(LANG); return (i >= 0 && m.nm[i]) || m.nm[1]; }
 function addMoons(list, earth, jd) {
   if (MOON_WANT && !(S.sel && S.sel.type === "body" && S.sel.id === MOON_WANT)) MOON_WANT = null;
-  const all = S.fov < 1.2 * DEG;
+  // 23.10.2026: Monde schon ab ~12° Bildfeld zeigen (vorher erst ab 1,2° -> bei normalem Zoom sah man keine).
+  // Solange die Planetenscheibe größer als ihre echte Winkelgröße gezeichnet wird (ab 0,9° Bildfeld),
+  // werden die Bahnen im selben Verhältnis gedehnt, damit die Monde neben der Scheibe sichtbar bleiben.
+  const fDeg = S.fov / DEG, all = fDeg < 12;
+  const INNER = { jupiter: 421800, saturn: 238020, neptune: 354760 }, OUTER = { jupiter: 1882700, saturn: 1221870, neptune: 354760 };
   for (const md of MOON_DEFS) {
     const sel = S.sel && S.sel.type === "body" && S.sel.id === md.id;
     if (!all && !sel && MOON_WANT !== md.id) continue;
     const par = list.find((x) => x.id === md.p);
     if (!par) continue;
     const pv = helio(md.p, jd);
+    let xg = 1;
+    if (fDeg > 0.9 && INNER[md.p]) {
+      const k0 = cam.scale / par.distKm, ir = planetIconR(md.p) || 0;
+      let full = Math.max(1, (ir * 1.9 + 8) / (INNER[md.p] * k0));
+      full = Math.max(1, Math.min(full, 360 / (OUTER[md.p] * k0)));
+      xg = 1 + (full - 1) * Math.min(1, (fDeg - 0.9) / 0.3);
+    }
     const qx = pv[0] - earth[0], qy = pv[1] - earth[1], qz = pv[2] - earth[2];
     const ql = Math.hypot(qx, qy, qz), hl = Math.hypot(qx, qy) || 1;
     const lamE = Math.atan2(-qy, -qx);
@@ -1295,8 +1306,8 @@ function addMoons(list, earth, jd) {
     const ex = -qy / hl, ey = qx / hl;
     const rx = qx / ql, ry = qy / ql, rz = qz / ql;
     const nx = -rz * ey, ny = rz * ex, nz = rx * ey - ry * ex;
-    const eastKm = -md.a * Math.sin(th), depthKm = md.a * Math.cos(th);
-    const northKm = depthKm * (MOON_OPEN[md.p] || 0.05);
+    const eastKm = -md.a * xg * Math.sin(th), depthKm = md.a * Math.cos(th);
+    const northKm = depthKm * xg * (MOON_OPEN[md.p] || 0.05);
     const k = 1 / KM_PER_AU;
     const q = eclToRaDec(qx + (ex * eastKm + nx * northKm) * k, qy + (ey * eastKm + ny * northKm) * k, qz + nz * northKm * k);
     list.push({ id: md.id, moonOf: md.p, name: moonName(md), alt: md.nm[1], kind: tr("moon"), ra: q.ra, dec: q.dec, distKm: par.distKm, color: md.c, mag: 6, radiusDeg: 0, rKm: md.r, front: depthKm >= 0, zoomFov: 3.2 * md.a / par.distKm });
