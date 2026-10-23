@@ -43,15 +43,19 @@ const GROUPS: { title: { de: string; en: string }; items: { path: string; de: st
 function detectApp(): boolean {
   try {
     const q = new URLSearchParams(window.location.search).get("app");
+    // Altlast: früher wurde der App-Modus dauerhaft im Browser gemerkt und die
+    // Webseite sah danach wie die App aus. Der alte Eintrag wird entfernt;
+    // ?app=1 gilt nur noch für diesen Tab (sessionStorage).
+    localStorage.removeItem(KEY);
     if (q === "1") {
-      localStorage.setItem(KEY, "1");
+      sessionStorage.setItem(KEY, "1");
       return true;
     }
     if (q === "0") {
-      localStorage.removeItem(KEY);
+      sessionStorage.removeItem(KEY);
       return false;
     }
-    if (localStorage.getItem(KEY) === "1") return true;
+    if (sessionStorage.getItem(KEY) === "1") return true;
   } catch {
     // Speicher nicht verfügbar — dann nur die Erkennung unten
   }
