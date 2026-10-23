@@ -381,7 +381,7 @@ private fun AppRoot() {
         if (showBg) ParticleBackground(Modifier.fillMaxSize())
         ModalNavigationDrawer(
             drawerState = drawer,
-            gesturesEnabled = screen == Screen.Home,
+            gesturesEnabled = false,
             drawerContent = {
                 ModalDrawerSheet(drawerContainerColor = Color(0xFF0C0506)) {
                     DrawerContent(lang, onOpen = { go(Screen.Web(it.path, if (de) it.de else it.en)) }, onSettings = { go(Screen.Settings) })
@@ -416,8 +416,9 @@ private val HOME_CSS_JS =
     "(function(){var css='.app-fab,.app-drawer,.app-scrim{display:none!important}" +
         "button[aria-haspopup=listbox]{display:none!important}a[href\$=apk]{display:none!important}';" +
         "var n=0;function run(){try{if(!document.getElementById('cn-native')&&document.head){var s=document.createElement('style');" +
-        "s.id='cn-native';s.textContent=css;document.head.appendChild(s);}}catch(x){}}" +
-        "run();var iv=setInterval(function(){run();if(++n>40)clearInterval(iv);},500);})()"
+        "s.id='cn-native';s.textContent=css;document.head.appendChild(s);}" +
+        "var d=document.querySelectorAll('.dl-pill');for(var i=0;i<d.length;i++){var q=d[i].parentElement||d[i];q.style.setProperty('display','none','important');}}catch(x){}}" +
+        "run();var iv=setInterval(function(){run();if(++n>60)clearInterval(iv);},500);})()"
 
 /** Die Startseite der Webseite 1:1 (Design, Suche, Musik) in der App. Bleibt am Leben, damit Musik weiterlaeuft. */
 @SuppressLint("SetJavaScriptEnabled")
