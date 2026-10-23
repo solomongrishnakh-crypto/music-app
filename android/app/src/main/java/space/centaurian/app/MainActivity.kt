@@ -571,6 +571,13 @@ private fun homeJs(anim: Boolean): String =
         animJs(anim) + ";" +
         "var tm=null;try{new MutationObserver(function(){if(tm)return;tm=setTimeout(function(){tm=null;run();},200);}).observe(document.documentElement,{childList:true,subtree:true});}catch(x){}})()"
 
+/** WebView, die beim Verlassen der App nicht als "unsichtbar" gemeldet wird - so laeuft die Musik im Hintergrund weiter. */
+private class KeepAliveWebView(c: Context) : WebView(c) {
+    override fun onWindowVisibilityChanged(visibility: Int) {
+        if (visibility != android.view.View.GONE && visibility != android.view.View.INVISIBLE) super.onWindowVisibilityChanged(visibility)
+    }
+}
+
 /** Die Startseite der Webseite 1:1 (Design, Suche, Musik) in der App. Bleibt am Leben, damit Musik weiterlaeuft. */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
@@ -630,7 +637,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
                     factory = { c ->
-                        WebView(c).apply {
+                        KeepAliveWebView(c).apply {
                             layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                             setBackgroundColor(android.graphics.Color.parseColor("#060203"))
                             settings.javaScriptEnabled = true
