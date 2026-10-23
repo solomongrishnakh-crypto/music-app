@@ -692,6 +692,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
                                 }
                             }
                             visibility = if (visible) android.view.View.VISIBLE else android.view.View.INVISIBLE
+                            MusicBridge.web = this
                             loadUrl(siteUrl("/", lang))
                             web = this
                         }

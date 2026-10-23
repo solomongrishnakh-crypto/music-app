@@ -8,52 +8,155 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.graphics.drawable.Icon
 import android.media.AudioManager
+import android.media.MediaMetadata
+import android.media.session.MediaSession
+import android.media.session.PlaybackState
 import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.webkit.WebView
+import org.json.JSONObject
+import org.json.JSONTokener
+
+/** Verbindung zum Player der Webseite (in der Startseiten-WebView): Knoepfe klicken und Titel lesen. */
+object MusicBridge {
+    @Volatile var web: WebView? = null
+
+    private const val STATE_JS =
+        "(function(){try{var p=document.querySelector('path[d^=\"M6 6h2v12H6z\"]');if(!p)return '';var b=p.closest('button');var row=b.parentElement;" +
+            "var ps=row.querySelectorAll('p');var pl=!!row.querySelector('path[d^=\"M6 5h4v14h\"]');" +
+            "return JSON.stringify({t:ps[0]?ps[0].textContent:'',a:ps[1]?ps[1].textContent:'',p:pl});}catch(e){return '';}})()"
+
+    fun click(kind: String) {
+        val sel = when (kind) {
+            "prev" -> "path[d^=\\\"M6 6h2v12H6z\\\"]"
+            "next" -> "path[d^=\\\"M16 6h2v12h-2z\\\"]"
+            else -> "path[d^=\\\"M6 5h4v14h\\\"],path[d^=\\\"M8 5v14l11-7z\\\"]"
+        }
+        val js = "(function(){try{var p=document.querySelector(\"$sel\");if(p){var b=p.closest('button');if(b)b.click();}}catch(e){}})()"
+        val w = web ?: return
+        w.post { w.evaluateJavascript(js, null) }
+    }
+
+    fun state(cb: (String, String, Boolean) -> Unit) {
+        val w = web ?: return
+        w.post {
+            w.evaluateJavascript(STATE_JS) { raw ->
+                try {
+                    val s = JSONTokener(raw ?: "").nextValue() as? String ?: ""
+                    if (s.isNotEmpty()) {
+                        val o = JSONObject(s)
+                        cb(o.optString("t"), o.optString("a"), o.optBoolean("p"))
+                    }
+                } catch (_: Exception) { }
+            }
+        }
+    }
+}
 
 /**
- * Haelt die App im Hintergrund am Leben, solange Musik spielt (Vordergrund-Dienst mit Benachrichtigung),
- * damit Android den Ton nicht abdreht, wenn man zu einer anderen App wechselt.
- * Beendet sich selbst, sobald keine Musik mehr laeuft.
+ * Haelt die App im Hintergrund am Leben, solange Musik spielt, und zeigt eine Medien-Benachrichtigung
+ * mit Zurueck / Pause / Weiter. Beendet sich nach laengerer Stille selbst.
  */
 class MusicService : Service() {
     private val handler = Handler(Looper.getMainLooper())
     private var quiet = 0
+    private var session: MediaSession? = null
+    private var title = "Centaurian"
+    private var artist = ""
+    private var playing = true
 
-    private val check = object : Runnable {
+    private val tick = object : Runnable {
         override fun run() {
+            MusicBridge.state { t, a, p ->
+                handler.post {
+                    val changed = t != title || a != artist || p != playing
+                    title = if (t.isNotBlank()) t else title
+                    artist = a
+                    playing = p
+                    if (changed) refresh()
+                }
+            }
             val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            if (am.isMusicActive) quiet = 0 else quiet++
-            if (quiet >= 4) {
+            if (playing || am.isMusicActive) quiet = 0 else quiet++
+            if (quiet >= 150) {
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
                 return
             }
-            handler.postDelayed(this, 5000)
+            handler.postDelayed(this, 2000)
         }
     }
 
     override fun onBind(intent: Intent?): IBinder? = null
 
-    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
-        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        if (Build.VERSION.SDK_INT >= 26) {
-            nm.createNotificationChannel(NotificationChannel("music", "Musik", NotificationManager.IMPORTANCE_LOW))
-        }
+    private fun action(name: String, icon: Int, label: String): Notification.Action {
+        val pi = PendingIntent.getService(
+            this, name.hashCode(), Intent(this, MusicService::class.java).setAction(name),
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
+        )
+        return Notification.Action.Builder(Icon.createWithResource(this, icon), label, pi).build()
+    }
+
+    private fun build(): Notification {
         val open = PendingIntent.getActivity(
             this, 0, Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
-        val n = (if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, "music") else @Suppress("DEPRECATION") Notification.Builder(this))
-            .setSmallIcon(android.R.drawable.ic_media_play)
-            .setContentTitle("Centaurian")
-            .setContentText("Musik läuft im Hintergrund")
+        val b = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, "music") else @Suppress("DEPRECATION") Notification.Builder(this)
+        b.setSmallIcon(android.R.drawable.ic_media_play)
+            .setContentTitle(title)
+            .setContentText(if (artist.isNotBlank()) artist else "Centaurian")
             .setContentIntent(open)
-            .setOngoing(true)
-            .build()
+            .setOngoing(playing)
+            .setVisibility(Notification.VISIBILITY_PUBLIC)
+            .addAction(action("prev", android.R.drawable.ic_media_previous, "Zurück"))
+            .addAction(action("pp", if (playing) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play, if (playing) "Pause" else "Play"))
+            .addAction(action("next", android.R.drawable.ic_media_next, "Weiter"))
+        val st = Notification.MediaStyle().setShowActionsInCompactView(0, 1, 2)
+        session?.let { st.setMediaSession(it.sessionToken) }
+        b.setStyle(st)
+        return b.build()
+    }
+
+    private fun refresh() {
+        session?.let { s ->
+            s.setMetadata(MediaMetadata.Builder().putString(MediaMetadata.METADATA_KEY_TITLE, title).putString(MediaMetadata.METADATA_KEY_ARTIST, artist).build())
+            s.setPlaybackState(
+                PlaybackState.Builder()
+                    .setActions(PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or PlaybackState.ACTION_SKIP_TO_NEXT or PlaybackState.ACTION_SKIP_TO_PREVIOUS)
+                    .setState(if (playing) PlaybackState.STATE_PLAYING else PlaybackState.STATE_PAUSED, PlaybackState.PLAYBACK_POSITION_UNKNOWN, 1f)
+                    .build(),
+            )
+        }
+        (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(7, build())
+    }
+
+    override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        when (intent?.action) {
+            "prev" -> { MusicBridge.click("prev"); return START_NOT_STICKY }
+            "next" -> { MusicBridge.click("next"); return START_NOT_STICKY }
+            "pp" -> { MusicBridge.click("pp"); return START_NOT_STICKY }
+        }
+        val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+        if (Build.VERSION.SDK_INT >= 26) {
+            nm.createNotificationChannel(NotificationChannel("music", "Musik", NotificationManager.IMPORTANCE_LOW))
+        }
+        if (session == null) {
+            session = MediaSession(this, "Centaurian").apply {
+                setCallback(object : MediaSession.Callback() {
+                    override fun onPlay() = MusicBridge.click("pp")
+                    override fun onPause() = MusicBridge.click("pp")
+                    override fun onSkipToNext() = MusicBridge.click("next")
+                    override fun onSkipToPrevious() = MusicBridge.click("prev")
+                })
+                isActive = true
+            }
+        }
+        val n = build()
         try {
             if (Build.VERSION.SDK_INT >= 29) startForeground(7, n, ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK) else startForeground(7, n)
         } catch (_: Exception) {
@@ -61,13 +164,16 @@ class MusicService : Service() {
             return START_NOT_STICKY
         }
         quiet = 0
-        handler.removeCallbacks(check)
-        handler.postDelayed(check, 5000)
+        refresh()
+        handler.removeCallbacks(tick)
+        handler.post(tick)
         return START_NOT_STICKY
     }
 
     override fun onDestroy() {
-        handler.removeCallbacks(check)
+        handler.removeCallbacks(tick)
+        session?.release()
+        session = null
         super.onDestroy()
     }
 }
