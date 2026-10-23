@@ -29,6 +29,7 @@ interface YTPlayerInstance {
   loadVideoById: (videoId: string) => void;
   seekTo: (seconds: number, allowSeekAhead: boolean) => void;
   getCurrentTime: () => number;
+  getPlayerState: () => number;
   getDuration: () => number;
   setPlaybackQuality: (quality: string) => void;
   destroy: () => void;
@@ -169,11 +170,30 @@ export default function YoutubePlayer({
 
   // Bei Songwechsel neues Video laden
   useEffect(() => {
-    if (isReady && song && playerRef.current) {
-      playerRef.current.loadVideoById(song.id);
-      setCurrentTime(0);
-      setDuration(0);
-    }
+    if (!(isReady && song && playerRef.current)) return;
+    const id = song.id;
+    playerRef.current.loadVideoById(id);
+    setCurrentTime(0);
+    setDuration(0);
+
+    // Haengt der Start (Puffern, "nicht gestartet", "bereit" ohne Abspielen),
+    // nach ein paar Sekunden erneut anstossen, danach das Video neu laden.
+    // Bewusst pausierte Songs (Status 2) werden nicht angefasst.
+    let tries = 0;
+    const iv = window.setInterval(() => {
+      const pl = playerRef.current;
+      if (!pl) return;
+      const st = pl.getPlayerState();
+      if (st === 1 || st === 2 || st === 0) {
+        clearInterval(iv);
+        return;
+      }
+      tries++;
+      if (tries === 2 || tries === 4) pl.playVideo();
+      if (tries === 6) pl.loadVideoById(id);
+      if (tries >= 10) clearInterval(iv);
+    }, 1000);
+    return () => clearInterval(iv);
   }, [song, isReady]);
 
   // Aktuelle Zeit/Dauer laufend abfragen (YT-API bietet keine Events dafür)

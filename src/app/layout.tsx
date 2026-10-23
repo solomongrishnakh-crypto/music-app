@@ -70,6 +70,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="de" className={`dark ${jetbrainsMono.variable} ${orbitron.variable}`}>
+      <head>
+        {/* Schnellerer Songstart: Verbindungen zu YouTube schon vorab aufbauen */}
+        <link rel="preconnect" href="https://www.youtube.com" />
+        <link rel="preconnect" href="https://i.ytimg.com" />
+        <link rel="preconnect" href="https://www.google.com" />
+        <link rel="dns-prefetch" href="https://googlevideo.com" />
+      </head>
       <body className="antialiased min-h-screen bg-background font-mono text-foreground selection:bg-accent/40 selection:text-white">
         {/* Strukturierte Daten für Suchmaschinen/KI: Name der Seite und
             offizielle Kontakt-Profile (Telegram, X) */}
