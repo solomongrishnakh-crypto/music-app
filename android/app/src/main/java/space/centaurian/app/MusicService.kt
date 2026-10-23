@@ -34,6 +34,7 @@ object MusicBridge {
     @Volatile var stamp = 0L
     @Volatile var cmd = ""
     @Volatile var guard = false
+    @Volatile var fg = true
     @Volatile var appCtx: Context? = null
     @Volatile var serviceUp = false
     @Volatile private var lastStart = 0L
@@ -57,6 +58,37 @@ object MusicBridge {
     @Volatile var seekAt = 0L
     @Volatile var seekPos = 0.0
 
+    /** Bass-Pegel 0..1 aus dem Audio-Ausgang (Visualizer), -1 = nicht verfuegbar. */
+    @Volatile var level = -1f
+    private var viz: android.media.audiofx.Visualizer? = null
+    private var vizMax = 40f
+
+    @Synchronized fun vizSync(on: Boolean) {
+        val c = appCtx ?: return
+        if (!on) {
+            try { viz?.enabled = false; viz?.release() } catch (_: Exception) { }
+            viz = null; level = -1f; return
+        }
+        if (viz != null) return
+        if (c.checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) return
+        try {
+            val v = android.media.audiofx.Visualizer(0)
+            v.captureSize = android.media.audiofx.Visualizer.getCaptureSizeRange()[0].coerceAtLeast(256)
+            v.setDataCaptureListener(object : android.media.audiofx.Visualizer.OnDataCaptureListener {
+                override fun onWaveFormDataCapture(vis: android.media.audiofx.Visualizer?, w: ByteArray?, r: Int) { }
+                override fun onFftDataCapture(vis: android.media.audiofx.Visualizer?, f: ByteArray?, r: Int) {
+                    if (f == null || f.size < 12) return
+                    var e = 0f
+                    for (i in 1..4) { val re = f[2 * i].toFloat(); val im = f[2 * i + 1].toFloat(); e += Math.sqrt((re * re + im * im).toDouble()).toFloat() }
+                    vizMax = maxOf(e, vizMax * 0.995f, 20f)
+                    level = (e / vizMax).coerceIn(0f, 1f)
+                }
+            }, android.media.audiofx.Visualizer.getMaxCaptureRate(), false, true)
+            v.enabled = true
+            viz = v
+        } catch (_: Exception) { viz = null; level = -1f }
+    }
+
     /** Aktuelle Position in ms, auf "jetzt" hochgerechnet (die Seite meldet nur alle 0,5 s). */
     fun positionMs(): Long {
         val now = System.currentTimeMillis()
@@ -69,11 +101,15 @@ object MusicBridge {
     class Js {
         @JavascriptInterface fun update(t: String, a: String, p: Boolean) {
             title = t; artist = a; playing = p; stamp = System.currentTimeMillis()
+            vizSync(p)
         }
         @JavascriptInterface fun update2(t: String, a: String, p: Boolean, c: String, cur: Double, d: Double) {
             title = t; artist = a; playing = p; cover = c; pos = cur; dur = d; stamp = System.currentTimeMillis()
+            vizSync(p)
             if (p) { want = true; ensureService() } else if (!guard) want = false
         }
+        @JavascriptInterface fun shown(): Boolean = !MusicBridge.guard && MusicBridge.fg
+        @JavascriptInterface fun level(): Float = MusicBridge.level
         @JavascriptInterface fun heroBack() { backReq.intValue = backReq.intValue + 1 }
         @JavascriptInterface fun playing(): Boolean = MusicBridge.playing
         @JavascriptInterface fun want(): Boolean = MusicBridge.want
