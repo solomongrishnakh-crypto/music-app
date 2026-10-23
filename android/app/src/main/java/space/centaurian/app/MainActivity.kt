@@ -538,6 +538,7 @@ private fun AppRoot() {
                         onFeedback = { homeCmd("!fb") },
                         onPrivacy = { go(Screen.Info(if (de) "Datenschutz" else Tr.t(lang, "Privacy"), Tr.privacy(lang), Screen.Home)) },
                         onAbout = { go(Screen.Info(aboutTitle(de, lang), aboutBody(lang), Screen.Home)) },
+                        active = drawer.targetValue == DrawerValue.Open,
                     )
                 }
             },
@@ -1061,23 +1062,14 @@ private fun DrawerContent(
     onFeedback: () -> Unit,
     onPrivacy: () -> Unit,
     onAbout: () -> Unit,
+    active: Boolean = true,
 ) {
     val de = lang == "de"
     var q by remember { mutableStateOf("") }
     val inf = androidx.compose.animation.core.rememberInfiniteTransition(label = "menu")
     val pulse by inf.animateFloat(0f, 1f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(1800, easing = androidx.compose.animation.core.FastOutSlowInEasing), androidx.compose.animation.core.RepeatMode.Reverse), label = "pulse")
-    val scan by inf.animateFloat(0f, 1f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(5200, easing = androidx.compose.animation.core.LinearEasing)), label = "scan")
     Box(Modifier.fillMaxSize()) {
-        if (anim) ParticleBackground(Modifier.fillMaxSize())
-        Canvas(Modifier.fillMaxSize()) {
-            val y = size.height * scan
-            drawRect(
-                androidx.compose.ui.graphics.Brush.verticalGradient(
-                    listOf(Color.Transparent, Accent.copy(alpha = 0.16f), Color.Transparent), startY = y - 90f, endY = y + 90f,
-                ),
-                topLeft = Offset(0f, y - 90f), size = androidx.compose.ui.geometry.Size(size.width, 180f),
-            )
-        }
+        if (anim) StarDust(active, Modifier.fillMaxSize())
         Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = 12.dp)) {
             Row(Modifier.fillMaxWidth().clickable { onHome() }.padding(horizontal = 18.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(
@@ -1096,7 +1088,6 @@ private fun DrawerContent(
                     }
                 }
             }
-            Box(Modifier.fillMaxWidth().padding(horizontal = 18.dp).height(1.dp).background(androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(Accent.copy(alpha = 0.9f), Accent.copy(alpha = 0.15f), Color.Transparent))))
             SearchBar(q, if (de) "Planeten, Songs, Reiche…" else Tr.t(lang, "Planets, songs, empires…"), { q = it }, Modifier.padding(horizontal = 14.dp, vertical = 2.dp), onSearch = { onSiteSearch(it) })
             if (q.isNotBlank()) {
                 DrawerRow("⌕", (if (de) "„" else Tr.t(lang, "\"")) + q.trim() + (if (de) "“ auf der Webseite suchen" else Tr.t(lang, "\" – search everything")), false) { onSiteSearch(q.trim()) }
@@ -1166,6 +1157,56 @@ private fun DrawerContent(
                     }
                 }
             }
+        }
+    }
+}
+
+/** Funkelnde Sterne und wenige Staubkoernchen, die treiben und kurz aufleuchten. Laeuft nur bei offenem Menue, ca. 30 Bilder pro Sekunde. */
+@Composable
+private fun StarDust(active: Boolean, modifier: Modifier = Modifier) {
+    val stars = remember {
+        val r = java.util.Random(7)
+        List(44) { floatArrayOf(r.nextFloat(), r.nextFloat(), 0.6f + r.nextFloat() * 1.1f, r.nextFloat() * 6.28f, 0.6f + r.nextFloat() * 1.6f) }
+    }
+    val dust = remember {
+        val r = java.util.Random(9)
+        List(14) { floatArrayOf(r.nextFloat(), r.nextFloat(), (r.nextFloat() - 0.5f) * 0.02f, 0.004f + r.nextFloat() * 0.012f, 1.2f + r.nextFloat() * 1.6f, r.nextFloat() * 6.28f, 3f + r.nextFloat() * 4f) }
+    }
+    var t by remember { mutableStateOf(0f) }
+    LaunchedEffect(active) {
+        if (!active) return@LaunchedEffect
+        var last = 0L
+        while (true) {
+            androidx.compose.runtime.withFrameNanos { n ->
+                if (last == 0L) last = n
+                else if (n - last >= 33_000_000L) { t += (n - last) / 1_000_000_000f; last = n }
+            }
+        }
+    }
+    Canvas(modifier) {
+        val w = size.width
+        val h = size.height
+        val d = density
+        for (s in stars) {
+            val k = 0.5f + 0.5f * kotlin.math.sin(t * s[4] + s[3])
+            val a = 0.12f + 0.88f * k * k * k
+            val c = Offset(s[0] * w, s[1] * h)
+            drawCircle(Color.White.copy(alpha = a), radius = s[2] * d * 0.8f, center = c)
+            if (s[2] > 1.2f && a > 0.7f) {
+                val l = s[2] * d * 3f * a
+                val lc = Color.White.copy(alpha = a * 0.5f)
+                drawLine(lc, Offset(c.x - l, c.y), Offset(c.x + l, c.y), strokeWidth = 1f)
+                drawLine(lc, Offset(c.x, c.y - l), Offset(c.x, c.y + l), strokeWidth = 1f)
+            }
+        }
+        for (p in dust) {
+            val x = ((((p[0] + p[2] * t) % 1f) + 1f) % 1f) * w
+            val y = ((((p[1] + p[3] * t) % 1f) + 1f) % 1f) * h
+            val f = kotlin.math.sin(t * 6.283f / p[6] + p[5]).coerceAtLeast(0f).let { it * it * it * it * it * it }
+            val r = p[4] * d * 0.7f
+            val c = Offset(x, y)
+            if (f > 0.02f) drawCircle(Accent.copy(alpha = 0.28f * f), radius = r * (2f + 3f * f), center = c)
+            drawCircle(Color(0xFFFFD9CC).copy(alpha = 0.35f + 0.65f * f), radius = r * (1f + 0.6f * f), center = c)
         }
     }
 }
