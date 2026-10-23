@@ -1081,11 +1081,6 @@ private fun DrawerContent(
                 Spacer(Modifier.size(8.dp))
                 Column {
                     Text("CENTAURIAN", color = TextMain, fontSize = 13.sp, fontWeight = FontWeight.Bold, letterSpacing = 5.sp)
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Box(Modifier.size(5.dp).background(Color(0xFF4DFF9A).copy(alpha = 0.4f + 0.6f * pulse), CircleShape))
-                        Spacer(Modifier.size(6.dp))
-                        Text("ONLINE", color = TextMuted, fontSize = 8.sp, fontFamily = Mono, letterSpacing = 3.sp)
-                    }
                 }
             }
             SearchBar(q, if (de) "Planeten, Songs, Reiche…" else Tr.t(lang, "Planets, songs, empires…"), { q = it }, Modifier.padding(horizontal = 14.dp, vertical = 2.dp), onSearch = { onSiteSearch(it) })
