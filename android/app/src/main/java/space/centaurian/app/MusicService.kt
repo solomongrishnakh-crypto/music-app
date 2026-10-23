@@ -119,7 +119,7 @@ object MusicBridge {
 
     private const val STATE_JS =
         "(function(){try{var t='',a='';" +
-            "var b=document.querySelector('button.min-w-0.flex-1');" +
+            "var b=document.querySelector('div.fixed.bottom-0 button.min-w-0.flex-1');" +
             "if(b){var ps=b.querySelectorAll('p');if(ps[0])t=ps[0].textContent||'';if(ps[1])a=ps[1].textContent||'';}" +
             "if(!t||/^\\s*$/.test(t)){var m=navigator.mediaSession;var md=m&&m.metadata;if(md){t=md.title||'';a=md.artist||'';}}" +
             "var p=window.__cenPlaying===true;" +
