@@ -3,7 +3,7 @@
 "use client";
 
 // Portiert 1:1 aus der abgenommenen Hintergrund-Vorschau (Partikel-Tunnel zum Schwarzen Loch).
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as THREE from "three";
 
 function initTunnel(canvas: HTMLCanvasElement, lite: boolean): () => void {
@@ -338,9 +338,24 @@ function initTunnel(canvas: HTMLCanvasElement, lite: boolean): () => void {
  */
 export default function TunnelBackground({ lite = false }: { lite?: boolean }) {
   const ref = useRef<HTMLCanvasElement>(null);
+  // Geht der WebGL-Kontext verloren (z. B. wenig Grafikspeicher in der App), wird ein frisches Canvas aufgebaut.
+  const [k, setK] = useState(0);
   useEffect(() => {
-    if (!ref.current) return;
-    return initTunnel(ref.current, lite);
-  }, []);
-  return <canvas ref={ref} aria-hidden="true" className="block h-full w-full" />;
+    const c = ref.current;
+    if (!c) return;
+    const stop = initTunnel(c, lite);
+    let timer: number | undefined;
+    const lost = (e: Event) => {
+      e.preventDefault();
+      timer = window.setTimeout(() => setK((x) => x + 1), 400);
+    };
+    c.addEventListener("webglcontextlost", lost);
+    return () => {
+      c.removeEventListener("webglcontextlost", lost);
+      if (timer) window.clearTimeout(timer);
+      stop();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [k]);
+  return <canvas key={k} ref={ref} aria-hidden="true" className="block h-full w-full" />;
 }
