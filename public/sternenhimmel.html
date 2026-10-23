@@ -3426,6 +3426,39 @@ function parseOrient(e, alpha) {
   const roll = Math.atan2(cx[0] * f[0] + cx[1] * f[1] + cx[2] * f[2], u0[0] * Us[0] + u0[1] * Us[1] + u0[2] * Us[2]);
   return { az, alt, roll };
 }
+// Bevorzugt: das fertig verrechnete Lagesensor-Signal von Android (Gyro + Beschleunigung + Kompass,
+// "Rotation Vector") über die Generic-Sensor-API – deutlich ruhiger als eigenes Mischen der Roh-Ereignisse.
+let genSensor = null, genGot = false;
+const genM = new Float32Array(16);
+function startGenSensor() {
+  try {
+    if (typeof AbsoluteOrientationSensor === "undefined") return false;
+    const sn = new AbsoluteOrientationSensor({ frequency: 60, referenceFrame: "screen" });
+    sn.addEventListener("reading", () => {
+      sn.populateMatrix(genM);
+      // Spalten = Geräteachsen (Bildschirm-bezogen) in Weltkoordinaten Ost-Nord-Oben
+      const Y = [genM[4], genM[5], genM[6]], F = [-genM[8], -genM[9], -genM[10]];
+      const az = Math.atan2(F[0], F[1]), alt = Math.asin(Math.max(-1, Math.min(1, F[2])));
+      const f = enu(az, alt), r0 = [Math.cos(az), -Math.sin(az), 0];
+      const u0 = [r0[1] * f[2] - r0[2] * f[1], r0[2] * f[0] - r0[0] * f[2], r0[0] * f[1] - r0[1] * f[0]];
+      const cx = [u0[1] * Y[2] - u0[2] * Y[1], u0[2] * Y[0] - u0[0] * Y[2], u0[0] * Y[1] - u0[1] * Y[0]];
+      const roll = Math.atan2(cx[0] * f[0] + cx[1] * f[1] + cx[2] * f[2], u0[0] * Y[0] + u0[1] * Y[1] + u0[2] * Y[2]);
+      genGot = true;
+      updateMagDecl();
+      sensorAz = az + magDecl * DEG; sensorAlt = alt; sensorRoll = roll;
+    });
+    sn.addEventListener("error", () => {
+      // nicht erlaubt / nicht vorhanden → auf die Roh-Ereignisse ausweichen
+      if (genSensor === sn) { genSensor = null; if (S.sensor && !genGot) addRawListeners(); }
+    });
+    genSensor = sn; sn.start();
+    return true;
+  } catch { genSensor = null; return false; }
+}
+function addRawListeners() {
+  window.addEventListener("deviceorientationabsolute", onOrient);
+  window.addEventListener("deviceorientation", onOrient);
+}
 function onOrient(e) {
   // "Absolut" = Kompass-Ereignis (Android: deviceorientationabsolute, iOS: webkitCompassHeading).
   // Ein absolutes Ereignis ohne Werte (z. B. Brave) zählt nicht.
@@ -3470,6 +3503,8 @@ horizonBtn.onclick = () => {
 function stopSensor() {
   S.sensor = false; document.getElementById("tSensor").setAttribute("aria-pressed", "false");
   window.removeEventListener("deviceorientationabsolute", onOrient); window.removeEventListener("deviceorientation", onOrient);
+  try { if (genSensor) genSensor.stop(); } catch {}
+  genSensor = null; genGot = false;
 }
 document.getElementById("tSensor").onclick = async () => {
   const btn = document.getElementById("tSensor"), msg = document.getElementById("sensorMsg");
@@ -3481,8 +3516,8 @@ document.getElementById("tSensor").onclick = async () => {
     }
   } catch { msg.hidden = false; msg.textContent = tr("sensorDenied"); setTimeout(() => { if (!S.sensor) msg.hidden = true; }, 9000); return; }
   sensorAz = null; absSeen = false; absP = null; relP = null; yawOff = null;
-  window.addEventListener("deviceorientationabsolute", onOrient);
-  window.addEventListener("deviceorientation", onOrient);
+  genGot = false;
+  if (!startGenSensor()) addRawListeners();
   S.sensor = true; btn.setAttribute("aria-pressed", "true");
   msg.hidden = false; msg.textContent = tr("holdUp");
   setTimeout(() => { if (S.sensor && sensorAz === null) msg.textContent = tr("noSensor"); else if (S.sensor) msg.hidden = true; }, 1500);
