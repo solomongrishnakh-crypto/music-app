@@ -39,6 +39,9 @@ export const EMPIRE_WIKI_ALIASES: Record<string, string> = {
   "Mongol Khanate": "Northern Yuan",
   // lieferte den Artikel der Staatsreederei IRISL statt des Landes
   "Islamic Republic of Iran": "Iran",
+  // lieferte "Russians" (Lied von Sting)
+  "Russian Federation": "Russia",
+  "(Russian Federation)": "Russia",
 };
 
 export function wikiLookupName(name: string): string {
