@@ -2060,14 +2060,14 @@ export default function ImperienClient() {
         }
         .sea-label { pointer-events: auto; cursor: pointer; }
         .sea-label span {
-          display: block; transform: translate(-50%, -50%); white-space: nowrap;
+          position: absolute; left: 0; top: 0; display: inline-block; transform: translate(-50%, -50%); white-space: nowrap;
           font-family: var(--font-mono, monospace); font-style: italic;
           color: #cfe8ff; letter-spacing: 0.08em;
           text-shadow: 0 1px 2px #000, 0 0 6px #000, 0 0 10px #000;
         }
-        .sea-r0 span { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85; }
-        .sea-r1 span { font-size: 9px; letter-spacing: 0.06em; opacity: 0.85; }
-        .sea-r2 span { font-size: 8px; letter-spacing: 0.03em; opacity: 0.85; }
+        .sea-r0 span { font-size: 8px; letter-spacing: 0.1em; text-transform: uppercase; opacity: 0.85; }
+        .sea-r1 span { font-size: 7px; letter-spacing: 0.05em; opacity: 0.85; }
+        .sea-r2 span { font-size: 6.5px; letter-spacing: 0.02em; opacity: 0.85; }
         .leaflet-tooltip.prehist-label {
           font-size: 10px;
           font-style: italic;
