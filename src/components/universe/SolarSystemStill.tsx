@@ -23,7 +23,7 @@ const ORBITS: { id: string; r: number; a: number; s: number; c: string; label?: 
   { id: "jupiter", r: 90, a: 235, s: 5, c: "#e2b98a", label: true },
   { id: "saturn", r: 124, a: 20, s: 4.4, c: "#e6d29a", label: true },
   { id: "uranus", r: 156, a: 300, s: 3.2, c: "#8fe0e6", label: true },
-  { id: "neptune", r: 186, a: 130, s: 3.2, c: "#5a78ff", label: true },
+  { id: "neptune", r: 186, a: 205, s: 3.2, c: "#5a78ff", label: true },
 ];
 
 export default function SolarSystemStill({ className = "" }: { className?: string }) {
@@ -45,7 +45,7 @@ export default function SolarSystemStill({ className = "" }: { className?: strin
         </radialGradient>
       </defs>
       {ORBITS.map((o) => (
-        <ellipse key={o.id} cx={CX} cy={CY} rx={o.r} ry={o.r * TILT} fill="none" stroke="rgba(255,255,255,0.13)" strokeWidth="0.6" />
+        <ellipse key={o.id} cx={CX} cy={CY} rx={o.r} ry={o.r * TILT} fill="none" stroke="rgba(190,205,255,0.42)" strokeWidth="0.8" />
       ))}
       <circle cx={CX} cy={CY} r="15" fill="url(#ssSun)" />
       <circle cx={CX} cy={CY} r="4.5" fill="#fff0c0" />

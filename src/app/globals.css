@@ -297,6 +297,12 @@ body {
     0 12px 32px -20px rgba(0, 0, 0, 0.85);
   transition: outline-color 0.2s ease, box-shadow 0.2s ease;
 }
+/* Schwarze Box ohne Milchglas (Sonnensystem-Bild auf der Universum-Seite) */
+.hud-card.hud-black {
+  background: #000 !important;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
 /* Rote HUD-Ecken als oberste Ebene (auch über Canvas-Inhalten sichtbar).
    Ersetzt die alten Glanz-Ebenen der glass-card. */
 .glass-card::before { display: none !important; }

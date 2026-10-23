@@ -1440,7 +1440,7 @@ export default function UniversumPage() {
             <button
               type="button"
               onClick={() => setShowSolarSystem(true)}
-              className="hud-card group relative h-36 w-full overflow-hidden text-left sm:h-44"
+              className="hud-card group relative h-36 w-full hud-black overflow-hidden text-left sm:h-44"
             >
               <SolarSystemStill />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent p-4">
