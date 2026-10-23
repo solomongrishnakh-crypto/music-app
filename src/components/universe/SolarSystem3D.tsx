@@ -1266,6 +1266,11 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
         arr[5] = voy.pos.z;
         vl.geo.attributes.position.needsUpdate = true;
         vl.line.computeLineDistances();
+        // Beim Hineinzoomen (Planetenbereich) die Linie ausblenden
+        const lenV = Math.max(1e-6, voy.pos.length());
+        const kf = Math.min(1, Math.max(0, (camDist / lenV - 0.15) / 0.3));
+        vl.mat.opacity = 0.22 * kf * kf * (3 - 2 * kf);
+        vl.line.visible = vl.mat.opacity > 0.004;
         const dash = Math.max(1e-6, camDist * 0.012);
         vl.mat.dashSize = dash;
         vl.mat.gapSize = dash * 1.3;
