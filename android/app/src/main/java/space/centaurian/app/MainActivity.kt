@@ -1161,11 +1161,11 @@ private fun DrawerContent(
 private fun StarDust(active: Boolean, modifier: Modifier = Modifier) {
     val stars = remember {
         val r = java.util.Random(7)
-        List(44) { floatArrayOf(r.nextFloat(), r.nextFloat(), 0.6f + r.nextFloat() * 1.1f, r.nextFloat() * 6.28f, 0.6f + r.nextFloat() * 1.6f) }
+        List(70) { floatArrayOf(r.nextFloat(), r.nextFloat(), 0.3f + r.nextFloat() * r.nextFloat() * 0.7f, r.nextFloat() * 6.28f, 0.5f + r.nextFloat() * 1.8f, r.nextFloat()) }
     }
     val dust = remember {
         val r = java.util.Random(9)
-        List(14) { floatArrayOf(r.nextFloat(), r.nextFloat(), (r.nextFloat() - 0.5f) * 0.02f, 0.004f + r.nextFloat() * 0.012f, 1.2f + r.nextFloat() * 1.6f, r.nextFloat() * 6.28f, 3f + r.nextFloat() * 4f) }
+        List(12) { floatArrayOf(r.nextFloat(), r.nextFloat(), (r.nextFloat() - 0.5f) * 0.02f, 0.004f + r.nextFloat() * 0.012f, 0.5f + r.nextFloat() * 0.5f, r.nextFloat() * 6.28f, 3f + r.nextFloat() * 4f) }
     }
     var t by remember { mutableStateOf(0f) }
     LaunchedEffect(active) {
@@ -1184,24 +1184,15 @@ private fun StarDust(active: Boolean, modifier: Modifier = Modifier) {
         val d = density
         for (s in stars) {
             val k = 0.5f + 0.5f * kotlin.math.sin(t * s[4] + s[3])
-            val a = 0.12f + 0.88f * k * k * k
-            val c = Offset(s[0] * w, s[1] * h)
-            drawCircle(Color.White.copy(alpha = a), radius = s[2] * d * 0.8f, center = c)
-            if (s[2] > 1.2f && a > 0.7f) {
-                val l = s[2] * d * 3f * a
-                val lc = Color.White.copy(alpha = a * 0.5f)
-                drawLine(lc, Offset(c.x - l, c.y), Offset(c.x + l, c.y), strokeWidth = 1f)
-                drawLine(lc, Offset(c.x, c.y - l), Offset(c.x, c.y + l), strokeWidth = 1f)
-            }
+            val a = (0.10f + 0.80f * k * k) * (0.5f + 0.5f * s[2] / 1.0f).coerceAtMost(1f)
+            val tint = if (s[5] < 0.25f) Color(0xFFCFE0FF) else if (s[5] > 0.8f) Color(0xFFFFE2CF) else Color.White
+            drawCircle(tint.copy(alpha = a), radius = s[2] * d, center = Offset(s[0] * w, s[1] * h))
         }
         for (p in dust) {
             val x = ((((p[0] + p[2] * t) % 1f) + 1f) % 1f) * w
             val y = ((((p[1] + p[3] * t) % 1f) + 1f) % 1f) * h
             val f = kotlin.math.sin(t * 6.283f / p[6] + p[5]).coerceAtLeast(0f).let { it * it * it * it * it * it }
-            val r = p[4] * d * 0.7f
-            val c = Offset(x, y)
-            if (f > 0.02f) drawCircle(Accent.copy(alpha = 0.28f * f), radius = r * (2f + 3f * f), center = c)
-            drawCircle(Color(0xFFFFD9CC).copy(alpha = 0.35f + 0.65f * f), radius = r * (1f + 0.6f * f), center = c)
+            drawCircle(Color(0xFFFFD9CC).copy(alpha = 0.22f + 0.78f * f), radius = p[4] * d * (1f + 0.5f * f), center = Offset(x, y))
         }
     }
 }
