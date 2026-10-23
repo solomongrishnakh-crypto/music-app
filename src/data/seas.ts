@@ -14,19 +14,19 @@ export interface Sea {
 }
 
 export const SEAS: Sea[] = [
-  { id: "atlantic", lat: 15, lng: -35, rank: 0, de: "Atlantischer Ozean", en: "Atlantic Ocean",
+  { id: "atlantic", lat: 24, lng: -42, rank: 0, de: "Atlantischer Ozean", en: "Atlantic Ocean",
     tde: "Benannt nach dem Titanen Atlas der griechischen Sage, der das Himmelsgewölbe am westlichen Rand der Welt trug – vermutlich auch nach dem Atlasgebirge in Nordwestafrika. Schon Herodot sprach vom „Meer des Atlas“.",
     ten: "Named after Atlas, the Titan of Greek myth who held up the sky at the western edge of the world – probably also after the Atlas Mountains in northwest Africa. Herodotus already spoke of the “Sea of Atlas”." },
-  { id: "pacific", lat: 5, lng: -150, rank: 0, de: "Pazifischer Ozean", en: "Pacific Ocean",
+  { id: "pacific", lat: 2, lng: -135, rank: 0, de: "Pazifischer Ozean", en: "Pacific Ocean",
     tde: "Ferdinand Magellan nannte ihn 1520 „Mar Pacífico“ – das friedliche Meer –, weil er nach den Stürmen an der Südspitze Südamerikas wochenlang ruhige See hatte.",
     ten: "Ferdinand Magellan called it “Mar Pacífico” – the peaceful sea – in 1520, because after the storms at the tip of South America he found calm waters for weeks." },
-  { id: "indian", lat: -15, lng: 80, rank: 0, de: "Indischer Ozean", en: "Indian Ocean",
+  { id: "indian", lat: -22, lng: 78, rank: 0, de: "Indischer Ozean", en: "Indian Ocean",
     tde: "Benannt nach Indien, dem wichtigsten Land an seinen Küsten und Ziel des antiken Seehandels. Schon die Römer sagten „Oceanus Indicus“.",
     ten: "Named after India, the most important land on its shores and goal of ancient sea trade. The Romans already said “Oceanus Indicus”." },
   { id: "arctic", lat: 82, lng: 0, rank: 0, de: "Arktischer Ozean", en: "Arctic Ocean",
     tde: "Von griechisch „arktos“ = Bär: Der Himmel im hohen Norden wird vom Sternbild Großer Bär beherrscht. „Arktis“ heißt also Land unter dem Bären.",
     ten: "From Greek “arktos” = bear: the sky of the far north is dominated by the constellation Great Bear. “Arctic” means the land under the Bear." },
-  { id: "southern", lat: -62, lng: 20, rank: 0, de: "Südlicher Ozean", en: "Southern Ocean",
+  { id: "southern", lat: -60, lng: 50, rank: 0, de: "Südlicher Ozean", en: "Southern Ocean",
     tde: "Das Meer rund um die Antarktis. „Antarktis“ bedeutet „Gegenteil der Arktis“ (griech. anti-arktikos). Als eigener Ozean wird es erst seit 2000/2021 offiziell geführt.",
     ten: "The sea around Antarctica. “Antarctic” means “opposite of the Arctic” (Greek anti-arktikos). It has only been recognised as a separate ocean since 2000/2021." },
   { id: "med", lat: 35, lng: 18, rank: 1, de: "Mittelmeer", en: "Mediterranean Sea",

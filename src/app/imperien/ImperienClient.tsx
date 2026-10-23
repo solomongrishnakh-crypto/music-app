@@ -2065,9 +2065,9 @@ export default function ImperienClient() {
           color: #cfe8ff; letter-spacing: 0.08em;
           text-shadow: 0 1px 2px #000, 0 0 6px #000, 0 0 10px #000;
         }
-        .sea-r0 span { font-size: 14px; letter-spacing: 0.25em; text-transform: uppercase; }
-        .sea-r1 span { font-size: 11px; letter-spacing: 0.15em; }
-        .sea-r2 span { font-size: 10px; }
+        .sea-r0 span { font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; opacity: 0.85; }
+        .sea-r1 span { font-size: 9px; letter-spacing: 0.06em; opacity: 0.85; }
+        .sea-r2 span { font-size: 8px; letter-spacing: 0.03em; opacity: 0.85; }
         .leaflet-tooltip.prehist-label {
           font-size: 10px;
           font-style: italic;
