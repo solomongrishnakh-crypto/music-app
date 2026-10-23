@@ -480,13 +480,6 @@ private fun AppRoot() {
             val cur = screen
             if (cur is Screen.Web && cur.path in BARE) {
                 Box(
-                            Modifier.size(38.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xAA060203))
-                                .border(BorderStroke(1.dp, LineSoft), RoundedCornerShape(8.dp)).clickable { a() },
-                            contentAlignment = Alignment.Center,
-                        ) { Text(t, color = TextMain, fontSize = 20.sp) }
-                    }
-                }
-                Box(
                     Modifier.align(Alignment.CenterStart).width(30.dp).fillMaxHeight().pointerInput(Unit) {
                         var total = 0f
                         detectHorizontalDragGestures(onDragStart = { total = 0f }, onDragEnd = { total = 0f }) { _, dx ->
