@@ -118,7 +118,7 @@ class MusicService : Service() {
                     artUrl = c
                     Thread {
                         try {
-                            val bm = java.net.URL(c).openStream().use { BitmapFactory.decodeStream(it) }
+                            val bm = cropCover(java.net.URL(c).openStream().use { BitmapFactory.decodeStream(it) })
                             handler.post { art = bm; refresh() }
                         } catch (_: Exception) { }
                     }.start()
@@ -174,6 +174,18 @@ class MusicService : Service() {
         session?.let { st.setMediaSession(it.sessionToken) }
         b.setStyle(st)
         return b.build()
+    }
+
+    /** YouTube-Vorschaubilder (4:3) haben oben/unten schwarze Balken: abschneiden und mittig quadratisch zuschneiden. */
+    private fun cropCover(src: Bitmap): Bitmap {
+        var y = 0
+        var h = src.height
+        val ratio = src.width.toFloat() / src.height
+        if (ratio in 1.28f..1.38f) { y = (src.height * 0.125f).toInt(); h = (src.height * 0.75f).toInt() }
+        val side = minOf(src.width, h)
+        val x = (src.width - side) / 2
+        val yy = y + (h - side) / 2
+        return Bitmap.createBitmap(src, x, yy, side, side)
     }
 
     private fun updateState() {
