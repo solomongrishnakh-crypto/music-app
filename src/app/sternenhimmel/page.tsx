@@ -123,7 +123,7 @@ export default async function SternenhimmelPage({ searchParams }: Props) {
         src={`/sternenhimmel.html${c}`}
         title="Sternenhimmel"
         allow="geolocation; accelerometer; gyroscope; magnetometer; fullscreen; autoplay; encrypted-media"
-        className="fixed inset-0 z-[3000] h-[100dvh] w-full border-0 bg-black"
+        className="fixed inset-0 z-[3000] h-[100dvh] w-full border-0 bg-[#06082a]"
       />
     </>
   );
