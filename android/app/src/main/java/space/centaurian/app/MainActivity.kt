@@ -531,7 +531,7 @@ private fun AppRoot() {
                         onSiteSearch = { q -> homeCmd(q) },
                         onFeedback = { homeCmd("!fb") },
                         onPrivacy = { go(Screen.Web("/datenschutz", if (de) "Datenschutz" else Tr.t(lang, "Privacy"))) },
-                        onAbout = { go(Screen.Info(aboutTitle(de), aboutBody(de), Screen.Home)) },
+                        onAbout = { go(Screen.Info(aboutTitle(de, lang), aboutBody(de), Screen.Home)) },
                     )
                 }
             },
@@ -555,7 +555,7 @@ private fun AppRoot() {
                     onFeedback = { homeCmd("!fb") },
                     onOpen = { webBack = Screen.Settings; screen = it },
                 )
-                is Screen.Tools -> ToolsHub(de, onBack = { screen = Screen.Home }, onOpen = { sec ->
+                is Screen.Tools -> ToolsHub(de, lang, onBack = { screen = Screen.Home }, onOpen = { sec ->
                     webBack = Screen.Tools
                     screen = Screen.Web(sec.path, if (de) sec.de else sec.en)
                 })
@@ -1233,7 +1233,7 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
     }
 }
 
-private fun aboutTitle(de: Boolean) = if (de) "Über Centaurian" else Tr.t(lang, "About Centaurian")
+private fun aboutTitle(de: Boolean, lang: String) = if (de) "Über Centaurian" else Tr.t(lang, "About Centaurian")
 
 private fun aboutBody(de: Boolean): String =
 if (de)
@@ -1485,7 +1485,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
             SetCard(
                 "info", if (de) "Über die App" else Tr.t(lang, "About the app"),
                 if (de) "Was dich hier erwartet" else Tr.t(lang, "What to expect here"),
-                onClick = { onOpen(Screen.Info(aboutTitle(de), aboutBody(de))) },
+                onClick = { onOpen(Screen.Info(aboutTitle(de, lang), aboutBody(de))) },
             )
 
             GroupTitle(if (de) "Kontakt" else Tr.t(lang, "Contact"))
@@ -1521,7 +1521,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
 }
 
 @Composable
-private fun ToolsHub(de: Boolean, onBack: () -> Unit, onOpen: (Section) -> Unit) {
+private fun ToolsHub(de: Boolean, lang: String, onBack: () -> Unit, onOpen: (Section) -> Unit) {
     Column(Modifier.fillMaxSize()) {
         TopBar(if (de) "Werkzeuge" else Tr.t(lang, "Tools"), { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack)
         Column(Modifier.fillMaxSize().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(top = 10.dp, bottom = 20.dp)) {
