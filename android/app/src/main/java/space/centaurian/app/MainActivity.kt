@@ -44,6 +44,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -105,15 +110,86 @@ private fun Modifier.hudCorners(len: Float = 14f): Modifier = this.drawBehind {
     l(Offset(w, h), Offset(w - len, h)); l(Offset(w, h), Offset(w, h - len))
 }
 
-/** Sternenhimmel-Hintergrund wie auf der Webseite. */
-private fun Modifier.stars(): Modifier = this.drawBehind {
-    val r = java.util.Random(7)
-    repeat(70) {
-        val x = r.nextFloat() * size.width
-        val y = r.nextFloat() * size.height
-        val a = 0.15f + r.nextFloat() * 0.5f
-        drawCircle(Color.White.copy(alpha = a), radius = 0.8f + r.nextFloat() * 1.4f, center = Offset(x, y))
+/** Animierte Partikel mit Verbindungslinien wie der Hintergrund der Webseite. */
+private class Particle(val x0: Float, val y0: Float, val vx: Float, val vy: Float, val r: Float, val a: Float)
+
+@Composable
+private fun ParticleBackground(modifier: Modifier = Modifier) {
+    val parts = remember {
+        val r = java.util.Random(11)
+        List(48) {
+            Particle(r.nextFloat(), r.nextFloat(), (r.nextFloat() - 0.5f) * 0.012f, (r.nextFloat() - 0.5f) * 0.012f, 0.8f + r.nextFloat() * 1.6f, 0.2f + r.nextFloat() * 0.6f)
+        }
     }
+    var t by remember { mutableStateOf(0f) }
+    LaunchedEffect(Unit) {
+        var last = 0L
+        while (true) {
+            androidx.compose.runtime.withFrameNanos { n ->
+                if (last != 0L) t += (n - last) / 1_000_000_000f
+                last = n
+            }
+        }
+    }
+    Canvas(modifier) {
+        val w = size.width
+        val h = size.height
+        val pts = parts.map {
+            val x = (((it.x0 + it.vx * t) % 1f) + 1f) % 1f * w
+            val y = (((it.y0 + it.vy * t) % 1f) + 1f) % 1f * h
+            Offset(x, y)
+        }
+        val maxD = 150.dp.toPx()
+        for (i in pts.indices) {
+            for (j in i + 1 until pts.size) {
+                val dx = pts[i].x - pts[j].x
+                val dy = pts[i].y - pts[j].y
+                val d = kotlin.math.sqrt(dx * dx + dy * dy)
+                if (d < maxD) {
+                    drawLine(Accent.copy(alpha = 0.22f * (1f - d / maxD)), pts[i], pts[j], strokeWidth = 1f)
+                }
+            }
+        }
+        for (i in pts.indices) {
+            drawCircle(Color.White.copy(alpha = parts[i].a), radius = parts[i].r.dp.toPx() * 0.7f, center = pts[i])
+        }
+    }
+}
+
+@Composable
+private fun SearchBar(query: String, hint: String, onChange: (String) -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier
+            .fillMaxWidth()
+            .background(Color(0x80140A0A))
+            .border(BorderStroke(1.dp, Color(0x33FF5A4D)))
+            .hudCorners(10f)
+            .padding(horizontal = 12.dp, vertical = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(Icons.Default.Search, contentDescription = null, tint = Accent, modifier = Modifier.size(18.dp))
+        Spacer(Modifier.size(10.dp))
+        Box(Modifier.weight(1f)) {
+            if (query.isEmpty()) Text(hint.uppercase(), color = TextMuted.copy(alpha = 0.7f), fontSize = 11.sp, fontFamily = Mono, letterSpacing = 2.sp)
+            BasicTextField(
+                value = query,
+                onValueChange = onChange,
+                singleLine = true,
+                textStyle = androidx.compose.ui.text.TextStyle(color = TextMain, fontSize = 13.sp, fontFamily = Mono),
+                cursorBrush = SolidColor(Accent),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+        if (query.isNotEmpty()) {
+            Text("✕", color = TextMuted, fontSize = 14.sp, modifier = Modifier.clickable { onChange("") }.padding(start = 8.dp))
+        }
+    }
+}
+
+private fun matches(s: Section, q: String): Boolean {
+    val k = q.trim().lowercase()
+    return k.isEmpty() || s.de.lowercase().contains(k) || s.en.lowercase().contains(k) ||
+        s.descDe.lowercase().contains(k) || s.descEn.lowercase().contains(k)
 }
 
 private const val BASE = "https://centaurianspace.com"
@@ -211,9 +287,13 @@ private fun initialLang(ctx: Context): String {
 }
 
 private val NATIVE_CSS_JS =
-    "(function(){var s=document.getElementById('cn-native');if(!s){s=document.createElement('style');" +
-        "s.id='cn-native';s.textContent='.app-fab,.app-drawer,.app-scrim{display:none!important}';" +
-        "document.head.appendChild(s);}})()"
+    "(function(){var css='.app-fab,.app-drawer,.app-scrim,#langBox,#langStrip{display:none!important}" +
+        "button[aria-haspopup=listbox]{display:none!important}';" +
+        "function inj(d){try{if(!d||!d.head||d.getElementById('cn-native'))return;var s=d.createElement('style');" +
+        "s.id='cn-native';s.textContent=css;d.head.appendChild(s);}catch(e){}}" +
+        "function all(){inj(document);var f=document.querySelectorAll('iframe');" +
+        "for(var i=0;i<f.length;i++){try{inj(f[i].contentDocument);}catch(e){}}}" +
+        "all();var n=0;var iv=setInterval(function(){all();if(++n>30)clearInterval(iv);},400);})()"
 
 // ---------------------------------------------------------------- Activity
 class MainActivity : ComponentActivity() {
@@ -377,7 +457,10 @@ private fun GroupTitle(text: String) {
 @Composable
 private fun HomeScreen(lang: String, onMenu: () -> Unit, onOpen: (Section) -> Unit) {
     val de = lang == "de"
-    Column(Modifier.fillMaxSize().background(BgDark).stars()) {
+    var query by remember { mutableStateOf("") }
+    Box(Modifier.fillMaxSize().background(BgDark)) {
+    ParticleBackground(Modifier.fillMaxSize())
+    Column(Modifier.fillMaxSize()) {
         TopBar("Centaurian", { Icon(Icons.Default.Menu, contentDescription = "Menu", tint = TextMain) }, onMenu)
         LazyColumn(Modifier.fillMaxSize().navigationBarsPadding()) {
             item {
@@ -394,17 +477,23 @@ private fun HomeScreen(lang: String, onMenu: () -> Unit, onOpen: (Section) -> Un
                     }
                 }
             }
-            item { GroupTitle(if (de) "Entdecken" else "Explore") }
-            items(EXPLORE.size) { i ->
-                val s = EXPLORE[i]
-                NumberedCard(i + 1, if (de) s.de else s.en, if (de) s.descDe else s.descEn) { onOpen(s) }
+            item { SearchBar(query, if (de) "Suchen…" else "Search…", { query = it }, Modifier.padding(horizontal = 14.dp, vertical = 4.dp)) }
+            val ex = EXPLORE.filter { matches(it, query) }
+            val tl = TOOLS.filter { matches(it, query) }
+            if (ex.isEmpty() && tl.isEmpty()) {
+                item { Text(if (de) "Nichts gefunden" else "Nothing found", color = TextMuted, fontSize = 12.sp, fontFamily = Mono, modifier = Modifier.padding(24.dp)) }
             }
-            item { GroupTitle(if (de) "Werkzeuge" else "Tools") }
-            items(TOOLS.chunked(2).size) { r ->
-                val pair = TOOLS.chunked(2)[r]
+            if (ex.isNotEmpty()) item { GroupTitle(if (de) "Entdecken" else "Explore") }
+            items(ex.size) { i ->
+                val s = ex[i]
+                NumberedCard(EXPLORE.indexOf(s) + 1, if (de) s.de else s.en, if (de) s.descDe else s.descEn) { onOpen(s) }
+            }
+            if (tl.isNotEmpty()) item { GroupTitle(if (de) "Werkzeuge" else "Tools") }
+            items(tl.chunked(2).size) { r ->
+                val pair = tl.chunked(2)[r]
                 Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 3.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     pair.forEachIndexed { k, s ->
-                        ToolTile(EXPLORE.size + r * 2 + k + 1, if (de) s.de else s.en, Modifier.weight(1f).height(64.dp)) { onOpen(s) }
+                        ToolTile(EXPLORE.size + TOOLS.indexOf(s) + 1, if (de) s.de else s.en, Modifier.weight(1f).height(64.dp)) { onOpen(s) }
                     }
                     if (pair.size == 1) Spacer(Modifier.weight(1f))
                 }
@@ -412,19 +501,24 @@ private fun HomeScreen(lang: String, onMenu: () -> Unit, onOpen: (Section) -> Un
             item { Spacer(Modifier.height(20.dp)) }
         }
     }
+    }
 }
 
 // ---------------------------------------------------------------- Menue
 @Composable
 private fun DrawerContent(lang: String, onOpen: (Section) -> Unit, onSettings: () -> Unit) {
     val de = lang == "de"
-    var n = 0
+    var q by remember { mutableStateOf("") }
     Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())) {
         Text("CENTAURIAN", color = TextMain, fontSize = 15.sp, fontWeight = FontWeight.Bold, letterSpacing = 6.sp, modifier = Modifier.padding(20.dp))
-        GroupTitle(if (de) "Entdecken" else "Explore")
-        EXPLORE.forEach { s -> n++; DrawerItem(n, if (de) s.de else s.en) { onOpen(s) } }
-        GroupTitle(if (de) "Werkzeuge" else "Tools")
-        TOOLS.forEach { s -> n++; DrawerItem(n, if (de) s.de else s.en) { onOpen(s) } }
+        SearchBar(q, if (de) "Suchen…" else "Search…", { q = it }, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+        val ex = EXPLORE.filter { matches(it, q) }
+        val tl = TOOLS.filter { matches(it, q) }
+        if (ex.isNotEmpty()) GroupTitle(if (de) "Entdecken" else "Explore")
+        ex.forEach { s -> DrawerItem(EXPLORE.indexOf(s) + 1, if (de) s.de else s.en) { onOpen(s) } }
+        if (tl.isNotEmpty()) GroupTitle(if (de) "Werkzeuge" else "Tools")
+        tl.forEach { s -> DrawerItem(EXPLORE.size + TOOLS.indexOf(s) + 1, if (de) s.de else s.en) { onOpen(s) } }
+        if (ex.isEmpty() && tl.isEmpty()) Text(if (de) "Nichts gefunden" else "Nothing found", color = TextMuted, fontSize = 12.sp, fontFamily = Mono, modifier = Modifier.padding(20.dp))
         Spacer(Modifier.height(20.dp))
         Row(
             Modifier
@@ -575,8 +669,8 @@ private fun SettingsRow(title: String, sub: String = "", trailing: String = "›
 @Composable
 private fun Card(content: @Composable () -> Unit) {
     Column(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp).clip(RoundedCornerShape(12.dp))
-            .background(Accent.copy(alpha = 0.05f)).border(BorderStroke(1.dp, LineSoft), RoundedCornerShape(12.dp)),
+        Modifier.fillMaxWidth().padding(horizontal = 14.dp)
+            .background(Color(0x80140A0A)).border(BorderStroke(1.dp, Color(0x1AFFFFFF))).hudCorners(),
     ) { content() }
 }
 
@@ -592,7 +686,9 @@ private fun SettingsScreen(lang: String, onBack: () -> Unit, onLang: (String) ->
         try { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) } catch (_: Exception) { }
     }
 
-    Column(Modifier.fillMaxSize().background(BgDark)) {
+    Box(Modifier.fillMaxSize().background(BgDark)) {
+    ParticleBackground(Modifier.fillMaxSize())
+    Column(Modifier.fillMaxSize()) {
         TopBar(if (de) "Einstellungen" else "Settings", { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack)
         Column(Modifier.fillMaxSize().navigationBarsPadding().verticalScroll(rememberScrollState())) {
             GroupTitle(if (de) "Sprache" else "Language")
@@ -699,6 +795,7 @@ private fun SettingsScreen(lang: String, onBack: () -> Unit, onLang: (String) ->
                 textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(vertical = 26.dp),
             )
         }
+    }
     }
 }
 
