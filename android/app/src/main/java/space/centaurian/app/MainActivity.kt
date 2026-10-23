@@ -1,6 +1,7 @@
 package space.centaurian.app
 
 import android.Manifest
+import android.os.Build
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
@@ -362,6 +363,11 @@ private const val HIDE_FB_JS =
 private fun nativeJs(hideNews: Boolean, anim: Boolean): String =
     "(function(){var css='.app-fab,.app-drawer,.app-scrim,#langBox,#langStrip,#fbLink,#newsLink{display:none!important}" +
         "button[aria-haspopup=listbox]{display:none!important}';" +
+        "if((location.hash||'')==='#space-news'){css+='#space-news .grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;background:transparent!important}" +
+        "#space-news .grid>*{padding:10px!important;border-radius:12px!important;background:rgba(255,255,255,0.04)!important}" +
+        "#space-news .grid p.label-mono{font-size:11px!important;margin-top:6px!important}" +
+        "#space-news .grid p.line-clamp-3{font-size:14px!important;line-height:1.35!important;-webkit-line-clamp:5!important;min-height:0!important;text-transform:none!important;letter-spacing:0!important}" +
+        "#space-news>button{padding-bottom:14px!important}';}" +
         "function inj(d){try{if(!d||!d.head||d.getElementById('cn-native'))return;var s=d.createElement('style');" +
         "s.id='cn-native';s.textContent=css;d.head.appendChild(s);}catch(e){}}" +
         "function all(){inj(document);var f=document.querySelectorAll('iframe');" +
@@ -397,8 +403,27 @@ class MainActivity : ComponentActivity() {
         if (on) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
+    private val notifLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+
+    override fun onPause() {
+        super.onPause()
+        // Spielt Musik, dann Vordergrund-Dienst starten, damit der Ton im Hintergrund weiterlaeuft.
+        try {
+            val am = getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
+            if (am.isMusicActive) startForegroundService(Intent(this, MusicService::class.java))
+        } catch (_: Exception) { }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        try { stopService(Intent(this, MusicService::class.java)) } catch (_: Exception) { }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
         if (getSharedPreferences("cn", Context.MODE_PRIVATE).getBoolean("keepon", false)) setKeepOn(true)
         enableEdgeToEdge()
         setContent {
@@ -534,6 +559,7 @@ private fun homeJs(anim: Boolean): String =
     "(function(){var css='.app-fab,.app-drawer,.app-scrim{display:none!important}" +
         "button[aria-haspopup=listbox]{display:none!important}a[href\$=apk]{display:none!important}" +
         "';" +
+        "try{Object.defineProperty(document,'hidden',{get:function(){return false;},configurable:true});Object.defineProperty(document,'visibilityState',{get:function(){return 'visible';},configurable:true});document.addEventListener('visibilitychange',function(e){e.stopImmediatePropagation();},true);}catch(x){}" +
         "var n=0;function run(){try{if(!document.getElementById('cn-native')&&document.head){var s=document.createElement('style');" +
         "s.id='cn-native';s.textContent=css;document.head.appendChild(s);}" +
         "var kk=document.getElementById('kontakte');if(kk)kk.style.setProperty('display','none','important');" +
