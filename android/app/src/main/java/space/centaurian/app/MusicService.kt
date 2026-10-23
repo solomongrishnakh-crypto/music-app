@@ -26,8 +26,12 @@ object MusicBridge {
     @Volatile var web: WebView? = null
 
     private const val STATE_JS =
-        "(function(){try{var m=navigator.mediaSession;var md=m&&m.metadata;" +
-            "return JSON.stringify({t:md?md.title:'',a:md?md.artist:'',p:m?m.playbackState==='playing':false});}catch(e){return '';}})()"
+        "(function(){try{var t='',a='';" +
+            "var b=document.querySelector('button.min-w-0.flex-1');" +
+            "if(b){var ps=b.querySelectorAll('p');if(ps[0])t=ps[0].textContent||'';if(ps[1])a=ps[1].textContent||'';}" +
+            "if(!t||/^\\s*$/.test(t)){var m=navigator.mediaSession;var md=m&&m.metadata;if(md){t=md.title||'';a=md.artist||'';}}" +
+            "var p=window.__cenPlaying===true;" +
+            "return JSON.stringify({t:t.trim(),a:a.trim(),p:p});}catch(e){return '';}})()"
 
     fun click(kind: String) {
         val sel = when (kind) {
