@@ -893,6 +893,9 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
                             settings.allowContentAccess = false
                             settings.javaScriptCanOpenWindowsAutomatically = false
                             settings.mediaPlaybackRequiresUserGesture = false
+                            // Renderer der Startseite (dort laeuft die Musik) bleibt wichtig, auch wenn eine andere Seite offen ist -
+                            // sonst kann Android ihn bei Speicherdruck beenden und die Musik stoppt
+                            setRendererPriorityPolicy(WebView.RENDERER_PRIORITY_IMPORTANT, false)
                             Offline.register(this)
                             CookieManager.getInstance().setAcceptCookie(true)
                             settings.setGeolocationEnabled(true)
