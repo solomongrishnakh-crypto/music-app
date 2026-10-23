@@ -262,7 +262,7 @@ class MusicService : Service() {
             stopSelf()
             return START_NOT_STICKY
         }
-        serviceUp = true
+        MusicBridge.serviceUp = true
         quiet = 0
         refresh()
         handler.removeCallbacks(tick)
@@ -271,7 +271,7 @@ class MusicService : Service() {
     }
 
     override fun onDestroy() {
-        serviceUp = false
+        MusicBridge.serviceUp = false
         handler.removeCallbacks(tick)
         session?.release()
         session = null
