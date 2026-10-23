@@ -874,7 +874,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
         val path = try { Uri.parse(w.url ?: "").path ?: "/" } catch (_: Exception) { "/" }
         val isHome = path == "/" || path.length <= 3 && path.startsWith("/")
         if (!isHome) {
-            w.loadUrl(siteUrl("/", lang))
+            softHome(w, siteUrl("/", lang))
             kotlinx.coroutines.delay(2500)
         } else {
             kotlinx.coroutines.delay(300)
