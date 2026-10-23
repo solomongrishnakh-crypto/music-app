@@ -35,6 +35,16 @@ object MusicBridge {
     @Volatile var cover = ""
     @Volatile var pos = 0.0
     @Volatile var dur = 0.0
+    @Volatile var seekAt = 0L
+    @Volatile var seekPos = 0.0
+
+    /** Aktuelle Position in ms, auf "jetzt" hochgerechnet (die Seite meldet nur alle 0,5 s). */
+    fun positionMs(): Long {
+        val now = System.currentTimeMillis()
+        val base = if (now - seekAt < 3000) (seekPos * 1000) + (now - seekAt) else (pos * 1000) + (if (playing) (now - stamp).coerceIn(0, 1500) else 0)
+        val max = if (dur > 0) (dur * 1000).toLong() else Long.MAX_VALUE
+        return base.toLong().coerceIn(0, max)
+    }
 
     /** Wird von der Seite aufgerufen (auch im Hintergrund): meldet Titel/Status und holt Befehle ab. */
     class Js {
@@ -170,7 +180,7 @@ class MusicService : Service() {
         session?.setPlaybackState(
             PlaybackState.Builder()
                 .setActions(PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or PlaybackState.ACTION_SKIP_TO_NEXT or PlaybackState.ACTION_SKIP_TO_PREVIOUS or PlaybackState.ACTION_SEEK_TO)
-                .setState(if (playing) PlaybackState.STATE_PLAYING else PlaybackState.STATE_PAUSED, (MusicBridge.pos * 1000).toLong(), 1f)
+                .setState(if (playing) PlaybackState.STATE_PLAYING else PlaybackState.STATE_PAUSED, MusicBridge.positionMs(), 1f)
                 .build(),
         )
     }
@@ -203,7 +213,7 @@ class MusicService : Service() {
                     override fun onPause() = MusicBridge.click("pp")
                     override fun onSkipToNext() = MusicBridge.click("next")
                     override fun onSkipToPrevious() = MusicBridge.click("prev")
-                    override fun onSeekTo(pos: Long) { MusicBridge.cmd = "seek:" + (pos / 1000.0); MusicBridge.pos = pos / 1000.0 }
+                    override fun onSeekTo(pos: Long) { MusicBridge.cmd = "seek:" + (pos / 1000.0); MusicBridge.seekPos = pos / 1000.0; MusicBridge.seekAt = System.currentTimeMillis(); updateState() }
                 })
                 isActive = true
             }
