@@ -1814,7 +1814,7 @@ export default function ImperienClient() {
       const modern = lang === "de" ? s.de : s.en;
       const name = antikSeas && anc ? anc.n : modern;
       const ancLine = anc
-        ? `<br><br><b>${lang === "de" ? "In der Antike" : "In antiquity"}:</b> ${esc(anc.n)} – ${esc(lang === "de" ? anc.d : anc.e)}`
+        ? `<br><br><b>${lang === "de" ? "In der Antike" : "In ancient times"}:</b> ${esc(anc.n)} – ${esc(lang === "de" ? anc.d : anc.e)}`
         : "";
       const modLine = antikSeas && anc ? `<br><i>${lang === "de" ? "Heute" : "Today"}: ${esc(modern)}</i>` : "";
       const text = (lang === "de" ? s.tde : s.ten);
