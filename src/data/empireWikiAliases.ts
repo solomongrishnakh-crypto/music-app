@@ -37,6 +37,8 @@ export const EMPIRE_WIKI_ALIASES: Record<string, string> = {
   "Cimmerian Bosporus": "Bosporan Kingdom",
   "Kingdom of Armenia": "Kingdom of Armenia (antiquity)",
   "Mongol Khanate": "Northern Yuan",
+  // lieferte den Artikel der Staatsreederei IRISL statt des Landes
+  "Islamic Republic of Iran": "Iran",
 };
 
 export function wikiLookupName(name: string): string {
