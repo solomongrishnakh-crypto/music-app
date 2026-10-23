@@ -6,6 +6,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import LangRedirect from "@/components/LangRedirect";
 import ScrollKeeper from "@/components/ScrollKeeper";
 import FeedbackBox from "@/components/FeedbackBox";
+import AppShell from "@/components/AppShell";
 import PersistentPlayerBar from "@/components/player/PersistentPlayerBar";
 import { HOME_KEYWORDS } from "@/lib/seoKeywords";
 import Script from "next/script";
@@ -131,6 +132,7 @@ export default function RootLayout({
         <LanguageProvider>
           <PlayerProvider>
             <LangRedirect />
+            <AppShell />
             <ScrollKeeper />
             {children}
             <PersistentPlayerBar />

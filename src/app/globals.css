@@ -647,3 +647,45 @@ a.hud-card.feat-card:hover {
 }
 @keyframes histMove { from { transform: translateX(0); } to { transform: translateX(calc(100% - 2px)); } }
 @media (prefers-reduced-motion: reduce) { .hist-mark { animation: none; } }
+
+/* ---------- App-Modus (AppShell.tsx) ---------- */
+html[data-app] body { padding-top: calc(46px + env(safe-area-inset-top)); }
+html[data-app] .app-hide,
+html[data-app] .app-lang-fixed { display: none !important; }
+html[data-app] iframe.fixed {
+  top: calc(46px + env(safe-area-inset-top)) !important;
+  height: calc(100dvh - 46px - env(safe-area-inset-top)) !important;
+}
+.app-bar {
+  position: fixed; inset: 0 0 auto 0; z-index: 3500;
+  height: calc(46px + env(safe-area-inset-top)); padding-top: env(safe-area-inset-top);
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.app-burger {
+  width: 52px; height: 46px; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 5px;
+  background: none; border: 0; cursor: pointer;
+}
+.app-burger span { display: block; width: 22px; height: 2px; border-radius: 1px; background: #f2f2f0; }
+.app-title { font-family: var(--font-display, sans-serif); font-weight: 700; font-size: 14px; letter-spacing: 0.22em; color: #f2f2f0; }
+.app-bar-spacer { width: 52px; }
+.app-scrim { position: fixed; inset: 0; z-index: 3600; background: rgba(0, 0, 0, 0.55); }
+.app-drawer {
+  position: fixed; top: 0; bottom: 0; left: 0; z-index: 3700; width: min(82vw, 320px);
+  padding: calc(env(safe-area-inset-top) + 16px) 0 16px; overflow-y: auto;
+  background: rgba(8, 8, 10, 0.97); border-right: 1px solid rgba(255, 255, 255, 0.1);
+  transform: translateX(-102%); transition: transform 0.22s ease; visibility: hidden;
+}
+.app-drawer-open { transform: none; visibility: visible; }
+.app-drawer ul { list-style: none; margin: 0; padding: 0; }
+.app-drawer li a {
+  display: block; padding: 14px 22px; font-size: 14px; letter-spacing: 0.04em; color: #f2f2f0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.app-langs { display: flex; flex-wrap: wrap; gap: 6px; padding: 18px 16px 8px; }
+.app-langs button {
+  font-size: 11px; padding: 6px 9px; color: #b8b8b4; background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.14); border-radius: 6px; cursor: pointer;
+}
+.app-langs button.on { color: #fff; border-color: rgba(255, 255, 255, 0.55); }

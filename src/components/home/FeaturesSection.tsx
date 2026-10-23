@@ -38,7 +38,7 @@ export default function FeaturesSection() {
     <section className="mx-auto w-full max-w-6xl">
       {/* Nutzerwunsch 03.10.2026: Schriftzug genau mittig zwischen Suchleiste und "Was dich erwartet" (gleicher Abstand oben/unten) */}
       <UniverseTypewriter className="mb-5 mt-6 sm:mb-6 sm:mt-12" />
-      <AppDownloadPill />
+      <div className="app-hide"><AppDownloadPill /></div>
       <SectionHeading index="01" label={t("featuresLabel")} />
 
       {/* Nutzerwunsch 03.10.2026: "Boxen kleiner, kompakter und moderner" —
