@@ -7,9 +7,6 @@ on:
       - "android/**"
       - ".github/workflows/android.yml"
 
-permissions:
-  contents: write
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -22,12 +19,11 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
-      - name: Debug-APK bauen
+      - name: Test-APK bauen
         run: gradle -p android assembleDebug --no-daemon
-      - name: APK als Download veröffentlichen
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          cp android/app/build/outputs/apk/debug/app-debug.apk Centaurian-test.apk
-          gh release delete android-test --yes --cleanup-tag || true
-          gh release create android-test Centaurian-test.apk --prerelease --title "Centaurian Android (Test)" --notes "Test-APK, automatisch gebaut."
+      - name: APK bereitstellen (nur mit GitHub-Login herunterladbar)
+        uses: actions/upload-artifact@v4
+        with:
+          name: Centaurian-App
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
