@@ -239,7 +239,6 @@ private data class Section(
 )
 
 private val SKY = listOf(
-    Section("/universum", "Universum", "Universe", "Fakten und Zahlen aus dem All", "Facts and numbers from space"),
     Section("/sternenhimmel", "Sternenhimmel", "Live sky", "Halte dein Handy in den Himmel", "Hold your phone up to the sky"),
     Section("/sonnensystem", "Sonnensystem", "Solar system", "Live mit echten Positionen", "Live with real positions"),
     Section("/sternbilder", "Sternbilder", "Constellations", "Alle 88 Sternbilder", "All 88 constellations"),
@@ -251,14 +250,17 @@ private val HISTORY = listOf(
 private val NEWS = listOf(
     Section("/universum#space-news", "Weltraum-News", "Space news", "Aktuelle News aus Raumfahrt und Astronomie", "Latest space and astronomy news"),
 )
-private val EXPLORE = SKY + HISTORY + NEWS
 private val TOOLS = listOf(
     Section("/groessenvergleich", "Größenvergleich", "Size comparison", "Vom Neutronenstern bis zum Universum", "From neutron stars to the universe"),
     Section("/weltraum-rechner", "Rechner", "Calculator", "Gewicht, Alter und Entfernungen im All", "Weight, age and distances in space"),
     Section("/reisezeit/saturn/auto", "Reisezeit", "Travel time", "Wie lange dauert die Reise zu einem Planeten?", "How long does a trip to a planet take?"),
     Section("/geburtstag", "Geburtstag", "Birthday", "Dein Geburtstag im Universum", "Your birthday in the universe"),
-    Section("/maschine-der-ewigkeit", "Maschine der Ewigkeit", "Machine of eternity", "Zahnräder, die seit dem Urknall laufen", "Gears running since the big bang"),
+    Section("/universum#maschine", "Maschine der Ewigkeit", "Machine of eternity", "Zahnräder, die seit dem Urknall laufen", "Gears running since the big bang"),
 )
+private val UNI = listOf(
+    Section("/universum", "Universum", "Universe", "Fakten und Zahlen aus dem All", "Facts and numbers from space"),
+) + TOOLS
+private val EXPLORE = UNI + SKY + HISTORY + NEWS
 
 private val SLUGS = listOf(
     "/imperien/reiche" to "/empires/list",
@@ -780,12 +782,12 @@ private fun DrawerContent(
                 DrawerRow("⌕", (if (de) "„" else "\"") + q.trim() + (if (de) "“ auf der Webseite suchen" else "\" – search everything"), false) { onSiteSearch(q.trim()) }
             }
             val groups = listOf(
-                (if (de) "Universum & Himmel" else "Universe & sky") to SKY,
+                (if (de) "Universum" else "Universe") to UNI,
+                (if (de) "Himmel" else "Sky") to SKY,
                 (if (de) "Geschichte" else "History") to HISTORY,
                 "News" to NEWS,
-                (if (de) "Werkzeuge" else "Tools") to TOOLS,
             )
-            val all = SKY + HISTORY + NEWS + TOOLS
+            val all = UNI + SKY + HISTORY + NEWS
             groups.forEach { (title, list) ->
                 if (list === TOOLS && q.isBlank()) {
                     GroupTitle(title)
