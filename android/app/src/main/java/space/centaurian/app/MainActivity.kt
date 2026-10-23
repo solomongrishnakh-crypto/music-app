@@ -467,6 +467,20 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/** Warum wurde die App zuletzt beendet? (Android 11+) Hilft zu finden, wenn die Musik ploetzlich stoppt. */
+private fun lastExits(ctx: Context): String {
+    if (android.os.Build.VERSION.SDK_INT < 30) return "-"
+    return try {
+        val am = ctx.getSystemService(Context.ACTIVITY_SERVICE) as android.app.ActivityManager
+        val names = mapOf(1 to "SELF", 2 to "SIGNALED", 3 to "LOW_MEMORY", 4 to "CRASH", 5 to "CRASH_NATIVE", 6 to "ANR", 9 to "RESOURCE", 10 to "USER", 11 to "USER_STOPPED", 12 to "DEP_DIED", 13 to "OTHER", 14 to "FREEZER", 16 to "UPDATED")
+        val l = am.getHistoricalProcessExitReasons(ctx.packageName, 0, 3)
+        if (l.isEmpty()) "-" else l.joinToString("\n") {
+            val min = (System.currentTimeMillis() - it.timestamp) / 60000
+            (names[it.reason] ?: it.reason.toString()) + " · " + min + " min" + (if (!it.description.isNullOrBlank()) " · " + it.description else "")
+        }
+    } catch (_: Exception) { "-" }
+}
+
 // ---------------------------------------------------------------- Wurzel
 @Composable
 private fun AppRoot() {
@@ -1649,6 +1663,11 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                     } catch (_: Exception) { }
                 },
                 trailing = { Text("↗", color = Accent, fontSize = 18.sp) },
+            )
+            SetCard(
+                "chat", if (de) "Diagnose" else Tr.t(lang, "Diagnostics"),
+                remember { lastExits(ctx) },
+                onClick = { },
             )
 
             GroupTitle("Support")
