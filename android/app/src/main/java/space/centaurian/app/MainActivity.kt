@@ -481,7 +481,7 @@ private fun AppRoot() {
             }
             when (val s = screen) {
                 is Screen.Home -> {}
-                is Screen.Web -> androidx.compose.runtime.key(s.path) { WebScreen(s, lang, anim, onBare = { webBare = it }, onBack = { screen = webBack }) }
+                is Screen.Web -> androidx.compose.runtime.key(s.path) { WebScreen(s, lang, anim, onBare = { webBare = it }, onHome = { screen = Screen.Home }, onBack = { screen = webBack }) }
                 is Screen.Settings -> SettingsScreen(
                     lang,
                     anim = anim,
@@ -515,6 +515,7 @@ private fun AppRoot() {
             }
         }
     }
+    BackHandler(enabled = drawer.currentValue == DrawerValue.Open) { scope.launch { drawer.close() } }
 }
 
 // ---------------------------------------------------------------- Startseite = echte Webseite
@@ -548,6 +549,7 @@ private fun homeJs(anim: Boolean): String =
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, String>?, anim: Boolean, onBare: (Boolean) -> Unit, onMenu: () -> Unit) {
+    val homeActivity = LocalContext.current as MainActivity
     var web by remember { mutableStateOf<WebView?>(null) }
     var canBack by remember { mutableStateOf(false) }
     var bareNow by remember { mutableStateOf(false) }
@@ -586,7 +588,14 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
     }
     Column(Modifier.fillMaxSize().background(BgDark)) {
         if (bareNow) Box(Modifier.fillMaxWidth().statusBarsPadding())
-        else TopBar("Centaurian", { Icon(Icons.Default.Menu, contentDescription = "Menu", tint = TextMain) }, onMenu)
+        else TopBar("Centaurian", { Icon(Icons.Default.Menu, contentDescription = "Menu", tint = TextMain) }, onMenu, onTitle = {
+            val w = web
+            val path = try { Uri.parse(w?.url ?: "").path ?: "/" } catch (_: Exception) { "/" }
+            if (w != null) {
+                if (path == "/" || (path.length <= 3 && path.startsWith("/"))) w.evaluateJavascript("window.scrollTo({top:0,behavior:'smooth'})", null)
+                else w.loadUrl(siteUrl("/", lang))
+            }
+        })
         if (progress in 1..99) {
             LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth().height(2.dp), color = Accent, trackColor = Color.Transparent)
         }
@@ -602,9 +611,14 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
                             settings.domStorageEnabled = true
                             settings.mediaPlaybackRequiresUserGesture = false
                             CookieManager.getInstance().setAcceptCookie(true)
+                            settings.setGeolocationEnabled(true)
                             webChromeClient = object : WebChromeClient() {
                                 override fun onProgressChanged(view: WebView?, newProgress: Int) {
                                     progress = newProgress
+                                }
+
+                                override fun onGeolocationPermissionsShowPrompt(origin: String?, callback: GeolocationPermissions.Callback?) {
+                                    homeActivity.withLocationPermission { callback?.invoke(origin, true, false) }
                                 }
                             }
                             webViewClient = object : WebViewClient() {
@@ -671,7 +685,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
 
 // ---------------------------------------------------------------- Bausteine
 @Composable
-private fun TopBar(title: String, icon: @Composable () -> Unit, onIcon: () -> Unit) {
+private fun TopBar(title: String, icon: @Composable () -> Unit, onIcon: () -> Unit, onTitle: (() -> Unit)? = null) {
     Row(
         Modifier.fillMaxWidth().background(Color(0xB3030206)).statusBarsPadding().height(48.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -684,6 +698,7 @@ private fun TopBar(title: String, icon: @Composable () -> Unit, onIcon: () -> Un
             fontFamily = Mono,
             fontWeight = FontWeight.Bold,
             letterSpacing = 3.sp,
+            modifier = if (onTitle != null) Modifier.clickable { onTitle() }.padding(end = 16.dp, top = 12.dp, bottom = 12.dp) else Modifier,
         )
     }
     Box(Modifier.fillMaxWidth().height(1.dp).background(LineSoft))
@@ -895,7 +910,7 @@ private fun DrawerRow(tag: String, title: String, active: Boolean, onClick: () -
 // ---------------------------------------------------------------- Web-Ansicht
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boolean) -> Unit, onBack: () -> Unit) {
+private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boolean) -> Unit, onHome: () -> Unit, onBack: () -> Unit) {
     val ctx = LocalContext.current
     val activity = ctx as MainActivity
     var progress by remember { mutableStateOf(0) }
@@ -920,7 +935,7 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
             TopBar(s.title, { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, {
                 val w = web
                 if (w != null && w.canGoBack()) w.goBack() else onBack()
-            })
+            }, onTitle = onHome)
         }
         if (progress in 1..99) {
             LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth().height(2.dp), color = Accent, trackColor = Color.Transparent)
@@ -993,6 +1008,7 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
                         web = this
                     }
                 },
+                onRelease = { v -> try { v.stopLoading(); v.loadUrl("about:blank"); v.destroy() } catch (_: Exception) { } },
             )
             if (failed) {
                 Column(
@@ -1162,7 +1178,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                     if (de) "Gespeicherte Daten der Ansichten löschen" else "Delete saved data of the views",
                 ) {
                     try {
-                        WebView(ctx).clearCache(true)
+                        WebView(ctx).apply { clearCache(true); destroy() }
                     } catch (_: Exception) { }
                     Toast.makeText(ctx, if (de) "Gelöscht" else "Cleared", Toast.LENGTH_SHORT).show()
                 }
