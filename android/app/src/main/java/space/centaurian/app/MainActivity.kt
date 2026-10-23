@@ -530,7 +530,7 @@ private fun AppRoot() {
                         onSettings = { go(Screen.Settings) },
                         onSiteSearch = { q -> homeCmd(q) },
                         onFeedback = { homeCmd("!fb") },
-                        onPrivacy = { go(Screen.Web("/datenschutz", if (de) "Datenschutz" else "Privacy")) },
+                        onPrivacy = { go(Screen.Web("/datenschutz", if (de) "Datenschutz" else Tr.t(lang, "Privacy"))) },
                         onAbout = { go(Screen.Info(aboutTitle(de), aboutBody(de), Screen.Home)) },
                     )
                 }
@@ -589,12 +589,12 @@ private fun AppRoot() {
         AlertDialog(
             onDismissRequest = { if (Updater.progress < 0) Updater.avail = null },
             containerColor = Color(0xFF14090B),
-            title = { Text(if (de) "Update verfügbar" else "Update available", color = TextMain, fontFamily = Mono, fontSize = 15.sp) },
+            title = { Text(if (de) "Update verfügbar" else Tr.t(lang, "Update available"), color = TextMain, fontFamily = Mono, fontSize = 15.sp) },
             text = {
                 Column {
                     Text(
-                        (if (de) "Neue Version " else "New version ") + upd.name +
-                            (if (de) ". Die App lädt das Update und startet die Installation." else ". The app downloads the update and starts the installation."),
+                        (if (de) "Neue Version " else Tr.t(lang, "New version ")) + upd.name +
+                            (if (de) ". Die App lädt das Update und startet die Installation." else Tr.t(lang, ". The app downloads the update and starts the installation.")),
                         color = TextMuted, fontSize = 13.sp,
                     )
                     if (Updater.progress >= 0) {
@@ -603,20 +603,20 @@ private fun AppRoot() {
                     }
                     if (Updater.msg == "!") {
                         Spacer(Modifier.height(8.dp))
-                        Text(if (de) "Download fehlgeschlagen. Versuch es nochmal." else "Download failed. Try again.", color = Accent, fontSize = 12.sp)
+                        Text(if (de) "Download fehlgeschlagen. Versuch es nochmal." else Tr.t(lang, "Download failed. Try again."), color = Accent, fontSize = 12.sp)
                     }
                 }
             },
             confirmButton = {
                 Text(
-                    if (Updater.progress >= 0) "…" else if (de) "JETZT AKTUALISIEREN" else "UPDATE NOW",
+                    if (Updater.progress >= 0) "…" else if (de) "JETZT AKTUALISIEREN" else Tr.t(lang, "UPDATE NOW"),
                     color = Accent, fontFamily = Mono, fontSize = 12.sp, fontWeight = FontWeight.Bold,
                     modifier = Modifier.clickable(enabled = Updater.progress < 0) { Updater.msg = ""; Updater.start(ctx) }.padding(12.dp),
                 )
             },
             dismissButton = {
                 if (Updater.progress < 0) Text(
-                    if (de) "SPÄTER" else "LATER", color = TextMuted, fontFamily = Mono, fontSize = 12.sp,
+                    if (de) "SPÄTER" else Tr.t(lang, "LATER"), color = TextMuted, fontFamily = Mono, fontSize = 12.sp,
                     modifier = Modifier.clickable { Updater.avail = null }.padding(12.dp),
                 )
             },
@@ -872,11 +872,11 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text(if (de) "Keine Verbindung" else "No connection", color = TextMain, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text(if (de) "Keine Verbindung" else Tr.t(lang, "No connection"), color = TextMain, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     Box(
                         Modifier.padding(top = 20.dp).clip(RoundedCornerShape(8.dp)).border(BorderStroke(1.dp, Accent), RoundedCornerShape(8.dp))
                             .clickable { failed = false; web?.reload() }.padding(horizontal = 22.dp, vertical = 10.dp),
-                    ) { Text((if (de) "Erneut versuchen" else "Retry").uppercase(), color = Accent, fontSize = 12.sp, letterSpacing = 2.sp) }
+                    ) { Text((if (de) "Erneut versuchen" else Tr.t(lang, "Retry")).uppercase(), color = Accent, fontSize = 12.sp, letterSpacing = 2.sp) }
                 }
             }
         }
@@ -965,25 +965,25 @@ private fun HomeScreen(lang: String, onMenu: () -> Unit, onOpen: (Section) -> Un
                     Column {
                         Text("CENTAURIAN", color = TextMain, fontSize = 18.sp, fontFamily = Mono, fontWeight = FontWeight.Bold, letterSpacing = 5.sp)
                         Text(
-                            if (de) "Universum & Weltgeschichte" else "Universe & world history",
+                            if (de) "Universum & Weltgeschichte" else Tr.t(lang, "Universe & world history"),
                             color = TextMuted, fontSize = 11.sp, letterSpacing = 1.sp,
                             modifier = Modifier.padding(top = 3.dp),
                         )
                     }
                 }
             }
-            item { SearchBar(query, if (de) "Suchen…" else "Search…", { query = it }, Modifier.padding(horizontal = 14.dp, vertical = 4.dp)) }
+            item { SearchBar(query, if (de) "Suchen…" else Tr.t(lang, "Search…"), { query = it }, Modifier.padding(horizontal = 14.dp, vertical = 4.dp)) }
             val ex = EXPLORE.filter { matches(it, query) }
             val tl = TOOLS.filter { matches(it, query) }
             if (ex.isEmpty() && tl.isEmpty()) {
-                item { Text(if (de) "Nichts gefunden" else "Nothing found", color = TextMuted, fontSize = 12.sp, fontFamily = Mono, modifier = Modifier.padding(24.dp)) }
+                item { Text(if (de) "Nichts gefunden" else Tr.t(lang, "Nothing found"), color = TextMuted, fontSize = 12.sp, fontFamily = Mono, modifier = Modifier.padding(24.dp)) }
             }
-            if (ex.isNotEmpty()) item { GroupTitle(if (de) "Entdecken" else "Explore") }
+            if (ex.isNotEmpty()) item { GroupTitle(if (de) "Entdecken" else Tr.t(lang, "Explore")) }
             items(ex.size) { i ->
                 val s = ex[i]
                 NumberedCard(EXPLORE.indexOf(s) + 1, if (de) s.de else s.en, if (de) s.descDe else s.descEn) { onOpen(s) }
             }
-            if (tl.isNotEmpty()) item { GroupTitle(if (de) "Werkzeuge" else "Tools") }
+            if (tl.isNotEmpty()) item { GroupTitle(if (de) "Werkzeuge" else Tr.t(lang, "Tools")) }
             items(tl.chunked(2).size) { r ->
                 val pair = tl.chunked(2)[r]
                 Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 3.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1023,13 +1023,13 @@ private fun DrawerContent(
                 Spacer(Modifier.size(8.dp))
                 Text("CENTAURIAN", color = TextMain, fontSize = 13.sp, fontWeight = FontWeight.Bold, letterSpacing = 5.sp)
             }
-            SearchBar(q, if (de) "Planeten, Songs, Reiche…" else "Planets, songs, empires…", { q = it }, Modifier.padding(horizontal = 14.dp, vertical = 2.dp), onSearch = { onSiteSearch(it) })
+            SearchBar(q, if (de) "Planeten, Songs, Reiche…" else Tr.t(lang, "Planets, songs, empires…"), { q = it }, Modifier.padding(horizontal = 14.dp, vertical = 2.dp), onSearch = { onSiteSearch(it) })
             if (q.isNotBlank()) {
-                DrawerRow("⌕", (if (de) "„" else "\"") + q.trim() + (if (de) "“ auf der Webseite suchen" else "\" – search everything"), false) { onSiteSearch(q.trim()) }
+                DrawerRow("⌕", (if (de) "„" else Tr.t(lang, "\"")) + q.trim() + (if (de) "“ auf der Webseite suchen" else Tr.t(lang, "\" – search everything")), false) { onSiteSearch(q.trim()) }
             }
             val groups = listOf(
-                (if (de) "Universum & Himmel" else "Universe & sky") to UNI,
-                (if (de) "Geschichte" else "History") to HISTORY,
+                (if (de) "Universum & Himmel" else Tr.t(lang, "Universe & sky")) to UNI,
+                (if (de) "Geschichte" else Tr.t(lang, "History")) to HISTORY,
                 "News" to NEWS,
             )
             val all = UNI + HISTORY + NEWS
@@ -1071,9 +1071,9 @@ private fun DrawerContent(
                 }
                 Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(
-                        Triple("§", if (de) "Datenschutz" else "Privacy", onPrivacy),
-                        Triple("i", if (de) "Infos" else "About", onAbout),
-                        Triple("⚙", if (de) "Einstellungen" else "Settings", onSettings),
+                        Triple("§", if (de) "Datenschutz" else Tr.t(lang, "Privacy"), onPrivacy),
+                        Triple("i", if (de) "Infos" else Tr.t(lang, "About"), onAbout),
+                        Triple("⚙", if (de) "Einstellungen" else Tr.t(lang, "Settings"), onSettings),
                     ).forEach { (ic, label, act) ->
                         Column(
                             Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(Color(0x0DFFFFFF))
@@ -1218,22 +1218,22 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text(if (de) "Keine Verbindung" else "No connection", color = TextMain, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Text(if (de) "Keine Verbindung" else Tr.t(lang, "No connection"), color = TextMain, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     Text(
-                        if (de) "Bitte Internet prüfen und erneut versuchen." else "Please check your internet and try again.",
+                        if (de) "Bitte Internet prüfen und erneut versuchen." else Tr.t(lang, "Please check your internet and try again."),
                         color = TextMuted, fontSize = 13.sp, textAlign = TextAlign.Center, modifier = Modifier.padding(top = 8.dp, bottom = 20.dp),
                     )
                     Box(
                         Modifier.clip(RoundedCornerShape(8.dp)).border(BorderStroke(1.dp, Accent), RoundedCornerShape(8.dp))
                             .clickable { failed = false; web?.reload() }.padding(horizontal = 22.dp, vertical = 10.dp),
-                    ) { Text((if (de) "Erneut versuchen" else "Retry").uppercase(), color = Accent, fontSize = 12.sp, letterSpacing = 2.sp) }
+                    ) { Text((if (de) "Erneut versuchen" else Tr.t(lang, "Retry")).uppercase(), color = Accent, fontSize = 12.sp, letterSpacing = 2.sp) }
                 }
             }
         }
     }
 }
 
-private fun aboutTitle(de: Boolean) = if (de) "Über Centaurian" else "About Centaurian"
+private fun aboutTitle(de: Boolean) = if (de) "Über Centaurian" else Tr.t(lang, "About Centaurian")
 
 private fun aboutBody(de: Boolean): String =
 if (de)
@@ -1386,7 +1386,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
 
     Box(Modifier.fillMaxSize().background(BgDark)) {
     Column(Modifier.fillMaxSize()) {
-        TopBar(if (de) "Einstellungen" else "Settings", { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack)
+        TopBar(if (de) "Einstellungen" else Tr.t(lang, "Settings"), { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack)
         Column(Modifier.fillMaxSize().navigationBarsPadding().verticalScroll(rememberScrollState())) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
                 Image(painterResource(R.mipmap.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(56.dp))
@@ -1397,9 +1397,9 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                 }
             }
 
-            GroupTitle(if (de) "Allgemein" else "General")
+            GroupTitle(if (de) "Allgemein" else Tr.t(lang, "General"))
             SetCard(
-                "lang", if (de) "Sprache" else "Language", "${cur.flag}  ${cur.name}",
+                "lang", if (de) "Sprache" else Tr.t(lang, "Language"), "${cur.flag}  ${cur.name}",
                 onClick = { langOpen = !langOpen },
                 trailing = { Text(if (langOpen) "−" else "+", color = Accent, fontSize = 20.sp) },
                 extra = if (langOpen) ({
@@ -1422,8 +1422,8 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                 }) else null,
             )
             SetCard(
-                "screen", if (de) "Bildschirm anlassen" else "Keep screen on",
-                if (de) "Display geht in der App nicht aus" else "The display stays on while the app is open",
+                "screen", if (de) "Bildschirm anlassen" else Tr.t(lang, "Keep screen on"),
+                if (de) "Display geht in der App nicht aus" else Tr.t(lang, "The display stays on while the app is open"),
                 onClick = {
                     keepOn = !keepOn
                     prefs.edit().putBoolean("keepon", keepOn).apply()
@@ -1432,25 +1432,25 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                 trailing = { SetSwitch(keepOn) },
             )
             SetCard(
-                "screen", if (de) "Bass-Reaktion im Cover" else "Bass reaction in cover",
-                if (de) "Partikel reagieren auf die Musik (braucht Audio-Erlaubnis, nimmt nichts auf)" else "Particles react to the music (needs audio permission, records nothing)",
+                "screen", if (de) "Bass-Reaktion im Cover" else Tr.t(lang, "Bass reaction in cover"),
+                if (de) "Partikel reagieren auf die Musik (braucht Audio-Erlaubnis, nimmt nichts auf)" else Tr.t(lang, "Particles react to the music (needs audio permission, records nothing)"),
                 onClick = { (ctx as? MainActivity)?.askMic() },
                 trailing = { SetSwitch((ctx as? MainActivity)?.micGranted?.value == true) },
             )
 
             GroupTitle("App")
             SetCard(
-                "update", if (de) "Nach Updates suchen" else "Check for updates",
+                "update", if (de) "Nach Updates suchen" else Tr.t(lang, "Check for updates"),
                 when (Updater.msg) {
-                    "…" -> if (de) "Suche läuft …" else "Checking …"
-                    "ok" -> if (de) "Du hast die neueste Version" else "You have the latest version"
-                    "?" -> if (de) "Keine Verbindung" else "No connection"
+                    "…" -> if (de) "Suche läuft …" else Tr.t(lang, "Checking …")
+                    "ok" -> if (de) "Du hast die neueste Version" else Tr.t(lang, "You have the latest version")
+                    "?" -> if (de) "Keine Verbindung" else Tr.t(lang, "No connection")
                     else -> "Version $version"
                 },
                 onClick = { Updater.check(ctx, true) },
             )
             SetCard(
-                "share", if (de) "App teilen" else "Share app", if (de) "Link an Freunde schicken" else "Send the link to friends",
+                "share", if (de) "App teilen" else Tr.t(lang, "Share app"), if (de) "Link an Freunde schicken" else Tr.t(lang, "Send the link to friends"),
                 onClick = {
                     val i = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, BASE) }
                     ctx.startActivity(Intent.createChooser(i, "Centaurian"))
@@ -1458,16 +1458,16 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                 trailing = { Text("↗", color = Accent, fontSize = 18.sp) },
             )
             SetCard(
-                "clean", if (de) "Zwischenspeicher leeren" else "Clear cache",
-                if (de) "Gespeicherte Daten der Ansichten löschen" else "Delete saved data of the views",
+                "clean", if (de) "Zwischenspeicher leeren" else Tr.t(lang, "Clear cache"),
+                if (de) "Gespeicherte Daten der Ansichten löschen" else Tr.t(lang, "Delete saved data of the views"),
                 onClick = {
                     try { WebView(ctx).apply { clearCache(true); destroy() } } catch (_: Exception) { }
-                    Toast.makeText(ctx, if (de) "Gelöscht" else "Cleared", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(ctx, if (de) "Gelöscht" else Tr.t(lang, "Cleared"), Toast.LENGTH_SHORT).show()
                 },
             )
             SetCard(
-                "lock", if (de) "Berechtigungen" else "Permissions",
-                if (de) "Standort & Benachrichtigungen in Android" else "Location and notifications in Android",
+                "lock", if (de) "Berechtigungen" else Tr.t(lang, "Permissions"),
+                if (de) "Standort & Benachrichtigungen in Android" else Tr.t(lang, "Location and notifications in Android"),
                 onClick = {
                     try {
                         ctx.startActivity(Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + ctx.packageName)))
@@ -1478,32 +1478,32 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
 
             GroupTitle("Support")
             SetCard(
-                "chat", if (de) "Feedback senden" else "Send feedback",
-                if (de) "Fehler melden oder Ideen schicken" else "Report a bug or share an idea",
+                "chat", if (de) "Feedback senden" else Tr.t(lang, "Send feedback"),
+                if (de) "Fehler melden oder Ideen schicken" else Tr.t(lang, "Report a bug or share an idea"),
                 onClick = { onFeedback() },
             )
             SetCard(
-                "info", if (de) "Über die App" else "About the app",
-                if (de) "Was dich hier erwartet" else "What to expect here",
+                "info", if (de) "Über die App" else Tr.t(lang, "About the app"),
+                if (de) "Was dich hier erwartet" else Tr.t(lang, "What to expect here"),
                 onClick = { onOpen(Screen.Info(aboutTitle(de), aboutBody(de))) },
             )
 
-            GroupTitle(if (de) "Kontakt" else "Contact")
+            GroupTitle(if (de) "Kontakt" else Tr.t(lang, "Contact"))
             SetCard("plane", "Telegram", "t.me/Perseus641", onClick = { open("https://t.me/Perseus641") }, trailing = { Text("↗", color = Accent, fontSize = 18.sp) })
             SetCard("x", "X", "x.com/capone_835", onClick = { open("https://x.com/capone_835") }, trailing = { Text("↗", color = Accent, fontSize = 18.sp) })
 
-            GroupTitle(if (de) "Rechtliches" else "Legal")
+            GroupTitle(if (de) "Rechtliches" else Tr.t(lang, "Legal"))
             SetCard(
-                "shield", if (de) "Datenschutzerklärung" else "Privacy policy",
-                onClick = { onOpen(Screen.Web("/datenschutz", if (de) "Datenschutz" else "Privacy")) },
+                "shield", if (de) "Datenschutzerklärung" else Tr.t(lang, "Privacy policy"),
+                onClick = { onOpen(Screen.Web("/datenschutz", if (de) "Datenschutz" else Tr.t(lang, "Privacy"))) },
             )
             SetCard(
-                "layers", if (de) "Quellen & Lizenzen" else "Sources & licenses",
+                "layers", if (de) "Quellen & Lizenzen" else Tr.t(lang, "Sources & licenses"),
                 onClick = {
                     onOpen(
                         Screen.Info(
-                            if (de) "Quellen & Lizenzen" else "Sources & licenses",
-                            (if (de) "Alle Daten stammen aus offenen, öffentlich dokumentierten Quellen:\n\n" else "All data comes from open, publicly documented sources:\n\n") +
+                            if (de) "Quellen & Lizenzen" else Tr.t(lang, "Sources & licenses"),
+                            (if (de) "Alle Daten stammen aus offenen, öffentlich dokumentierten Quellen:\n\n" else Tr.t(lang, "All data comes from open, publicly documented sources:\n\n")) +
                                 SOURCES.joinToString("\n") { "• ${it.first} — ${it.second}" },
                         ),
                     )
@@ -1523,7 +1523,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
 @Composable
 private fun ToolsHub(de: Boolean, onBack: () -> Unit, onOpen: (Section) -> Unit) {
     Column(Modifier.fillMaxSize()) {
-        TopBar(if (de) "Werkzeuge" else "Tools", { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack)
+        TopBar(if (de) "Werkzeuge" else Tr.t(lang, "Tools"), { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack)
         Column(Modifier.fillMaxSize().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(top = 10.dp, bottom = 20.dp)) {
             TOOLS.forEachIndexed { i, sec ->
                 NumberedCard(i + 1, if (de) sec.de else sec.en, if (de) sec.descDe else sec.descEn) { onOpen(sec) }
