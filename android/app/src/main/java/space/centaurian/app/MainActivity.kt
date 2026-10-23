@@ -440,6 +440,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         MusicBridge.fg = true
+        Updater.check(this, false)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

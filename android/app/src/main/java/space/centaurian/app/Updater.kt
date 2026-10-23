@@ -28,8 +28,15 @@ object Updater {
     var msg by mutableStateOf("")
     private val main = Handler(Looper.getMainLooper())
 
+    @Volatile private var lastAuto = 0L
+
     fun check(ctx: Context, manual: Boolean) {
         val app = ctx.applicationContext
+        if (!manual) {
+            val n = System.currentTimeMillis()
+            if (n - lastAuto < 5 * 60 * 1000) return
+            lastAuto = n
+        }
         if (manual) msg = "…"
         Thread {
             val i = fetch()
