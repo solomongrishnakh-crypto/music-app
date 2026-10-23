@@ -445,6 +445,7 @@ private fun AppRoot() {
     }
 
     var homeBare by remember { mutableStateOf(false) }
+    var webBare by remember { mutableStateOf(false) }
     var searchReq by remember { mutableStateOf<Pair<Int, String>?>(null) }
     fun homeCmd(arg: String) {
         searchReq = Pair((searchReq?.first ?: 0) + 1, arg)
@@ -480,7 +481,7 @@ private fun AppRoot() {
             }
             when (val s = screen) {
                 is Screen.Home -> {}
-                is Screen.Web -> androidx.compose.runtime.key(s.path) { WebScreen(s, lang, anim, onBack = { screen = webBack }) }
+                is Screen.Web -> androidx.compose.runtime.key(s.path) { WebScreen(s, lang, anim, onBare = { webBare = it }, onBack = { screen = webBack }) }
                 is Screen.Settings -> SettingsScreen(
                     lang,
                     anim = anim,
@@ -500,7 +501,7 @@ private fun AppRoot() {
                 is Screen.Info -> InfoScreen(s.title, s.body, onBack = { screen = s.backTo })
             }
             val cur = screen
-            if ((cur is Screen.Web && cur.path in BARE) || (cur == Screen.Home && homeBare)) {
+            if ((cur is Screen.Web && (cur.path in BARE || webBare)) || (cur == Screen.Home && homeBare)) {
                 Box(
                     Modifier.align(Alignment.CenterStart).width(30.dp).fillMaxHeight().pointerInput(Unit) {
                         var total = 0f
@@ -894,7 +895,7 @@ private fun DrawerRow(tag: String, title: String, active: Boolean, onClick: () -
 // ---------------------------------------------------------------- Web-Ansicht
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBack: () -> Unit) {
+private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boolean) -> Unit, onBack: () -> Unit) {
     val ctx = LocalContext.current
     val activity = ctx as MainActivity
     var progress by remember { mutableStateOf(0) }
@@ -908,7 +909,10 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBack: () -> 
         if (w != null && w.canGoBack()) w.goBack() else onBack()
     }
 
-    val bare = s.path in BARE
+    var bareNow by remember { mutableStateOf(s.path in BARE) }
+    val bare = bareNow
+    LaunchedEffect(bare) { onBare(bare) }
+    androidx.compose.runtime.DisposableEffect(Unit) { onDispose { onBare(false) } }
     Column(Modifier.fillMaxSize().background(BgDark)) {
         if (bare) {
             Box(Modifier.fillMaxWidth().statusBarsPadding())
@@ -956,6 +960,11 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBack: () -> 
 
                             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                                 failed = false
+                            }
+
+                            override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
+                                canGoBack = view?.canGoBack() == true
+                                bareNow = isBarePath(try { Uri.parse(url ?: "").path ?: "" } catch (_: Exception) { "" })
                             }
 
                             override fun onPageFinished(view: WebView?, url: String?) {
