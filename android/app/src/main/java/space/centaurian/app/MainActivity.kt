@@ -479,9 +479,7 @@ private fun AppRoot() {
             }
             val cur = screen
             if (cur is Screen.Web && cur.path in BARE) {
-                Row(Modifier.align(Alignment.TopStart).statusBarsPadding().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("‹" to { screen = Screen.Home }, "≡" to { scope.launch { drawer.open() } }).forEach { (t, a) ->
-                        Box(
+                Box(
                             Modifier.size(38.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xAA060203))
                                 .border(BorderStroke(1.dp, LineSoft), RoundedCornerShape(8.dp)).clickable { a() },
                             contentAlignment = Alignment.Center,
