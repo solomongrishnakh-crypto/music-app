@@ -479,6 +479,15 @@ private fun AppRoot() {
             }
             val cur = screen
             if (cur is Screen.Web && cur.path in BARE) {
+                Row(Modifier.align(Alignment.TopStart).statusBarsPadding().padding(8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf("‹" to { screen = Screen.Home }, "≡" to { scope.launch { drawer.open() } }).forEach { (t, a) ->
+                        Box(
+                            Modifier.size(38.dp).clip(RoundedCornerShape(8.dp)).background(Color(0xAA060203))
+                                .border(BorderStroke(1.dp, LineSoft), RoundedCornerShape(8.dp)).clickable { a() },
+                            contentAlignment = Alignment.Center,
+                        ) { Text(t, color = TextMain, fontSize = 20.sp) }
+                    }
+                }
                 Box(
                     Modifier.align(Alignment.CenterStart).width(30.dp).fillMaxHeight().pointerInput(Unit) {
                         var total = 0f
@@ -589,10 +598,16 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
                                     view?.evaluateJavascript(homeJs(anim), null)
                                 }
 
+                                override fun onRenderProcessGone(view: WebView?, detail: android.webkit.RenderProcessGoneDetail?): Boolean {
+                                    failed = true
+                                    return true
+                                }
+
                                 override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
                                     if (request?.isForMainFrame == true) failed = true
                                 }
                             }
+                            visibility = if (visible) android.view.View.VISIBLE else android.view.View.INVISIBLE
                             loadUrl(siteUrl("/", lang))
                             web = this
                         }
@@ -971,7 +986,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
         try { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) } catch (_: Exception) { }
     }
 
-    Box(Modifier.fillMaxSize()) {
+    Box(Modifier.fillMaxSize().background(BgDark)) {
     Column(Modifier.fillMaxSize()) {
         TopBar(if (de) "Einstellungen" else "Settings", { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack)
         Column(Modifier.fillMaxSize().navigationBarsPadding().verticalScroll(rememberScrollState())) {
@@ -1077,8 +1092,6 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                 ) {
                     try {
                         WebView(ctx).clearCache(true)
-                        CookieManager.getInstance().removeAllCookies(null)
-                        WebStorage.getInstance().deleteAllData()
                     } catch (_: Exception) { }
                     Toast.makeText(ctx, if (de) "Gelöscht" else "Cleared", Toast.LENGTH_SHORT).show()
                 }
