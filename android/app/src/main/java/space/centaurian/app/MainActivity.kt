@@ -90,6 +90,9 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -531,7 +534,7 @@ private fun AppRoot() {
                         onSiteSearch = { q -> homeCmd(q) },
                         onFeedback = { homeCmd("!fb") },
                         onPrivacy = { go(Screen.Info(if (de) "Datenschutz" else Tr.t(lang, "Privacy"), Tr.privacy(lang), Screen.Home)) },
-                        onAbout = { go(Screen.Info(aboutTitle(de, lang), aboutBody(de), Screen.Home)) },
+                        onAbout = { go(Screen.Info(aboutTitle(de, lang), aboutBody(lang), Screen.Home)) },
                     )
                 }
             },
@@ -1288,23 +1291,7 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
 
 private fun aboutTitle(de: Boolean, lang: String) = if (de) "Über Centaurian" else Tr.t(lang, "About Centaurian")
 
-private fun aboutBody(de: Boolean): String =
-if (de)
-                                "Centaurian ist ein privates Hobby-Projekt: ein kleiner Ort, um Musik zu hören und unsere Welt und das Universum zu entdecken – kostenlos, ohne Anmeldung, ohne Werbung.\n\n" +
-                                    "Musik: Songs suchen und direkt hören, über den offiziellen YouTube-Player.\n" +
-                                    "Universum: Fakten, Zahlen und Live-News aus dem All.\n" +
-                                    "Sternenhimmel: Echte Sterne und Planeten für deinen Ort.\n" +
-                                    "Sonnensystem: Planeten und Raumsonden live in 3D.\n" +
-                                    "Weltgeschichte: Grenzen von Imperien von 3400 v. Chr. bis heute.\n\n" +
-                                    "Alles läuft über offizielle, öffentlich dokumentierte Schnittstellen (YouTube, NASA/JPL, Wikipedia). Nichts wird heruntergeladen oder auf dieser Seite gespeichert."
-                            else
-                                "Centaurian is a private hobby project: a small place to listen to music and explore our world and the universe – free, no sign-up, no ads.\n\n" +
-                                    "Music: search songs and play them directly via the official YouTube player.\n" +
-                                    "Universe: facts, numbers and live news from space.\n" +
-                                    "Live sky: real stars and planets for your location.\n" +
-                                    "Solar system: planets and space probes live in 3D.\n" +
-                                    "World history: empire borders from 3400 BC to today.\n\n" +
-                                    "Everything runs through official, publicly documented interfaces (YouTube, NASA/JPL, Wikipedia). Nothing is downloaded or stored on this site."
+private fun aboutBody(lang: String): String = Tr.about(lang)
 
 // ---------------------------------------------------------------- Einstellungen
 @Composable
@@ -1538,7 +1525,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
             SetCard(
                 "info", if (de) "Über die App" else Tr.t(lang, "About the app"),
                 if (de) "Was dich hier erwartet" else Tr.t(lang, "What to expect here"),
-                onClick = { onOpen(Screen.Info(aboutTitle(de, lang), aboutBody(de))) },
+                onClick = { onOpen(Screen.Info(aboutTitle(de, lang), aboutBody(lang))) },
             )
 
             GroupTitle(if (de) "Kontakt" else Tr.t(lang, "Contact"))
@@ -1602,11 +1589,29 @@ private fun ToolsHub(de: Boolean, lang: String, onBack: () -> Unit, onOpen: (Sec
 
 @Composable
 private fun InfoScreen(title: String, body: String, onBack: () -> Unit) {
+    val styled = remember(body) {
+        buildAnnotatedString {
+            val lines = body.split("\n")
+            lines.forEachIndexed { i, line ->
+                val colon = line.indexOf(':')
+                val isHead = line.length in 3..40 && line == line.uppercase() && line.any { it.isLetter() }
+                when {
+                    isHead -> withStyle(SpanStyle(color = Accent, fontWeight = FontWeight.Bold, letterSpacing = 1.sp, fontSize = 12.sp)) { append(line) }
+                    colon in 2..24 && !line.substring(0, colon).contains('.') -> {
+                        withStyle(SpanStyle(color = Accent, fontWeight = FontWeight.Bold)) { append(line.substring(0, colon + 1)) }
+                        append(line.substring(colon + 1))
+                    }
+                    else -> append(line)
+                }
+                if (i < lines.lastIndex) append("\n")
+            }
+        }
+    }
     Column(Modifier.fillMaxSize()) {
         TopBar(title, { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack)
         Text(
-            body,
-            color = TextMain, fontSize = 14.sp, lineHeight = 22.sp,
+            styled,
+            color = TextMain, fontSize = 15.sp, lineHeight = 24.sp,
             modifier = Modifier.fillMaxSize().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(20.dp),
         )
     }
