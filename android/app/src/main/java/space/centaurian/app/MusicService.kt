@@ -26,9 +26,8 @@ object MusicBridge {
     @Volatile var web: WebView? = null
 
     private const val STATE_JS =
-        "(function(){try{var p=document.querySelector('path[d^=\"M6 6h2v12H6z\"]');if(!p)return '';var b=p.closest('button');var row=b.parentElement;" +
-            "var ps=row.querySelectorAll('p');var pl=!!row.querySelector('path[d^=\"M6 5h4v14h\"]');" +
-            "return JSON.stringify({t:ps[0]?ps[0].textContent:'',a:ps[1]?ps[1].textContent:'',p:pl});}catch(e){return '';}})()"
+        "(function(){try{var m=navigator.mediaSession;var md=m&&m.metadata;" +
+            "return JSON.stringify({t:md?md.title:'',a:md?md.artist:'',p:m?m.playbackState==='playing':false});}catch(e){return '';}})()"
 
     fun click(kind: String) {
         val sel = when (kind) {
@@ -36,7 +35,7 @@ object MusicBridge {
             "next" -> "path[d^=\\\"M16 6h2v12h-2z\\\"]"
             else -> "path[d^=\\\"M6 5h4v14h\\\"],path[d^=\\\"M8 5v14l11-7z\\\"]"
         }
-        val js = "(function(){try{var p=document.querySelector(\"$sel\");if(p){var b=p.closest('button');if(b)b.click();}}catch(e){}})()"
+        val js = "(function(){try{var ps=document.querySelectorAll(\"$sel\");for(var i=0;i<ps.length;i++){var b=ps[i].closest('button');if(b&&b.offsetParent!==null){b.click();break;}}}catch(e){}})()"
         val w = web ?: return
         w.post { w.evaluateJavascript(js, null) }
     }

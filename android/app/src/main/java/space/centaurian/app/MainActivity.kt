@@ -555,11 +555,30 @@ private fun animJs(on: Boolean): String =
         (if (on) "" else "if(!keep){var s=document.createElement('style');s.id='cn-anim';s.textContent='html,body{background:#000!important}';(document.head||document.documentElement).appendChild(s);}") +
         "}catch(e){}})()"
 
+/** Kompakte, futuristische Suchergebnisse (Zeilen statt grosser Kacheln) - nur in der App. */
+private const val RESULTS_CSS =
+    "div.mt-10>h2.label-mono{font-size:10px!important;letter-spacing:3px!important;color:#ff5a4d!important;margin:14px 0 8px!important}" +
+        "div.mt-10>h2.label-mono+div.grid.gap-px{grid-template-columns:1fr!important;gap:6px!important;background:transparent!important}" +
+        "div.mt-10>h2.label-mono+div.grid.gap-px>div.group{flex-direction:row!important;align-items:center!important;gap:12px!important;padding:6px 10px 6px 6px!important;" +
+        "border:1px solid rgba(255,90,77,0.25)!important;border-radius:10px!important;background:linear-gradient(90deg,rgba(255,90,77,0.10),rgba(255,255,255,0.02))!important;position:relative!important}" +
+        "div.mt-10>h2.label-mono+div.grid.gap-px>div.group>div.relative{width:52px!important;height:52px!important;aspect-ratio:auto!important;flex:0 0 52px!important;border-radius:8px!important}" +
+        "div.mt-10>h2.label-mono+div.grid.gap-px>div.group>div.relative button[class*=right-1]{width:20px!important;height:20px!important;right:2px!important;top:2px!important}" +
+        "div.mt-10>h2.label-mono+div.grid.gap-px>div.group>div.flex-1{padding:0!important;min-width:0!important}" +
+        "div.mt-10>h2.label-mono+div.grid.gap-px>div.group>div.flex-1>p:first-child{white-space:normal!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;font-size:13px!important;line-height:1.25!important}" +
+        "div.mt-10>h2.label-mono+div.grid.gap-px>div.group>div.flex-1>p:last-child{font-size:10px!important;letter-spacing:1.5px!important;text-transform:uppercase!important;color:#ff8a80!important;margin-top:2px!important}"
+
+private const val RESULTS_JS =
+    "try{if(!window.__cnRows){window.__cnRows=1;document.addEventListener('click',function(e){var t=e.target;if(!t||!t.closest)return;" +
+        "var row=t.closest('div.group');if(!row||!row.parentElement||!row.parentElement.matches('div.grid.gap-px'))return;if(t.closest('button'))return;" +
+        "var b=row.querySelector('div.relative>button');if(b)b.click();},true);}}catch(e){}"
+
 private fun homeJs(anim: Boolean): String =
     "(function(){var css='.app-fab,.app-drawer,.app-scrim{display:none!important}" +
         "button[aria-haspopup=listbox]{display:none!important}a[href\$=apk]{display:none!important}" +
+        RESULTS_CSS +
         "';" +
         "try{Object.defineProperty(document,'hidden',{get:function(){return false;},configurable:true});Object.defineProperty(document,'visibilityState',{get:function(){return 'visible';},configurable:true});document.addEventListener('visibilitychange',function(e){e.stopImmediatePropagation();},true);}catch(x){}" +
+        RESULTS_JS +
         "var n=0;function run(){try{if(!document.getElementById('cn-native')&&document.head){var s=document.createElement('style');" +
         "s.id='cn-native';s.textContent=css;document.head.appendChild(s);}" +
         "var kk=document.getElementById('kontakte');if(kk)kk.style.setProperty('display','none','important');" +
