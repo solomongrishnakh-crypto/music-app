@@ -391,9 +391,9 @@ private fun AppRoot() {
         if (showBg) ParticleBackground(Modifier.fillMaxSize())
         ModalNavigationDrawer(
             drawerState = drawer,
-            gesturesEnabled = false,
+            gesturesEnabled = drawer.currentValue == DrawerValue.Open || drawer.targetValue == DrawerValue.Open,
             drawerContent = {
-                ModalDrawerSheet(drawerContainerColor = Color(0xF8060203)) {
+                ModalDrawerSheet(drawerContainerColor = Color(0xFF060203)) {
                     DrawerContent(lang, screen == Screen.Home, onHome = { screen = Screen.Home; scope.launch { drawer.close() } }, onOpen = { go(Screen.Web(it.path, if (de) it.de else it.en)) }, onSettings = { go(Screen.Settings) },
                         onSiteSearch = { q -> searchReq = Pair((searchReq?.first ?: 0) + 1, q); screen = Screen.Home; scope.launch { drawer.close() } })
                 }
@@ -692,7 +692,6 @@ private fun DrawerRow(tag: String, title: String, active: Boolean, onClick: () -
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 14.dp, vertical = 3.dp)
-            .then(if (active) Modifier.glassBox() else Modifier)
             .clickable { onClick() }
             .padding(horizontal = 12.dp, vertical = 11.dp),
         verticalAlignment = Alignment.CenterVertically,
