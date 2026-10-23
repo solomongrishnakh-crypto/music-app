@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import SiteBackground from "@/components/particles/SiteBackground";
 import SpaceNewsSection from "@/components/home/SpaceNewsSection";
-import SolarSystem from "@/components/universe/SolarSystem";
+import SolarSystemStill from "@/components/universe/SolarSystemStill";
 import UniverseAgeTicker from "@/components/universe/UniverseAgeTicker";
 import Gear3D from "@/components/universe/Gear3D";
 import SolarSystemModal from "@/components/universe/SolarSystemModal";
@@ -1440,9 +1440,9 @@ export default function UniversumPage() {
             <button
               type="button"
               onClick={() => setShowSolarSystem(true)}
-              className="hud-card group relative h-52 w-full overflow-hidden text-left sm:h-64"
+              className="hud-card group relative h-36 w-full overflow-hidden text-left sm:h-44"
             >
-              <SolarSystem mode="compact" />
+              <SolarSystemStill />
               <div className="pointer-events-none absolute inset-x-0 bottom-0 bg-gradient-to-t from-background/90 to-transparent p-4">
                 <p className="label-mono text-xs uppercase text-accent">{t("solarSystemLabel")}</p>
                 <p className="mt-1 flex items-center gap-2 text-sm font-semibold text-foreground">
