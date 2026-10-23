@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { Song } from "@/types/music";
 import SongCover from "@/components/ui/SongCover";
 import { useLanguage } from "@/contexts/LanguageContext";
+import AddToPlaylist from "@/components/playlist/AddToPlaylist";
 
 interface FavoritesModalProps {
   songs: Song[];
@@ -118,6 +119,7 @@ export default function FavoritesModal({
                   </span>
                 </button>
 
+                <AddToPlaylist song={song} />
                 <button
                   onClick={() => onToggleFavorite(song)}
                   className="shrink-0 p-1.5 text-accent transition-transform hover:scale-110"

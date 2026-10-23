@@ -3,6 +3,7 @@
 import { Song } from "@/types/music";
 import SongCover from "@/components/ui/SongCover";
 import { useLanguage } from "@/contexts/LanguageContext";
+import AddToPlaylist from "@/components/playlist/AddToPlaylist";
 
 interface CompactSongListProps {
   songs: Song[];
@@ -68,6 +69,7 @@ export default function CompactSongList({
                 </span>
               </button>
 
+              <AddToPlaylist song={song} />
               <button
                 onClick={() => onToggleFavorite(song)}
                 className="shrink-0 p-1.5 text-accent transition-transform hover:scale-110"

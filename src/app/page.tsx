@@ -15,6 +15,8 @@ import ContactSection from "@/components/home/ContactSection";
 import AboutSiteSection from "@/components/home/AboutSiteSection";
 import TypedWordmark from "@/components/ui/TypedWordmark";
 import InfoHint from "@/components/ui/InfoHint";
+import PlaylistsSection from "@/components/playlist/PlaylistsSection";
+import { parseYoutubeListId } from "@/lib/history/playlists";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { Song } from "@/types/music";
 import { usePlayer } from "@/contexts/PlayerContext";
@@ -39,6 +41,7 @@ export default function Home() {
   const [musicAsked, setMusicAsked] = useState(false);
   const [showHero, setShowHero] = useState(false);
   const [showAllFavorites, setShowAllFavorites] = useState(false);
+  const [importReq, setImportReq] = useState<{ id: string; n: number } | null>(null);
   const requestIdRef = useRef(0);
 
   // Aktuelle Suchergebnisse laufend als "Weiter"-Warteschlange im globalen
@@ -105,6 +108,13 @@ export default function Home() {
   }
 
   async function handleSearch(q: string) {
+    // YouTube-Playlist-Link in der Suchleiste: als Playlist importieren
+    const listId = parseYoutubeListId(q);
+    if (listId) {
+      setImportReq((r) => ({ id: listId, n: (r?.n ?? 0) + 1 }));
+      setQuery("");
+      return;
+    }
     setQuery(q);
     setMusicAsked(false);
     if (!q.trim()) {
@@ -142,6 +152,13 @@ export default function Home() {
 
   function handlePlay(song: Song) {
     player.play(song, results.length > 0 ? results : undefined);
+    setShowHero(true);
+    scrollToTop();
+  }
+
+  function handlePlayList(songs: Song[], start: number) {
+    if (!songs[start]) return;
+    player.play(songs[start], songs);
     setShowHero(true);
     scrollToTop();
   }
@@ -214,6 +231,15 @@ export default function Home() {
               <p>{t("infoHintNote2")}</p>
             </InfoHint>
           </div>
+        )}
+
+        {!query.trim() && (
+          <PlaylistsSection
+            favorites={player.favorites}
+            activeSongId={player.currentSong?.id}
+            onPlay={handlePlayList}
+            importRequest={importReq}
+          />
         )}
 
         {showFavorites && (

@@ -2,6 +2,7 @@
 
 import { Song } from "@/types/music";
 import SongCover from "@/components/ui/SongCover";
+import AddToPlaylist from "@/components/playlist/AddToPlaylist";
 
 interface SongCardProps {
   song: Song;
@@ -42,6 +43,10 @@ export default function SongCard({
             </svg>
           </span>
         </button>
+
+        <div className="absolute left-1.5 top-1.5 bg-black/60">
+          <AddToPlaylist song={song} className="flex h-7 w-7 items-center justify-center text-white/70 transition-colors hover:text-white" />
+        </div>
 
         {onToggleFavorite && (
           <button
