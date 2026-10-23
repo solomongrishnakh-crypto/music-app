@@ -14,6 +14,8 @@ import android.media.MediaMetadata
 import android.media.session.MediaSession
 import android.media.session.PlaybackState
 import android.os.Build
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
@@ -30,11 +32,17 @@ object MusicBridge {
     @Volatile var playing = false
     @Volatile var stamp = 0L
     @Volatile var cmd = ""
+    @Volatile var cover = ""
+    @Volatile var pos = 0.0
+    @Volatile var dur = 0.0
 
     /** Wird von der Seite aufgerufen (auch im Hintergrund): meldet Titel/Status und holt Befehle ab. */
     class Js {
         @JavascriptInterface fun update(t: String, a: String, p: Boolean) {
             title = t; artist = a; playing = p; stamp = System.currentTimeMillis()
+        }
+        @JavascriptInterface fun update2(t: String, a: String, p: Boolean, c: String, cur: Double, d: Double) {
+            title = t; artist = a; playing = p; cover = c; pos = cur; dur = d; stamp = System.currentTimeMillis()
         }
         @JavascriptInterface fun cmd(): String { val c = cmd; cmd = ""; return c }
     }
@@ -87,12 +95,25 @@ class MusicService : Service() {
     private var title = "Centaurian"
     private var artist = ""
     private var playing = true
+    private var art: Bitmap? = null
+    private var artUrl = ""
+    private var lastDur = 0.0
 
     private val tick = object : Runnable {
         override fun run() {
             if (MusicBridge.title.isNotBlank() && System.currentTimeMillis() - MusicBridge.stamp < 6000) {
                 val t = MusicBridge.title; val a = MusicBridge.artist; val p = MusicBridge.playing
-                if (t != title || a != artist || p != playing) { title = t; artist = a; playing = p; refresh() }
+                val c = MusicBridge.cover
+                if (c.isNotBlank() && c != artUrl) {
+                    artUrl = c
+                    Thread {
+                        try {
+                            val bm = java.net.URL(c).openStream().use { BitmapFactory.decodeStream(it) }
+                            handler.post { art = bm; refresh() }
+                        } catch (_: Exception) { }
+                    }.start()
+                }
+                if (t != title || a != artist || p != playing || Math.abs(MusicBridge.dur - lastDur) > 1) { title = t; artist = a; playing = p; lastDur = MusicBridge.dur; refresh() } else updateState()
             } else MusicBridge.state { t, a, p ->
                 handler.post {
                     val changed = t != title || a != artist || p != playing
@@ -133,6 +154,7 @@ class MusicService : Service() {
             .setContentTitle(title)
             .setContentText(if (artist.isNotBlank()) artist else "Centaurian")
             .setContentIntent(open)
+            .setLargeIcon(art)
             .setOngoing(playing)
             .setVisibility(Notification.VISIBILITY_PUBLIC)
             .addAction(action("prev", android.R.drawable.ic_media_previous, "Zurück"))
@@ -144,16 +166,23 @@ class MusicService : Service() {
         return b.build()
     }
 
+    private fun updateState() {
+        session?.setPlaybackState(
+            PlaybackState.Builder()
+                .setActions(PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or PlaybackState.ACTION_SKIP_TO_NEXT or PlaybackState.ACTION_SKIP_TO_PREVIOUS or PlaybackState.ACTION_SEEK_TO)
+                .setState(if (playing) PlaybackState.STATE_PLAYING else PlaybackState.STATE_PAUSED, (MusicBridge.pos * 1000).toLong(), 1f)
+                .build(),
+        )
+    }
+
     private fun refresh() {
         session?.let { s ->
-            s.setMetadata(MediaMetadata.Builder().putString(MediaMetadata.METADATA_KEY_TITLE, title).putString(MediaMetadata.METADATA_KEY_ARTIST, artist).build())
-            s.setPlaybackState(
-                PlaybackState.Builder()
-                    .setActions(PlaybackState.ACTION_PLAY or PlaybackState.ACTION_PAUSE or PlaybackState.ACTION_SKIP_TO_NEXT or PlaybackState.ACTION_SKIP_TO_PREVIOUS)
-                    .setState(if (playing) PlaybackState.STATE_PLAYING else PlaybackState.STATE_PAUSED, PlaybackState.PLAYBACK_POSITION_UNKNOWN, 1f)
-                    .build(),
-            )
+            val md = MediaMetadata.Builder().putString(MediaMetadata.METADATA_KEY_TITLE, title).putString(MediaMetadata.METADATA_KEY_ARTIST, artist)
+                .putLong(MediaMetadata.METADATA_KEY_DURATION, (MusicBridge.dur * 1000).toLong())
+            art?.let { md.putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, it) }
+            s.setMetadata(md.build())
         }
+        updateState()
         (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager).notify(7, build())
     }
 
@@ -174,6 +203,7 @@ class MusicService : Service() {
                     override fun onPause() = MusicBridge.click("pp")
                     override fun onSkipToNext() = MusicBridge.click("next")
                     override fun onSkipToPrevious() = MusicBridge.click("prev")
+                    override fun onSeekTo(pos: Long) { MusicBridge.cmd = "seek:" + (pos / 1000.0); MusicBridge.pos = pos / 1000.0 }
                 })
                 isActive = true
             }
