@@ -45,6 +45,9 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.SolidColor
@@ -73,6 +76,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.font.FontFamily
@@ -183,7 +187,7 @@ private fun ParticleBackground(modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun SearchBar(query: String, hint: String, onChange: (String) -> Unit, modifier: Modifier = Modifier) {
+private fun SearchBar(query: String, hint: String, onChange: (String) -> Unit, modifier: Modifier = Modifier, onSearch: ((String) -> Unit)? = null) {
     Row(
         modifier
             .fillMaxWidth()
@@ -201,6 +205,8 @@ private fun SearchBar(query: String, hint: String, onChange: (String) -> Unit, m
                 singleLine = true,
                 textStyle = androidx.compose.ui.text.TextStyle(color = TextMain, fontSize = 13.sp, fontFamily = Mono),
                 cursorBrush = SolidColor(Accent),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { if (query.isNotBlank()) onSearch?.invoke(query.trim()) }),
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -317,7 +323,9 @@ private val NATIVE_CSS_JS =
         "s.id='cn-native';s.textContent=css;d.head.appendChild(s);}catch(e){}}" +
         "function all(){inj(document);var f=document.querySelectorAll('iframe');" +
         "for(var i=0;i<f.length;i++){try{inj(f[i].contentDocument);}catch(e){}}}" +
-        "all();var n=0;var iv=setInterval(function(){all();if(++n>30)clearInterval(iv);},400);})()"
+        "function bk(){try{var a=document.querySelectorAll('a,button');for(var i=0;i<a.length;i++){var t=(a[i].textContent||'').trim();" +
+        "if(t.length<24&&(t.charAt(0)==='\u2190'||t.charAt(0)==='\u2039')){a[i].style.setProperty('display','none','important');}}}catch(e){}}" +
+        "all();bk();var n=0;var iv=setInterval(function(){all();bk();if(++n>30)clearInterval(iv);},400);})()"
 
 // ---------------------------------------------------------------- Activity
 class MainActivity : ComponentActivity() {
@@ -376,6 +384,7 @@ private fun AppRoot() {
         screen = if (screen is Screen.Info) Screen.Settings else Screen.Home
     }
 
+    var searchReq by remember { mutableStateOf<Pair<Int, String>?>(null) }
     val showBg = screen is Screen.Settings || screen is Screen.Info
     Box(Modifier.fillMaxSize().background(BgDark)) {
         if (showBg) ParticleBackground(Modifier.fillMaxSize())
@@ -384,13 +393,14 @@ private fun AppRoot() {
             gesturesEnabled = false,
             drawerContent = {
                 ModalDrawerSheet(drawerContainerColor = Color(0xFF0C0506)) {
-                    DrawerContent(lang, onOpen = { go(Screen.Web(it.path, if (de) it.de else it.en)) }, onSettings = { go(Screen.Settings) })
+                    DrawerContent(lang, onOpen = { go(Screen.Web(it.path, if (de) it.de else it.en)) }, onSettings = { go(Screen.Settings) },
+                        onSiteSearch = { q -> searchReq = Pair((searchReq?.first ?: 0) + 1, q); screen = Screen.Home; scope.launch { drawer.close() } })
                 }
             },
         ) {
             Box(Modifier.fillMaxSize()) {
-            Box(Modifier.fillMaxSize().then(if (screen == Screen.Home) Modifier else Modifier.size(0.dp))) {
-                HomeWebLayer(lang, screen == Screen.Home, onMenu = { scope.launch { drawer.open() } })
+            Box(Modifier.then(if (screen == Screen.Home) Modifier.fillMaxSize() else Modifier.size(0.dp)).clipToBounds()) {
+                HomeWebLayer(lang, screen == Screen.Home, searchReq, onMenu = { scope.launch { drawer.open() } })
             }
             when (val s = screen) {
                 is Screen.Home -> {}
@@ -423,13 +433,33 @@ private val HOME_CSS_JS =
 /** Die Startseite der Webseite 1:1 (Design, Suche, Musik) in der App. Bleibt am Leben, damit Musik weiterlaeuft. */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-private fun HomeWebLayer(lang: String, visible: Boolean, onMenu: () -> Unit) {
+private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, String>?, onMenu: () -> Unit) {
     var web by remember { mutableStateOf<WebView?>(null) }
     var canBack by remember { mutableStateOf(false) }
     var progress by remember { mutableStateOf(0) }
     var failed by remember { mutableStateOf(false) }
     val de = lang == "de"
     BackHandler(enabled = visible && canBack) { web?.goBack() }
+    LaunchedEffect(searchReq) {
+        val r = searchReq ?: return@LaunchedEffect
+        val w = web ?: return@LaunchedEffect
+        val path = try { Uri.parse(w.url ?: "").path ?: "/" } catch (_: Exception) { "/" }
+        val isHome = path == "/" || path.length <= 3 && path.startsWith("/")
+        if (!isHome) {
+            w.loadUrl(siteUrl("/", lang))
+            kotlinx.coroutines.delay(2500)
+        } else {
+            kotlinx.coroutines.delay(300)
+        }
+        val q = org.json.JSONObject.quote(r.second)
+        w.evaluateJavascript(
+            "(function(q){window.scrollTo(0,0);var l=document.querySelectorAll('input');var i=null;" +
+                "for(var k=0;k<l.length;k++){var t=l[k].type;if(t==='text'||t==='search'||!t){i=l[k];break;}}" +
+                "if(!i)return;var set=Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set;" +
+                "set.call(i,q);i.dispatchEvent(new Event('input',{bubbles:true}));i.focus();})($q)",
+            null,
+        )
+    }
     Column(Modifier.fillMaxSize().background(BgDark)) {
         TopBar("Centaurian", { Icon(Icons.Default.Menu, contentDescription = "Menu", tint = TextMain) }, onMenu)
         if (progress in 1..99) {
@@ -485,6 +515,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, onMenu: () -> Unit) {
                             web = this
                         }
                     },
+                    update = { v -> v.visibility = if (visible) android.view.View.VISIBLE else android.view.View.INVISIBLE },
                 )
             }
             if (failed) {
@@ -621,19 +652,26 @@ private fun HomeScreen(lang: String, onMenu: () -> Unit, onOpen: (Section) -> Un
 
 // ---------------------------------------------------------------- Menue
 @Composable
-private fun DrawerContent(lang: String, onOpen: (Section) -> Unit, onSettings: () -> Unit) {
+private fun DrawerContent(lang: String, onOpen: (Section) -> Unit, onSettings: () -> Unit, onSiteSearch: (String) -> Unit) {
     val de = lang == "de"
     var q by remember { mutableStateOf("") }
     Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())) {
         Text("CENTAURIAN", color = TextMain, fontSize = 15.sp, fontWeight = FontWeight.Bold, letterSpacing = 6.sp, modifier = Modifier.padding(20.dp))
-        SearchBar(q, if (de) "Suchen…" else "Search…", { q = it }, Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+        SearchBar(q, if (de) "Planeten, Songs, Reiche…" else "Planets, songs, empires…", { q = it }, Modifier.padding(horizontal = 16.dp, vertical = 4.dp), onSearch = { onSiteSearch(it) })
+        if (q.isNotBlank()) {
+            Row(Modifier.fillMaxWidth().clickable { onSiteSearch(q.trim()) }.padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Search, contentDescription = null, tint = Accent, modifier = Modifier.size(16.dp))
+                Spacer(Modifier.size(12.dp))
+                Text((if (de) "„" else "\"") + q.trim() + (if (de) "“ auf der Webseite suchen" else "\" – search everything"), color = TextMain, fontSize = 13.sp)
+            }
+        }
         val ex = EXPLORE.filter { matches(it, q) }
         val tl = TOOLS.filter { matches(it, q) }
         if (ex.isNotEmpty()) GroupTitle(if (de) "Entdecken" else "Explore")
         ex.forEach { s -> DrawerItem(EXPLORE.indexOf(s) + 1, if (de) s.de else s.en) { onOpen(s) } }
         if (tl.isNotEmpty()) GroupTitle(if (de) "Werkzeuge" else "Tools")
         tl.forEach { s -> DrawerItem(EXPLORE.size + TOOLS.indexOf(s) + 1, if (de) s.de else s.en) { onOpen(s) } }
-        if (ex.isEmpty() && tl.isEmpty()) Text(if (de) "Nichts gefunden" else "Nothing found", color = TextMuted, fontSize = 12.sp, fontFamily = Mono, modifier = Modifier.padding(20.dp))
+        if (ex.isEmpty() && tl.isEmpty() && q.isBlank()) Text(if (de) "Nichts gefunden" else "Nothing found", color = TextMuted, fontSize = 12.sp, fontFamily = Mono, modifier = Modifier.padding(20.dp))
         Spacer(Modifier.height(20.dp))
         Row(
             Modifier
