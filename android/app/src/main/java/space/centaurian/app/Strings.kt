@@ -5,6 +5,7 @@ object Tr {
     private val ORDER = listOf("es", "fr", "pt", "tr", "ru", "el", "ar", "hi", "zh", "ja", "ko", "id", "fa")
 
     private val M: Map<String, List<String>> = mapOf(
+        "Loading …" to listOf("Cargando …", "Chargement …", "Carregando …", "Yükleniyor …", "Загрузка …", "Φόρτωση …", "جارٍ التحميل …", "लोड हो रहा है …", "加载中 …", "読み込み中 …", "불러오는 중 …", "Memuat …", "در حال بارگذاری …"),
         "Privacy" to listOf("Privacidad", "Confidentialité", "Privacidade", "Gizlilik", "Конфиденциальность", "Απόρρητο", "الخصوصية", "गोपनीयता", "隐私", "プライバシー", "개인정보", "Privasi", "حریم خصوصی"),
         "Update available" to listOf("Actualización disponible", "Mise à jour disponible", "Atualização disponível", "Güncelleme mevcut", "Доступно обновление", "Διαθέσιμη ενημέρωση", "تحديث متاح", "अपडेट उपलब्ध है", "有可用更新", "アップデートがあります", "업데이트 가능", "Pembaruan tersedia", "به‌روزرسانی موجود است"),
         "New version " to listOf("Nueva versión ", "Nouvelle version ", "Nova versão ", "Yeni sürüm ", "Новая версия ", "Νέα έκδοση ", "إصدار جديد ", "नया संस्करण ", "新版本 ", "新バージョン ", "새 버전 ", "Versi baru ", "نسخه جدید "),

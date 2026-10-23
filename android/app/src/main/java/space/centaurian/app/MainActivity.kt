@@ -752,10 +752,28 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
     var bareNow by remember { mutableStateOf(false) }
     var progress by remember { mutableStateOf(0) }
     var failed by remember { mutableStateOf(false) }
+    var loading by remember { mutableStateOf(true) }
+    var attempt by remember { mutableStateOf(0) }
+    var loadedLang by remember { mutableStateOf(lang) }
     val de = lang == "de"
     val langNow by rememberUpdatedState(lang)
     val animNow by rememberUpdatedState(anim)
-    LaunchedEffect(lang) { web?.loadUrl(siteUrl("/", lang)) }
+    // Sprachwechsel: erst neu laden, wenn die Startseite sichtbar ist (im versteckten Zustand hat die WebView Groesse 0 und rendert kaputt)
+    LaunchedEffect(lang, visible, web) {
+        val w = web
+        if (w != null && visible && loadedLang != lang) {
+            loadedLang = lang; attempt = 0; loading = true
+            w.loadUrl(siteUrl("/", lang))
+        }
+    }
+    LaunchedEffect(loading, attempt) {
+        if (loading) {
+            kotlinx.coroutines.delay(15000)
+            if (loading) {
+                if (attempt == 0) { attempt = 1; web?.stopLoading(); web?.reload() } else { loading = false; failed = true }
+            }
+        }
+    }
     LaunchedEffect(anim) { web?.evaluateJavascript(animJs(anim), null) }
     BackHandler(enabled = visible && canBack) { web?.goBack() }
     LaunchedEffect(searchReq) {
@@ -832,6 +850,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
 
                                 override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                                     failed = false
+                                    loading = true
                                     view?.evaluateJavascript("try{localStorage.setItem('centaurian-lang','$langNow');}catch(e){}", null)
                                 }
 
@@ -844,6 +863,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
 
                                 override fun onPageFinished(view: WebView?, url: String?) {
                                     view?.evaluateJavascript(homeJs(animNow), null)
+                                    loading = false
                                 }
 
                                 override fun onRenderProcessGone(view: WebView?, detail: android.webkit.RenderProcessGoneDetail?): Boolean {
@@ -866,6 +886,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
                     update = { v -> v.visibility = android.view.View.VISIBLE; v.alpha = if (visible) 1f else 0f },
                 )
             }
+            if (loading && !failed) LoadingCover(lang)
             if (failed) {
                 Column(
                     Modifier.fillMaxSize().background(BgDark).padding(32.dp),
@@ -875,7 +896,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
                     Text(if (de) "Keine Verbindung" else Tr.t(lang, "No connection"), color = TextMain, fontSize = 18.sp, fontWeight = FontWeight.Bold)
                     Box(
                         Modifier.padding(top = 20.dp).clip(RoundedCornerShape(8.dp)).border(BorderStroke(1.dp, Accent), RoundedCornerShape(8.dp))
-                            .clickable { failed = false; web?.reload() }.padding(horizontal = 22.dp, vertical = 10.dp),
+                            .clickable { failed = false; loading = true; attempt = 0; web?.reload() }.padding(horizontal = 22.dp, vertical = 10.dp),
                     ) { Text((if (de) "Erneut versuchen" else Tr.t(lang, "Retry")).uppercase(), color = Accent, fontSize = 12.sp, letterSpacing = 2.sp) }
                 }
             }
@@ -884,6 +905,19 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
 }
 
 // ---------------------------------------------------------------- Bausteine
+@Composable
+private fun LoadingCover(lang: String) {
+    Box(Modifier.fillMaxSize().background(BgDark).pointerInput(Unit) { }, contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            androidx.compose.material3.CircularProgressIndicator(color = Accent, strokeWidth = 2.dp, modifier = Modifier.size(34.dp))
+            Text(
+                if (lang == "de") "Lädt …" else Tr.t(lang, "Loading …"),
+                color = TextMuted, fontSize = 12.sp, fontFamily = Mono, letterSpacing = 2.sp, modifier = Modifier.padding(top = 14.dp),
+            )
+        }
+    }
+}
+
 @Composable
 private fun TopBar(title: String, icon: @Composable () -> Unit, onIcon: () -> Unit, onTitle: (() -> Unit)? = null) {
     Row(
@@ -1117,7 +1151,17 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
     var failed by remember { mutableStateOf(false) }
     var web by remember { mutableStateOf<WebView?>(null) }
     var canGoBack by remember { mutableStateOf(false) }
+    var loading by remember { mutableStateOf(true) }
+    var attempt by remember { mutableStateOf(0) }
     val de = lang == "de"
+    LaunchedEffect(loading, attempt) {
+        if (loading) {
+            kotlinx.coroutines.delay(15000)
+            if (loading) {
+                if (attempt == 0) { attempt = 1; web?.stopLoading(); web?.reload() } else { loading = false; failed = true }
+            }
+        }
+    }
 
     BackHandler(enabled = true) {
         val w = web
@@ -1175,6 +1219,7 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
 
                             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                                 failed = false
+                                loading = true
                             }
 
                             override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
@@ -1184,6 +1229,7 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
 
                             override fun onPageFinished(view: WebView?, url: String?) {
                                 canGoBack = view?.canGoBack() == true
+                                loading = false
                                 view?.evaluateJavascript(
                                     "try{localStorage.setItem('centaurian-lang','$lang');localStorage.setItem('cn_app_mode','1');}catch(e){}",
                                     null,
@@ -1212,6 +1258,7 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
                 },
                 onRelease = { v -> try { v.stopLoading(); v.loadUrl("about:blank"); v.destroy() } catch (_: Exception) { } },
             )
+            if (loading && !failed) LoadingCover(lang)
             if (failed) {
                 Column(
                     Modifier.fillMaxSize().background(BgDark).padding(32.dp),
