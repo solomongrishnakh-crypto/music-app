@@ -467,6 +467,14 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/** Zur Startseite wechseln, ohne die Seite neu zu laden - sonst ist die laufende Musik weg. */
+private fun softHome(w: WebView, url: String) {
+    val path = try { Uri.parse(url).path ?: "/" } catch (_: Exception) { "/" }
+    w.evaluateJavascript("(function(){try{var r=window.next&&window.next.router;if(r&&r.push){r.push('" + path + "');return 'ok';}}catch(e){}return 'no';})()") { res ->
+        if (res?.contains("ok") != true) w.loadUrl(url)
+    }
+}
+
 /** Warum wurde die App zuletzt beendet? (Android 11+) Hilft zu finden, wenn die Musik ploetzlich stoppt. */
 private fun lastExits(ctx: Context): String {
     if (android.os.Build.VERSION.SDK_INT < 30) return "-"
@@ -855,7 +863,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
         if (r.second == "!home") {
             val p0 = try { Uri.parse(w.url ?: "").path ?: "/" } catch (_: Exception) { "/" }
             if (p0 == "/" || (p0.length <= 3 && p0.startsWith("/"))) w.evaluateJavascript("window.scrollTo({top:0,behavior:'smooth'})", null)
-            else w.loadUrl(siteUrl("/", lang))
+            else softHome(w, siteUrl("/", lang))
             return@LaunchedEffect
         }
         if (r.second == "!fb") {
@@ -887,7 +895,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
             val path = try { Uri.parse(w?.url ?: "").path ?: "/" } catch (_: Exception) { "/" }
             if (w != null) {
                 if (path == "/" || (path.length <= 3 && path.startsWith("/"))) w.evaluateJavascript("window.scrollTo({top:0,behavior:'smooth'})", null)
-                else w.loadUrl(siteUrl("/", lang))
+                else softHome(w, siteUrl("/", lang))
             }
         })
         if (progress in 1..99) {
