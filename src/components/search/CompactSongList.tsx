@@ -14,6 +14,7 @@ interface CompactSongListProps {
   /** Zeigt nur die ersten `limit` Songs, mit einem "Mehr"-Button für den Rest. */
   limit?: number;
   onShowMore?: () => void;
+  className?: string;
 }
 
 /**
@@ -28,6 +29,7 @@ export default function CompactSongList({
   activeSongId,
   limit,
   onShowMore,
+  className = "mt-10",
 }: CompactSongListProps) {
   const { t } = useLanguage();
   if (songs.length === 0) return null;
@@ -36,15 +38,15 @@ export default function CompactSongList({
   const remaining = songs.length - visibleSongs.length;
 
   return (
-    <div className="mt-10 w-full">
-      <h2 className="label-mono mb-3 text-xs uppercase">{title}</h2>
+    <div className={className + " w-full"}>
+      {title && <h2 className="label-mono mb-3 text-xs uppercase">{title}</h2>}
       <div className="flex flex-col divide-y divide-border border-y border-border">
         {visibleSongs.map((song) => {
           const isActive = song.id === activeSongId;
           return (
             <div
               key={song.id}
-              className={`group flex items-center gap-3 py-2 pl-3 pr-2 transition-colors ${
+              className={`group flex items-center gap-3 py-1.5 pl-3 pr-1 transition-colors ${
                 isActive ? "bg-surface" : "hover:bg-surface"
               }`}
             >
@@ -87,7 +89,7 @@ export default function CompactSongList({
       {remaining > 0 && onShowMore && (
         <button
           onClick={onShowMore}
-          className="label-mono mt-2 w-full border-b border-border py-2 text-center text-[11px] uppercase text-muted transition-colors hover:text-accent"
+          className="label-mono w-full border-b border-border py-1.5 text-center text-[11px] uppercase text-muted transition-colors hover:text-accent"
         >
           + {remaining} {t("moreShow")}
         </button>

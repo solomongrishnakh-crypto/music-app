@@ -243,14 +243,14 @@ export default function Home() {
         )}
 
         {showFavorites && (
-          <div className="glass-card mx-auto mt-4 flex w-full max-w-2xl items-center justify-between gap-3 px-4 py-3">
-            <p className="label-mono text-xs uppercase">
-              {t("favoritesLabel")} <span className="ml-1">🔀</span>
+          <div className="glass-card mx-auto mt-3 flex w-full max-w-2xl items-center justify-between gap-3 px-3 py-2">
+            <p className="label-mono text-[11px] uppercase">
+              {t("favoritesLabel")}
               <span className="ml-2 text-muted">({player.favorites.length})</span>
             </p>
             <button
               onClick={handleShufflePlayFavorites}
-              className="flex shrink-0 items-center gap-1.5 border border-border px-3 py-1.5 text-[11px] uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent"
+              className="flex shrink-0 items-center gap-1 border border-border px-2 py-1 text-[10px] uppercase text-foreground transition-colors hover:border-accent hover:text-accent"
               aria-label={t("shufflePlayAria")}
             >
               <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -264,7 +264,8 @@ export default function Home() {
         {showFavorites && (
           <CompactSongList
             songs={player.favorites}
-            title={`${t("favoritesCompactLabel")} 🔀`}
+            title=""
+            className="mt-1"
             onPlay={handlePlay}
             onToggleFavorite={player.toggleFavorite}
             activeSongId={player.currentSong?.id}

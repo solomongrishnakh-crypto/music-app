@@ -69,13 +69,13 @@ export default function PlaylistsSection({ favorites, activeSongId, onPlay, impo
     };
   }, [open]);
 
-  const chip = "label-mono flex shrink-0 items-center gap-1.5 border border-border px-3 py-1.5 text-[11px] uppercase tracking-wide text-foreground transition-colors hover:border-accent hover:text-accent";
+  const chip = "label-mono flex shrink-0 items-center gap-1 border border-border px-2 py-1 text-[10px] uppercase tracking-normal text-foreground transition-colors hover:border-accent hover:text-accent";
 
   return (
-    <section className="mx-auto mt-6 w-full max-w-2xl" aria-label={pt.title}>
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="label-mono text-xs uppercase">{pt.title}</h2>
-        <div className="flex gap-2">
+    <section className="mx-auto mt-3 w-full max-w-2xl" aria-label={pt.title}>
+      <div className="mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <h2 className="label-mono text-[11px] uppercase">{pt.title}</h2>
+        <div className="flex min-w-0 flex-wrap gap-1.5">
           <button type="button" className={chip} onClick={() => { setMode(mode === "new" ? "" : "new"); setErr(""); }}>+ {pt.newPl}</button>
           <button type="button" className={chip} onClick={() => { setMode(mode === "yt" ? "" : "yt"); setErr(""); }}>▶ {pt.importYt}</button>
         </div>
