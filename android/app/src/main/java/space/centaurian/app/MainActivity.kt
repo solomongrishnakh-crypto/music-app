@@ -369,7 +369,7 @@ private const val HIDE_FB_JS =
         "bt[q].style.setProperty('display','none','important');}"
 
 private fun nativeJs(hideNews: Boolean, anim: Boolean): String =
-    "(function(){var css='html,body{background-color:#060203!important}.app-fab,.app-drawer,.app-scrim,#langBox,#langStrip,#fbLink,#newsLink{display:none!important}" +
+    "(function(){var css='html{background-color:#060203!important}body{background-color:transparent!important}.app-fab,.app-drawer,.app-scrim,#langBox,#langStrip,#fbLink,#newsLink{display:none!important}" +
         "button[aria-haspopup=listbox]{display:none!important}';" +
         "if((location.hash||'')==='#space-news'){css+='#space-news .grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;background:transparent!important}" +
         "#space-news .grid>*{padding:10px!important;border-radius:12px!important;background:rgba(255,255,255,0.04)!important}" +
@@ -715,7 +715,7 @@ size();requestAnimationFrame(frame);
 """
 
 private fun homeJs(anim: Boolean): String =
-    "(function(){var css='html,body{background-color:#060203!important}.app-fab,.app-drawer,.app-scrim{display:none!important}" +
+    "(function(){var css='html{background-color:#060203!important}body{background-color:transparent!important}.app-fab,.app-drawer,.app-scrim{display:none!important}" +
         "button[aria-haspopup=listbox]{display:none!important}a[href\$=apk]{display:none!important}" +
         RESULTS_CSS +
         "span.relative.inline-block>button.rounded-full.h-5.w-5{display:none!important}form[role=search]>div.group{padding:4px 10px!important;gap:7px!important;border:1px solid rgba(220,228,255,0.14)!important;border-radius:2px!important;background:linear-gradient(#ff5a4d,#ff5a4d) 0 0/9px 1px no-repeat,linear-gradient(#ff5a4d,#ff5a4d) 0 0/1px 9px no-repeat,linear-gradient(#ff5a4d,#ff5a4d) 100% 0/9px 1px no-repeat,linear-gradient(#ff5a4d,#ff5a4d) 100% 0/1px 9px no-repeat,linear-gradient(#ff5a4d,#ff5a4d) 0 100%/9px 1px no-repeat,linear-gradient(#ff5a4d,#ff5a4d) 0 100%/1px 9px no-repeat,linear-gradient(#ff5a4d,#ff5a4d) 100% 100%/9px 1px no-repeat,linear-gradient(#ff5a4d,#ff5a4d) 100% 100%/1px 9px no-repeat,linear-gradient(90deg,rgba(255,90,77,0.18),rgba(255,255,255,0.04) 55%,rgba(255,90,77,0.07))!important;-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);box-shadow:inset 0 1px 0 rgba(255,255,255,0.09),0 0 18px -8px rgba(255,90,77,0.75)!important}form[role=search]>div.group:focus-within{border-color:rgba(255,90,77,0.65)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,0.12),0 0 22px -4px rgba(255,90,77,0.8)!important}form[role=search]>div.group>svg:first-child{color:#ff5a4d!important}form[role=search] input::placeholder{text-transform:uppercase!important;letter-spacing:2px!important;font-size:10px!important;opacity:0.6!important}form[role=search] input{letter-spacing:0.6px!important}form[role=search] svg{width:13px!important;height:13px!important}form[role=search] input{font-size:12px!important;line-height:1.15!important;padding:2px 0!important}form[role=search] button{padding:2px!important}" +
