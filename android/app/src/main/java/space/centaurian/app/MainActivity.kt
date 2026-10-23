@@ -11,6 +11,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.ViewGroup
+import android.view.WindowManager
 import android.webkit.CookieManager
 import android.webkit.GeolocationPermissions
 import android.webkit.WebChromeClient
@@ -37,6 +38,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
@@ -241,11 +245,12 @@ private val EXPLORE = listOf(
     Section("/imperien", "Weltgeschichte", "World history", "Imperien von 3400 v. Chr. bis heute", "Empires from 3400 BC to today"),
     Section("/sternbilder", "Sternbilder", "Constellations", "Alle 88 Sternbilder", "All 88 constellations"),
     Section("/himmel-heute", "Himmel heute", "Sky today"),
+    Section("/universum#space-news", "Weltraum-News", "Space news", "Aktuelle News aus Raumfahrt und Astronomie", "Latest space and astronomy news"),
 )
 private val TOOLS = listOf(
     Section("/groessenvergleich", "Größenvergleich", "Size comparison"),
     Section("/weltraum-rechner", "Rechner", "Calculator"),
-    Section("/reisezeit", "Reisezeit", "Travel time"),
+    Section("/reisezeit/saturn/auto", "Reisezeit", "Travel time"),
     Section("/geburtstag", "Geburtstag", "Birthday"),
     Section("/maschine-der-ewigkeit", "Maschine der Ewigkeit", "Machine of eternity"),
 )
@@ -268,6 +273,22 @@ private val SLUGS = listOf(
     "/maschine-der-ewigkeit" to "/eternity-machine",
     "/reisezeit" to "/travel-time",
 )
+
+private val BARE = listOf("/sternenhimmel", "/sternbilder", "/himmel-heute")
+
+private val START_OPTS = listOf(
+    "home" to ("Startseite" to "Home"),
+    "/sternenhimmel" to ("Sternenhimmel" to "Live sky"),
+    "/universum" to ("Universum" to "Universe"),
+    "/sonnensystem" to ("Sonnensystem" to "Solar system"),
+    "/imperien" to ("Weltgeschichte" to "World history"),
+)
+
+private fun startScreenFor(ctx: Context, de: Boolean): Screen {
+    val st = ctx.getSharedPreferences("cn", Context.MODE_PRIVATE).getString("start", "home") ?: "home"
+    val o = START_OPTS.firstOrNull { it.first == st && it.first != "home" } ?: return Screen.Home
+    return Screen.Web(o.first, if (de) o.second.first else o.second.second)
+}
 
 private data class Lng(val code: String, val flag: String, val name: String)
 
@@ -292,12 +313,13 @@ private sealed interface Screen {
     data object Home : Screen
     data class Web(val path: String, val title: String, val afterJs: String? = null) : Screen
     data object Settings : Screen
-    data class Info(val title: String, val body: String) : Screen
+    data class Info(val title: String, val body: String, val backTo: Screen = Settings) : Screen
 }
 
 // ---------------------------------------------------------------- Hilfen
 private fun siteUrl(path: String, lang: String): String {
-    var p = path
+    val hash = if (path.contains("#")) "#" + path.substringAfter("#") else ""
+    var p = path.substringBefore("#")
     if (lang != "de") {
         for ((de, intl) in SLUGS) {
             if (p == de || p.startsWith("$de/")) {
@@ -307,7 +329,7 @@ private fun siteUrl(path: String, lang: String): String {
         }
         p = if (p == "/") "/$lang" else "/$lang$p"
     }
-    return BASE + p + (if (p.contains("?")) "&" else "?") + "app=1"
+    return BASE + p + (if (p.contains("?")) "&" else "?") + "app=1" + hash
 }
 
 private fun initialLang(ctx: Context): String {
@@ -317,15 +339,24 @@ private fun initialLang(ctx: Context): String {
     return if (LANGS.any { it.code == sys }) sys else "en"
 }
 
-private val NATIVE_CSS_JS =
-    "(function(){var css='.app-fab,.app-drawer,.app-scrim,#langBox,#langStrip{display:none!important}" +
+/** JS-Schnipsel: kleines schwebendes Feedback-Symbol der Webseite ausblenden. */
+private const val HIDE_FB_JS =
+    "var bt=document.querySelectorAll('button');for(var q=0;q<bt.length;q++){var cn=bt[q].className;" +
+        "if(typeof cn==='string'&&cn.indexOf('z-[3100]')>=0&&cn.indexOf('fixed')>=0&&cn.indexOf('rounded-full')>=0)" +
+        "bt[q].style.setProperty('display','none','important');}"
+
+private fun nativeJs(hideNews: Boolean): String =
+    "(function(){var css='.app-fab,.app-drawer,.app-scrim,#langBox,#langStrip,#fbLink,#newsLink{display:none!important}" +
         "button[aria-haspopup=listbox]{display:none!important}';" +
         "function inj(d){try{if(!d||!d.head||d.getElementById('cn-native'))return;var s=d.createElement('style');" +
         "s.id='cn-native';s.textContent=css;d.head.appendChild(s);}catch(e){}}" +
         "function all(){inj(document);var f=document.querySelectorAll('iframe');" +
         "for(var i=0;i<f.length;i++){try{inj(f[i].contentDocument);}catch(e){}}}" +
         "function bk(){try{var a=document.querySelectorAll('a,button');for(var i=0;i<a.length;i++){var t=(a[i].textContent||'').trim();" +
-        "if(t.length<24&&(t.charAt(0)==='\u2190'||t.charAt(0)==='\u2039')){a[i].style.setProperty('display','none','important');}}}catch(e){}}" +
+        "if(t.length<24&&(t.charAt(0)==='\u2190'||t.charAt(0)==='\u2039')){a[i].style.setProperty('display','none','important');}}" +
+        HIDE_FB_JS +
+        (if (hideNews) "var nw=document.getElementById('space-news');if(nw)nw.style.setProperty('display','none','important');" else "") +
+        "}catch(e){}}" +
         "all();bk();var n=0;var iv=setInterval(function(){all();bk();if(++n>30)clearInterval(iv);},400);})()"
 
 // ---------------------------------------------------------------- Activity
@@ -347,8 +378,13 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    fun setKeepOn(on: Boolean) {
+        if (on) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        if (getSharedPreferences("cn", Context.MODE_PRIVATE).getBoolean("keepon", false)) setKeepOn(true)
         enableEdgeToEdge()
         setContent {
             MaterialTheme(
@@ -368,9 +404,11 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun AppRoot() {
     val ctx = LocalContext.current
+    val prefs = remember { ctx.getSharedPreferences("cn", Context.MODE_PRIVATE) }
     var lang by remember { mutableStateOf(initialLang(ctx)) }
-    var screen by remember { mutableStateOf<Screen>(Screen.Home) }
+    var screen by remember { mutableStateOf<Screen>(startScreenFor(ctx, initialLang(ctx) == "de")) }
     var webBack by remember { mutableStateOf<Screen>(Screen.Home) }
+    var anim by remember { mutableStateOf(prefs.getBoolean("anim", true)) }
     val drawer = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val de = lang == "de"
@@ -381,11 +419,22 @@ private fun AppRoot() {
         scope.launch { drawer.close() }
     }
 
+    fun openSection(it: Section) {
+        val js = if (it.path.contains("#")) "var e=document.getElementById('" + it.path.substringAfter("#") + "');if(e)e.scrollIntoView()" else null
+        go(Screen.Web(it.path, if (de) it.de else it.en, js))
+    }
+
     BackHandler(enabled = screen != Screen.Home) {
-        screen = if (screen is Screen.Info) Screen.Settings else Screen.Home
+        val cur = screen
+        screen = if (cur is Screen.Info) cur.backTo else Screen.Home
     }
 
     var searchReq by remember { mutableStateOf<Pair<Int, String>?>(null) }
+    fun homeCmd(arg: String) {
+        searchReq = Pair((searchReq?.first ?: 0) + 1, arg)
+        screen = Screen.Home
+        scope.launch { drawer.close() }
+    }
     val showBg = screen is Screen.Settings || screen is Screen.Info
     Box(Modifier.fillMaxSize().background(BgDark)) {
         if (showBg) ParticleBackground(Modifier.fillMaxSize())
@@ -394,28 +443,51 @@ private fun AppRoot() {
             gesturesEnabled = drawer.currentValue == DrawerValue.Open || drawer.targetValue == DrawerValue.Open,
             drawerContent = {
                 ModalDrawerSheet(drawerContainerColor = Color(0xFF060203)) {
-                    DrawerContent(lang, screen == Screen.Home, onHome = { screen = Screen.Home; scope.launch { drawer.close() } }, onOpen = { go(Screen.Web(it.path, if (de) it.de else it.en)) }, onSettings = { go(Screen.Settings) },
-                        onSiteSearch = { q -> searchReq = Pair((searchReq?.first ?: 0) + 1, q); screen = Screen.Home; scope.launch { drawer.close() } })
+                    DrawerContent(
+                        lang,
+                        onHome = { screen = Screen.Home; scope.launch { drawer.close() } },
+                        onOpen = { openSection(it) },
+                        onSettings = { go(Screen.Settings) },
+                        onSiteSearch = { q -> homeCmd(q) },
+                        onFeedback = { homeCmd("!fb") },
+                        onPrivacy = { go(Screen.Web("/datenschutz", if (de) "Datenschutz" else "Privacy")) },
+                        onAbout = { go(Screen.Info(aboutTitle(de), aboutBody(de), Screen.Home)) },
+                    )
                 }
             },
         ) {
             Box(Modifier.fillMaxSize()) {
             Box(Modifier.then(if (screen == Screen.Home) Modifier.fillMaxSize() else Modifier.size(0.dp)).clipToBounds()) {
-                HomeWebLayer(lang, screen == Screen.Home, searchReq, onMenu = { scope.launch { drawer.open() } })
+                HomeWebLayer(lang, screen == Screen.Home, searchReq, anim, onMenu = { scope.launch { drawer.open() } })
             }
             when (val s = screen) {
                 is Screen.Home -> {}
-                is Screen.Web -> WebScreen(s, lang, onBack = { screen = webBack })
+                is Screen.Web -> androidx.compose.runtime.key(s.path) { WebScreen(s, lang, onBack = { screen = webBack }) }
                 is Screen.Settings -> SettingsScreen(
                     lang,
+                    anim = anim,
                     onBack = { screen = Screen.Home },
                     onLang = { code ->
-                        ctx.getSharedPreferences("cn", Context.MODE_PRIVATE).edit().putString("lang", code).apply()
+                        prefs.edit().putString("lang", code).apply()
                         lang = code
                     },
+                    onAnim = { v -> prefs.edit().putBoolean("anim", v).apply(); anim = v },
+                    onFeedback = { homeCmd("!fb") },
                     onOpen = { webBack = Screen.Settings; screen = it },
                 )
-                is Screen.Info -> InfoScreen(s.title, s.body, onBack = { screen = Screen.Settings })
+                is Screen.Info -> InfoScreen(s.title, s.body, onBack = { screen = s.backTo })
+            }
+            val cur = screen
+            if (cur is Screen.Web && cur.path in BARE) {
+                Box(
+                    Modifier.align(Alignment.CenterStart).width(30.dp).fillMaxHeight().pointerInput(Unit) {
+                        var total = 0f
+                        detectHorizontalDragGestures(onDragStart = { total = 0f }, onDragEnd = { total = 0f }) { _, dx ->
+                            total += dx
+                            if (total > 36f) { total = 0f; scope.launch { drawer.open() } }
+                        }
+                    },
+                )
             }
             }
         }
@@ -423,20 +495,22 @@ private fun AppRoot() {
 }
 
 // ---------------------------------------------------------------- Startseite = echte Webseite
-private val HOME_CSS_JS =
+private fun homeJs(anim: Boolean): String =
     "(function(){var css='.app-fab,.app-drawer,.app-scrim{display:none!important}" +
-        "button[aria-haspopup=listbox]{display:none!important}a[href\$=apk]{display:none!important}';" +
+        "button[aria-haspopup=listbox]{display:none!important}a[href\$=apk]{display:none!important}" +
+        (if (anim) "" else "canvas{display:none!important}") + "';" +
         "var n=0;function run(){try{if(!document.getElementById('cn-native')&&document.head){var s=document.createElement('style');" +
         "s.id='cn-native';s.textContent=css;document.head.appendChild(s);}" +
         "var im=document.querySelector('img[src*=\"branding/logo.jpg\"]');if(im){var sc=im.closest('section');if(sc)sc.style.setProperty('display','none','important');}" +
         "var fo=document.querySelectorAll('footer');for(var j=0;j<fo.length;j++){fo[j].style.setProperty('display','none','important');}" +
-        "var d=document.querySelectorAll('.dl-pill');for(var i=0;i<d.length;i++){var q=d[i].parentElement||d[i];q.style.setProperty('display','none','important');}}catch(x){}}" +
+        "var d=document.querySelectorAll('.dl-pill');for(var i=0;i<d.length;i++){var q=d[i].parentElement||d[i];q.style.setProperty('display','none','important');}" +
+        HIDE_FB_JS + "}catch(x){}}" +
         "run();var iv=setInterval(function(){run();if(++n>60)clearInterval(iv);},500);})()"
 
 /** Die Startseite der Webseite 1:1 (Design, Suche, Musik) in der App. Bleibt am Leben, damit Musik weiterlaeuft. */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, String>?, onMenu: () -> Unit) {
+private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, String>?, anim: Boolean, onMenu: () -> Unit) {
     var web by remember { mutableStateOf<WebView?>(null) }
     var canBack by remember { mutableStateOf(false) }
     var progress by remember { mutableStateOf(0) }
@@ -446,6 +520,11 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
     LaunchedEffect(searchReq) {
         val r = searchReq ?: return@LaunchedEffect
         val w = web ?: return@LaunchedEffect
+        if (r.second == "!fb") {
+            kotlinx.coroutines.delay(300)
+            w.evaluateJavascript("window.postMessage({centaurianFeedback:true},location.origin)", null)
+            return@LaunchedEffect
+        }
         val path = try { Uri.parse(w.url ?: "").path ?: "/" } catch (_: Exception) { "/" }
         val isHome = path == "/" || path.length <= 3 && path.startsWith("/")
         if (!isHome) {
@@ -469,7 +548,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
             LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth().height(2.dp), color = Accent, trackColor = Color.Transparent)
         }
         Box(Modifier.fillMaxSize().navigationBarsPadding()) {
-            androidx.compose.runtime.key(lang) {
+            androidx.compose.runtime.key(lang, anim) {
                 AndroidView(
                     modifier = Modifier.fillMaxSize(),
                     factory = { c ->
@@ -507,7 +586,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
                                 }
 
                                 override fun onPageFinished(view: WebView?, url: String?) {
-                                    view?.evaluateJavascript(HOME_CSS_JS, null)
+                                    view?.evaluateJavascript(homeJs(anim), null)
                                 }
 
                                 override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
@@ -655,13 +734,22 @@ private fun HomeScreen(lang: String, onMenu: () -> Unit, onOpen: (Section) -> Un
 
 // ---------------------------------------------------------------- Menue
 @Composable
-private fun DrawerContent(lang: String, atHome: Boolean, onHome: () -> Unit, onOpen: (Section) -> Unit, onSettings: () -> Unit, onSiteSearch: (String) -> Unit) {
+private fun DrawerContent(
+    lang: String,
+    onHome: () -> Unit,
+    onOpen: (Section) -> Unit,
+    onSettings: () -> Unit,
+    onSiteSearch: (String) -> Unit,
+    onFeedback: () -> Unit,
+    onPrivacy: () -> Unit,
+    onAbout: () -> Unit,
+) {
     val de = lang == "de"
     var q by remember { mutableStateOf("") }
     Box(Modifier.fillMaxSize()) {
         ParticleBackground(Modifier.fillMaxSize())
         Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = 12.dp)) {
-            Row(Modifier.padding(horizontal = 18.dp, vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.fillMaxWidth().clickable { onHome() }.padding(horizontal = 18.dp, vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Image(painterResource(R.mipmap.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(40.dp))
                 Spacer(Modifier.size(8.dp))
                 Text("CENTAURIAN", color = TextMain, fontSize = 15.sp, fontWeight = FontWeight.Bold, letterSpacing = 5.sp)
@@ -670,18 +758,30 @@ private fun DrawerContent(lang: String, atHome: Boolean, onHome: () -> Unit, onO
             if (q.isNotBlank()) {
                 DrawerRow("⌕", (if (de) "„" else "\"") + q.trim() + (if (de) "“ auf der Webseite suchen" else "\" – search everything"), false) { onSiteSearch(q.trim()) }
             }
-            if (q.isBlank()) {
-                Spacer(Modifier.height(8.dp))
-                DrawerRow("⌂", if (de) "Startseite" else "Home", atHome) { onHome() }
-            }
             val ex = EXPLORE.filter { matches(it, q) }
             val tl = TOOLS.filter { matches(it, q) }
             if (ex.isNotEmpty()) GroupTitle(if (de) "Entdecken" else "Explore")
             ex.forEach { s -> DrawerRow("%02d".format(EXPLORE.indexOf(s) + 1), if (de) s.de else s.en, false) { onOpen(s) } }
             if (tl.isNotEmpty()) GroupTitle(if (de) "Werkzeuge" else "Tools")
             tl.forEach { s -> DrawerRow("%02d".format(EXPLORE.size + TOOLS.indexOf(s) + 1), if (de) s.de else s.en, false) { onOpen(s) } }
-            Spacer(Modifier.height(16.dp))
-            DrawerRow("⚙", if (de) "Einstellungen" else "Settings", false) { onSettings() }
+            if (q.isBlank()) {
+                Spacer(Modifier.height(14.dp))
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp).glassBox().clickable { onFeedback() }.padding(horizontal = 16.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("✉", color = Accent, fontSize = 15.sp)
+                    Spacer(Modifier.size(14.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text("FEEDBACK", color = TextMain, fontSize = 12.sp, fontFamily = Mono, letterSpacing = 3.sp, fontWeight = FontWeight.Bold)
+                        Text(if (de) "Fehler melden oder Ideen schicken" else "Report a bug or share an idea", color = TextMuted, fontSize = 11.sp, modifier = Modifier.padding(top = 2.dp))
+                    }
+                }
+                Spacer(Modifier.height(6.dp))
+                DrawerRow("§", if (de) "Datenschutz" else "Privacy", false) { onPrivacy() }
+                DrawerRow("i", if (de) "Infos" else "About", false) { onAbout() }
+                DrawerRow("⚙", if (de) "Einstellungen" else "Settings", false) { onSettings() }
+            }
         }
     }
 }
@@ -720,7 +820,7 @@ private fun WebScreen(s: Screen.Web, lang: String, onBack: () -> Unit) {
         if (w != null && w.canGoBack()) w.goBack() else onBack()
     }
 
-    val bare = s.path in listOf("/sternenhimmel", "/sternbilder", "/himmel-heute")
+    val bare = s.path in BARE
     Column(Modifier.fillMaxSize().background(BgDark)) {
         if (bare) {
             Box(Modifier.fillMaxWidth().statusBarsPadding())
@@ -776,7 +876,7 @@ private fun WebScreen(s: Screen.Web, lang: String, onBack: () -> Unit) {
                                     "try{localStorage.setItem('centaurian-lang','$lang');localStorage.setItem('cn_app_mode','1');}catch(e){}",
                                     null,
                                 )
-                                view?.evaluateJavascript(NATIVE_CSS_JS, null)
+                                view?.evaluateJavascript(nativeJs(s.path == "/universum"), null)
                                 val js = s.afterJs
                                 if (js != null) {
                                     Handler(Looper.getMainLooper()).postDelayed({ view?.evaluateJavascript(js, null) }, 1500)
@@ -813,6 +913,26 @@ private fun WebScreen(s: Screen.Web, lang: String, onBack: () -> Unit) {
     }
 }
 
+private fun aboutTitle(de: Boolean) = if (de) "Über Centaurian" else "About Centaurian"
+
+private fun aboutBody(de: Boolean): String =
+if (de)
+                                "Centaurian ist ein privates Hobby-Projekt: ein kleiner Ort, um Musik zu hören und unsere Welt und das Universum zu entdecken – kostenlos, ohne Anmeldung, ohne Werbung.\n\n" +
+                                    "Musik: Songs suchen und direkt hören, über den offiziellen YouTube-Player.\n" +
+                                    "Universum: Fakten, Zahlen und Live-News aus dem All.\n" +
+                                    "Sternenhimmel: Echte Sterne und Planeten für deinen Ort.\n" +
+                                    "Sonnensystem: Planeten und Raumsonden live in 3D.\n" +
+                                    "Weltgeschichte: Grenzen von Imperien von 3400 v. Chr. bis heute.\n\n" +
+                                    "Alles läuft über offizielle, öffentlich dokumentierte Schnittstellen (YouTube, NASA/JPL, Wikipedia). Nichts wird heruntergeladen oder auf dieser Seite gespeichert."
+                            else
+                                "Centaurian is a private hobby project: a small place to listen to music and explore our world and the universe – free, no sign-up, no ads.\n\n" +
+                                    "Music: search songs and play them directly via the official YouTube player.\n" +
+                                    "Universe: facts, numbers and live news from space.\n" +
+                                    "Live sky: real stars and planets for your location.\n" +
+                                    "Solar system: planets and space probes live in 3D.\n" +
+                                    "World history: empire borders from 3400 BC to today.\n\n" +
+                                    "Everything runs through official, publicly documented interfaces (YouTube, NASA/JPL, Wikipedia). Nothing is downloaded or stored on this site."
+
 // ---------------------------------------------------------------- Einstellungen
 @Composable
 private fun SettingsRow(title: String, sub: String = "", trailing: String = "›", onClick: (() -> Unit)? = null) {
@@ -837,10 +957,13 @@ private fun Card(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun SettingsScreen(lang: String, onBack: () -> Unit, onLang: (String) -> Unit, onOpen: (Screen) -> Unit) {
+private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLang: (String) -> Unit, onAnim: (Boolean) -> Unit, onFeedback: () -> Unit, onOpen: (Screen) -> Unit) {
     val ctx = LocalContext.current
     val de = lang == "de"
     var langOpen by remember { mutableStateOf(false) }
+    val prefs = remember { ctx.getSharedPreferences("cn", Context.MODE_PRIVATE) }
+    var startKey by remember { mutableStateOf(prefs.getString("start", "home") ?: "home") }
+    var keepOn by remember { mutableStateOf(prefs.getBoolean("keepon", false)) }
     val cur = LANGS.first { it.code == lang }
     val version = try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName ?: "" } catch (_: Exception) { "" }
 
@@ -873,12 +996,40 @@ private fun SettingsScreen(lang: String, onBack: () -> Unit, onLang: (String) ->
                 }
             }
 
+            GroupTitle(if (de) "Anzeige & Start" else "Display & start")
+            Card {
+                val so = START_OPTS.firstOrNull { it.first == startKey } ?: START_OPTS[0]
+                SettingsRow(
+                    if (de) "Startbereich" else "Start area",
+                    if (de) "Was beim Öffnen der App zuerst erscheint" else "What opens first when you start the app",
+                    if (de) so.second.first else so.second.second,
+                ) {
+                    val i = START_OPTS.indexOfFirst { it.first == startKey }
+                    startKey = START_OPTS[(i + 1) % START_OPTS.size].first
+                    prefs.edit().putString("start", startKey).apply()
+                }
+                SettingsRow(
+                    if (de) "Hintergrund-Animation" else "Background animation",
+                    if (de) "Aus spart Akku und läuft flüssiger" else "Off saves battery and runs smoother",
+                    if (anim) (if (de) "AN" else "ON") else (if (de) "AUS" else "OFF"),
+                ) { onAnim(!anim) }
+                SettingsRow(
+                    if (de) "Bildschirm anlassen" else "Keep screen on",
+                    if (de) "Display geht in der App nicht aus" else "The display stays on while the app is open",
+                    if (keepOn) (if (de) "AN" else "ON") else (if (de) "AUS" else "OFF"),
+                ) {
+                    keepOn = !keepOn
+                    prefs.edit().putBoolean("keepon", keepOn).apply()
+                    (ctx as? MainActivity)?.setKeepOn(keepOn)
+                }
+            }
+
             GroupTitle("Feedback")
             Card {
                 SettingsRow(
                     if (de) "Feedback senden" else "Send feedback",
                     if (de) "Fehler melden oder Ideen schicken" else "Report a bug or share an idea",
-                ) { onOpen(Screen.Web("/", "Feedback", "window.postMessage({centaurianFeedback:true},location.origin)")) }
+                ) { onFeedback() }
             }
 
             GroupTitle(if (de) "Über Centaurian" else "About Centaurian")
@@ -888,26 +1039,7 @@ private fun SettingsScreen(lang: String, onBack: () -> Unit, onLang: (String) ->
                     if (de) "Was dich hier erwartet" else "What to expect here",
                 ) {
                     onOpen(
-                        Screen.Info(
-                            if (de) "Über Centaurian" else "About Centaurian",
-                            if (de)
-                                "Centaurian ist ein privates Hobby-Projekt: ein kleiner Ort, um Musik zu hören und unsere Welt und das Universum zu entdecken – kostenlos, ohne Anmeldung, ohne Werbung.\n\n" +
-                                    "Musik: Songs suchen und direkt hören, über den offiziellen YouTube-Player.\n" +
-                                    "Universum: Fakten, Zahlen und Live-News aus dem All.\n" +
-                                    "Sternenhimmel: Echte Sterne und Planeten für deinen Ort.\n" +
-                                    "Sonnensystem: Planeten und Raumsonden live in 3D.\n" +
-                                    "Weltgeschichte: Grenzen von Imperien von 3400 v. Chr. bis heute.\n\n" +
-                                    "Alles läuft über offizielle, öffentlich dokumentierte Schnittstellen (YouTube, NASA/JPL, Wikipedia). Nichts wird heruntergeladen oder auf dieser Seite gespeichert."
-                            else
-                                "Centaurian is a private hobby project: a small place to listen to music and explore our world and the universe – free, no sign-up, no ads.\n\n" +
-                                    "Music: search songs and play them directly via the official YouTube player.\n" +
-                                    "Universe: facts, numbers and live news from space.\n" +
-                                    "Live sky: real stars and planets for your location.\n" +
-                                    "Solar system: planets and space probes live in 3D.\n" +
-                                    "World history: empire borders from 3400 BC to today.\n\n" +
-                                    "Everything runs through official, publicly documented interfaces (YouTube, NASA/JPL, Wikipedia). Nothing is downloaded or stored on this site.",
-                        ),
-                    )
+                        Screen.Info(aboutTitle(de), aboutBody(de)))
                 }
             }
 
@@ -949,6 +1081,15 @@ private fun SettingsScreen(lang: String, onBack: () -> Unit, onLang: (String) ->
                         WebStorage.getInstance().deleteAllData()
                     } catch (_: Exception) { }
                     Toast.makeText(ctx, if (de) "Gelöscht" else "Cleared", Toast.LENGTH_SHORT).show()
+                }
+                SettingsRow(
+                    if (de) "Berechtigungen" else "Permissions",
+                    if (de) "Standort & Co. in den Android-Einstellungen" else "Location and more in Android settings",
+                    "↗",
+                ) {
+                    try {
+                        ctx.startActivity(Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + ctx.packageName)))
+                    } catch (_: Exception) { }
                 }
                 SettingsRow(if (de) "Version" else "Version", trailing = version)
             }
