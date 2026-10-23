@@ -559,11 +559,12 @@ private fun animJs(on: Boolean): String =
 private const val RESULTS_CSS =
     "div.mt-10>h2.label-mono{font-size:10px!important;letter-spacing:3px!important;color:#ff5a4d!important;margin:14px 0 8px!important}" +
         "div.mt-10>h2.label-mono+div.grid.gap-px{grid-template-columns:1fr!important;gap:6px!important;background:transparent!important}" +
-        "div.mt-10>h2.label-mono+div.grid.gap-px>div.group{flex-direction:row!important;align-items:center!important;gap:12px!important;padding:8px 6px 8px 12px!important;" +
+        "div.mt-10>h2.label-mono+div.grid.gap-px>div.group{flex-direction:row!important;align-items:center!important;gap:12px!important;padding:8px 6px 8px 8px!important;" +
         "border:1px solid rgba(255,90,77,0.25)!important;border-left:3px solid #ff5a4d!important;border-radius:10px!important;background:linear-gradient(90deg,rgba(255,90,77,0.10),rgba(255,255,255,0.02))!important;position:relative!important}" +
-        "div.mt-10>h2.label-mono+div.grid.gap-px>div.group>div.relative{order:2!important;width:auto!important;height:auto!important;flex:0 0 auto!important;aspect-ratio:auto!important;position:static!important;overflow:visible!important;background:transparent!important}" +
+        "div.mt-10>h2.label-mono+div.grid.gap-px>div.group>div.relative{display:contents!important}" +
         "div.mt-10>h2.label-mono+div.grid.gap-px>div.group>div.relative>*{display:none!important}" +
-        "div.mt-10>h2.label-mono+div.grid.gap-px>div.group>div.relative>button[class*=right-1]{display:flex!important;position:static!important;width:32px!important;height:32px!important;background:transparent!important}" +
+        "div.mt-10>h2.label-mono+div.grid.gap-px>div.group>div.relative>*:first-child{display:block!important;position:relative!important;inset:auto!important;order:0!important;flex:0 0 auto!important;width:58px!important;height:58px!important;border-radius:8px!important;overflow:hidden!important;border:1px solid rgba(255,90,77,0.45)!important}" +
+        "div.mt-10>h2.label-mono+div.grid.gap-px>div.group>div.relative>button[class*=right-1]{display:flex!important;order:3!important;position:static!important;width:32px!important;height:32px!important;background:transparent!important}" +
         "div.mt-10>h2.label-mono+div.grid.gap-px>div.group>div.flex-1{order:1!important;flex:1 1 auto!important;padding:0!important;min-width:0!important}" +
         "div.mt-10>h2.label-mono+div.grid.gap-px>div.group>div.flex-1>p:first-child{white-space:normal!important;display:-webkit-box!important;-webkit-line-clamp:2!important;-webkit-box-orient:vertical!important;font-size:13px!important;line-height:1.25!important}" +
         "div.mt-10>h2.label-mono+div.grid.gap-px>div.group>div.flex-1>p:last-child{font-size:10px!important;letter-spacing:1.5px!important;text-transform:uppercase!important;color:#ff8a80!important;margin-top:2px!important}"
