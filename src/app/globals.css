@@ -368,9 +368,11 @@ div.border-b.border-border:has(> p.label-mono:first-child) > p.label-mono:first-
 }
 .hud-head-label {
   font-family: var(--font-mono), monospace; font-size: 0.7rem; text-transform: uppercase;
-  letter-spacing: 0.18em; color: rgba(236, 240, 250, 0.85); white-space: nowrap;
+  letter-spacing: 0.18em; color: rgba(236, 240, 250, 0.85);
+  /* darf umbrechen: lange Überschriften (z. B. "Reiche in deinem Geburtsjahr (2006)") ragten am Handy über den Rand */
+  white-space: normal; min-width: 0; overflow-wrap: anywhere; line-height: 1.35;
 }
-.hud-rule { flex: 1; height: 1px; background: linear-gradient(90deg, rgba(var(--hud-accent), 0.7), rgba(220, 228, 255, 0.14) 30%, rgba(220, 228, 255, 0)); }
+.hud-rule { flex: 1 1 1.5rem; min-width: 1.5rem; height: 1px; background: linear-gradient(90deg, rgba(var(--hud-accent), 0.7), rgba(220, 228, 255, 0.14) 30%, rgba(220, 228, 255, 0)); }
 
 /* HUD-Knopf (Kontakte, Aktionen) */
 .hud-btn {

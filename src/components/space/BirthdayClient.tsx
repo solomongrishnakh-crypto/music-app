@@ -69,6 +69,10 @@ export default function BirthdayClient() {
     const mars = nf1.format(info.days / 686.98);
     const text = fill(T.shareTxt, { d: nf.format(info.days), m: mars, url: typeof window !== "undefined" ? window.location.href.split("#")[0] : "" });
     try {
+      // Am Handy zuerst das Teilen-Menü (WhatsApp usw.), sonst in die Zwischenablage
+      if (typeof navigator.share === "function" && window.matchMedia("(pointer: coarse)").matches) {
+        try { await navigator.share({ text }); return; } catch (e) { if ((e as Error)?.name === "AbortError") return; }
+      }
       await navigator.clipboard.writeText(text);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
@@ -98,7 +102,7 @@ export default function BirthdayClient() {
               {WORLDS.map((w) => {
                 const b = findBody(w.id);
                 return (
-                  <li key={w.id} className="hud-card border border-border p-3 text-center">
+                  <li key={w.id} className="hud-card border border-border p-3 text-center last:col-span-2 sm:last:col-span-1">
                     <p className="text-xs text-muted">{b ? localize(b.name, lang) : w.id}</p>
                     <p className="mt-1 font-display text-2xl font-bold text-foreground">{nf1.format(info.days / w.p)}</p>
                     <p className="text-[11px] text-muted">{T.yrs}</p>
@@ -128,7 +132,10 @@ export default function BirthdayClient() {
                       href={localePath(`/imperien/reich/${e.slug}`)}
                       className="label-mono inline-block border border-border px-3 py-1.5 text-xs text-foreground transition-colors hover:border-accent hover:text-accent"
                     >
-                      {reichNameL(e.en, lang, e.de)}
+                      {/* Der Datensatz führt Libyen 1969–2013 unter einem Eintrag; ab 1977 hieß der Staat Dschamahirija */}
+                      {e.slug === "libyan-arab-republic" && info.y >= 1977
+                        ? lang === "de" ? "Libysche Dschamahirija" : "Libyan Jamahiriya"
+                        : reichNameL(e.en, lang, e.de)}
                     </Link>
                   </li>
                 ))}
