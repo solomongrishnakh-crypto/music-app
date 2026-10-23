@@ -91,6 +91,11 @@
     const ids = new Set(found); if (S.sel && S.sel.type === "kep") ids.add(S.sel.id);
     for (const id of ids) {
       const h = BY.get(id); if (!h) continue;
+      // Echt wäre: Kepler-Sterne sind schwach (Helligkeit 11–16) und nur mit Zoom/Teleskop zu sehen.
+      // Gemerkte Systeme werden deshalb nur markiert, wenn der Stern bei dieser Zoomstufe auch sichtbar wäre
+      // (angetippte immer).
+      const isSel = S.sel && S.sel.type === "kep" && S.sel.id === id;
+      if (!isSel && h.mag > lim + 0.6) continue;
       if (h.f !== frameNo) { ctx.save(); ctx.globalCompositeOperation = "lighter"; drawDot(h, fade, Math.max(lim, h.mag + 1), true); ctx.restore(); }
       const v = vis.find((q) => q.h === h); if (!v) continue;
       ctx.save(); ctx.strokeStyle = "rgba(125,220,255,.9)"; ctx.fillStyle = `rgba(${h.col},1)`; ctx.lineWidth = 1.3;
