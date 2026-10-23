@@ -41,6 +41,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
@@ -392,8 +393,8 @@ private fun AppRoot() {
             drawerState = drawer,
             gesturesEnabled = false,
             drawerContent = {
-                ModalDrawerSheet(drawerContainerColor = Color(0xFF0C0506)) {
-                    DrawerContent(lang, onOpen = { go(Screen.Web(it.path, if (de) it.de else it.en)) }, onSettings = { go(Screen.Settings) },
+                ModalDrawerSheet(drawerContainerColor = Color(0xF8060203)) {
+                    DrawerContent(lang, screen == Screen.Home, onHome = { screen = Screen.Home; scope.launch { drawer.close() } }, onOpen = { go(Screen.Web(it.path, if (de) it.de else it.en)) }, onSettings = { go(Screen.Settings) },
                         onSiteSearch = { q -> searchReq = Pair((searchReq?.first ?: 0) + 1, q); screen = Screen.Home; scope.launch { drawer.close() } })
                 }
             },
@@ -427,6 +428,8 @@ private val HOME_CSS_JS =
         "button[aria-haspopup=listbox]{display:none!important}a[href\$=apk]{display:none!important}';" +
         "var n=0;function run(){try{if(!document.getElementById('cn-native')&&document.head){var s=document.createElement('style');" +
         "s.id='cn-native';s.textContent=css;document.head.appendChild(s);}" +
+        "var im=document.querySelector('img[src*=\"branding/logo.jpg\"]');if(im){var sc=im.closest('section');if(sc)sc.style.setProperty('display','none','important');}" +
+        "var fo=document.querySelectorAll('footer');for(var j=0;j<fo.length;j++){fo[j].style.setProperty('display','none','important');}" +
         "var d=document.querySelectorAll('.dl-pill');for(var i=0;i<d.length;i++){var q=d[i].parentElement||d[i];q.style.setProperty('display','none','important');}}catch(x){}}" +
         "run();var iv=setInterval(function(){run();if(++n>60)clearInterval(iv);},500);})()"
 
@@ -652,50 +655,52 @@ private fun HomeScreen(lang: String, onMenu: () -> Unit, onOpen: (Section) -> Un
 
 // ---------------------------------------------------------------- Menue
 @Composable
-private fun DrawerContent(lang: String, onOpen: (Section) -> Unit, onSettings: () -> Unit, onSiteSearch: (String) -> Unit) {
+private fun DrawerContent(lang: String, atHome: Boolean, onHome: () -> Unit, onOpen: (Section) -> Unit, onSettings: () -> Unit, onSiteSearch: (String) -> Unit) {
     val de = lang == "de"
     var q by remember { mutableStateOf("") }
-    Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState())) {
-        Text("CENTAURIAN", color = TextMain, fontSize = 15.sp, fontWeight = FontWeight.Bold, letterSpacing = 6.sp, modifier = Modifier.padding(20.dp))
-        SearchBar(q, if (de) "Planeten, Songs, Reiche…" else "Planets, songs, empires…", { q = it }, Modifier.padding(horizontal = 16.dp, vertical = 4.dp), onSearch = { onSiteSearch(it) })
-        if (q.isNotBlank()) {
-            Row(Modifier.fillMaxWidth().clickable { onSiteSearch(q.trim()) }.padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Search, contentDescription = null, tint = Accent, modifier = Modifier.size(16.dp))
-                Spacer(Modifier.size(12.dp))
-                Text((if (de) "„" else "\"") + q.trim() + (if (de) "“ auf der Webseite suchen" else "\" – search everything"), color = TextMain, fontSize = 13.sp)
+    Box(Modifier.fillMaxSize()) {
+        ParticleBackground(Modifier.fillMaxSize())
+        Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = 12.dp)) {
+            Row(Modifier.padding(horizontal = 18.dp, vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Image(painterResource(R.mipmap.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(40.dp))
+                Spacer(Modifier.size(8.dp))
+                Text("CENTAURIAN", color = TextMain, fontSize = 15.sp, fontWeight = FontWeight.Bold, letterSpacing = 5.sp)
             }
-        }
-        val ex = EXPLORE.filter { matches(it, q) }
-        val tl = TOOLS.filter { matches(it, q) }
-        if (ex.isNotEmpty()) GroupTitle(if (de) "Entdecken" else "Explore")
-        ex.forEach { s -> DrawerItem(EXPLORE.indexOf(s) + 1, if (de) s.de else s.en) { onOpen(s) } }
-        if (tl.isNotEmpty()) GroupTitle(if (de) "Werkzeuge" else "Tools")
-        tl.forEach { s -> DrawerItem(EXPLORE.size + TOOLS.indexOf(s) + 1, if (de) s.de else s.en) { onOpen(s) } }
-        if (ex.isEmpty() && tl.isEmpty() && q.isBlank()) Text(if (de) "Nichts gefunden" else "Nothing found", color = TextMuted, fontSize = 12.sp, fontFamily = Mono, modifier = Modifier.padding(20.dp))
-        Spacer(Modifier.height(20.dp))
-        Row(
-            Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp)
-                .clip(RoundedCornerShape(8.dp))
-                .border(BorderStroke(1.dp, LineSoft), RoundedCornerShape(8.dp))
-                .clickable { onSettings() }
-                .padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Icon(Icons.Default.Settings, contentDescription = null, tint = Accent, modifier = Modifier.size(18.dp))
-            Spacer(Modifier.size(12.dp))
-            Text((if (de) "Einstellungen" else "Settings").uppercase(), color = TextMain, fontSize = 12.sp, letterSpacing = 2.sp)
+            SearchBar(q, if (de) "Planeten, Songs, Reiche…" else "Planets, songs, empires…", { q = it }, Modifier.padding(horizontal = 14.dp, vertical = 2.dp), onSearch = { onSiteSearch(it) })
+            if (q.isNotBlank()) {
+                DrawerRow("⌕", (if (de) "„" else "\"") + q.trim() + (if (de) "“ auf der Webseite suchen" else "\" – search everything"), false) { onSiteSearch(q.trim()) }
+            }
+            if (q.isBlank()) {
+                Spacer(Modifier.height(8.dp))
+                DrawerRow("⌂", if (de) "Startseite" else "Home", atHome) { onHome() }
+            }
+            val ex = EXPLORE.filter { matches(it, q) }
+            val tl = TOOLS.filter { matches(it, q) }
+            if (ex.isNotEmpty()) GroupTitle(if (de) "Entdecken" else "Explore")
+            ex.forEach { s -> DrawerRow("%02d".format(EXPLORE.indexOf(s) + 1), if (de) s.de else s.en, false) { onOpen(s) } }
+            if (tl.isNotEmpty()) GroupTitle(if (de) "Werkzeuge" else "Tools")
+            tl.forEach { s -> DrawerRow("%02d".format(EXPLORE.size + TOOLS.indexOf(s) + 1), if (de) s.de else s.en, false) { onOpen(s) } }
+            Spacer(Modifier.height(16.dp))
+            DrawerRow("⚙", if (de) "Einstellungen" else "Settings", false) { onSettings() }
         }
     }
 }
 
 @Composable
-private fun DrawerItem(n: Int, title: String, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clickable { onClick() }.padding(horizontal = 20.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text("%02d".format(n), color = Accent.copy(alpha = 0.6f), fontSize = 10.sp)
-        Spacer(Modifier.size(14.dp))
-        Text(title.uppercase(), color = TextMain, fontSize = 12.sp, fontFamily = Mono, letterSpacing = 2.sp)
+private fun DrawerRow(tag: String, title: String, active: Boolean, onClick: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 14.dp, vertical = 3.dp)
+            .then(if (active) Modifier.glassBox() else Modifier)
+            .clickable { onClick() }
+            .padding(horizontal = 12.dp, vertical = 11.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.width(3.dp).height(16.dp).background(if (active) Accent else Color.Transparent))
+        Spacer(Modifier.size(10.dp))
+        Text(tag, color = Accent, fontSize = 11.sp, fontFamily = Mono, modifier = Modifier.width(26.dp))
+        Text(title.uppercase(), color = if (active) Color.White else TextMain, fontSize = 12.sp, fontFamily = Mono, letterSpacing = 2.sp, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal)
     }
 }
 
@@ -887,19 +892,21 @@ private fun SettingsScreen(lang: String, onBack: () -> Unit, onLang: (String) ->
                         Screen.Info(
                             if (de) "Über Centaurian" else "About Centaurian",
                             if (de)
-                                "Centaurian zeigt das Universum live und die Weltgeschichte aller Imperien.\n\n" +
+                                "Centaurian ist ein privates Hobby-Projekt: ein kleiner Ort, um Musik zu hören und unsere Welt und das Universum zu entdecken – kostenlos, ohne Anmeldung, ohne Werbung.\n\n" +
+                                    "Musik: Songs suchen und direkt hören, über den offiziellen YouTube-Player.\n" +
                                     "Universum: Fakten, Zahlen und Live-News aus dem All.\n" +
                                     "Sternenhimmel: Echte Sterne und Planeten für deinen Ort.\n" +
                                     "Sonnensystem: Planeten und Raumsonden live in 3D.\n" +
                                     "Weltgeschichte: Grenzen von Imperien von 3400 v. Chr. bis heute.\n\n" +
-                                    "Ein privates Hobby-Projekt. Es werden ausschließlich offizielle, öffentlich dokumentierte Schnittstellen genutzt."
+                                    "Alles läuft über offizielle, öffentlich dokumentierte Schnittstellen (YouTube, NASA/JPL, Wikipedia). Nichts wird heruntergeladen oder auf dieser Seite gespeichert."
                             else
-                                "Centaurian shows the universe live and the world history of all empires.\n\n" +
+                                "Centaurian is a private hobby project: a small place to listen to music and explore our world and the universe – free, no sign-up, no ads.\n\n" +
+                                    "Music: search songs and play them directly via the official YouTube player.\n" +
                                     "Universe: facts, numbers and live news from space.\n" +
                                     "Live sky: real stars and planets for your location.\n" +
                                     "Solar system: planets and space probes live in 3D.\n" +
                                     "World history: empire borders from 3400 BC to today.\n\n" +
-                                    "A private hobby project. Only official, publicly documented interfaces are used.",
+                                    "Everything runs through official, publicly documented interfaces (YouTube, NASA/JPL, Wikipedia). Nothing is downloaded or stored on this site.",
                         ),
                     )
                 }
