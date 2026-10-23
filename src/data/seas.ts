@@ -153,3 +153,28 @@ export const SEAS: Sea[] = [
     tde: "Nach dem britischen Polarforscher James Clark Ross, der es 1841 entdeckte.",
     ten: "After the British polar explorer James Clark Ross, who discovered it in 1841." },
 ];
+
+// Antike Namen (Nutzerwunsch 23.10.2026). n = Name in der Antike,
+// d/e = kurzer Hinweis (de/en), wer ihn so nannte.
+export const SEAS_ANCIENT: Record<string, { n: string; d: string; e: string }> = {
+  atlantic: { n: "Mare Atlanticum / Okeanos", d: "Griechen und Römer: der Weltstrom „Okeanos“ jenseits der Säulen des Herakles.", e: "Greeks and Romans: the world-river “Okeanos” beyond the Pillars of Hercules." },
+  indian: { n: "Mare Erythraeum", d: "Griechisch „Erythra Thalassa“ (Rotes Meer) – so hieß damals das ganze Meer von Ostafrika bis Indien.", e: "Greek “Erythra Thalassa” (Red Sea) – back then the whole sea from East Africa to India." },
+  arctic: { n: "Mare Cronium", d: "Bei Plinius dem Älteren das „Kronos-Meer“ im hohen Norden.", e: "In Pliny the Elder the “Sea of Cronus” in the far north." },
+  med: { n: "Mare Nostrum", d: "Römisch „unser Meer“; auch „Mare Internum“ (inneres Meer). Griechen: „He Thalatta“ (das Meer).", e: "Roman “our sea”; also “Mare Internum” (inner sea). Greeks: “He Thalatta” (the Sea)." },
+  black: { n: "Pontus Euxinus", d: "Griechisch „Pontos Euxeinos“ – das gastfreundliche Meer.", e: "Greek “Pontos Euxeinos” – the hospitable sea." },
+  red: { n: "Sinus Arabicus", d: "Römisch „Arabischer Golf“; die Griechen nannten es „Erythra Thalassa“.", e: "Roman “Arabian Gulf”; the Greeks called it “Erythra Thalassa”." },
+  dead: { n: "Lacus Asphaltites", d: "„Asphaltsee“ bei Römern und Josephus, wegen der Asphaltklumpen an der Oberfläche.", e: "“Asphalt Lake” for Romans and Josephus, for the lumps of bitumen on its surface." },
+  caspian: { n: "Mare Caspium / Hyrcanum", d: "Bei den Römern nach den Kaspiern bzw. der Landschaft Hyrkanien.", e: "For the Romans after the Caspians or the region of Hyrcania." },
+  north: { n: "Mare Germanicum", d: "Römisch „Germanisches Meer“, auch „Oceanus Germanicus“.", e: "Roman “Germanic Sea”, also “Oceanus Germanicus”." },
+  baltic: { n: "Mare Suebicum / Sinus Codanus", d: "Tacitus: „Suebisches Meer“; Pomponius Mela: „Codanischer Golf“.", e: "Tacitus: “Suebian Sea”; Pomponius Mela: “Codanian Gulf”." },
+  aegean: { n: "Aigaion Pelagos / Mare Aegaeum", d: "Griechisch und römisch fast wie heute.", e: "Greek and Roman, nearly as today." },
+  adriatic: { n: "Mare Hadriaticum / Mare Superum", d: "Römisch auch „oberes Meer“, weil es im Osten Italiens liegt.", e: "Also Roman “upper sea”, as it lies on Italy’s east." },
+  ionian: { n: "Mare Ionium", d: "Griechisch und römisch: das Ionische Meer.", e: "Greek and Roman: the Ionian Sea." },
+  tyrrhenian: { n: "Mare Tyrrhenum / Mare Inferum", d: "Römisch auch „unteres Meer“, weil es im Westen Italiens liegt.", e: "Also Roman “lower sea”, as it lies on Italy’s west." },
+  marmara: { n: "Propontis", d: "Griechisch „Vor dem Pontos“ – das Meer vor dem Schwarzen Meer.", e: "Greek “before the Pontos” – the sea before the Black Sea." },
+  biscay: { n: "Sinus Cantabricus", d: "Römisch nach den Kantabrern an der Nordküste Spaniens.", e: "Roman, after the Cantabri on Spain’s north coast." },
+  southchina: { n: "Magnus Sinus", d: "Bei Ptolemäus der „Große Golf“ östlich der Goldenen Halbinsel (nur vage bekannt).", e: "In Ptolemy the “Great Gulf” east of the Golden Peninsula (only vaguely known)." },
+  bengal: { n: "Sinus Gangeticus", d: "Bei Ptolemäus der „Gangesgolf“.", e: "In Ptolemy the “Gulf of the Ganges”." },
+  arabian: { n: "Mare Erythraeum", d: "Teil des griechisch-römischen „Erythräischen Meeres“.", e: "Part of the Greco-Roman “Erythraean Sea”." },
+  persian: { n: "Sinus Persicus", d: "Römisch „Persischer Golf“ – schon damals so.", e: "Roman “Persian Gulf” – already so then." },
+};

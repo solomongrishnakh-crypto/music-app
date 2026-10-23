@@ -26,7 +26,7 @@ import { lookupWikiInBrowser } from "@/lib/history/wikiClientLookup";
 import { wikiLookupName } from "@/data/empireWikiAliases";
 import { reichNameL } from "@/lib/history/reicheNames";
 import reicheIndex from "@/data/reiche/index.json";
-import { SEAS } from "@/data/seas";
+import { SEAS, SEAS_ANCIENT } from "@/data/seas";
 import { decodeRing } from "@/lib/history/empiresClient";
 import {
   PREHIST_COLORS,
@@ -1793,6 +1793,8 @@ export default function ImperienClient() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [leafletReady, preYear, currentYear, lang]);
 
+  // Bis 500 n. Chr. tragen die Meere ihre antiken Namen.
+  const antikSeas = (preYear ?? currentYear) <= 500;
   // Meere/Ozeane: Name anklicken -> Herkunft des Namens (Nutzerwunsch 23.10.2026).
   useEffect(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -1808,13 +1810,19 @@ export default function ImperienClient() {
     const minZ = [1, 3, 4];
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const markers = SEAS.map((s: any) => {
-      const name = lang === "de" ? s.de : s.en;
-      const text = lang === "de" ? s.tde : s.ten;
+      const anc = SEAS_ANCIENT[s.id];
+      const modern = lang === "de" ? s.de : s.en;
+      const name = antikSeas && anc ? anc.n : modern;
+      const ancLine = anc
+        ? `<br><br><b>${lang === "de" ? "In der Antike" : "In antiquity"}:</b> ${esc(anc.n)} – ${esc(lang === "de" ? anc.d : anc.e)}`
+        : "";
+      const modLine = antikSeas && anc ? `<br><i>${lang === "de" ? "Heute" : "Today"}: ${esc(modern)}</i>` : "";
+      const text = (lang === "de" ? s.tde : s.ten);
       const m = L.marker([s.lat, s.lng], {
         pane: "seas",
         icon: L.divIcon({ className: `sea-label sea-r${s.rank}`, html: `<span>${esc(name)}</span>`, iconSize: [0, 0] }),
       });
-      m.bindPopup(`<b>${esc(name)}</b><br>${esc(text)}`, { maxWidth: 260 });
+      m.bindPopup(`<b>${esc(name)}</b>${modLine}<br>${esc(text)}${ancLine}`, { maxWidth: 280 });
       return { m, rank: s.rank as number };
     });
     const sync = () => {
@@ -1831,7 +1839,7 @@ export default function ImperienClient() {
       map.off("zoomend", sync);
       map.removeLayer(group);
     };
-  }, [leafletReady, lang]);
+  }, [leafletReady, lang, antikSeas]);
 
   // Ausführliche Info (Wikipedia) nachladen, sobald ein Gebiet angeklickt wurde.
   useEffect(() => {
