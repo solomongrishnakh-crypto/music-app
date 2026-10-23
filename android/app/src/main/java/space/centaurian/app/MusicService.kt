@@ -32,6 +32,8 @@ object MusicBridge {
     @Volatile var playing = false
     @Volatile var stamp = 0L
     @Volatile var cmd = ""
+    @Volatile var guard = false
+    @Volatile var want = false
     @Volatile var cover = ""
     @Volatile var pos = 0.0
     @Volatile var dur = 0.0
@@ -53,8 +55,11 @@ object MusicBridge {
         }
         @JavascriptInterface fun update2(t: String, a: String, p: Boolean, c: String, cur: Double, d: Double) {
             title = t; artist = a; playing = p; cover = c; pos = cur; dur = d; stamp = System.currentTimeMillis()
+            if (p) want = true else if (!guard) want = false
         }
         @JavascriptInterface fun playing(): Boolean = MusicBridge.playing
+        @JavascriptInterface fun want(): Boolean = MusicBridge.want
+        @JavascriptInterface fun resume(): Boolean = MusicBridge.want && MusicBridge.guard
         @JavascriptInterface fun cmd(): String { val c = cmd; cmd = ""; return c }
     }
 
@@ -75,6 +80,7 @@ object MusicBridge {
         val js = "(function(){try{var ps=document.querySelectorAll(\"$sel\");for(var i=0;i<ps.length;i++){var b=ps[i].closest('button');if(b&&b.offsetParent!==null){b.click();break;}}}catch(e){}})()"
         val w = web ?: return
         cmd = kind
+        if (kind == "pp" && playing) want = false
         // Falls die Seite den Befehl nicht innerhalb von 1,5 s abholt: direkt klicken.
         w.postDelayed({ if (cmd == kind) { cmd = ""; w.evaluateJavascript(js, null) } }, 1500)
     }

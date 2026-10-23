@@ -56,6 +56,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -584,7 +585,7 @@ private fun homeJs(anim: Boolean): String =
         "try{Object.defineProperty(document,'hidden',{get:function(){return false;},configurable:true});Object.defineProperty(document,'visibilityState',{get:function(){return 'visible';},configurable:true});document.addEventListener('visibilitychange',function(e){e.stopImmediatePropagation();},true);}catch(x){}" +
         RESULTS_JS +
         "window.__cenCtx=function(){try{var c=['main','#__next','body > div'];for(var i=0;i<c.length;i++){var n=document.querySelector(c[i]);if(!n)continue;var k=null;for(var x in n){if(x.indexOf('__reactFiber')===0){k=x;break;}}if(!k)continue;var f=n[k];while(f){var p=f.memoizedProps;if(p&&p.value&&typeof p.value.toggleFavorite==='function')return p.value;f=f.return;}}}catch(e){}return null;};" +
-        "if(!window.__cenPoll){window.__cenPoll=1;setInterval(function(){try{var c=window.__cenCtx();if(!window.CenNative)return;if(c&&c.currentSong)CenNative.update2(c.currentSong.title||'',c.currentSong.artist||'',!!c.isPlaying,c.currentSong.coverUrl||'',c.currentTime||0,c.duration||0);var m=CenNative.cmd();if(!c||!m)return;if(m==='next')c.next();else if(m==='prev')c.previous();else if(m==='pp')c.togglePlayback();else if(m.indexOf('seek:')===0)c.seekTo(parseFloat(m.substring(5)));}catch(e){}},500);}" +
+        "if(!window.__cenPoll){window.__cenPoll=1;setInterval(function(){try{var c=window.__cenCtx();if(!window.CenNative)return;if(c&&c.currentSong)CenNative.update2(c.currentSong.title||'',c.currentSong.artist||'',!!c.isPlaying,c.currentSong.coverUrl||'',c.currentTime||0,c.duration||0);if(c&&CenNative.resume()&&!c.isPlaying&&Date.now()-(window.__cenRes||0)>2500){window.__cenRes=Date.now();c.togglePlayback();}var m=CenNative.cmd();if(!c||!m)return;if(m==='next')c.next();else if(m==='prev')c.previous();else if(m==='pp')c.togglePlayback();else if(m.indexOf('seek:')===0)c.seekTo(parseFloat(m.substring(5)));}catch(e){}},500);}" +
         "window.__cenSave=function(){try{var b=document.getElementById('cn-save');if(!b)return;var c=window.__cenCtx();var on=!!(c&&c.currentSong&&c.isFavorite(c.currentSong.id));var de=(document.documentElement.lang||'').indexOf('de')===0;b.className=on?'on':'';b.textContent=on?(de?'★ GESPEICHERT':'★ SAVED'):(de?'☆ SPEICHERN':'☆ SAVE');}catch(e){}};" +
         "var n=0;function run(){try{if(!document.getElementById('cn-native')&&document.head){var s=document.createElement('style');" +
         "s.id='cn-native';s.textContent=css;document.head.appendChild(s);}" +
@@ -610,6 +611,7 @@ private class KeepAliveWebView(c: Context) : WebView(c) {
 @Composable
 private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, String>?, anim: Boolean, onBare: (Boolean) -> Unit, onMenu: () -> Unit) {
     val homeActivity = LocalContext.current as MainActivity
+    SideEffect { MusicBridge.guard = !visible }
     var web by remember { mutableStateOf<WebView?>(null) }
     var canBack by remember { mutableStateOf(false) }
     var bareNow by remember { mutableStateOf(false) }
@@ -1052,7 +1054,7 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
                                     null,
                                 )
                                 view?.evaluateJavascript(nativeJs(s.path == "/universum", anim), null)
-                                view?.evaluateJavascript("if(!window.__cenDuck){window.__cenDuck=1;setInterval(function(){try{window.__cenPlaying=CenNative.playing();}catch(e){}},500);}", null)
+                                view?.evaluateJavascript("if(!window.__cenDuck){window.__cenDuck=1;setInterval(function(){try{window.__cenPlaying=CenNative.want();}catch(e){}},500);}", null)
                                 val js = s.afterJs
                                 if (js != null) {
                                     Handler(Looper.getMainLooper()).postDelayed({ view?.evaluateJavascript(js, null) }, 1500)
