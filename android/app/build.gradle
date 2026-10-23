@@ -17,13 +17,22 @@ android {
         versionName "2.${vc}"
     }
 
-    // Feste Test-Signatur, damit neue Test-Versionen ueber alte installiert werden koennen.
+    // Signatur: im CI mit privatem Schluessel aus den GitHub-Secrets (CEN_KS / CEN_KS_PW),
+    // lokal faellt sie auf den alten Test-Schluessel zurueck.
     signingConfigs {
         debug {
-            storeFile file('../debug.keystore')
-            storePassword 'android'
-            keyAlias 'androiddebugkey'
-            keyPassword 'android'
+            def ks = System.getenv('CEN_KS')
+            if (ks) {
+                storeFile file(ks)
+                storePassword System.getenv('CEN_KS_PW')
+                keyAlias 'centaurian'
+                keyPassword System.getenv('CEN_KS_PW')
+            } else {
+                storeFile file('../debug.keystore')
+                storePassword 'android'
+                keyAlias 'androiddebugkey'
+                keyPassword 'android'
+            }
         }
     }
 

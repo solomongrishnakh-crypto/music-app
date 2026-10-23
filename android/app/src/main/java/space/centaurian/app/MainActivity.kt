@@ -824,6 +824,9 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
                             setBackgroundColor(android.graphics.Color.parseColor("#060203"))
                             settings.javaScriptEnabled = true
                             settings.domStorageEnabled = true
+                            settings.allowFileAccess = false
+                            settings.allowContentAccess = false
+                            settings.javaScriptCanOpenWindowsAutomatically = false
                             settings.mediaPlaybackRequiresUserGesture = false
                             CookieManager.getInstance().setAcceptCookie(true)
                             settings.setGeolocationEnabled(true)
@@ -1193,6 +1196,9 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
                         setBackgroundColor(android.graphics.Color.parseColor("#060203"))
                         settings.javaScriptEnabled = true
                         settings.domStorageEnabled = true
+                            settings.allowFileAccess = false
+                            settings.allowContentAccess = false
+                            settings.javaScriptCanOpenWindowsAutomatically = false
                         settings.mediaPlaybackRequiresUserGesture = false
                         settings.setGeolocationEnabled(true)
                         CookieManager.getInstance().setAcceptCookie(true)

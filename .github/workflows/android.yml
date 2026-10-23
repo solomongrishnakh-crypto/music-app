@@ -23,7 +23,18 @@ jobs:
         with:
           gradle-version: "8.9"
       - name: Test-APK bauen
-        run: gradle -p android assembleDebug --no-daemon -Pvc=${{ github.run_number }}
+        env:
+          KS_B64: ${{ secrets.KEYSTORE_B64 }}
+          CEN_KS_PW: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            export CEN_KS="$RUNNER_TEMP/release.jks"
+            echo "Signatur: privater Schluessel"
+          else
+            echo "Signatur: alter Test-Schluessel"
+          fi
+          gradle -p android assembleDebug --no-daemon -Pvc=${{ github.run_number }}
       - name: APK bereitstellen (nur mit GitHub-Login herunterladbar)
         uses: actions/upload-artifact@v4
         with:
@@ -37,6 +48,8 @@ jobs:
         run: |
           mkdir -p out
           cp android/app/build/outputs/apk/debug/app-debug.apk out/Centaurian.apk
-          echo '{"code": ${{ github.run_number }}, "name": "2.${{ github.run_number }}"}' > out/version.json
+          SHA=$(sha256sum out/Centaurian.apk | cut -d' ' -f1)
+          echo "{\"code\": ${{ github.run_number }}, \"name\": \"2.${{ github.run_number }}\", \"sha256\": \"$SHA\"}" > out/version.json
+          cat out/version.json
           gh release view app-latest >/dev/null 2>&1 || gh release create app-latest --title "App-Update" --notes "Automatische Updates fuer die Centaurian-App" --latest=false
           gh release upload app-latest out/Centaurian.apk out/version.json --clobber

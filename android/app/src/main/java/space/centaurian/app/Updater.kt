@@ -20,7 +20,8 @@ import java.net.URL
 object Updater {
     private const val BASE = "https://github.com/solomongrishnakh-crypto/music-app/releases/download/app-latest/"
 
-    data class Info(val code: Int, val name: String)
+    data class Info(val code: Int, val name: String, val sha: String = "")
+    @Volatile private var expectedSha = ""
 
     var avail by mutableStateOf<Info?>(null)
     var progress by mutableIntStateOf(-1)
@@ -72,13 +73,14 @@ object Updater {
     fun fetch(): Info? = try {
         val txt = open("version.json").inputStream.bufferedReader().use { it.readText() }
         val o = JSONObject(txt)
-        Info(o.getInt("code"), o.optString("name"))
+        Info(o.getInt("code"), o.optString("name"), o.optString("sha256").lowercase()).also { expectedSha = it.sha }
     } catch (_: Exception) { null }
 
     /** Blockierend. Gibt die geladene APK zurueck oder null. */
     fun download(ctx: Context, onProgress: (Int) -> Unit): File? = try {
         val dir = File(ctx.cacheDir, "updates").apply { mkdirs() }
         val f = File(dir, "Centaurian.apk")
+        val sha = java.security.MessageDigest.getInstance("SHA-256")
         val c = open("Centaurian.apk")
         val total = c.contentLength.toLong()
         c.inputStream.use { input ->
@@ -90,6 +92,7 @@ object Updater {
                     val n = input.read(buf)
                     if (n < 0) break
                     out.write(buf, 0, n)
+                    sha.update(buf, 0, n)
                     done += n
                     if (total > 0) {
                         val p = (done * 100 / total).toInt()
@@ -98,7 +101,9 @@ object Updater {
                 }
             }
         }
-        if (f.length() > 1_000_000) f else null
+        val got = sha.digest().joinToString("") { "%02x".format(it) }
+        // Pruefsumme aus version.json muss stimmen, sonst wird die Datei verworfen (Schutz vor manipulierten Downloads)
+        if (f.length() > 1_000_000 && (expectedSha.isEmpty() || expectedSha == got)) f else { f.delete(); null }
     } catch (_: Exception) { null }
 
     /** false, wenn erst die Erlaubnis "Apps installieren" erteilt werden muss (Einstellungen wurden geoeffnet). */
