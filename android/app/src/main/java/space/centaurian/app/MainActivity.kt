@@ -363,7 +363,7 @@ private const val HIDE_FB_JS =
         "bt[q].style.setProperty('display','none','important');}"
 
 private fun nativeJs(hideNews: Boolean, anim: Boolean): String =
-    "(function(){var css='.app-fab,.app-drawer,.app-scrim,#langBox,#langStrip,#fbLink,#newsLink{display:none!important}" +
+    "(function(){var css='html,body{background-color:#060203!important}.app-fab,.app-drawer,.app-scrim,#langBox,#langStrip,#fbLink,#newsLink{display:none!important}" +
         "button[aria-haspopup=listbox]{display:none!important}';" +
         "if((location.hash||'')==='#space-news'){css+='#space-news .grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;background:transparent!important}" +
         "#space-news .grid>*{padding:10px!important;border-radius:12px!important;background:rgba(255,255,255,0.04)!important}" +
@@ -708,7 +708,7 @@ size();requestAnimationFrame(frame);
 """
 
 private fun homeJs(anim: Boolean): String =
-    "(function(){var css='.app-fab,.app-drawer,.app-scrim{display:none!important}" +
+    "(function(){var css='html,body{background-color:#060203!important}.app-fab,.app-drawer,.app-scrim{display:none!important}" +
         "button[aria-haspopup=listbox]{display:none!important}a[href\$=apk]{display:none!important}" +
         RESULTS_CSS +
         "form[role=search]>div.group{padding:6px 12px!important;gap:8px!important}form[role=search] svg{width:16px!important;height:16px!important}form[role=search] input{font-size:14px!important;line-height:1.2!important}" +
@@ -1489,8 +1489,23 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
             )
 
             GroupTitle(if (de) "Kontakt" else Tr.t(lang, "Contact"))
-            SetCard("plane", "Telegram", "t.me/Perseus641", onClick = { open("https://t.me/Perseus641") }, trailing = { Text("↗", color = Accent, fontSize = 18.sp) })
-            SetCard("x", "X", "x.com/capone_835", onClick = { open("https://x.com/capone_835") }, trailing = { Text("↗", color = Accent, fontSize = 18.sp) })
+            Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                listOf("plane" to "https://t.me/Perseus641", "x" to "https://x.com/capone_835").forEach { (ic, url) ->
+                    Box(
+                        Modifier.weight(1f).height(64.dp).clip(RoundedCornerShape(16.dp))
+                            .background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(Color(0x1FFF5A4D), Color(0x0DFFFFFF))))
+                            .border(BorderStroke(1.dp, Accent.copy(alpha = 0.28f)), RoundedCornerShape(16.dp))
+                            .clickable { open(url) },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Box(
+                            Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(Accent.copy(alpha = 0.16f))
+                                .border(BorderStroke(1.dp, Accent.copy(alpha = 0.4f)), RoundedCornerShape(12.dp)),
+                            contentAlignment = Alignment.Center,
+                        ) { SetIcon(ic) }
+                    }
+                }
+            }
 
             GroupTitle(if (de) "Rechtliches" else Tr.t(lang, "Legal"))
             SetCard(
