@@ -376,10 +376,9 @@ private fun AppRoot() {
         screen = if (screen is Screen.Info) Screen.Settings else Screen.Home
     }
 
-    val showBg = screen !is Screen.Web
+    val showBg = screen is Screen.Settings || screen is Screen.Info
     Box(Modifier.fillMaxSize().background(BgDark)) {
         if (showBg) ParticleBackground(Modifier.fillMaxSize())
-        SiteBackground(showBg)
         ModalNavigationDrawer(
             drawerState = drawer,
             gesturesEnabled = screen == Screen.Home,
@@ -389,12 +388,12 @@ private fun AppRoot() {
                 }
             },
         ) {
+            Box(Modifier.fillMaxSize()) {
+            Box(Modifier.fillMaxSize().then(if (screen == Screen.Home) Modifier else Modifier.size(0.dp))) {
+                HomeWebLayer(lang, screen == Screen.Home, onMenu = { scope.launch { drawer.open() } })
+            }
             when (val s = screen) {
-                is Screen.Home -> HomeScreen(
-                    lang,
-                    onMenu = { scope.launch { drawer.open() } },
-                    onOpen = { go(Screen.Web(it.path, if (de) it.de else it.en)) },
-                )
+                is Screen.Home -> {}
                 is Screen.Web -> WebScreen(s, lang, onBack = { screen = webBack })
                 is Screen.Settings -> SettingsScreen(
                     lang,
@@ -407,57 +406,102 @@ private fun AppRoot() {
                 )
                 is Screen.Info -> InfoScreen(s.title, s.body, onBack = { screen = Screen.Settings })
             }
+            }
         }
     }
 }
 
-// ---------------------------------------------------------------- Hintergrund der Webseite
-private val BG_JS =
-    "(function(){var n=0;var iv=setInterval(function(){try{var c=document.querySelector('canvas');" +
-        "if(c&&!document.__cnBg){document.__cnBg=1;var e=c;while(e&&e!==document.body){var p=e.parentElement;" +
-        "if(!p)break;for(var i=0;i<p.children.length;i++){var k=p.children[i];if(k!==e&&k.tagName!=='SCRIPT'&&k.tagName!=='STYLE'&&k.tagName!=='LINK')k.style.setProperty('display','none','important');}e=p;}" +
-        "document.documentElement.style.setProperty('background','#030206','important');" +
-        "document.body.style.setProperty('overflow','hidden','important');document.documentElement.style.setProperty('overflow','hidden','important');}}catch(x){}" +
-        "if(++n>80)clearInterval(iv);},250);})()"
+// ---------------------------------------------------------------- Startseite = echte Webseite
+private val HOME_CSS_JS =
+    "(function(){var css='.app-fab,.app-drawer,.app-scrim{display:none!important}" +
+        "button[aria-haspopup=listbox]{display:none!important}a[href*=\\'Centaurian.apk\\']{display:none!important}';" +
+        "var n=0;function run(){try{if(!document.getElementById('cn-native')&&document.head){var s=document.createElement('style');" +
+        "s.id='cn-native';s.textContent=css;document.head.appendChild(s);}" +
+        "var l=document.querySelectorAll('a[href*=\\"Centaurian.apk\\"]');for(var i=0;i<l.length;i++){l[i].style.setProperty('display','none','important');}}catch(x){}}" +
+        "run();var iv=setInterval(function(){run();if(++n>40)clearInterval(iv);},500);})()"
 
-/** Die echte Hintergrund-Animation der Webseite (Partikel-Tunnel), ohne jeden Seiteninhalt. */
+/** Die Startseite der Webseite 1:1 (Design, Suche, Musik) in der App. Bleibt am Leben, damit Musik weiterlaeuft. */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-private fun SiteBackground(visible: Boolean) {
+private fun HomeWebLayer(lang: String, visible: Boolean, onMenu: () -> Unit) {
     var web by remember { mutableStateOf<WebView?>(null) }
-    AndroidView(
-        modifier = Modifier.fillMaxSize(),
-        factory = { c ->
-            WebView(c).apply {
-                layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
-                setBackgroundColor(android.graphics.Color.TRANSPARENT)
-                settings.javaScriptEnabled = true
-                settings.domStorageEnabled = true
-                isVerticalScrollBarEnabled = false
-                isHorizontalScrollBarEnabled = false
-                webViewClient = object : WebViewClient() {
-                    override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
-                        view?.evaluateJavascript(BG_JS, null)
-                    }
-                    override fun onPageFinished(view: WebView?, url: String?) {
-                        view?.evaluateJavascript(BG_JS, null)
-                    }
+    var canBack by remember { mutableStateOf(false) }
+    var progress by remember { mutableStateOf(0) }
+    var failed by remember { mutableStateOf(false) }
+    val de = lang == "de"
+    BackHandler(enabled = visible && canBack) { web?.goBack() }
+    Column(Modifier.fillMaxSize().background(BgDark)) {
+        TopBar("Centaurian", { Icon(Icons.Default.Menu, contentDescription = "Menu", tint = TextMain) }, onMenu)
+        if (progress in 1..99) {
+            LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth().height(2.dp), color = Accent, trackColor = Color.Transparent)
+        }
+        Box(Modifier.fillMaxSize().navigationBarsPadding()) {
+            androidx.compose.runtime.key(lang) {
+                AndroidView(
+                    modifier = Modifier.fillMaxSize(),
+                    factory = { c ->
+                        WebView(c).apply {
+                            layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                            setBackgroundColor(android.graphics.Color.parseColor("#060203"))
+                            settings.javaScriptEnabled = true
+                            settings.domStorageEnabled = true
+                            settings.mediaPlaybackRequiresUserGesture = false
+                            CookieManager.getInstance().setAcceptCookie(true)
+                            webChromeClient = object : WebChromeClient() {
+                                override fun onProgressChanged(view: WebView?, newProgress: Int) {
+                                    progress = newProgress
+                                }
+                            }
+                            webViewClient = object : WebViewClient() {
+                                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                                    val uri = request?.url ?: return false
+                                    val host = uri.host ?: return false
+                                    if (host == "centaurianspace.com" || host.endsWith(".centaurianspace.com")) return false
+                                    try {
+                                        c.startActivity(Intent(Intent.ACTION_VIEW, uri))
+                                    } catch (_: Exception) {
+                                    }
+                                    return true
+                                }
+
+                                override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                                    failed = false
+                                    view?.evaluateJavascript("try{localStorage.setItem('centaurian-lang','$lang');}catch(e){}", null)
+                                }
+
+                                override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
+                                    canBack = view?.canGoBack() == true
+                                }
+
+                                override fun onPageFinished(view: WebView?, url: String?) {
+                                    view?.evaluateJavascript(HOME_CSS_JS, null)
+                                }
+
+                                override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
+                                    if (request?.isForMainFrame == true) failed = true
+                                }
+                            }
+                            loadUrl(siteUrl("/", lang))
+                            web = this
+                        }
+                    },
+                )
+            }
+            if (failed) {
+                Column(
+                    Modifier.fillMaxSize().background(BgDark).padding(32.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(if (de) "Keine Verbindung" else "No connection", color = TextMain, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    Box(
+                        Modifier.padding(top = 20.dp).clip(RoundedCornerShape(8.dp)).border(BorderStroke(1.dp, Accent), RoundedCornerShape(8.dp))
+                            .clickable { failed = false; web?.reload() }.padding(horizontal = 22.dp, vertical = 10.dp),
+                    ) { Text((if (de) "Erneut versuchen" else "Retry").uppercase(), color = Accent, fontSize = 12.sp, letterSpacing = 2.sp) }
                 }
-                loadUrl("$BASE/?app=1")
-                web = this
             }
-        },
-        update = { v ->
-            if (visible) {
-                v.visibility = android.view.View.VISIBLE
-                v.onResume()
-                v.resumeTimers()
-            } else {
-                v.visibility = android.view.View.INVISIBLE
-                v.onPause()
-            }
-        },
-    )
+        }
+    }
 }
 
 // ---------------------------------------------------------------- Bausteine
