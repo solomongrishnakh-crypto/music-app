@@ -1544,6 +1544,20 @@ export default function SolarSystem3D({ onSelectPlanet, selectedId, className = 
             }}
             className="label-mono border border-border bg-background/80 px-2 py-1 text-[10px] uppercase text-muted [color-scheme:dark] hover:border-accent focus:border-accent focus:outline-none"
           />
+          {/* Nutzerwunsch 23.10.2026: Knopf „Jetzt“ zurück zur Echtzeit, wenn ein anderes Datum gewählt wurde */}
+          {dateInput && (
+            <button
+              type="button"
+              onClick={() => {
+                offsetDaysRef.current = 0;
+                approachCacheRef.current = null;
+                setDateInput("");
+              }}
+              className="label-mono whitespace-nowrap border border-accent bg-accent/15 px-2 py-1 text-[10px] uppercase text-accent transition-colors hover:bg-accent hover:text-black"
+            >
+              ⟲ {t("solarNow")}
+            </button>
+          )}
           <button
             type="button"
             onClick={() => setShowDistances((v) => !v)}
