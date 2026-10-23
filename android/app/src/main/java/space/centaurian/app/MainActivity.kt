@@ -96,19 +96,45 @@ private val TextMuted = Color(0xFFB49A96)
 private val LineSoft = Color(0x33FF5A4D)
 
 private val Corner = Color(0x99FF5A4D)
-private val Mono = FontFamily.Monospace
+private val Mono = FontFamily.SansSerif
 
-/** Rote Eck-Klammern wie bei den HUD-Karten der Webseite. */
-private fun Modifier.hudCorners(len: Float = 14f): Modifier = this.drawBehind {
+/** Rote Eck-Klammern wie bei den HUD-Karten der Webseite (7 x 1 px). */
+private fun Modifier.hudCorners(len: Float = 7f): Modifier = this.drawBehind {
+    val d = density
+    val l0 = len * d
+    val st = 1f * d
     val w = size.width
     val h = size.height
-    val st = 2f
     fun l(a: Offset, b: Offset) = drawLine(Corner, a, b, strokeWidth = st)
-    l(Offset(0f, 0f), Offset(len, 0f)); l(Offset(0f, 0f), Offset(0f, len))
-    l(Offset(w, 0f), Offset(w - len, 0f)); l(Offset(w, 0f), Offset(w, len))
-    l(Offset(0f, h), Offset(len, h)); l(Offset(0f, h), Offset(0f, h - len))
-    l(Offset(w, h), Offset(w - len, h)); l(Offset(w, h), Offset(w, h - len))
+    l(Offset(0f, st / 2), Offset(l0, st / 2)); l(Offset(st / 2, 0f), Offset(st / 2, l0))
+    l(Offset(w, st / 2), Offset(w - l0, st / 2)); l(Offset(w - st / 2, 0f), Offset(w - st / 2, l0))
+    l(Offset(0f, h - st / 2), Offset(l0, h - st / 2)); l(Offset(st / 2, h), Offset(st / 2, h - l0))
+    l(Offset(w, h - st / 2), Offset(w - l0, h - st / 2)); l(Offset(w - st / 2, h), Offset(w - st / 2, h - l0))
 }
+
+/** Milchglas-Box wie .hud-card der Webseite: Glanz oben links, roter Unterglanz, helle Kante, rote Ecken. */
+private fun Modifier.glassBox(): Modifier = this
+    .drawBehind {
+        drawRect(Color(0x6108070C))
+    }
+    .drawBehind {
+        drawRect(
+            androidx.compose.ui.graphics.Brush.linearGradient(
+                0f to Color(0x1AFFFFFF), 0.38f to Color(0x05FFFFFF), 0.6f to Color(0x00FFFFFF),
+                start = Offset(0f, 0f), end = Offset(size.width, size.height),
+            ),
+        )
+        drawRect(
+            androidx.compose.ui.graphics.Brush.radialGradient(
+                listOf(Color(0x1AFF5A4D), Color(0x00FF5A4D)),
+                center = Offset(size.width / 2f, size.height * 1.2f), radius = size.width * 0.6f,
+            ),
+        )
+        drawLine(Color(0x29FFFFFF), Offset(0f, 0.5f), Offset(size.width, 0.5f), strokeWidth = 1f)
+        drawLine(Color(0x2EFF5A4D), Offset(0f, size.height - 0.5f), Offset(size.width, size.height - 0.5f), strokeWidth = 1f)
+    }
+    .border(BorderStroke(1.dp, Color(0x1CFFFFFF)))
+    .hudCorners()
 
 /** Animierte Partikel mit Verbindungslinien wie der Hintergrund der Webseite. */
 private class Particle(val x0: Float, val y0: Float, val vx: Float, val vy: Float, val r: Float, val a: Float)
@@ -161,10 +187,8 @@ private fun SearchBar(query: String, hint: String, onChange: (String) -> Unit, m
     Row(
         modifier
             .fillMaxWidth()
-            .background(Color(0x80140A0A))
-            .border(BorderStroke(1.dp, Color(0x33FF5A4D)))
-            .hudCorners(10f)
-            .padding(horizontal = 12.dp, vertical = 9.dp),
+            .glassBox()
+            .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(Icons.Default.Search, contentDescription = null, tint = Accent, modifier = Modifier.size(18.dp))
@@ -352,7 +376,10 @@ private fun AppRoot() {
         screen = if (screen is Screen.Info) Screen.Settings else Screen.Home
     }
 
+    val showBg = screen !is Screen.Web
     Box(Modifier.fillMaxSize().background(BgDark)) {
+        if (showBg) ParticleBackground(Modifier.fillMaxSize())
+        SiteBackground(showBg)
         ModalNavigationDrawer(
             drawerState = drawer,
             gesturesEnabled = screen == Screen.Home,
@@ -384,11 +411,60 @@ private fun AppRoot() {
     }
 }
 
+// ---------------------------------------------------------------- Hintergrund der Webseite
+private val BG_JS =
+    "(function(){var n=0;var iv=setInterval(function(){try{var c=document.querySelector('canvas');" +
+        "if(c&&!document.__cnBg){document.__cnBg=1;var e=c;while(e&&e!==document.body){var p=e.parentElement;" +
+        "if(!p)break;for(var i=0;i<p.children.length;i++){var k=p.children[i];if(k!==e&&k.tagName!=='SCRIPT'&&k.tagName!=='STYLE'&&k.tagName!=='LINK')k.style.setProperty('display','none','important');}e=p;}" +
+        "document.documentElement.style.setProperty('background','#030206','important');" +
+        "document.body.style.setProperty('overflow','hidden','important');document.documentElement.style.setProperty('overflow','hidden','important');}}catch(x){}" +
+        "if(++n>80)clearInterval(iv);},250);})()"
+
+/** Die echte Hintergrund-Animation der Webseite (Partikel-Tunnel), ohne jeden Seiteninhalt. */
+@SuppressLint("SetJavaScriptEnabled")
+@Composable
+private fun SiteBackground(visible: Boolean) {
+    var web by remember { mutableStateOf<WebView?>(null) }
+    AndroidView(
+        modifier = Modifier.fillMaxSize(),
+        factory = { c ->
+            WebView(c).apply {
+                layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
+                setBackgroundColor(android.graphics.Color.TRANSPARENT)
+                settings.javaScriptEnabled = true
+                settings.domStorageEnabled = true
+                isVerticalScrollBarEnabled = false
+                isHorizontalScrollBarEnabled = false
+                webViewClient = object : WebViewClient() {
+                    override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                        view?.evaluateJavascript(BG_JS, null)
+                    }
+                    override fun onPageFinished(view: WebView?, url: String?) {
+                        view?.evaluateJavascript(BG_JS, null)
+                    }
+                }
+                loadUrl("$BASE/?app=1")
+                web = this
+            }
+        },
+        update = { v ->
+            if (visible) {
+                v.visibility = android.view.View.VISIBLE
+                v.onResume()
+                v.resumeTimers()
+            } else {
+                v.visibility = android.view.View.INVISIBLE
+                v.onPause()
+            }
+        },
+    )
+}
+
 // ---------------------------------------------------------------- Bausteine
 @Composable
 private fun TopBar(title: String, icon: @Composable () -> Unit, onIcon: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().background(BgDark).statusBarsPadding().height(48.dp),
+        Modifier.fillMaxWidth().background(Color(0xB3030206)).statusBarsPadding().height(48.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.size(48.dp).clickable { onIcon() }, contentAlignment = Alignment.Center) { icon() }
@@ -410,11 +486,9 @@ private fun NumberedCard(index: Int, title: String, desc: String, onClick: () ->
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 14.dp, vertical = 3.dp)
-            .background(Color(0x80140A0A))
-            .border(BorderStroke(1.dp, Color(0x1AFFFFFF)))
-            .hudCorners()
+            .glassBox()
             .clickable { onClick() }
-            .padding(horizontal = 14.dp, vertical = 10.dp),
+            .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text("%02d".format(index), color = Accent, fontSize = 10.sp, fontFamily = Mono, letterSpacing = 1.sp)
@@ -433,9 +507,7 @@ private fun NumberedCard(index: Int, title: String, desc: String, onClick: () ->
 private fun ToolTile(index: Int, title: String, modifier: Modifier, onClick: () -> Unit) {
     Column(
         modifier
-            .background(Color(0x80140A0A))
-            .border(BorderStroke(1.dp, Color(0x1AFFFFFF)))
-            .hudCorners(10f)
+            .glassBox()
             .clickable { onClick() }
             .padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
@@ -458,8 +530,7 @@ private fun GroupTitle(text: String) {
 private fun HomeScreen(lang: String, onMenu: () -> Unit, onOpen: (Section) -> Unit) {
     val de = lang == "de"
     var query by remember { mutableStateOf("") }
-    Box(Modifier.fillMaxSize().background(BgDark)) {
-    ParticleBackground(Modifier.fillMaxSize())
+    Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize()) {
         TopBar("Centaurian", { Icon(Icons.Default.Menu, contentDescription = "Menu", tint = TextMain) }, onMenu)
         LazyColumn(Modifier.fillMaxSize().navigationBarsPadding()) {
@@ -563,11 +634,16 @@ private fun WebScreen(s: Screen.Web, lang: String, onBack: () -> Unit) {
         if (w != null && w.canGoBack()) w.goBack() else onBack()
     }
 
+    val bare = s.path in listOf("/sternenhimmel", "/sternbilder", "/himmel-heute")
     Column(Modifier.fillMaxSize().background(BgDark)) {
-        TopBar(s.title, { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, {
-            val w = web
-            if (w != null && w.canGoBack()) w.goBack() else onBack()
-        })
+        if (bare) {
+            Box(Modifier.fillMaxWidth().statusBarsPadding())
+        } else {
+            TopBar(s.title, { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, {
+                val w = web
+                if (w != null && w.canGoBack()) w.goBack() else onBack()
+            })
+        }
         if (progress in 1..99) {
             LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth().height(2.dp), color = Accent, trackColor = Color.Transparent)
         }
@@ -670,7 +746,7 @@ private fun SettingsRow(title: String, sub: String = "", trailing: String = "›
 private fun Card(content: @Composable () -> Unit) {
     Column(
         Modifier.fillMaxWidth().padding(horizontal = 14.dp)
-            .background(Color(0x80140A0A)).border(BorderStroke(1.dp, Color(0x1AFFFFFF))).hudCorners(),
+            .glassBox(),
     ) { content() }
 }
 
@@ -686,8 +762,7 @@ private fun SettingsScreen(lang: String, onBack: () -> Unit, onLang: (String) ->
         try { ctx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url))) } catch (_: Exception) { }
     }
 
-    Box(Modifier.fillMaxSize().background(BgDark)) {
-    ParticleBackground(Modifier.fillMaxSize())
+    Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize()) {
         TopBar(if (de) "Einstellungen" else "Settings", { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack)
         Column(Modifier.fillMaxSize().navigationBarsPadding().verticalScroll(rememberScrollState())) {
@@ -801,7 +876,7 @@ private fun SettingsScreen(lang: String, onBack: () -> Unit, onLang: (String) ->
 
 @Composable
 private fun InfoScreen(title: String, body: String, onBack: () -> Unit) {
-    Column(Modifier.fillMaxSize().background(BgDark)) {
+    Column(Modifier.fillMaxSize()) {
         TopBar(title, { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack)
         Text(
             body,
