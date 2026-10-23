@@ -1542,6 +1542,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
     var langOpen by remember { mutableStateOf(false) }
     val prefs = remember { ctx.getSharedPreferences("cn", Context.MODE_PRIVATE) }
     var keepOn by remember { mutableStateOf(prefs.getBoolean("keepon", false)) }
+    var bassOn by remember { mutableStateOf(prefs.getBoolean("bass", true)) }
     val cur = LANGS.first { it.code == lang }
     val version = try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName ?: "" } catch (_: Exception) { "" }
 
@@ -1599,8 +1600,14 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
             SetCard(
                 "screen", if (de) "Bass-Reaktion im Cover" else Tr.t(lang, "Bass reaction in cover"),
                 if (de) "Partikel reagieren auf die Musik (braucht Audio-Erlaubnis, nimmt nichts auf)" else Tr.t(lang, "Particles react to the music (needs audio permission, records nothing)"),
-                onClick = { (ctx as? MainActivity)?.askMic() },
-                trailing = { SetSwitch((ctx as? MainActivity)?.micGranted?.value == true) },
+                onClick = {
+                    val on = !(bassOn && (ctx as? MainActivity)?.micGranted?.value == true)
+                    bassOn = on
+                    prefs.edit().putBoolean("bass", on).apply()
+                    if (on) (ctx as? MainActivity)?.askMic()
+                    if (!on) MusicBridge.vizSync(false)
+                },
+                trailing = { SetSwitch(bassOn && (ctx as? MainActivity)?.micGranted?.value == true) },
             )
 
             GroupTitle("App")

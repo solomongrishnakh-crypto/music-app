@@ -70,6 +70,8 @@ object MusicBridge {
             viz = null; level = -1f; return
         }
         if (viz != null) return
+        val sp = c.getSharedPreferences("cn", android.content.Context.MODE_PRIVATE)
+        if (sp.contains("bass") && !sp.getBoolean("bass", true)) return
         if (c.checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED) return
         try {
             val v = android.media.audiofx.Visualizer(0)
