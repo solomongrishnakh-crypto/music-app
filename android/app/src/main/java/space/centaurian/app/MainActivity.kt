@@ -75,6 +75,7 @@ import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -260,8 +261,8 @@ private val TOOLS = listOf(
 )
 private val UNI = listOf(
     Section("/universum", "Universum", "Universe", "Fakten und Zahlen aus dem All", "Facts and numbers from space"),
-) + TOOLS
-private val EXPLORE = UNI + SKY + HISTORY + NEWS
+) + SKY + TOOLS
+private val EXPLORE = UNI + HISTORY + NEWS
 
 private val SLUGS = listOf(
     "/imperien/reiche" to "/empires/list",
@@ -283,6 +284,10 @@ private val SLUGS = listOf(
 )
 
 private val BARE = listOf("/sternenhimmel", "/sternbilder", "/himmel-heute")
+private val BARE_ALL = BARE + listOf("/night-sky", "/constellations", "/sky-today")
+
+private fun isBarePath(p: String): Boolean =
+    BARE_ALL.any { p == it || p.endsWith(it) || p.startsWith("$it/") || p.contains("$it/") }
 
 private val START_OPTS = listOf(
     "home" to ("Startseite" to "Home"),
@@ -439,6 +444,7 @@ private fun AppRoot() {
         screen = if (cur is Screen.Info) cur.backTo else Screen.Home
     }
 
+    var homeBare by remember { mutableStateOf(false) }
     var searchReq by remember { mutableStateOf<Pair<Int, String>?>(null) }
     fun homeCmd(arg: String) {
         searchReq = Pair((searchReq?.first ?: 0) + 1, arg)
@@ -470,7 +476,7 @@ private fun AppRoot() {
         ) {
             Box(Modifier.fillMaxSize()) {
             Box(Modifier.then(if (screen == Screen.Home) Modifier.fillMaxSize() else Modifier.size(0.dp)).clipToBounds()) {
-                HomeWebLayer(lang, screen == Screen.Home, searchReq, anim, onMenu = { scope.launch { drawer.open() } })
+                HomeWebLayer(lang, screen == Screen.Home, searchReq, anim, onBare = { homeBare = it }, onMenu = { scope.launch { drawer.open() } })
             }
             when (val s = screen) {
                 is Screen.Home -> {}
@@ -494,7 +500,7 @@ private fun AppRoot() {
                 is Screen.Info -> InfoScreen(s.title, s.body, onBack = { screen = s.backTo })
             }
             val cur = screen
-            if (cur is Screen.Web && cur.path in BARE) {
+            if ((cur is Screen.Web && cur.path in BARE) || (cur == Screen.Home && homeBare)) {
                 Box(
                     Modifier.align(Alignment.CenterStart).width(30.dp).fillMaxHeight().pointerInput(Unit) {
                         var total = 0f
@@ -534,9 +540,10 @@ private fun homeJs(anim: Boolean): String =
 /** Die Startseite der Webseite 1:1 (Design, Suche, Musik) in der App. Bleibt am Leben, damit Musik weiterlaeuft. */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
-private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, String>?, anim: Boolean, onMenu: () -> Unit) {
+private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, String>?, anim: Boolean, onBare: (Boolean) -> Unit, onMenu: () -> Unit) {
     var web by remember { mutableStateOf<WebView?>(null) }
     var canBack by remember { mutableStateOf(false) }
+    var bareNow by remember { mutableStateOf(false) }
     var progress by remember { mutableStateOf(0) }
     var failed by remember { mutableStateOf(false) }
     val de = lang == "de"
@@ -571,7 +578,8 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
         )
     }
     Column(Modifier.fillMaxSize().background(BgDark)) {
-        TopBar("Centaurian", { Icon(Icons.Default.Menu, contentDescription = "Menu", tint = TextMain) }, onMenu)
+        if (bareNow) Box(Modifier.fillMaxWidth().statusBarsPadding())
+        else TopBar("Centaurian", { Icon(Icons.Default.Menu, contentDescription = "Menu", tint = TextMain) }, onMenu)
         if (progress in 1..99) {
             LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth().height(2.dp), color = Accent, trackColor = Color.Transparent)
         }
@@ -611,6 +619,9 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
 
                                 override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
                                     canBack = view?.canGoBack() == true
+                                    val b = isBarePath(try { Uri.parse(url ?: "").path ?: "" } catch (_: Exception) { "" })
+                                    bareNow = b
+                                    onBare(b)
                                 }
 
                                 override fun onPageFinished(view: WebView?, url: String?) {
@@ -795,21 +806,19 @@ private fun DrawerContent(
                 DrawerRow("⌕", (if (de) "„" else "\"") + q.trim() + (if (de) "“ auf der Webseite suchen" else "\" – search everything"), false) { onSiteSearch(q.trim()) }
             }
             val groups = listOf(
-                (if (de) "Universum" else "Universe") to UNI,
-                (if (de) "Himmel" else "Sky") to SKY,
+                (if (de) "Universum & Himmel" else "Universe & sky") to UNI,
                 (if (de) "Geschichte" else "History") to HISTORY,
                 "News" to NEWS,
             )
-            val all = UNI + SKY + HISTORY + NEWS
+            val all = UNI + HISTORY + NEWS
+            val closed = remember { mutableStateMapOf<String, Boolean>() }
             groups.forEach { (title, list) ->
-                if (list === TOOLS && q.isBlank()) {
-                    GroupTitle(title)
-                    DrawerRow("%02d".format(SKY.size + HISTORY.size + NEWS.size + 1), if (de) "Alle Werkzeuge (${TOOLS.size})" else "All tools (${TOOLS.size})", false) { onTools() }
-                    return@forEach
-                }
                 val f = list.filter { matches(it, q) }
-                if (f.isNotEmpty()) GroupTitle(title)
-                f.forEach { sec -> DrawerRow("%02d".format(all.indexOf(sec) + 1), if (de) sec.de else sec.en, false) { onOpen(sec) } }
+                if (f.isNotEmpty()) {
+                    val isClosed = q.isBlank() && closed[title] == true
+                    Box(Modifier.clickable { closed[title] = !isClosed }) { GroupTitle(title + if (q.isBlank()) (if (isClosed) "  ▸" else "  ▾") else "") }
+                    if (!isClosed) f.forEach { sec -> DrawerRow("%02d".format(all.indexOf(sec) + 1), if (de) sec.de else sec.en, false) { onOpen(sec) } }
+                }
             }
             if (q.isBlank()) {
                 Spacer(Modifier.height(14.dp))
