@@ -78,6 +78,17 @@ const WORD_ISO: Record<string, string> = {
   Javanisch: "jv", Sundanesisch: "su", Kurdisch: "ku", Paschtu: "ps", Usbekisch: "uz",
   Kasachisch: "kk", Turkmenisch: "tk", Aserbaidschanisch: "az", Tatarisch: "tt",
   Bulgarisch: "bg", Serbisch: "sr", Schwedisch: "sv", Quechua: "qu", Sindhi: "sd",
+  Italienisch: "it", Niederländisch: "nl", Polnisch: "pl", Ungarisch: "hu", Rumänisch: "ro", Albanisch: "sq",
+  Georgisch: "ka", Armenisch: "hy", Hebräisch: "he", Aramäisch: "arc", Finnisch: "fi", Norwegisch: "no",
+  Dänisch: "da", Tschechisch: "cs", Slowakisch: "sk", Ukrainisch: "uk", Weißrussisch: "be", Kroatisch: "hr",
+  Slowenisch: "sl", Litauisch: "lt", Lettisch: "lv", Estnisch: "et", Isländisch: "is", Irisch: "ga",
+  Walisisch: "cy", Katalanisch: "ca", Baskisch: "eu", Thai: "th", Laotisch: "lo", Tibetisch: "bo",
+  Nepalesisch: "ne", Singhalesisch: "si", Indonesisch: "id", Afrikaans: "af", Niederdeutsch: "nds",
+  Mazedonisch: "mk", Maltesisch: "mt", Luxemburgisch: "lb", Tadschikisch: "tg", Kirgisisch: "ky",
+  Uigurisch: "ug", Tigrinya: "ti", Wolof: "wo", Zulu: "zu", Xhosa: "xh", Shona: "sn", Hawaiianisch: "haw",
+  Galicisch: "gl", Asturisch: "ast", Okzitanisch: "oc", Bretonisch: "br", Friaulisch: "fur", Korsisch: "co",
+  Sardisch: "sc", Kornisch: "kw", Manx: "gv", Grönländisch: "kl", Fidschianisch: "fj", Tagalog: "tl",
+  Filipino: "fil", Assamesisch: "as", Odia: "or", Gujarati: "gu",
 };
 
 // Verbindungswörter (Reihenfolge: es, fr, pt, tr, ru, el, ar, hi, zh, ja, ko)
