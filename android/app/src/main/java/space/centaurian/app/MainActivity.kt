@@ -1214,6 +1214,56 @@ private fun Card(content: @Composable () -> Unit) {
 }
 
 @Composable
+private fun SetIcon(kind: String) {
+    androidx.compose.foundation.Canvas(Modifier.size(22.dp)) {
+        val w = size.width
+        val h = size.height
+        val sw = 1.8.dp.toPx()
+        val st = androidx.compose.ui.graphics.drawscope.Stroke(width = sw, cap = androidx.compose.ui.graphics.StrokeCap.Round, join = androidx.compose.ui.graphics.StrokeJoin.Round)
+        val c = Accent
+        fun o(x: Float, y: Float) = androidx.compose.ui.geometry.Offset(x * w, y * h)
+        fun line(x1: Float, y1: Float, x2: Float, y2: Float) = drawLine(c, o(x1, y1), o(x2, y2), sw, androidx.compose.ui.graphics.StrokeCap.Round)
+        fun poly(close: Boolean, vararg p: Float) {
+            val path = androidx.compose.ui.graphics.Path()
+            path.moveTo(p[0] * w, p[1] * h)
+            var i = 2
+            while (i < p.size) { path.lineTo(p[i] * w, p[i + 1] * h); i += 2 }
+            if (close) path.close()
+            drawPath(path, c, style = st)
+        }
+        fun box(x1: Float, y1: Float, x2: Float, y2: Float, r: Float) =
+            drawRoundRect(c, o(x1, y1), androidx.compose.ui.geometry.Size((x2 - x1) * w, (y2 - y1) * h), androidx.compose.ui.geometry.CornerRadius(r * w, r * w), style = st)
+        when (kind) {
+            "lang" -> {
+                drawCircle(c, radius = 0.42f * w, center = o(0.5f, 0.5f), style = st)
+                drawOval(c, o(0.32f, 0.08f), androidx.compose.ui.geometry.Size(0.36f * w, 0.84f * h), style = st)
+                line(0.08f, 0.5f, 0.92f, 0.5f)
+            }
+            "screen" -> { box(0.1f, 0.16f, 0.9f, 0.68f, 0.08f); line(0.5f, 0.68f, 0.5f, 0.84f); line(0.3f, 0.86f, 0.7f, 0.86f) }
+            "update" -> { line(0.5f, 0.1f, 0.5f, 0.62f); poly(false, 0.3f, 0.44f, 0.5f, 0.64f, 0.7f, 0.44f); poly(false, 0.14f, 0.72f, 0.14f, 0.9f, 0.86f, 0.9f, 0.86f, 0.72f) }
+            "share" -> {
+                drawCircle(c, 0.11f * w, o(0.24f, 0.5f), style = st); drawCircle(c, 0.11f * w, o(0.76f, 0.2f), style = st); drawCircle(c, 0.11f * w, o(0.76f, 0.8f), style = st)
+                line(0.34f, 0.45f, 0.66f, 0.25f); line(0.34f, 0.55f, 0.66f, 0.75f)
+            }
+            "clean" -> poly(true, 0.5f, 0.08f, 0.6f, 0.4f, 0.92f, 0.5f, 0.6f, 0.6f, 0.5f, 0.92f, 0.4f, 0.6f, 0.08f, 0.5f, 0.4f, 0.4f)
+            "lock" -> {
+                box(0.2f, 0.46f, 0.8f, 0.88f, 0.08f)
+                drawArc(c, 180f, 180f, false, o(0.32f, 0.12f), androidx.compose.ui.geometry.Size(0.36f * w, 0.4f * h), style = st)
+                line(0.32f, 0.32f, 0.32f, 0.46f); line(0.68f, 0.32f, 0.68f, 0.46f)
+                drawCircle(c, 0.04f * w, o(0.5f, 0.66f))
+            }
+            "chat" -> { box(0.1f, 0.14f, 0.9f, 0.68f, 0.14f); poly(false, 0.3f, 0.68f, 0.26f, 0.88f, 0.52f, 0.68f); drawCircle(c, 0.035f * w, o(0.32f, 0.41f)); drawCircle(c, 0.035f * w, o(0.5f, 0.41f)); drawCircle(c, 0.035f * w, o(0.68f, 0.41f)) }
+            "info" -> { drawCircle(c, 0.42f * w, o(0.5f, 0.5f), style = st); line(0.5f, 0.46f, 0.5f, 0.72f); drawCircle(c, 0.04f * w, o(0.5f, 0.3f)) }
+            "plane" -> { poly(true, 0.1f, 0.46f, 0.9f, 0.12f, 0.62f, 0.88f, 0.46f, 0.58f); line(0.46f, 0.58f, 0.9f, 0.12f) }
+            "x" -> { line(0.2f, 0.2f, 0.8f, 0.8f); line(0.8f, 0.2f, 0.2f, 0.8f) }
+            "shield" -> { poly(true, 0.5f, 0.08f, 0.86f, 0.22f, 0.84f, 0.52f, 0.5f, 0.92f, 0.16f, 0.52f, 0.14f, 0.22f); poly(false, 0.34f, 0.5f, 0.46f, 0.62f, 0.68f, 0.38f) }
+            "layers" -> { poly(true, 0.5f, 0.1f, 0.9f, 0.3f, 0.5f, 0.5f, 0.1f, 0.3f); poly(false, 0.1f, 0.5f, 0.5f, 0.7f, 0.9f, 0.5f); poly(false, 0.1f, 0.7f, 0.5f, 0.9f, 0.9f, 0.7f) }
+            else -> drawCircle(c, 0.3f * w, o(0.5f, 0.5f), style = st)
+        }
+    }
+}
+
+@Composable
 private fun SetCard(
     icon: String,
     title: String,
@@ -1236,7 +1286,7 @@ private fun SetCard(
                 Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(Accent.copy(alpha = 0.16f))
                     .border(BorderStroke(1.dp, Accent.copy(alpha = 0.4f)), RoundedCornerShape(12.dp)),
                 contentAlignment = Alignment.Center,
-            ) { Text(icon, fontSize = 18.sp) }
+            ) { SetIcon(icon) }
             Spacer(Modifier.size(14.dp))
             Column(Modifier.weight(1f)) {
                 Text(title, color = TextMain, fontSize = 14.sp, fontWeight = FontWeight.Medium)
@@ -1286,7 +1336,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
 
             GroupTitle(if (de) "Allgemein" else "General")
             SetCard(
-                "🌐", if (de) "Sprache" else "Language", "${cur.flag}  ${cur.name}",
+                "lang", if (de) "Sprache" else "Language", "${cur.flag}  ${cur.name}",
                 onClick = { langOpen = !langOpen },
                 trailing = { Text(if (langOpen) "−" else "+", color = Accent, fontSize = 20.sp) },
                 extra = if (langOpen) ({
@@ -1309,7 +1359,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                 }) else null,
             )
             SetCard(
-                "💡", if (de) "Bildschirm anlassen" else "Keep screen on",
+                "screen", if (de) "Bildschirm anlassen" else "Keep screen on",
                 if (de) "Display geht in der App nicht aus" else "The display stays on while the app is open",
                 onClick = {
                     keepOn = !keepOn
@@ -1321,7 +1371,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
 
             GroupTitle("App")
             SetCard(
-                "⬇️", if (de) "Nach Updates suchen" else "Check for updates",
+                "update", if (de) "Nach Updates suchen" else "Check for updates",
                 when (Updater.msg) {
                     "…" -> if (de) "Suche läuft …" else "Checking …"
                     "ok" -> if (de) "Du hast die neueste Version" else "You have the latest version"
@@ -1331,7 +1381,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                 onClick = { Updater.check(ctx, true) },
             )
             SetCard(
-                "🔗", if (de) "App teilen" else "Share app", if (de) "Link an Freunde schicken" else "Send the link to friends",
+                "share", if (de) "App teilen" else "Share app", if (de) "Link an Freunde schicken" else "Send the link to friends",
                 onClick = {
                     val i = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, BASE) }
                     ctx.startActivity(Intent.createChooser(i, "Centaurian"))
@@ -1339,7 +1389,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                 trailing = { Text("↗", color = Accent, fontSize = 18.sp) },
             )
             SetCard(
-                "🧹", if (de) "Zwischenspeicher leeren" else "Clear cache",
+                "clean", if (de) "Zwischenspeicher leeren" else "Clear cache",
                 if (de) "Gespeicherte Daten der Ansichten löschen" else "Delete saved data of the views",
                 onClick = {
                     try { WebView(ctx).apply { clearCache(true); destroy() } } catch (_: Exception) { }
@@ -1347,7 +1397,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                 },
             )
             SetCard(
-                "🔐", if (de) "Berechtigungen" else "Permissions",
+                "lock", if (de) "Berechtigungen" else "Permissions",
                 if (de) "Standort & Benachrichtigungen in Android" else "Location and notifications in Android",
                 onClick = {
                     try {
@@ -1359,27 +1409,27 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
 
             GroupTitle("Support")
             SetCard(
-                "💬", if (de) "Feedback senden" else "Send feedback",
+                "chat", if (de) "Feedback senden" else "Send feedback",
                 if (de) "Fehler melden oder Ideen schicken" else "Report a bug or share an idea",
                 onClick = { onFeedback() },
             )
             SetCard(
-                "ℹ️", if (de) "Über die App" else "About the app",
+                "info", if (de) "Über die App" else "About the app",
                 if (de) "Was dich hier erwartet" else "What to expect here",
                 onClick = { onOpen(Screen.Info(aboutTitle(de), aboutBody(de))) },
             )
 
             GroupTitle(if (de) "Kontakt" else "Contact")
-            SetCard("✈️", "Telegram", "t.me/Perseus641", onClick = { open("https://t.me/Perseus641") }, trailing = { Text("↗", color = Accent, fontSize = 18.sp) })
-            SetCard("✖️", "X", "x.com/capone_835", onClick = { open("https://x.com/capone_835") }, trailing = { Text("↗", color = Accent, fontSize = 18.sp) })
+            SetCard("plane", "Telegram", "t.me/Perseus641", onClick = { open("https://t.me/Perseus641") }, trailing = { Text("↗", color = Accent, fontSize = 18.sp) })
+            SetCard("x", "X", "x.com/capone_835", onClick = { open("https://x.com/capone_835") }, trailing = { Text("↗", color = Accent, fontSize = 18.sp) })
 
             GroupTitle(if (de) "Rechtliches" else "Legal")
             SetCard(
-                "🛡️", if (de) "Datenschutzerklärung" else "Privacy policy",
+                "shield", if (de) "Datenschutzerklärung" else "Privacy policy",
                 onClick = { onOpen(Screen.Web("/datenschutz", if (de) "Datenschutz" else "Privacy")) },
             )
             SetCard(
-                "📚", if (de) "Quellen & Lizenzen" else "Sources & licenses",
+                "layers", if (de) "Quellen & Lizenzen" else "Sources & licenses",
                 onClick = {
                     onOpen(
                         Screen.Info(
