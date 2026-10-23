@@ -238,15 +238,20 @@ private data class Section(
     val descEn: String = "",
 )
 
-private val EXPLORE = listOf(
-    Section("/universum", "Universum", "Universe", "Fakten, Zahlen und Live-News aus dem All", "Facts, numbers and live news from space"),
+private val SKY = listOf(
+    Section("/universum", "Universum", "Universe", "Fakten und Zahlen aus dem All", "Facts and numbers from space"),
     Section("/sternenhimmel", "Sternenhimmel", "Live sky", "Halte dein Handy in den Himmel", "Hold your phone up to the sky"),
     Section("/sonnensystem", "Sonnensystem", "Solar system", "Live mit echten Positionen", "Live with real positions"),
-    Section("/imperien", "Weltgeschichte", "World history", "Imperien von 3400 v. Chr. bis heute", "Empires from 3400 BC to today"),
     Section("/sternbilder", "Sternbilder", "Constellations", "Alle 88 Sternbilder", "All 88 constellations"),
     Section("/himmel-heute", "Himmel heute", "Sky today"),
+)
+private val HISTORY = listOf(
+    Section("/imperien", "Weltgeschichte", "World history", "Imperien von 3400 v. Chr. bis heute", "Empires from 3400 BC to today"),
+)
+private val NEWS = listOf(
     Section("/universum#space-news", "Weltraum-News", "Space news", "Aktuelle News aus Raumfahrt und Astronomie", "Latest space and astronomy news"),
 )
+private val EXPLORE = SKY + HISTORY + NEWS
 private val TOOLS = listOf(
     Section("/groessenvergleich", "Größenvergleich", "Size comparison"),
     Section("/weltraum-rechner", "Rechner", "Calculator"),
@@ -345,7 +350,7 @@ private const val HIDE_FB_JS =
         "if(typeof cn==='string'&&cn.indexOf('z-[3100]')>=0&&cn.indexOf('fixed')>=0&&cn.indexOf('rounded-full')>=0)" +
         "bt[q].style.setProperty('display','none','important');}"
 
-private fun nativeJs(hideNews: Boolean): String =
+private fun nativeJs(hideNews: Boolean, newsOnly: Boolean = false): String =
     "(function(){var css='.app-fab,.app-drawer,.app-scrim,#langBox,#langStrip,#fbLink,#newsLink{display:none!important}" +
         "button[aria-haspopup=listbox]{display:none!important}';" +
         "function inj(d){try{if(!d||!d.head||d.getElementById('cn-native'))return;var s=d.createElement('style');" +
@@ -355,9 +360,10 @@ private fun nativeJs(hideNews: Boolean): String =
         "function bk(){try{var a=document.querySelectorAll('a,button');for(var i=0;i<a.length;i++){var t=(a[i].textContent||'').trim();" +
         "if(t.length<24&&(t.charAt(0)==='\u2190'||t.charAt(0)==='\u2039')){a[i].style.setProperty('display','none','important');}}" +
         HIDE_FB_JS +
+        (if (newsOnly) "var el=document.getElementById('space-news');if(el){for(var p=el;p&&p!==document.body;p=p.parentElement){var ch=p.parentElement?p.parentElement.children:[];for(var k=0;k<ch.length;k++){var c=ch[k];if(c===p||c.tagName==='SCRIPT'||c.tagName==='STYLE'||c.tagName==='CANVAS')continue;if(getComputedStyle(c).position==='fixed')continue;c.style.setProperty('display','none','important');}}el.style.setProperty('margin-top','8px','important');}" else "") +
         (if (hideNews) "var nw=document.getElementById('space-news');if(nw)nw.style.setProperty('display','none','important');" else "") +
         "}catch(e){}}" +
-        "all();bk();var n=0;var iv=setInterval(function(){all();bk();if(++n>30)clearInterval(iv);},400);})()"
+        "all();bk();var n=0;var iv=setInterval(function(){all();bk();if(++n>60)clearInterval(iv);},400);})()"
 
 // ---------------------------------------------------------------- Activity
 class MainActivity : ComponentActivity() {
@@ -501,11 +507,13 @@ private fun homeJs(anim: Boolean): String =
         (if (anim) "" else "canvas{display:none!important}") + "';" +
         "var n=0;function run(){try{if(!document.getElementById('cn-native')&&document.head){var s=document.createElement('style');" +
         "s.id='cn-native';s.textContent=css;document.head.appendChild(s);}" +
+        "var kk=document.getElementById('kontakte');if(kk)kk.style.setProperty('display','none','important');" +
         "var im=document.querySelector('img[src*=\"branding/logo.jpg\"]');if(im){var sc=im.closest('section');if(sc)sc.style.setProperty('display','none','important');}" +
         "var fo=document.querySelectorAll('footer');for(var j=0;j<fo.length;j++){fo[j].style.setProperty('display','none','important');}" +
         "var d=document.querySelectorAll('.dl-pill');for(var i=0;i<d.length;i++){var q=d[i].parentElement||d[i];q.style.setProperty('display','none','important');}" +
         HIDE_FB_JS + "}catch(x){}}" +
-        "run();var iv=setInterval(function(){run();if(++n>60)clearInterval(iv);},500);})()"
+        "run();var iv=setInterval(function(){run();if(++n>60)clearInterval(iv);},500);" +
+        "var tm=null;try{new MutationObserver(function(){if(tm)return;tm=setTimeout(function(){tm=null;run();},200);}).observe(document.documentElement,{childList:true,subtree:true});}catch(x){}})()"
 
 /** Die Startseite der Webseite 1:1 (Design, Suche, Musik) in der App. Bleibt am Leben, damit Musik weiterlaeuft. */
 @SuppressLint("SetJavaScriptEnabled")
@@ -764,12 +772,18 @@ private fun DrawerContent(
             if (q.isNotBlank()) {
                 DrawerRow("⌕", (if (de) "„" else "\"") + q.trim() + (if (de) "“ auf der Webseite suchen" else "\" – search everything"), false) { onSiteSearch(q.trim()) }
             }
-            val ex = EXPLORE.filter { matches(it, q) }
-            val tl = TOOLS.filter { matches(it, q) }
-            if (ex.isNotEmpty()) GroupTitle(if (de) "Entdecken" else "Explore")
-            ex.forEach { s -> DrawerRow("%02d".format(EXPLORE.indexOf(s) + 1), if (de) s.de else s.en, false) { onOpen(s) } }
-            if (tl.isNotEmpty()) GroupTitle(if (de) "Werkzeuge" else "Tools")
-            tl.forEach { s -> DrawerRow("%02d".format(EXPLORE.size + TOOLS.indexOf(s) + 1), if (de) s.de else s.en, false) { onOpen(s) } }
+            val groups = listOf(
+                (if (de) "Universum & Himmel" else "Universe & sky") to SKY,
+                (if (de) "Geschichte" else "History") to HISTORY,
+                "News" to NEWS,
+                (if (de) "Werkzeuge" else "Tools") to TOOLS,
+            )
+            val all = SKY + HISTORY + NEWS + TOOLS
+            groups.forEach { (title, list) ->
+                val f = list.filter { matches(it, q) }
+                if (f.isNotEmpty()) GroupTitle(title)
+                f.forEach { sec -> DrawerRow("%02d".format(all.indexOf(sec) + 1), if (de) sec.de else sec.en, false) { onOpen(sec) } }
+            }
             if (q.isBlank()) {
                 Spacer(Modifier.height(14.dp))
                 Row(
@@ -882,7 +896,7 @@ private fun WebScreen(s: Screen.Web, lang: String, onBack: () -> Unit) {
                                     "try{localStorage.setItem('centaurian-lang','$lang');localStorage.setItem('cn_app_mode','1');}catch(e){}",
                                     null,
                                 )
-                                view?.evaluateJavascript(nativeJs(s.path == "/universum"), null)
+                                view?.evaluateJavascript(nativeJs(s.path == "/universum", s.path.endsWith("#space-news")), null)
                                 val js = s.afterJs
                                 if (js != null) {
                                     Handler(Looper.getMainLooper()).postDelayed({ view?.evaluateJavascript(js, null) }, 1500)
