@@ -718,14 +718,15 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
                                     if (request?.isForMainFrame == true) failed = true
                                 }
                             }
-                            visibility = if (visible) android.view.View.VISIBLE else android.view.View.INVISIBLE
+                            visibility = android.view.View.VISIBLE
+                            alpha = if (visible) 1f else 0f
                             MusicBridge.web = this
                             addJavascriptInterface(MusicBridge.Js(), "CenNative")
                             loadUrl(siteUrl("/", lang))
                             web = this
                         }
                     },
-                    update = { v -> v.visibility = if (visible) android.view.View.VISIBLE else android.view.View.INVISIBLE },
+                    update = { v -> v.visibility = android.view.View.VISIBLE; v.alpha = if (visible) 1f else 0f },
                 )
             }
             if (failed) {
@@ -1051,6 +1052,7 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
                                     null,
                                 )
                                 view?.evaluateJavascript(nativeJs(s.path == "/universum", anim), null)
+                                view?.evaluateJavascript("if(!window.__cenDuck){window.__cenDuck=1;setInterval(function(){try{window.__cenPlaying=CenNative.playing();}catch(e){}},500);}", null)
                                 val js = s.afterJs
                                 if (js != null) {
                                     Handler(Looper.getMainLooper()).postDelayed({ view?.evaluateJavascript(js, null) }, 1500)
@@ -1066,6 +1068,7 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
                                 if (request?.isForMainFrame == true) failed = true
                             }
                         }
+                        addJavascriptInterface(MusicBridge.Js(), "CenNative")
                         loadUrl(siteUrl(s.path, lang))
                         web = this
                     }

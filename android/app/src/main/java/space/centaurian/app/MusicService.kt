@@ -54,6 +54,7 @@ object MusicBridge {
         @JavascriptInterface fun update2(t: String, a: String, p: Boolean, c: String, cur: Double, d: Double) {
             title = t; artist = a; playing = p; cover = c; pos = cur; dur = d; stamp = System.currentTimeMillis()
         }
+        @JavascriptInterface fun playing(): Boolean = MusicBridge.playing
         @JavascriptInterface fun cmd(): String { val c = cmd; cmd = ""; return c }
     }
 
