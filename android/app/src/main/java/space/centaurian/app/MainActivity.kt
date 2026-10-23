@@ -414,10 +414,9 @@ private fun AppRoot() {
 // ---------------------------------------------------------------- Startseite = echte Webseite
 private val HOME_CSS_JS =
     "(function(){var css='.app-fab,.app-drawer,.app-scrim{display:none!important}" +
-        "button[aria-haspopup=listbox]{display:none!important}a[href*=\\'Centaurian.apk\\']{display:none!important}';" +
+        "button[aria-haspopup=listbox]{display:none!important}a[href\$=apk]{display:none!important}';" +
         "var n=0;function run(){try{if(!document.getElementById('cn-native')&&document.head){var s=document.createElement('style');" +
-        "s.id='cn-native';s.textContent=css;document.head.appendChild(s);}" +
-        "var l=document.querySelectorAll('a[href*=\\"Centaurian.apk\\"]');for(var i=0;i<l.length;i++){l[i].style.setProperty('display','none','important');}}catch(x){}}" +
+        "s.id='cn-native';s.textContent=css;document.head.appendChild(s);}}catch(x){}}" +
         "run();var iv=setInterval(function(){run();if(++n>40)clearInterval(iv);},500);})()"
 
 /** Die Startseite der Webseite 1:1 (Design, Suche, Musik) in der App. Bleibt am Leben, damit Musik weiterlaeuft. */
