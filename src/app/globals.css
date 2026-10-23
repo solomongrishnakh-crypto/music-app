@@ -647,3 +647,22 @@ a.hud-card.feat-card:hover {
 }
 @keyframes histMove { from { transform: translateX(0); } to { transform: translateX(calc(100% - 2px)); } }
 @media (prefers-reduced-motion: reduce) { .hist-mark { animation: none; } }
+
+/* Download-Seite /app */
+.app-hero { background:
+  radial-gradient(120% 90% at 85% 0%, rgba(var(--hud-accent), 0.18), transparent 60%),
+  linear-gradient(rgba(220,228,255,0.05) 1px, transparent 1px) 0 0 / 100% 28px,
+  linear-gradient(90deg, rgba(220,228,255,0.05) 1px, transparent 1px) 0 0 / 28px 100%,
+  var(--hud-glass); box-shadow: 0 0 40px -18px rgba(var(--hud-accent), 0.6); }
+.app-orbit { position: absolute; right: -90px; top: -90px; width: 320px; height: 320px; pointer-events: none; opacity: .55; }
+.app-orbit i { position: absolute; inset: 0; border: 1px solid rgba(var(--hud-accent), .35); border-radius: 50%; animation: app-spin 40s linear infinite; }
+.app-orbit i:nth-child(2) { inset: 40px; animation-duration: 28s; animation-direction: reverse; border-style: dashed; }
+.app-orbit i:nth-child(3) { inset: 85px; animation-duration: 18s; }
+.app-orbit i::after { content: ""; position: absolute; top: -3px; left: 50%; width: 6px; height: 6px; border-radius: 50%; background: rgb(var(--hud-accent)); box-shadow: 0 0 10px rgb(var(--hud-accent)); }
+.app-cta { box-shadow: 0 0 26px -6px rgba(var(--hud-accent), .8); animation: app-pulse 2.8s ease-in-out infinite; }
+.app-h { display: flex; align-items: center; gap: .75rem; }
+.app-h::after { content: ""; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(var(--hud-accent), .6), transparent); }
+[dir="rtl"] .app-h::after { background: linear-gradient(270deg, rgba(var(--hud-accent), .6), transparent); }
+@keyframes app-spin { to { transform: rotate(360deg); } }
+@keyframes app-pulse { 50% { box-shadow: 0 0 40px -2px rgba(var(--hud-accent), .95); } }
+@media (prefers-reduced-motion: reduce) { .app-orbit i, .app-cta { animation: none; } }

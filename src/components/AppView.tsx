@@ -17,6 +17,8 @@ const I = {
   hSafe: 36, safe: 37, // 3 ab 37
   hFaq: 40, faq: 41, // 3 Paare ab 41
   back: 47, note: 48,
+  hHow: 49, how: 50, // 3 Paare ab 50
+  kw: 56,
 } as const;
 
 type Lang = (typeof ALL_LANGS)[number];
@@ -36,6 +38,7 @@ export function appMetadata(lang: Lang): Metadata {
     description: a[I.lead],
     alternates: { canonical: langPath("/app", lang), languages: hreflang("/app") },
     openGraph: { title: a[I.title], description: a[I.lead], locale: OG_LOCALE[lang], url: BASE_URL + langPath("/app", lang), type: "website" },
+    keywords: a[I.kw].split(", "),
     robots: { index: true, follow: true },
   };
 }
@@ -64,32 +67,64 @@ export default function AppView({ lang }: { lang: Lang }) {
   const faqs = pairs(a, I.faq, 3);
   const safe = a.slice(I.safe, I.safe + 3);
   return (
+    <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "MobileApplication",
+          name: "Centaurian",
+          operatingSystem: "Android 7.0+",
+          applicationCategory: "MusicApplication",
+          description: a[I.lead],
+          inLanguage: lang,
+          url: BASE_URL + langPath("/app", lang),
+          downloadUrl: APK_URL,
+          offers: { "@type": "Offer", price: "0", priceCurrency: "EUR" },
+        }).replace(/</g, "\\u003c"),
+      }}
+    />
     <main lang={lang} dir={RTL.has(lang) ? "rtl" : "ltr"} className="mx-auto max-w-3xl px-4 pb-20 pt-6 sm:px-6">
       <nav className="label-mono mb-6 text-xs uppercase text-muted">
         <Link href={langPath("/", lang)} className="hover:text-accent">{a[I.back]}</Link>
       </nav>
 
-      <header className="border border-accent/40 bg-surface-elevated p-6 sm:p-8">
-        <p className="label-mono text-xs uppercase text-accent">Android · APK</p>
-        <h1 className="mt-2 font-display text-3xl font-bold text-foreground sm:text-4xl">{a[I.title]}</h1>
-        <p className="mt-4 leading-relaxed text-foreground/90">{a[I.lead]}</p>
-        <div className="mt-6 flex flex-wrap items-center gap-4">
+      <header className="app-hero relative overflow-hidden border border-accent/40 bg-surface-elevated p-6 sm:p-10">
+        <div className="app-orbit" aria-hidden="true"><i /><i /><i /></div>
+        <p className="label-mono relative text-xs uppercase tracking-[0.3em] text-accent">Android · APK · 2026</p>
+        <h1 className="relative mt-3 font-display text-3xl font-bold text-foreground sm:text-5xl">{a[I.title]}</h1>
+        <p className="relative mt-5 max-w-xl leading-relaxed text-foreground/90">{a[I.lead]}</p>
+        <div className="relative mt-7 flex flex-wrap items-center gap-4">
           <a
             href={APK_URL}
             rel="noopener"
-            className="inline-flex items-center gap-3 border border-accent bg-accent px-6 py-3 font-bold uppercase tracking-wide text-black transition-opacity hover:opacity-90"
+            className="app-cta inline-flex items-center gap-3 border border-accent bg-accent px-6 py-3 font-bold uppercase tracking-wide text-black transition-opacity hover:opacity-90"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} className="h-5 w-5" aria-hidden="true">
               <path d="M12 5v10m0 0-4-4m4 4 4-4M6 19h12" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             {a[I.btn]}
           </a>
-          <span className="text-xs text-muted">{a[I.meta]}</span>
+          <span className="label-mono text-xs text-muted">{a[I.meta]}</span>
         </div>
       </header>
 
       <section className="mt-10">
-        <h2 className="font-display text-xl font-bold text-foreground">{a[I.hFeat]}</h2>
+        <h2 className="app-h font-display text-xl font-bold text-foreground">{a[I.hHow]}</h2>
+        <ol className="app-flow mt-4 grid gap-3 sm:grid-cols-3">
+          {pairs(a, I.how, 3).map(([h, p], i) => (
+            <li key={h} className="relative border border-border bg-surface-elevated p-4">
+              <span className="label-mono text-xs text-accent">0{i + 1}</span>
+              <h3 className="mt-1 font-bold text-foreground">{h}</h3>
+              <p className="mt-1 text-sm leading-relaxed text-foreground/80">{p}</p>
+            </li>
+          ))}
+        </ol>
+      </section>
+
+      <section className="mt-10">
+        <h2 className="app-h font-display text-xl font-bold text-foreground">{a[I.hFeat]}</h2>
         <ul className="mt-4 grid gap-3 sm:grid-cols-2">
           {feats.map(([h, p], i) => (
             <li key={h} className={"flex gap-3 border border-border bg-surface-elevated p-4" + (i === 4 ? " sm:col-span-2" : "")}>
@@ -104,7 +139,7 @@ export default function AppView({ lang }: { lang: Lang }) {
       </section>
 
       <section className="mt-10">
-        <h2 className="font-display text-xl font-bold text-foreground">{a[I.hSteps]}</h2>
+        <h2 className="app-h font-display text-xl font-bold text-foreground">{a[I.hSteps]}</h2>
         <ol className="mt-4 space-y-3">
           {steps.map(([h, p], i) => (
             <li key={h} className="flex gap-4 border border-border bg-surface-elevated p-4">
@@ -120,7 +155,7 @@ export default function AppView({ lang }: { lang: Lang }) {
       </section>
 
       <section className="mt-10">
-        <h2 className="font-display text-xl font-bold text-foreground">{a[I.hPerm]}</h2>
+        <h2 className="app-h font-display text-xl font-bold text-foreground">{a[I.hPerm]}</h2>
         <p className="mt-2 text-sm leading-relaxed text-foreground/85">{a[I.permIntro]}</p>
         <dl className="mt-4 divide-y divide-border border border-border">
           {perms.map(([h, p]) => (
@@ -133,7 +168,7 @@ export default function AppView({ lang }: { lang: Lang }) {
       </section>
 
       <section className="mt-10">
-        <h2 className="font-display text-xl font-bold text-foreground">{a[I.hSafe]}</h2>
+        <h2 className="app-h font-display text-xl font-bold text-foreground">{a[I.hSafe]}</h2>
         <ul className="mt-4 space-y-2">
           {safe.map((s) => (
             <li key={s} className="flex gap-3 text-sm leading-relaxed text-foreground/85">
@@ -150,7 +185,7 @@ export default function AppView({ lang }: { lang: Lang }) {
       </section>
 
       <section className="mt-10">
-        <h2 className="font-display text-xl font-bold text-foreground">{a[I.hFaq]}</h2>
+        <h2 className="app-h font-display text-xl font-bold text-foreground">{a[I.hFaq]}</h2>
         <div className="mt-4 space-y-3">
           {faqs.map(([q, ans]) => (
             <div key={q} className="border border-border bg-surface-elevated p-4">
@@ -171,5 +206,6 @@ export default function AppView({ lang }: { lang: Lang }) {
         </a>
       </div>
     </main>
+    </>
   );
 }

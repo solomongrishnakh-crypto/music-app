@@ -49,7 +49,15 @@ export const APP_TEXT: Record<string, string[]> = {
   "Warum nicht im Play Store?",
   "Die App gibt es bisher nur als Direkt-Download. Deshalb zeigt Android die Warnung zu unbekannten Quellen. Das ist normal.",
   "Zur Startseite",
-  "Android warnt bei Apps außerhalb des Play Store immer. Das ist normal und kein Zeichen für ein Problem."
+  "Android warnt bei Apps außerhalb des Play Store immer. Das ist normal und kein Zeichen für ein Problem.",
+  "So läuft Musik im Hintergrund",
+  "Song starten",
+  "Tippe in der App auf einen Song und drücke Play.",
+  "Bildschirm aus oder andere App",
+  "Die Musik läuft einfach weiter. Eine Benachrichtigung zeigt Titel und Tasten.",
+  "Direkt steuern",
+  "Pause, Weiter und Zurück in der Benachrichtigung oder auf dem Sperrbildschirm.",
+  "Musik im Hintergrund, Universum entdecken, Planeten, Sterne, Weltgeschichte, Android App, APK"
  ],
  "en": [
   "Centaurian for Android",
@@ -100,7 +108,15 @@ export const APP_TEXT: Record<string, string[]> = {
   "Why not in the Play Store?",
   "So far the app is only a direct download. That is why Android shows the unknown-source warning. It is normal.",
   "Back to home",
-  "Android always warns about apps from outside the Play Store. This is normal and not a sign of a problem."
+  "Android always warns about apps from outside the Play Store. This is normal and not a sign of a problem.",
+  "How background music works",
+  "Start a song",
+  "Tap a song in the app and press play.",
+  "Screen off or another app",
+  "The music keeps playing. A notification shows the title and controls.",
+  "Control it directly",
+  "Pause, next and back from the notification or the lock screen.",
+  "background music app, explore the universe, planets, stars, world history, Android app, APK"
  ],
  "es": [
   "Centaurian para Android",
@@ -151,7 +167,15 @@ export const APP_TEXT: Record<string, string[]> = {
   "¿Por qué no está en Play Store?",
   "Por ahora la app es solo una descarga directa. Por eso Android muestra el aviso de fuente desconocida. Es normal.",
   "Volver al inicio",
-  "Android siempre avisa con apps de fuera de Play Store. Es normal y no indica ningún problema."
+  "Android siempre avisa con apps de fuera de Play Store. Es normal y no indica ningún problema.",
+  "Cómo funciona la música en segundo plano",
+  "Inicia una canción",
+  "Toca una canción en la app y pulsa reproducir.",
+  "Pantalla apagada u otra app",
+  "La música sigue sonando. Una notificación muestra el título y los controles.",
+  "Contrólala directamente",
+  "Pausa, siguiente y anterior desde la notificación o la pantalla de bloqueo.",
+  "música en segundo plano, explorar el universo, planetas, estrellas, historia, app Android, APK"
  ],
  "fr": [
   "Centaurian pour Android",
@@ -202,7 +226,15 @@ export const APP_TEXT: Record<string, string[]> = {
   "Pourquoi pas sur le Play Store ?",
   "Pour l'instant, l'app n'existe qu'en téléchargement direct. C'est pourquoi Android affiche l'avertissement de source inconnue. C'est normal.",
   "Retour à l'accueil",
-  "Android avertit toujours pour les apps hors Play Store. C'est normal et ne signale aucun problème."
+  "Android avertit toujours pour les apps hors Play Store. C'est normal et ne signale aucun problème.",
+  "Comment fonctionne la musique en arrière-plan",
+  "Lance un titre",
+  "Touche un titre dans l'app et appuie sur lecture.",
+  "Écran éteint ou autre app",
+  "La musique continue. Une notification affiche le titre et les commandes.",
+  "Commande-la directement",
+  "Pause, suivant et précédent depuis la notification ou l'écran de verrouillage.",
+  "musique en arrière-plan, explorer l'univers, planètes, étoiles, histoire, app Android, APK"
  ],
  "pt": [
   "Centaurian para Android",
@@ -253,7 +285,15 @@ export const APP_TEXT: Record<string, string[]> = {
   "Por que não está na Play Store?",
   "Por enquanto o app é só download direto. Por isso o Android mostra o aviso de fonte desconhecida. É normal.",
   "Voltar ao início",
-  "O Android sempre avisa sobre apps de fora da Play Store. É normal e não indica problema."
+  "O Android sempre avisa sobre apps de fora da Play Store. É normal e não indica problema.",
+  "Como funciona a música em segundo plano",
+  "Inicie uma música",
+  "Toque numa música no app e pressione reproduzir.",
+  "Ecrã desligado ou outro app",
+  "A música continua a tocar. Uma notificação mostra o título e os controlos.",
+  "Controle diretamente",
+  "Pausa, seguinte e anterior na notificação ou no ecrã de bloqueio.",
+  "música em segundo plano, explorar o universo, planetas, estrelas, história, app Android, APK"
  ],
  "tr": [
   "Android için Centaurian",
@@ -304,7 +344,15 @@ export const APP_TEXT: Record<string, string[]> = {
   "Neden Play Store'da yok?",
   "Uygulama şimdilik yalnızca doğrudan indirme olarak sunuluyor. Android bu yüzden bilinmeyen kaynak uyarısı gösterir. Normaldir.",
   "Ana sayfaya dön",
-  "Android, Play Store dışındaki uygulamalar için her zaman uyarır. Bu normaldir ve bir sorun işareti değildir."
+  "Android, Play Store dışındaki uygulamalar için her zaman uyarır. Bu normaldir ve bir sorun işareti değildir.",
+  "Arka planda müzik nasıl çalışır",
+  "Bir şarkı başlat",
+  "Uygulamada bir şarkıya dokun ve oynat tuşuna bas.",
+  "Ekran kapalı ya da başka uygulama",
+  "Müzik çalmaya devam eder. Bir bildirim başlığı ve tuşları gösterir.",
+  "Doğrudan kontrol et",
+  "Duraklat, ileri ve geri tuşları bildirimde ya da kilit ekranında.",
+  "arka planda müzik, evreni keşfet, gezegenler, yıldızlar, dünya tarihi, Android uygulaması, APK"
  ],
  "ru": [
   "Centaurian для Android",
@@ -355,7 +403,15 @@ export const APP_TEXT: Record<string, string[]> = {
   "Почему нет в Play Store?",
   "Пока приложение доступно только как прямая загрузка. Поэтому Android показывает предупреждение о неизвестном источнике. Это нормально.",
   "На главную",
-  "Android всегда предупреждает о приложениях не из Play Store. Это нормально и не признак проблемы."
+  "Android всегда предупреждает о приложениях не из Play Store. Это нормально и не признак проблемы.",
+  "Как работает музыка в фоне",
+  "Запусти песню",
+  "Нажми на песню в приложении и включи воспроизведение.",
+  "Экран выключен или другое приложение",
+  "Музыка продолжает играть. В уведомлении видны название и кнопки.",
+  "Управляй сразу",
+  "Пауза, дальше и назад прямо в уведомлении или на экране блокировки.",
+  "музыка в фоне, исследуй вселенную, планеты, звёзды, мировая история, приложение Android, APK"
  ],
  "el": [
   "Centaurian για Android",
@@ -406,7 +462,15 @@ export const APP_TEXT: Record<string, string[]> = {
   "Γιατί όχι στο Play Store;",
   "Προς το παρόν η εφαρμογή είναι μόνο άμεση λήψη. Γι' αυτό το Android δείχνει την προειδοποίηση άγνωστης πηγής. Είναι φυσιολογικό.",
   "Πίσω στην αρχική",
-  "Το Android προειδοποιεί πάντα για εφαρμογές εκτός Play Store. Είναι φυσιολογικό και όχι ένδειξη προβλήματος."
+  "Το Android προειδοποιεί πάντα για εφαρμογές εκτός Play Store. Είναι φυσιολογικό και όχι ένδειξη προβλήματος.",
+  "Πώς δουλεύει η μουσική στο παρασκήνιο",
+  "Ξεκίνα ένα τραγούδι",
+  "Πάτησε ένα τραγούδι στην εφαρμογή και μετά αναπαραγωγή.",
+  "Οθόνη κλειστή ή άλλη εφαρμογή",
+  "Η μουσική συνεχίζει. Μια ειδοποίηση δείχνει τον τίτλο και τα κουμπιά.",
+  "Έλεγχος αμέσως",
+  "Παύση, επόμενο και πίσω από την ειδοποίηση ή την οθόνη κλειδώματος.",
+  "μουσική στο παρασκήνιο, εξερεύνηση σύμπαντος, πλανήτες, αστέρια, ιστορία, εφαρμογή Android, APK"
  ],
  "ar": [
   "Centaurian لأندرويد",
@@ -457,7 +521,15 @@ export const APP_TEXT: Record<string, string[]> = {
   "لماذا ليس في Play Store؟",
   "حتى الآن التطبيق متاح كتنزيل مباشر فقط. لذلك يعرض أندرويد تحذير المصدر غير المعروف. هذا طبيعي.",
   "العودة إلى الرئيسية",
-  "يحذّر أندرويد دائمًا من التطبيقات خارج Play Store. هذا طبيعي وليس علامة على مشكلة."
+  "يحذّر أندرويد دائمًا من التطبيقات خارج Play Store. هذا طبيعي وليس علامة على مشكلة.",
+  "كيف تعمل الموسيقى في الخلفية",
+  "شغّل أغنية",
+  "اضغط على أغنية في التطبيق ثم اضغط تشغيل.",
+  "الشاشة مطفأة أو تطبيق آخر",
+  "تستمر الموسيقى في العمل. يعرض إشعار العنوان وأزرار التحكم.",
+  "تحكّم مباشرة",
+  "إيقاف مؤقت والتالي والسابق من الإشعار أو شاشة القفل.",
+  "موسيقى في الخلفية، استكشاف الكون، الكواكب، النجوم، تاريخ العالم، تطبيق أندرويد، APK"
  ],
  "hi": [
   "Android के लिए Centaurian",
@@ -508,7 +580,15 @@ export const APP_TEXT: Record<string, string[]> = {
   "Play Store में क्यों नहीं?",
   "अभी ऐप सिर्फ़ सीधे डाउनलोड के रूप में है। इसलिए Android अज्ञात स्रोत की चेतावनी दिखाता है। यह सामान्य है।",
   "होम पर वापस",
-  "Android Play Store के बाहर के ऐप पर हमेशा चेतावनी देता है। यह सामान्य है, किसी समस्या का संकेत नहीं।"
+  "Android Play Store के बाहर के ऐप पर हमेशा चेतावनी देता है। यह सामान्य है, किसी समस्या का संकेत नहीं।",
+  "बैकग्राउंड में संगीत कैसे चलता है",
+  "गाना शुरू करें",
+  "ऐप में किसी गाने पर टैप करें और प्ले दबाएँ।",
+  "स्क्रीन बंद या दूसरा ऐप",
+  "संगीत चलता रहता है। नोटिफ़िकेशन में शीर्षक और बटन दिखते हैं।",
+  "सीधे नियंत्रित करें",
+  "नोटिफ़िकेशन या लॉक स्क्रीन से पॉज़, आगे और पीछे।",
+  "बैकग्राउंड म्यूज़िक, ब्रह्मांड खोजें, ग्रह, तारे, विश्व इतिहास, Android ऐप, APK"
  ],
  "zh": [
   "Centaurian 安卓版",
@@ -559,7 +639,15 @@ export const APP_TEXT: Record<string, string[]> = {
   "为什么不在 Play 商店？",
   "目前应用只提供直接下载，所以 Android 会显示未知来源警告。这很正常。",
   "返回首页",
-  "对于 Play 商店之外的应用，Android 总会发出警告。这很正常，并不代表有问题。"
+  "对于 Play 商店之外的应用，Android 总会发出警告。这很正常，并不代表有问题。",
+  "后台音乐如何工作",
+  "开始播放",
+  "在应用中点一首歌，然后按播放。",
+  "关闭屏幕或切换其他应用",
+  "音乐会继续播放。通知会显示标题和控制按钮。",
+  "直接控制",
+  "在通知或锁屏上即可暂停、下一首和上一首。",
+  "后台音乐, 探索宇宙, 行星, 恒星, 世界历史, 安卓应用, APK"
  ],
  "ja": [
   "Android 版 Centaurian",
@@ -610,7 +698,15 @@ export const APP_TEXT: Record<string, string[]> = {
   "なぜ Play ストアにないのですか？",
   "現在は直接ダウンロードのみです。そのため Android は提供元不明の警告を表示します。これは正常です。",
   "ホームへ戻る",
-  "Play ストア以外のアプリには Android が必ず警告を出します。これは正常で、問題の兆候ではありません。"
+  "Play ストア以外のアプリには Android が必ず警告を出します。これは正常で、問題の兆候ではありません。",
+  "バックグラウンド再生の仕組み",
+  "曲を再生",
+  "アプリで曲をタップして再生を押します。",
+  "画面オフや別のアプリでも",
+  "音楽は流れ続けます。通知にタイトルと操作ボタンが出ます。",
+  "そのまま操作",
+  "通知やロック画面から一時停止、次へ、戻るができます。",
+  "バックグラウンド再生, 宇宙を探索, 惑星, 星, 世界史, Androidアプリ, APK"
  ],
  "ko": [
   "Android용 Centaurian",
@@ -661,7 +757,15 @@ export const APP_TEXT: Record<string, string[]> = {
   "왜 Play 스토어에 없나요?",
   "현재 앱은 직접 다운로드로만 제공됩니다. 그래서 Android가 알 수 없는 출처 경고를 보여줍니다. 정상입니다.",
   "홈으로",
-  "Android는 Play 스토어 밖의 앱에 항상 경고합니다. 정상이며 문제의 신호가 아닙니다."
+  "Android는 Play 스토어 밖의 앱에 항상 경고합니다. 정상이며 문제의 신호가 아닙니다.",
+  "백그라운드 음악 재생 방식",
+  "노래 시작",
+  "앱에서 노래를 누르고 재생을 누르세요.",
+  "화면이 꺼져도, 다른 앱에서도",
+  "음악이 계속 재생됩니다. 알림에 제목과 버튼이 표시됩니다.",
+  "바로 제어",
+  "알림이나 잠금 화면에서 일시정지, 다음, 이전을 할 수 있습니다.",
+  "백그라운드 음악, 우주 탐험, 행성, 별, 세계사, 안드로이드 앱, APK"
  ],
  "id": [
   "Centaurian untuk Android",
@@ -712,7 +816,15 @@ export const APP_TEXT: Record<string, string[]> = {
   "Kenapa tidak ada di Play Store?",
   "Saat ini aplikasi hanya tersedia sebagai unduhan langsung. Karena itu Android menampilkan peringatan sumber tidak dikenal. Itu normal.",
   "Kembali ke beranda",
-  "Android selalu memperingatkan aplikasi dari luar Play Store. Itu normal dan bukan tanda masalah."
+  "Android selalu memperingatkan aplikasi dari luar Play Store. Itu normal dan bukan tanda masalah.",
+  "Cara kerja musik di latar belakang",
+  "Putar lagu",
+  "Ketuk lagu di aplikasi lalu tekan putar.",
+  "Layar mati atau aplikasi lain",
+  "Musik tetap berputar. Notifikasi menampilkan judul dan tombol kontrol.",
+  "Kontrol langsung",
+  "Jeda, lanjut, dan kembali dari notifikasi atau layar kunci.",
+  "musik latar belakang, jelajahi alam semesta, planet, bintang, sejarah dunia, aplikasi Android, APK"
  ],
  "fa": [
   "Centaurian برای اندروید",
@@ -763,6 +875,14 @@ export const APP_TEXT: Record<string, string[]> = {
   "چرا در Play Store نیست؟",
   "فعلاً اپ فقط به‌صورت دانلود مستقیم است. برای همین اندروید هشدار منبع ناشناس می‌دهد. این عادی است.",
   "بازگشت به خانه",
-  "اندروید همیشه برای برنامه‌های بیرون از Play Store هشدار می‌دهد. این عادی است و نشانهٔ مشکل نیست."
+  "اندروید همیشه برای برنامه‌های بیرون از Play Store هشدار می‌دهد. این عادی است و نشانهٔ مشکل نیست.",
+  "پخش موسیقی در پس‌زمینه چطور کار می‌کند",
+  "آهنگ را شروع کن",
+  "در برنامه روی یک آهنگ بزن و پخش را فشار بده.",
+  "صفحه خاموش یا برنامه دیگر",
+  "موسیقی ادامه پیدا می‌کند. اعلان عنوان و دکمه‌ها را نشان می‌دهد.",
+  "مستقیم کنترل کن",
+  "مکث، بعدی و قبلی از اعلان یا صفحه قفل.",
+  "موسیقی در پس‌زمینه، کاوش جهان، سیاره‌ها، ستاره‌ها، تاریخ جهان، برنامه اندروید، APK"
  ]
 };
