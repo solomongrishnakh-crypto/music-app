@@ -406,7 +406,12 @@ class MainActivity : ComponentActivity() {
     }
 
     private val notifLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
-    private val micLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
+    val micGranted = mutableStateOf(false)
+    private val micLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { micGranted.value = it }
+    fun askMic() {
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED) micGranted.value = true
+        else micLauncher.launch(Manifest.permission.RECORD_AUDIO)
+    }
 
     override fun onPause() {
         super.onPause()
@@ -437,10 +442,7 @@ class MainActivity : ComponentActivity() {
             notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
         val sp = getSharedPreferences("cn", Context.MODE_PRIVATE)
-        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED && !sp.getBoolean("micAsked", false)) {
-            sp.edit().putBoolean("micAsked", true).apply()
-            micLauncher.launch(Manifest.permission.RECORD_AUDIO)
-        }
+        micGranted.value = checkSelfPermission(Manifest.permission.RECORD_AUDIO) == PackageManager.PERMISSION_GRANTED
         if (sp.getBoolean("keepon", false)) setKeepOn(true)
         enableEdgeToEdge()
         setContent {
@@ -1431,6 +1433,12 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                     (ctx as? MainActivity)?.setKeepOn(keepOn)
                 },
                 trailing = { SetSwitch(keepOn) },
+            )
+            SetCard(
+                "screen", if (de) "Bass-Reaktion im Cover" else "Bass reaction in cover",
+                if (de) "Partikel reagieren auf die Musik (braucht Audio-Erlaubnis, nimmt nichts auf)" else "Particles react to the music (needs audio permission, records nothing)",
+                onClick = { (ctx as? MainActivity)?.askMic() },
+                trailing = { SetSwitch((ctx as? MainActivity)?.micGranted?.value == true) },
             )
 
             GroupTitle("App")
