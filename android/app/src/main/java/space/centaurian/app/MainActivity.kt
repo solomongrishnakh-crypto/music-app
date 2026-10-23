@@ -43,6 +43,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -461,7 +462,7 @@ class MainActivity : ComponentActivity() {
                     onSurface = TextMain,
                     onBackground = TextMain,
                 ),
-            ) { AppRoot() }
+            ) { Box(Modifier.fillMaxSize().imePadding()) { AppRoot() } }
         }
     }
 }
