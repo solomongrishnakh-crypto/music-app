@@ -444,6 +444,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         MusicBridge.appCtx = applicationContext
+        Offline.start(applicationContext)
         if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
@@ -741,6 +742,56 @@ private fun homeJs(anim: Boolean): String =
         animJs(anim) + ";" +
         "var tm=null;try{new MutationObserver(function(){if(tm)return;tm=setTimeout(function(){tm=null;run();},200);}).observe(document.documentElement,{childList:true,subtree:true});}catch(x){}})()"
 
+/** Offline: ohne Netz werden bereits besuchte Seiten aus dem Zwischenspeicher gezeigt (Musik braucht weiterhin Netz). */
+object Offline {
+    private val views: MutableSet<WebView> = java.util.Collections.newSetFromMap(java.util.WeakHashMap<WebView, Boolean>())
+    @Volatile var online = true
+
+    fun check(ctx: Context): Boolean {
+        val cm = ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+        val n = cm.activeNetwork ?: return false
+        val c = cm.getNetworkCapabilities(n) ?: return false
+        return c.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_INTERNET) && c.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+    }
+
+    private fun mode() = if (online) android.webkit.WebSettings.LOAD_DEFAULT else android.webkit.WebSettings.LOAD_CACHE_ELSE_NETWORK
+
+    fun register(w: WebView) {
+        synchronized(views) { views.add(w) }
+        w.settings.cacheMode = mode()
+    }
+
+    private fun set(v: Boolean) {
+        if (online == v) return
+        online = v
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            synchronized(views) { views.forEach { try { it.settings.cacheMode = mode() } catch (_: Exception) { } } }
+        }
+    }
+
+    fun start(ctx: Context) {
+        online = try { check(ctx) } catch (_: Exception) { true }
+        try {
+            val cm = ctx.getSystemService(Context.CONNECTIVITY_SERVICE) as android.net.ConnectivityManager
+            cm.registerDefaultNetworkCallback(object : android.net.ConnectivityManager.NetworkCallback() {
+                override fun onCapabilitiesChanged(network: android.net.Network, caps: android.net.NetworkCapabilities) {
+                    set(caps.hasCapability(android.net.NetworkCapabilities.NET_CAPABILITY_VALIDATED))
+                }
+                override fun onLost(network: android.net.Network) { set(false) }
+            })
+        } catch (_: Exception) { }
+    }
+
+    /** Ladefehler der Hauptseite: ohne Netz einmal aus dem Zwischenspeicher versuchen. Gibt true zurueck, wenn neu geladen wird. */
+    fun retryFromCache(view: WebView?): Boolean {
+        if (view == null || view.settings.cacheMode == android.webkit.WebSettings.LOAD_CACHE_ELSE_NETWORK) return false
+        if (check(view.context)) return false
+        view.settings.cacheMode = android.webkit.WebSettings.LOAD_CACHE_ELSE_NETWORK
+        view.reload()
+        return true
+    }
+}
+
 /** WebView, die beim Verlassen der App nicht als "unsichtbar" gemeldet wird - so laeuft die Musik im Hintergrund weiter. */
 private class KeepAliveWebView(c: Context) : WebView(c) {
     override fun onWindowVisibilityChanged(visibility: Int) {
@@ -841,6 +892,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
                             settings.allowContentAccess = false
                             settings.javaScriptCanOpenWindowsAutomatically = false
                             settings.mediaPlaybackRequiresUserGesture = false
+                            Offline.register(this)
                             CookieManager.getInstance().setAcceptCookie(true)
                             settings.setGeolocationEnabled(true)
                             webChromeClient = object : WebChromeClient() {
@@ -888,7 +940,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
                                 }
 
                                 override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
-                                    if (request?.isForMainFrame == true) failed = true
+                                    if (request?.isForMainFrame == true && !Offline.retryFromCache(view)) failed = true
                                 }
                             }
                             visibility = android.view.View.VISIBLE
@@ -1274,6 +1326,7 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
                             settings.allowContentAccess = false
                             settings.javaScriptCanOpenWindowsAutomatically = false
                         settings.mediaPlaybackRequiresUserGesture = false
+                        Offline.register(this)
                         settings.setGeolocationEnabled(true)
                         CookieManager.getInstance().setAcceptCookie(true)
                         webChromeClient = object : WebChromeClient() {
@@ -1328,7 +1381,7 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
                             }
 
                             override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
-                                if (request?.isForMainFrame == true) failed = true
+                                if (request?.isForMainFrame == true && !Offline.retryFromCache(view)) failed = true
                             }
                         }
                         addJavascriptInterface(MusicBridge.Js(), "CenNative")
