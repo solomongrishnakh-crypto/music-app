@@ -34,6 +34,20 @@ object MusicBridge {
     @Volatile var stamp = 0L
     @Volatile var cmd = ""
     @Volatile var guard = false
+    @Volatile var appCtx: Context? = null
+    @Volatile var serviceUp = false
+    @Volatile private var lastStart = 0L
+
+    /** Startet die Benachrichtigung, sobald Musik laeuft (auch bei geoeffneter App). */
+    fun ensureService() {
+        val c = appCtx ?: return
+        val now = System.currentTimeMillis()
+        if (serviceUp || now - lastStart < 4000) return
+        lastStart = now
+        Handler(Looper.getMainLooper()).post {
+            try { c.startForegroundService(Intent(c, MusicService::class.java)) } catch (_: Exception) { }
+        }
+    }
     val openReq = mutableIntStateOf(0)
     val backReq = mutableIntStateOf(0)
     @Volatile var want = false
@@ -58,7 +72,7 @@ object MusicBridge {
         }
         @JavascriptInterface fun update2(t: String, a: String, p: Boolean, c: String, cur: Double, d: Double) {
             title = t; artist = a; playing = p; cover = c; pos = cur; dur = d; stamp = System.currentTimeMillis()
-            if (p) want = true else if (!guard) want = false
+            if (p) { want = true; ensureService() } else if (!guard) want = false
         }
         @JavascriptInterface fun heroBack() { backReq.intValue = backReq.intValue + 1 }
         @JavascriptInterface fun playing(): Boolean = MusicBridge.playing
@@ -146,12 +160,12 @@ class MusicService : Service() {
             }
             val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
             if (playing || am.isMusicActive) quiet = 0 else quiet++
-            if (quiet >= 150) {
+            if (quiet >= 300) {
                 stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
                 return
             }
-            handler.postDelayed(this, 2000)
+            handler.postDelayed(this, 1000)
         }
     }
 
@@ -248,6 +262,7 @@ class MusicService : Service() {
             stopSelf()
             return START_NOT_STICKY
         }
+        serviceUp = true
         quiet = 0
         refresh()
         handler.removeCallbacks(tick)
@@ -256,6 +271,7 @@ class MusicService : Service() {
     }
 
     override fun onDestroy() {
+        serviceUp = false
         handler.removeCallbacks(tick)
         session?.release()
         session = null

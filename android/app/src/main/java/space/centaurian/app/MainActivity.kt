@@ -412,6 +412,7 @@ class MainActivity : ComponentActivity() {
         // Spielt Musik, dann Vordergrund-Dienst starten, damit der Ton im Hintergrund weiterlaeuft.
         try {
             val am = getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
+            MusicBridge.web?.evaluateJavascript("try{var c=window.__cenCtx&&window.__cenCtx();if(c&&c.currentSong&&window.CenNative)CenNative.update2(c.currentSong.title||'',c.currentSong.artist||'',!!c.isPlaying,c.currentSong.coverUrl||'',c.currentTime||0,c.duration||0);}catch(e){}", null)
             if (am.isMusicActive) startForegroundService(Intent(this, MusicService::class.java))
         } catch (_: Exception) { }
     }
@@ -424,11 +425,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        try { stopService(Intent(this, MusicService::class.java)) } catch (_: Exception) { }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        MusicBridge.appCtx = applicationContext
         if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
@@ -821,7 +822,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
 
 // ---------------------------------------------------------------- Bausteine
 @Composable
-private fun TopBar(title: String, icon: @Composable () -> Unit, onIcon: () -> Unit, onTitle: (() -> Unit)? = null, music: Boolean = false) {
+private fun TopBar(title: String, icon: @Composable () -> Unit, onIcon: () -> Unit, onTitle: (() -> Unit)? = null) {
     Row(
         Modifier.fillMaxWidth().background(Color(0xB3030206)).statusBarsPadding().height(48.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -836,34 +837,8 @@ private fun TopBar(title: String, icon: @Composable () -> Unit, onIcon: () -> Un
             letterSpacing = 3.sp,
             modifier = if (onTitle != null) Modifier.clickable { onTitle() }.padding(end = 16.dp, top = 12.dp, bottom = 12.dp) else Modifier,
         )
-        if (music) MiniPlayer(Modifier.weight(1f))
     }
     Box(Modifier.fillMaxWidth().height(1.dp).background(LineSoft))
-}
-
-/** Kleine Musik-Steuerung (Zurueck / Pause / Weiter + Titel) fuer alle Seiten ausser der Startseite. */
-@Composable
-private fun MiniPlayer(modifier: Modifier = Modifier) {
-    var title by remember { mutableStateOf("") }
-    var playing by remember { mutableStateOf(false) }
-    var on by remember { mutableStateOf(false) }
-    LaunchedEffect(Unit) {
-        while (true) {
-            on = MusicBridge.want && MusicBridge.title.isNotBlank()
-            title = MusicBridge.title
-            playing = MusicBridge.playing
-            kotlinx.coroutines.delay(500)
-        }
-    }
-    if (!on) { Spacer(modifier); return }
-    Row(modifier.padding(end = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-        Text(title, color = TextMuted, fontSize = 10.sp, fontFamily = Mono, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.weight(1f).padding(horizontal = 6.dp))
-        for ((glyph, kind) in listOf("«" to "prev", (if (playing) "II" else "▶") to "pp", "»" to "next")) {
-            Box(Modifier.size(38.dp).clickable { MusicBridge.click(kind) }, contentAlignment = Alignment.Center) {
-                Text(glyph, color = Accent, fontSize = if (kind == "pp") 14.sp else 20.sp, fontWeight = FontWeight.Bold, fontFamily = Mono)
-            }
-        }
-    }
 }
 
 @Composable
@@ -1093,14 +1068,11 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
     Column(Modifier.fillMaxSize().background(BgDark)) {
         if (bare) {
             Box(Modifier.fillMaxWidth().statusBarsPadding())
-            var mini by remember { mutableStateOf(false) }
-            LaunchedEffect(Unit) { while (true) { mini = MusicBridge.want && MusicBridge.title.isNotBlank(); kotlinx.coroutines.delay(500) } }
-            if (mini) Row(Modifier.fillMaxWidth().height(36.dp).background(Color(0xB3030206)), verticalAlignment = Alignment.CenterVertically) { MiniPlayer(Modifier.weight(1f)) }
         } else {
             TopBar(s.title, { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, {
                 val w = web
                 if (w != null && w.canGoBack()) w.goBack() else onBack()
-            }, onTitle = onHome, music = true)
+            }, onTitle = onHome)
         }
         if (progress in 1..99) {
             LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth().height(2.dp), color = Accent, trackColor = Color.Transparent)
@@ -1257,7 +1229,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
 
     Box(Modifier.fillMaxSize().background(BgDark)) {
     Column(Modifier.fillMaxSize()) {
-        TopBar(if (de) "Einstellungen" else "Settings", { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack, music = true)
+        TopBar(if (de) "Einstellungen" else "Settings", { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack)
         Column(Modifier.fillMaxSize().navigationBarsPadding().verticalScroll(rememberScrollState())) {
             GroupTitle(if (de) "Sprache" else "Language")
             Card {
