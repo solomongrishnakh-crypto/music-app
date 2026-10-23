@@ -898,6 +898,11 @@ private fun WebScreen(s: Screen.Web, lang: String, onBack: () -> Unit) {
                                 }
                             }
 
+                            override fun onRenderProcessGone(view: WebView?, detail: android.webkit.RenderProcessGoneDetail?): Boolean {
+                                failed = true
+                                return true
+                            }
+
                             override fun onReceivedError(view: WebView?, request: WebResourceRequest?, error: WebResourceError?) {
                                 if (request?.isForMainFrame == true) failed = true
                             }
