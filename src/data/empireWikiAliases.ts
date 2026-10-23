@@ -40,6 +40,17 @@ export const EMPIRE_WIKI_ALIASES: Record<string, string> = {
   // lieferte den Artikel der Staatsreederei IRISL statt des Landes
   "Islamic Republic of Iran": "Iran",
   // lieferte "Russians" (Lied von Sting)
+  // Heutige Länder, bei denen die Suche den falschen/keinen Artikel lieferte
+  // (alle 190 Namen des Jahres 2024 am 23.10.2026 gegen die Live-Seite geprüft)
+  "Communist Laos": "Laos",
+  "Estado Novo": "Estado Novo (Portugal)",
+  "Federated Republic of Germany": "Germany",
+  "Second Republic of Austria": "Austria",
+  "Sultanate of Brunei": "Brunei",
+  "Union of Myanmar": "Myanmar",
+  "People's Republic of Angola": "Angola",
+  Micronesia: "Federated States of Micronesia",
+  "Saint Kitts": "Saint Kitts and Nevis",
   "Russian Federation": "Russia",
   "(Russian Federation)": "Russia",
 };
