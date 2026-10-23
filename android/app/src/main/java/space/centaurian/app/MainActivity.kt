@@ -415,6 +415,12 @@ class MainActivity : ComponentActivity() {
         } catch (_: Exception) { }
     }
 
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        if (intent.getBooleanExtra("np", false)) { intent.removeExtra("np"); MusicBridge.openReq.intValue = MusicBridge.openReq.intValue + 1 }
+    }
+
     override fun onResume() {
         super.onResume()
         try { stopService(Intent(this, MusicService::class.java)) } catch (_: Exception) { }
@@ -449,12 +455,14 @@ private fun AppRoot() {
     var lang by remember { mutableStateOf(initialLang(ctx)) }
     var screen by remember { mutableStateOf<Screen>(Screen.Home) }
     var webBack by remember { mutableStateOf<Screen>(Screen.Home) }
+    var returnTo by remember { mutableStateOf<Screen?>(null) }
     val anim = true
     val drawer = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val de = lang == "de"
 
     fun go(s: Screen) {
+        returnTo = null
         webBack = Screen.Home
         screen = s
         scope.launch { drawer.close() }
@@ -470,6 +478,21 @@ private fun AppRoot() {
         screen = if (cur is Screen.Info) cur.backTo else Screen.Home
     }
 
+    val openReq = MusicBridge.openReq.intValue
+    LaunchedEffect(openReq) {
+        if (openReq > 0) {
+            if (screen != Screen.Home) returnTo = screen
+            screen = Screen.Home
+            drawer.close()
+            kotlinx.coroutines.delay(350)
+            MusicBridge.web?.evaluateJavascript("var b=document.querySelector('button.min-w-0.flex-1');if(b)b.click();", null)
+        }
+    }
+    val backReq = MusicBridge.backReq.intValue
+    LaunchedEffect(backReq) {
+        val r = returnTo
+        if (backReq > 0 && r != null && screen == Screen.Home) { returnTo = null; screen = r }
+    }
     var homeBare by remember { mutableStateOf(false) }
     var webBare by remember { mutableStateOf(false) }
     var searchReq by remember { mutableStateOf<Pair<Int, String>?>(null) }
@@ -541,6 +564,13 @@ private fun AppRoot() {
             }
         }
     }
+    BackHandler(enabled = returnTo != null && screen == Screen.Home) {
+        MusicBridge.web?.evaluateJavascript("var b=document.querySelector('div.mx-auto.max-w-2xl.flex-col.items-center button.self-start');if(b)b.click();", null)
+        val r = returnTo
+        returnTo = null
+        if (r != null) screen = r
+    }
+
     BackHandler(enabled = drawer.currentValue == DrawerValue.Open) { scope.launch { drawer.close() } }
 }
 
@@ -584,6 +614,7 @@ private fun homeJs(anim: Boolean): String =
         "';" +
         "try{Object.defineProperty(document,'hidden',{get:function(){return false;},configurable:true});Object.defineProperty(document,'visibilityState',{get:function(){return 'visible';},configurable:true});document.addEventListener('visibilitychange',function(e){e.stopImmediatePropagation();},true);}catch(x){}" +
         RESULTS_JS +
+        "if(!window.__cenBackL){window.__cenBackL=1;document.addEventListener('click',function(e){try{var b=e.target.closest&&e.target.closest('div.mx-auto.max-w-2xl.flex-col.items-center button.self-start');if(b&&window.CenNative)CenNative.heroBack();}catch(x){}},true);}" +
         "window.__cenCtx=function(){try{var c=['main','#__next','body > div'];for(var i=0;i<c.length;i++){var n=document.querySelector(c[i]);if(!n)continue;var k=null;for(var x in n){if(x.indexOf('__reactFiber')===0){k=x;break;}}if(!k)continue;var f=n[k];while(f){var p=f.memoizedProps;if(p&&p.value&&typeof p.value.toggleFavorite==='function')return p.value;f=f.return;}}}catch(e){}return null;};" +
         "if(!window.__cenPoll){window.__cenPoll=1;setInterval(function(){try{var c=window.__cenCtx();if(!window.CenNative)return;if(c&&c.currentSong)CenNative.update2(c.currentSong.title||'',c.currentSong.artist||'',!!c.isPlaying,c.currentSong.coverUrl||'',c.currentTime||0,c.duration||0);if(c&&CenNative.resume()&&!c.isPlaying&&Date.now()-(window.__cenRes||0)>2500){window.__cenRes=Date.now();c.togglePlayback();}var m=CenNative.cmd();if(!c||!m)return;if(m==='next')c.next();else if(m==='prev')c.previous();else if(m==='pp')c.togglePlayback();else if(m.indexOf('seek:')===0)c.seekTo(parseFloat(m.substring(5)));}catch(e){}},500);}" +
         "window.__cenSave=function(){try{var b=document.getElementById('cn-save');if(!b)return;var c=window.__cenCtx();var on=!!(c&&c.currentSong&&c.isFavorite(c.currentSong.id));var de=(document.documentElement.lang||'').indexOf('de')===0;b.className=on?'on':'';b.textContent=on?(de?'★ GESPEICHERT':'★ SAVED'):(de?'☆ SPEICHERN':'☆ SAVE');}catch(e){}};" +

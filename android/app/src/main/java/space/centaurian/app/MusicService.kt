@@ -20,6 +20,7 @@ import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
 import android.webkit.JavascriptInterface
+import androidx.compose.runtime.mutableIntStateOf
 import android.webkit.WebView
 import org.json.JSONObject
 import org.json.JSONTokener
@@ -33,6 +34,8 @@ object MusicBridge {
     @Volatile var stamp = 0L
     @Volatile var cmd = ""
     @Volatile var guard = false
+    val openReq = mutableIntStateOf(0)
+    val backReq = mutableIntStateOf(0)
     @Volatile var want = false
     @Volatile var cover = ""
     @Volatile var pos = 0.0
@@ -57,6 +60,7 @@ object MusicBridge {
             title = t; artist = a; playing = p; cover = c; pos = cur; dur = d; stamp = System.currentTimeMillis()
             if (p) want = true else if (!guard) want = false
         }
+        @JavascriptInterface fun heroBack() { backReq.intValue = backReq.intValue + 1 }
         @JavascriptInterface fun playing(): Boolean = MusicBridge.playing
         @JavascriptInterface fun want(): Boolean = MusicBridge.want
         @JavascriptInterface fun resume(): Boolean = MusicBridge.want && MusicBridge.guard
@@ -163,7 +167,7 @@ class MusicService : Service() {
 
     private fun build(): Notification {
         val open = PendingIntent.getActivity(
-            this, 0, Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
+            this, 0, Intent(this, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP).putExtra("np", true),
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT,
         )
         val b = if (Build.VERSION.SDK_INT >= 26) Notification.Builder(this, "music") else @Suppress("DEPRECATION") Notification.Builder(this)
