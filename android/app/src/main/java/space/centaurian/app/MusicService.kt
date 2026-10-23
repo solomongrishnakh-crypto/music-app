@@ -17,6 +17,7 @@ import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.os.Looper
+import android.webkit.JavascriptInterface
 import android.webkit.WebView
 import org.json.JSONObject
 import org.json.JSONTokener
@@ -24,6 +25,19 @@ import org.json.JSONTokener
 /** Verbindung zum Player der Webseite (in der Startseiten-WebView): Knoepfe klicken und Titel lesen. */
 object MusicBridge {
     @Volatile var web: WebView? = null
+    @Volatile var title = ""
+    @Volatile var artist = ""
+    @Volatile var playing = false
+    @Volatile var stamp = 0L
+    @Volatile var cmd = ""
+
+    /** Wird von der Seite aufgerufen (auch im Hintergrund): meldet Titel/Status und holt Befehle ab. */
+    class Js {
+        @JavascriptInterface fun update(t: String, a: String, p: Boolean) {
+            title = t; artist = a; playing = p; stamp = System.currentTimeMillis()
+        }
+        @JavascriptInterface fun cmd(): String { val c = cmd; cmd = ""; return c }
+    }
 
     private const val STATE_JS =
         "(function(){try{var t='',a='';" +
@@ -41,7 +55,9 @@ object MusicBridge {
         }
         val js = "(function(){try{var ps=document.querySelectorAll(\"$sel\");for(var i=0;i<ps.length;i++){var b=ps[i].closest('button');if(b&&b.offsetParent!==null){b.click();break;}}}catch(e){}})()"
         val w = web ?: return
-        w.post { w.evaluateJavascript(js, null) }
+        cmd = kind
+        // Falls die Seite den Befehl nicht innerhalb von 1,5 s abholt: direkt klicken.
+        w.postDelayed({ if (cmd == kind) { cmd = ""; w.evaluateJavascript(js, null) } }, 1500)
     }
 
     fun state(cb: (String, String, Boolean) -> Unit) {
@@ -74,7 +90,10 @@ class MusicService : Service() {
 
     private val tick = object : Runnable {
         override fun run() {
-            MusicBridge.state { t, a, p ->
+            if (MusicBridge.title.isNotBlank() && System.currentTimeMillis() - MusicBridge.stamp < 6000) {
+                val t = MusicBridge.title; val a = MusicBridge.artist; val p = MusicBridge.playing
+                if (t != title || a != artist || p != playing) { title = t; artist = a; playing = p; refresh() }
+            } else MusicBridge.state { t, a, p ->
                 handler.post {
                     val changed = t != title || a != artist || p != playing
                     title = if (t.isNotBlank()) t else title

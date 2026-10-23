@@ -577,12 +577,17 @@ private fun homeJs(anim: Boolean): String =
     "(function(){var css='.app-fab,.app-drawer,.app-scrim{display:none!important}" +
         "button[aria-haspopup=listbox]{display:none!important}a[href\$=apk]{display:none!important}" +
         RESULTS_CSS +
+        "#cn-save{margin-top:14px;display:flex;align-items:center;gap:8px;padding:9px 18px;border:1px solid rgba(255,90,77,0.55);border-radius:999px;background:rgba(255,90,77,0.08);color:#fff;font-size:12px;letter-spacing:0.2em;font-family:inherit;text-transform:uppercase;box-shadow:0 0 14px rgba(255,90,77,0.25)}#cn-save.on{background:#ff5a4d;color:#0a0a0a}div.fixed.bottom-1.right-1{opacity:0!important;pointer-events:none!important}" +
         "div.mx-auto.flex.w-full.max-w-2xl.flex-col.items-center{position:relative;padding:14px 14px 18px;margin-top:6px;border:1px solid rgba(255,90,77,0.35);border-radius:18px;background:radial-gradient(120% 60% at 50% 0%,rgba(255,90,77,0.18),rgba(8,8,10,0.85) 60%);box-shadow:0 0 28px rgba(255,90,77,0.18),inset 0 0 40px rgba(255,90,77,0.06)}div.mx-auto.flex.w-full.max-w-2xl.flex-col.items-center .aspect-square{border:1px solid #ff5a4d!important;border-radius:14px;box-shadow:0 0 0 4px rgba(255,90,77,0.10),0 0 34px rgba(255,90,77,0.45);overflow:hidden}div.mx-auto.flex.w-full.max-w-2xl.flex-col.items-center p.font-display{font-size:19px;letter-spacing:0.12em;text-shadow:0 0 14px rgba(255,90,77,0.7)}div.mx-auto.flex.w-full.max-w-2xl.flex-col.items-center p.label-mono{letter-spacing:0.35em;color:#ff5a4d}div.mx-auto.flex.w-full.max-w-2xl.flex-col.items-center div.justify-center.gap-4 button{border-radius:999px;border:1px solid rgba(255,90,77,0.55);background:rgba(255,90,77,0.08);box-shadow:0 0 14px rgba(255,90,77,0.25)}div.mx-auto.flex.w-full.max-w-2xl.flex-col.items-center div.justify-center.gap-4 button.border-accent{background:#ff5a4d;color:#0a0a0a;box-shadow:0 0 26px rgba(255,90,77,0.8)}div.mx-auto.flex.w-full.max-w-2xl.flex-col.items-center button.self-start{border-radius:999px;border-color:rgba(255,90,77,0.5)}" +
         "';" +
         "try{Object.defineProperty(document,'hidden',{get:function(){return false;},configurable:true});Object.defineProperty(document,'visibilityState',{get:function(){return 'visible';},configurable:true});document.addEventListener('visibilitychange',function(e){e.stopImmediatePropagation();},true);}catch(x){}" +
         RESULTS_JS +
+        "window.__cenCtx=function(){try{var c=['main','#__next','body > div'];for(var i=0;i<c.length;i++){var n=document.querySelector(c[i]);if(!n)continue;var k=null;for(var x in n){if(x.indexOf('__reactFiber')===0){k=x;break;}}if(!k)continue;var f=n[k];while(f){var p=f.memoizedProps;if(p&&p.value&&typeof p.value.toggleFavorite==='function')return p.value;f=f.return;}}}catch(e){}return null;};" +
+        "if(!window.__cenPoll){window.__cenPoll=1;setInterval(function(){try{var c=window.__cenCtx();if(!window.CenNative)return;if(c&&c.currentSong)CenNative.update(c.currentSong.title||'',c.currentSong.artist||'',!!c.isPlaying);var m=CenNative.cmd();if(!c||!m)return;if(m==='next')c.next();else if(m==='prev')c.previous();else if(m==='pp')c.togglePlayback();}catch(e){}},500);}" +
+        "window.__cenSave=function(){try{var b=document.getElementById('cn-save');if(!b)return;var c=window.__cenCtx();var on=!!(c&&c.currentSong&&c.isFavorite(c.currentSong.id));var de=(document.documentElement.lang||'').indexOf('de')===0;b.className=on?'on':'';b.textContent=on?(de?'★ GESPEICHERT':'★ SAVED'):(de?'☆ SPEICHERN':'☆ SAVE');}catch(e){}};" +
         "var n=0;function run(){try{if(!document.getElementById('cn-native')&&document.head){var s=document.createElement('style');" +
         "s.id='cn-native';s.textContent=css;document.head.appendChild(s);}" +
+        "var hr=document.querySelector('div.mx-auto.max-w-2xl.flex-col.items-center');if(hr){var sb=document.getElementById('cn-save');if(!sb){sb=document.createElement('button');sb.id='cn-save';sb.type='button';sb.addEventListener('click',function(){var cc=window.__cenCtx();if(cc&&cc.currentSong)cc.toggleFavorite(cc.currentSong);setTimeout(window.__cenSave,200);});hr.appendChild(sb);}window.__cenSave();}" +
         "var kk=document.getElementById('kontakte');if(kk)kk.style.setProperty('display','none','important');" +
         "var im=document.querySelector('img[src*=\"branding/logo.jpg\"]');if(im){var sc=im.closest('section');if(sc)sc.style.setProperty('display','none','important');}" +
         "var fo=document.querySelectorAll('footer');for(var j=0;j<fo.length;j++){fo[j].style.setProperty('display','none','important');}" +
@@ -714,6 +719,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
                             }
                             visibility = if (visible) android.view.View.VISIBLE else android.view.View.INVISIBLE
                             MusicBridge.web = this
+                            addJavascriptInterface(MusicBridge.Js(), "CenNative")
                             loadUrl(siteUrl("/", lang))
                             web = this
                         }
