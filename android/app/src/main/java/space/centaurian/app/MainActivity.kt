@@ -65,6 +65,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -571,6 +572,45 @@ private fun AppRoot() {
         if (r != null) screen = r
     }
 
+    LaunchedEffect(Unit) { Updater.check(ctx, false) }
+    val upd = Updater.avail
+    if (upd != null) {
+        AlertDialog(
+            onDismissRequest = { if (Updater.progress < 0) Updater.avail = null },
+            containerColor = Color(0xFF14090B),
+            title = { Text(if (de) "Update verfügbar" else "Update available", color = TextMain, fontFamily = Mono, fontSize = 15.sp) },
+            text = {
+                Column {
+                    Text(
+                        (if (de) "Neue Version " else "New version ") + upd.name +
+                            (if (de) ". Die App lädt das Update und startet die Installation." else ". The app downloads the update and starts the installation."),
+                        color = TextMuted, fontSize = 13.sp,
+                    )
+                    if (Updater.progress >= 0) {
+                        Spacer(Modifier.height(10.dp))
+                        LinearProgressIndicator(progress = { Updater.progress / 100f }, modifier = Modifier.fillMaxWidth().height(3.dp), color = Accent, trackColor = LineSoft)
+                    }
+                    if (Updater.msg == "!") {
+                        Spacer(Modifier.height(8.dp))
+                        Text(if (de) "Download fehlgeschlagen. Versuch es nochmal." else "Download failed. Try again.", color = Accent, fontSize = 12.sp)
+                    }
+                }
+            },
+            confirmButton = {
+                Text(
+                    if (Updater.progress >= 0) "…" else if (de) "JETZT AKTUALISIEREN" else "UPDATE NOW",
+                    color = Accent, fontFamily = Mono, fontSize = 12.sp, fontWeight = FontWeight.Bold,
+                    modifier = Modifier.clickable(enabled = Updater.progress < 0) { Updater.msg = ""; Updater.start(ctx) }.padding(12.dp),
+                )
+            },
+            dismissButton = {
+                if (Updater.progress < 0) Text(
+                    if (de) "SPÄTER" else "LATER", color = TextMuted, fontFamily = Mono, fontSize = 12.sp,
+                    modifier = Modifier.clickable { Updater.avail = null }.padding(12.dp),
+                )
+            },
+        )
+    }
     BackHandler(enabled = drawer.currentValue == DrawerValue.Open) { scope.launch { drawer.close() } }
 }
 
@@ -1251,6 +1291,19 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                     prefs.edit().putBoolean("keepon", keepOn).apply()
                     (ctx as? MainActivity)?.setKeepOn(keepOn)
                 }
+            }
+
+            GroupTitle("App")
+            Card {
+                SettingsRow(
+                    if (de) "Nach Updates suchen" else "Check for updates",
+                    when (Updater.msg) {
+                        "…" -> if (de) "Suche läuft …" else "Checking …"
+                        "ok" -> if (de) "Du hast die neueste Version" else "You have the latest version"
+                        "?" -> if (de) "Keine Verbindung" else "No connection"
+                        else -> (if (de) "Version " else "Version ") + version
+                    },
+                ) { Updater.check(ctx, true) }
             }
 
             GroupTitle("Feedback")
