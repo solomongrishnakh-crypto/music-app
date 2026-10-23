@@ -68,6 +68,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
@@ -86,6 +89,32 @@ private val Accent = Color(0xFFFF5A4D)
 private val TextMain = Color(0xFFF0E4E2)
 private val TextMuted = Color(0xFFB49A96)
 private val LineSoft = Color(0x33FF5A4D)
+
+private val Corner = Color(0x99FF5A4D)
+private val Mono = FontFamily.Monospace
+
+/** Rote Eck-Klammern wie bei den HUD-Karten der Webseite. */
+private fun Modifier.hudCorners(len: Float = 14f): Modifier = this.drawBehind {
+    val w = size.width
+    val h = size.height
+    val st = 2f
+    fun l(a: Offset, b: Offset) = drawLine(Corner, a, b, strokeWidth = st)
+    l(Offset(0f, 0f), Offset(len, 0f)); l(Offset(0f, 0f), Offset(0f, len))
+    l(Offset(w, 0f), Offset(w - len, 0f)); l(Offset(w, 0f), Offset(w, len))
+    l(Offset(0f, h), Offset(len, h)); l(Offset(0f, h), Offset(0f, h - len))
+    l(Offset(w, h), Offset(w - len, h)); l(Offset(w, h), Offset(w, h - len))
+}
+
+/** Sternenhimmel-Hintergrund wie auf der Webseite. */
+private fun Modifier.stars(): Modifier = this.drawBehind {
+    val r = java.util.Random(7)
+    repeat(70) {
+        val x = r.nextFloat() * size.width
+        val y = r.nextFloat() * size.height
+        val a = 0.15f + r.nextFloat() * 0.5f
+        drawCircle(Color.White.copy(alpha = a), radius = 0.8f + r.nextFloat() * 1.4f, center = Offset(x, y))
+    }
+}
 
 private const val BASE = "https://centaurianspace.com"
 
@@ -279,14 +308,15 @@ private fun AppRoot() {
 @Composable
 private fun TopBar(title: String, icon: @Composable () -> Unit, onIcon: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().background(BgDark).statusBarsPadding().height(56.dp),
+        Modifier.fillMaxWidth().background(BgDark).statusBarsPadding().height(48.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(56.dp).clickable { onIcon() }, contentAlignment = Alignment.Center) { icon() }
+        Box(Modifier.size(48.dp).clickable { onIcon() }, contentAlignment = Alignment.Center) { icon() }
         Text(
             title.uppercase(),
             color = TextMain,
-            fontSize = 14.sp,
+            fontSize = 12.sp,
+            fontFamily = Mono,
             fontWeight = FontWeight.Bold,
             letterSpacing = 3.sp,
         )
@@ -299,53 +329,69 @@ private fun NumberedCard(index: Int, title: String, desc: String, onClick: () ->
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 5.dp)
-            .clip(RoundedCornerShape(12.dp))
-            .background(Accent.copy(alpha = 0.05f))
-            .border(BorderStroke(1.dp, LineSoft), RoundedCornerShape(12.dp))
+            .padding(horizontal = 14.dp, vertical = 3.dp)
+            .background(Color(0x80140A0A))
+            .border(BorderStroke(1.dp, Color(0x1AFFFFFF)))
+            .hudCorners()
             .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text("%02d".format(index), color = Accent.copy(alpha = 0.7f), fontSize = 11.sp, letterSpacing = 1.sp)
-        Spacer(Modifier.size(14.dp))
+        Text("%02d".format(index), color = Accent, fontSize = 10.sp, fontFamily = Mono, letterSpacing = 1.sp)
+        Spacer(Modifier.size(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(title.uppercase(), color = TextMain, fontSize = 14.sp, fontWeight = FontWeight.Medium, letterSpacing = 2.sp)
+            Text(title.uppercase(), color = TextMain, fontSize = 12.sp, fontFamily = Mono, fontWeight = FontWeight.Medium, letterSpacing = 2.sp)
             if (desc.isNotEmpty()) {
-                Text(desc, color = TextMuted, fontSize = 12.sp, modifier = Modifier.padding(top = 3.dp))
+                Text(desc, color = TextMuted, fontSize = 11.sp, modifier = Modifier.padding(top = 2.dp))
             }
         }
-        Text("›", color = Accent, fontSize = 22.sp)
+        Text("›", color = Accent, fontSize = 18.sp)
+    }
+}
+
+@Composable
+private fun ToolTile(index: Int, title: String, modifier: Modifier, onClick: () -> Unit) {
+    Column(
+        modifier
+            .background(Color(0x80140A0A))
+            .border(BorderStroke(1.dp, Color(0x1AFFFFFF)))
+            .hudCorners(10f)
+            .clickable { onClick() }
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+    ) {
+        Text("%02d".format(index), color = Accent, fontSize = 9.sp, fontFamily = Mono)
+        Text(title.uppercase(), color = TextMain, fontSize = 11.sp, fontFamily = Mono, letterSpacing = 1.sp, modifier = Modifier.padding(top = 3.dp), maxLines = 2)
     }
 }
 
 @Composable
 private fun GroupTitle(text: String) {
-    Text(
-        text.uppercase(),
-        color = Accent,
-        fontSize = 10.sp,
-        letterSpacing = 4.sp,
-        modifier = Modifier.padding(start = 20.dp, top = 22.dp, bottom = 6.dp),
-    )
+    Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(text.uppercase(), color = Accent, fontSize = 10.sp, fontFamily = Mono, letterSpacing = 3.sp)
+        Spacer(Modifier.size(10.dp))
+        Box(Modifier.weight(1f).height(1.dp).background(androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(Accent.copy(alpha = 0.7f), Color(0x00FFFFFF)))))
+    }
 }
 
 // ---------------------------------------------------------------- Start
 @Composable
 private fun HomeScreen(lang: String, onMenu: () -> Unit, onOpen: (Section) -> Unit) {
     val de = lang == "de"
-    Column(Modifier.fillMaxSize().background(BgDark)) {
+    Column(Modifier.fillMaxSize().background(BgDark).stars()) {
         TopBar("Centaurian", { Icon(Icons.Default.Menu, contentDescription = "Menu", tint = TextMain) }, onMenu)
         LazyColumn(Modifier.fillMaxSize().navigationBarsPadding()) {
             item {
-                Column(Modifier.fillMaxWidth().padding(top = 24.dp, bottom = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Image(painterResource(R.mipmap.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(140.dp))
-                    Text("CENTAURIAN", color = TextMain, fontSize = 22.sp, fontWeight = FontWeight.Bold, letterSpacing = 8.sp)
-                    Text(
-                        if (de) "Universum & Weltgeschichte" else "Universe & world history",
-                        color = TextMuted, fontSize = 12.sp, letterSpacing = 2.sp, textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(top = 6.dp),
-                    )
+                Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Image(painterResource(R.mipmap.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(64.dp))
+                    Spacer(Modifier.size(10.dp))
+                    Column {
+                        Text("CENTAURIAN", color = TextMain, fontSize = 18.sp, fontFamily = Mono, fontWeight = FontWeight.Bold, letterSpacing = 5.sp)
+                        Text(
+                            if (de) "Universum & Weltgeschichte" else "Universe & world history",
+                            color = TextMuted, fontSize = 11.sp, letterSpacing = 1.sp,
+                            modifier = Modifier.padding(top = 3.dp),
+                        )
+                    }
                 }
             }
             item { GroupTitle(if (de) "Entdecken" else "Explore") }
@@ -354,11 +400,16 @@ private fun HomeScreen(lang: String, onMenu: () -> Unit, onOpen: (Section) -> Un
                 NumberedCard(i + 1, if (de) s.de else s.en, if (de) s.descDe else s.descEn) { onOpen(s) }
             }
             item { GroupTitle(if (de) "Werkzeuge" else "Tools") }
-            items(TOOLS.size) { i ->
-                val s = TOOLS[i]
-                NumberedCard(EXPLORE.size + i + 1, if (de) s.de else s.en, if (de) s.descDe else s.descEn) { onOpen(s) }
+            items(TOOLS.chunked(2).size) { r ->
+                val pair = TOOLS.chunked(2)[r]
+                Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 3.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    pair.forEachIndexed { k, s ->
+                        ToolTile(EXPLORE.size + r * 2 + k + 1, if (de) s.de else s.en, Modifier.weight(1f).height(64.dp)) { onOpen(s) }
+                    }
+                    if (pair.size == 1) Spacer(Modifier.weight(1f))
+                }
             }
-            item { Spacer(Modifier.height(28.dp)) }
+            item { Spacer(Modifier.height(20.dp)) }
         }
     }
 }
@@ -394,10 +445,10 @@ private fun DrawerContent(lang: String, onOpen: (Section) -> Unit, onSettings: (
 
 @Composable
 private fun DrawerItem(n: Int, title: String, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clickable { onClick() }.padding(horizontal = 20.dp, vertical = 13.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().clickable { onClick() }.padding(horizontal = 20.dp, vertical = 9.dp), verticalAlignment = Alignment.CenterVertically) {
         Text("%02d".format(n), color = Accent.copy(alpha = 0.6f), fontSize = 10.sp)
         Spacer(Modifier.size(14.dp))
-        Text(title.uppercase(), color = TextMain, fontSize = 14.sp, letterSpacing = 2.sp)
+        Text(title.uppercase(), color = TextMain, fontSize = 12.sp, fontFamily = Mono, letterSpacing = 2.sp)
     }
 }
 
