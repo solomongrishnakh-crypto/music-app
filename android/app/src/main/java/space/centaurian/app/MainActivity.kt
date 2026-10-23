@@ -253,11 +253,11 @@ private val NEWS = listOf(
 )
 private val EXPLORE = SKY + HISTORY + NEWS
 private val TOOLS = listOf(
-    Section("/groessenvergleich", "Größenvergleich", "Size comparison"),
-    Section("/weltraum-rechner", "Rechner", "Calculator"),
-    Section("/reisezeit/saturn/auto", "Reisezeit", "Travel time"),
-    Section("/geburtstag", "Geburtstag", "Birthday"),
-    Section("/maschine-der-ewigkeit", "Maschine der Ewigkeit", "Machine of eternity"),
+    Section("/groessenvergleich", "Größenvergleich", "Size comparison", "Vom Neutronenstern bis zum Universum", "From neutron stars to the universe"),
+    Section("/weltraum-rechner", "Rechner", "Calculator", "Gewicht, Alter und Entfernungen im All", "Weight, age and distances in space"),
+    Section("/reisezeit/saturn/auto", "Reisezeit", "Travel time", "Wie lange dauert die Reise zu einem Planeten?", "How long does a trip to a planet take?"),
+    Section("/geburtstag", "Geburtstag", "Birthday", "Dein Geburtstag im Universum", "Your birthday in the universe"),
+    Section("/maschine-der-ewigkeit", "Maschine der Ewigkeit", "Machine of eternity", "Zahnräder, die seit dem Urknall laufen", "Gears running since the big bang"),
 )
 
 private val SLUGS = listOf(
@@ -318,6 +318,7 @@ private sealed interface Screen {
     data object Home : Screen
     data class Web(val path: String, val title: String, val afterJs: String? = null) : Screen
     data object Settings : Screen
+    data object Tools : Screen
     data class Info(val title: String, val body: String, val backTo: Screen = Settings) : Screen
 }
 
@@ -360,10 +361,10 @@ private fun nativeJs(hideNews: Boolean, newsOnly: Boolean = false): String =
         "function bk(){try{var a=document.querySelectorAll('a,button');for(var i=0;i<a.length;i++){var t=(a[i].textContent||'').trim();" +
         "if(t.length<24&&(t.charAt(0)==='\u2190'||t.charAt(0)==='\u2039')){a[i].style.setProperty('display','none','important');}}" +
         HIDE_FB_JS +
-        (if (newsOnly) "var el=document.getElementById('space-news');if(el){for(var p=el;p&&p!==document.body;p=p.parentElement){var ch=p.parentElement?p.parentElement.children:[];for(var k=0;k<ch.length;k++){var c=ch[k];if(c===p||c.tagName==='SCRIPT'||c.tagName==='STYLE'||c.tagName==='CANVAS')continue;if(getComputedStyle(c).position==='fixed')continue;c.style.setProperty('display','none','important');}}el.style.setProperty('margin-top','8px','important');}" else "") +
+        "var hh=(location.hash||'').replace('#','');if(hh==='space-news'||hh==='maschine'){var el=document.getElementById(hh);if(el){for(var p=el;p&&p!==document.body;p=p.parentElement){var ch=p.parentElement?p.parentElement.children:[];for(var k=0;k<ch.length;k++){var c=ch[k];if(c===p||c.tagName==='SCRIPT'||c.tagName==='STYLE'||c.tagName==='CANVAS')continue;if(getComputedStyle(c).position==='fixed')continue;c.style.setProperty('display','none','important');}}el.style.setProperty('margin-top','8px','important');}}" +
         (if (hideNews) "var nw=document.getElementById('space-news');if(nw)nw.style.setProperty('display','none','important');" else "") +
         "}catch(e){}}" +
-        "all();bk();var n=0;var iv=setInterval(function(){all();bk();if(++n>60)clearInterval(iv);},400);})()"
+        "all();bk();var n=0;var iv=setInterval(function(){all();bk();if(++n>500)clearInterval(iv);},500);})()"
 
 // ---------------------------------------------------------------- Activity
 class MainActivity : ComponentActivity() {
@@ -441,7 +442,7 @@ private fun AppRoot() {
         screen = Screen.Home
         scope.launch { drawer.close() }
     }
-    val showBg = screen is Screen.Settings || screen is Screen.Info
+    val showBg = screen is Screen.Settings || screen is Screen.Info || screen is Screen.Tools
     Box(Modifier.fillMaxSize().background(BgDark)) {
         if (showBg) ParticleBackground(Modifier.fillMaxSize())
         ModalNavigationDrawer(
@@ -453,6 +454,7 @@ private fun AppRoot() {
                         lang,
                         onHome = { screen = Screen.Home; scope.launch { drawer.close() } },
                         onOpen = { openSection(it) },
+                        onTools = { go(Screen.Tools) },
                         onSettings = { go(Screen.Settings) },
                         onSiteSearch = { q -> homeCmd(q) },
                         onFeedback = { homeCmd("!fb") },
@@ -481,6 +483,10 @@ private fun AppRoot() {
                     onFeedback = { homeCmd("!fb") },
                     onOpen = { webBack = Screen.Settings; screen = it },
                 )
+                is Screen.Tools -> ToolsHub(de, onBack = { screen = Screen.Home }, onOpen = { sec ->
+                    webBack = Screen.Tools
+                    screen = Screen.Web(sec.path, if (de) sec.de else sec.en)
+                })
                 is Screen.Info -> InfoScreen(s.title, s.body, onBack = { screen = s.backTo })
             }
             val cur = screen
@@ -752,6 +758,7 @@ private fun DrawerContent(
     lang: String,
     onHome: () -> Unit,
     onOpen: (Section) -> Unit,
+    onTools: () -> Unit,
     onSettings: () -> Unit,
     onSiteSearch: (String) -> Unit,
     onFeedback: () -> Unit,
@@ -780,6 +787,11 @@ private fun DrawerContent(
             )
             val all = SKY + HISTORY + NEWS + TOOLS
             groups.forEach { (title, list) ->
+                if (list === TOOLS && q.isBlank()) {
+                    GroupTitle(title)
+                    DrawerRow("%02d".format(SKY.size + HISTORY.size + NEWS.size + 1), if (de) "Alle Werkzeuge (${TOOLS.size})" else "All tools (${TOOLS.size})", false) { onTools() }
+                    return@forEach
+                }
                 val f = list.filter { matches(it, q) }
                 if (f.isNotEmpty()) GroupTitle(title)
                 f.forEach { sec -> DrawerRow("%02d".format(all.indexOf(sec) + 1), if (de) sec.de else sec.en, false) { onOpen(sec) } }
@@ -1123,6 +1135,18 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
             )
         }
     }
+    }
+}
+
+@Composable
+private fun ToolsHub(de: Boolean, onBack: () -> Unit, onOpen: (Section) -> Unit) {
+    Column(Modifier.fillMaxSize()) {
+        TopBar(if (de) "Werkzeuge" else "Tools", { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack)
+        Column(Modifier.fillMaxSize().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(top = 10.dp, bottom = 20.dp)) {
+            TOOLS.forEachIndexed { i, sec ->
+                NumberedCard(i + 1, if (de) sec.de else sec.en, if (de) sec.descDe else sec.descEn) { onOpen(sec) }
+            }
+        }
     }
 }
 
