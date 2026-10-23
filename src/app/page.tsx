@@ -167,7 +167,7 @@ export default function Home() {
           (Musik/AI News/Kontakte) wurden entfernt (Nutzerkorrektur
           18.09.2026: "diese centaurian text oben link und diese ganz
           obere leiste entfernen"). */}
-      <div className="app-lang-fixed fixed right-4 top-4 z-20 sm:right-8 sm:top-8">
+      <div className="fixed right-4 top-4 z-20 sm:right-8 sm:top-8">
         <LanguageSwitcher />
       </div>
 
@@ -289,10 +289,10 @@ export default function Home() {
             {/* Nutzerwunsch 15.10.2026 "kompakter, alles durcheinander": Startseite = Wegweiser.
                 Größenvergleich, Maschine, News und Zahlen liegen auf der Universum-Seite. */}
             <FeaturesSection />
-            <div id="kontakte" className="app-hide scroll-mt-24">
+            <div id="kontakte" className="scroll-mt-24">
               <AboutSiteSection />
             </div>
-            <div className="app-hide"><ContactSection /></div>
+            <ContactSection />
           </>
         )}
       </div>

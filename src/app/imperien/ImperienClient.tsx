@@ -2117,7 +2117,7 @@ export default function ImperienClient() {
       `}</style>
 
       <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col px-4 pb-12 pt-6 sm:px-8 sm:pt-8">
-        <div className="app-hide mb-4 flex items-center justify-between">
+        <div className="mb-4 flex items-center justify-between">
           <Link
             href={localePath("/")}
             className="label-mono inline-flex w-fit items-center gap-2 text-xs uppercase text-muted transition-colors hover:text-accent"

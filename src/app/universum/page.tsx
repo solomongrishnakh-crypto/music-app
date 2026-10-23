@@ -1408,7 +1408,7 @@ export default function UniversumPage() {
       <SiteBackground />
 
       <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 pb-20 pt-10 sm:px-8 sm:pt-14">
-        <div className="app-hide mb-8 flex items-center justify-between">
+        <div className="mb-8 flex items-center justify-between">
           <Link
             href={localePath("/")}
             className="label-mono inline-flex w-fit items-center gap-2 text-xs uppercase text-muted transition-colors hover:text-accent"

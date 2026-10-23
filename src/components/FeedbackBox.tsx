@@ -123,7 +123,7 @@ export default function FeedbackBox() {
           setOpen(true);
         }}
         aria-label={tx[0]}
-        className="app-hide fixed right-3 z-[3100] flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white/85 shadow-[0_4px_24px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] backdrop-blur-xl transition hover:border-accent/70 hover:bg-white/15 hover:text-white"
+        className="fixed right-3 z-[3100] flex h-10 w-10 items-center justify-center rounded-full border border-white/20 bg-white/10 text-white/85 shadow-[0_4px_24px_rgba(0,0,0,0.35),inset_0_1px_0_rgba(255,255,255,0.25)] backdrop-blur-xl transition hover:border-accent/70 hover:bg-white/15 hover:text-white"
         style={pos}
       >
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
