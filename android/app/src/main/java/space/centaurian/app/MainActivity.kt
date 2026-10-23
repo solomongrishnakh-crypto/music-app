@@ -423,7 +423,7 @@ private fun AppRoot() {
     var lang by remember { mutableStateOf(initialLang(ctx)) }
     var screen by remember { mutableStateOf<Screen>(Screen.Home) }
     var webBack by remember { mutableStateOf<Screen>(Screen.Home) }
-    var anim by remember { mutableStateOf(prefs.getBoolean("anim", true)) }
+    val anim = true
     val drawer = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val de = lang == "de"
@@ -489,7 +489,7 @@ private fun AppRoot() {
                         prefs.edit().putString("lang", code).apply()
                         lang = code
                     },
-                    onAnim = { v -> prefs.edit().putBoolean("anim", v).apply(); anim = v },
+                    onAnim = { },
                     onFeedback = { homeCmd("!fb") },
                     onOpen = { webBack = Screen.Settings; screen = it },
                 )
@@ -802,10 +802,10 @@ private fun DrawerContent(
     Box(Modifier.fillMaxSize()) {
         if (anim) ParticleBackground(Modifier.fillMaxSize())
         Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = 12.dp)) {
-            Row(Modifier.fillMaxWidth().clickable { onHome() }.padding(horizontal = 18.dp, vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Image(painterResource(R.mipmap.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(40.dp))
+            Row(Modifier.fillMaxWidth().clickable { onHome() }.padding(horizontal = 18.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Image(painterResource(R.mipmap.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(32.dp))
                 Spacer(Modifier.size(8.dp))
-                Text("CENTAURIAN", color = TextMain, fontSize = 15.sp, fontWeight = FontWeight.Bold, letterSpacing = 5.sp)
+                Text("CENTAURIAN", color = TextMain, fontSize = 13.sp, fontWeight = FontWeight.Bold, letterSpacing = 5.sp)
             }
             SearchBar(q, if (de) "Planeten, Songs, Reiche…" else "Planets, songs, empires…", { q = it }, Modifier.padding(horizontal = 14.dp, vertical = 2.dp), onSearch = { onSiteSearch(it) })
             if (q.isNotBlank()) {
@@ -817,32 +817,58 @@ private fun DrawerContent(
                 "News" to NEWS,
             )
             val all = UNI + HISTORY + NEWS
-            val closed = remember { mutableStateMapOf<String, Boolean>() }
+            var openGroup by remember { mutableStateOf<String?>(null) }
+            Spacer(Modifier.height(6.dp))
             groups.forEach { (title, list) ->
                 val f = list.filter { matches(it, q) }
                 if (f.isNotEmpty()) {
-                    val isClosed = q.isBlank() && closed[title] == true
-                    Box(Modifier.clickable { closed[title] = !isClosed }) { GroupTitle(title + if (q.isBlank()) (if (isClosed) "  ▸" else "  ▾") else "") }
-                    if (!isClosed) f.forEach { sec -> DrawerRow("%02d".format(all.indexOf(sec) + 1), if (de) sec.de else sec.en, false) { onOpen(sec) } }
+                    val isOpen = q.isNotBlank() || openGroup == title
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp).clip(RoundedCornerShape(10.dp))
+                            .background(if (isOpen) Color(0x22FF5A4D) else Color(0x0DFFFFFF))
+                            .border(BorderStroke(1.dp, if (isOpen) Accent.copy(alpha = 0.5f) else LineSoft), RoundedCornerShape(10.dp))
+                            .clickable { if (q.isBlank()) openGroup = if (isOpen) null else title }
+                            .padding(horizontal = 14.dp, vertical = 11.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text(title.uppercase(), color = if (isOpen) Color.White else TextMain, fontSize = 11.sp, fontFamily = Mono, letterSpacing = 2.sp, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                        Text("${f.size}", color = TextMuted, fontSize = 10.sp, fontFamily = Mono)
+                        Spacer(Modifier.size(10.dp))
+                        Text(if (isOpen) "–" else "+", color = Accent, fontSize = 15.sp, fontFamily = Mono)
+                    }
+                    if (isOpen) {
+                        f.forEach { sec -> DrawerRow("%02d".format(all.indexOf(sec) + 1), if (de) sec.de else sec.en, false) { onOpen(sec) } }
+                        Spacer(Modifier.height(4.dp))
+                    }
                 }
             }
             if (q.isBlank()) {
-                Spacer(Modifier.height(14.dp))
+                Spacer(Modifier.height(10.dp))
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp).glassBox().clickable { onFeedback() }.padding(horizontal = 16.dp, vertical = 14.dp),
+                    Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp).glassBox().clickable { onFeedback() }.padding(horizontal = 14.dp, vertical = 11.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text("✉", color = Accent, fontSize = 15.sp)
-                    Spacer(Modifier.size(14.dp))
-                    Column(Modifier.weight(1f)) {
-                        Text("FEEDBACK", color = TextMain, fontSize = 12.sp, fontFamily = Mono, letterSpacing = 3.sp, fontWeight = FontWeight.Bold)
-                        Text(if (de) "Fehler melden oder Ideen schicken" else "Report a bug or share an idea", color = TextMuted, fontSize = 11.sp, modifier = Modifier.padding(top = 2.dp))
+                    Text("✉", color = Accent, fontSize = 14.sp)
+                    Spacer(Modifier.size(12.dp))
+                    Text("FEEDBACK", color = TextMain, fontSize = 11.sp, fontFamily = Mono, letterSpacing = 3.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                    Text("›", color = Accent, fontSize = 16.sp)
+                }
+                Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    listOf(
+                        Triple("§", if (de) "Datenschutz" else "Privacy", onPrivacy),
+                        Triple("i", if (de) "Infos" else "About", onAbout),
+                        Triple("⚙", if (de) "Einstellungen" else "Settings", onSettings),
+                    ).forEach { (ic, label, act) ->
+                        Column(
+                            Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(Color(0x0DFFFFFF))
+                                .border(BorderStroke(1.dp, LineSoft), RoundedCornerShape(10.dp)).clickable { act() }.padding(vertical = 10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Text(ic, color = Accent, fontSize = 15.sp)
+                            Text(label.uppercase(), color = TextMuted, fontSize = 8.sp, fontFamily = Mono, letterSpacing = 1.sp, maxLines = 1, modifier = Modifier.padding(top = 3.dp))
+                        }
                     }
                 }
-                Spacer(Modifier.height(6.dp))
-                DrawerRow("§", if (de) "Datenschutz" else "Privacy", false) { onPrivacy() }
-                DrawerRow("i", if (de) "Infos" else "About", false) { onAbout() }
-                DrawerRow("⚙", if (de) "Einstellungen" else "Settings", false) { onSettings() }
             }
         }
     }
@@ -853,14 +879,14 @@ private fun DrawerRow(tag: String, title: String, active: Boolean, onClick: () -
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 14.dp, vertical = 3.dp)
+            .padding(horizontal = 14.dp, vertical = 1.dp)
             .clickable { onClick() }
-            .padding(horizontal = 12.dp, vertical = 11.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.width(3.dp).height(16.dp).background(if (active) Accent else Color.Transparent))
-        Spacer(Modifier.size(10.dp))
-        Text(tag, color = Accent, fontSize = 11.sp, fontFamily = Mono, modifier = Modifier.width(26.dp))
+        Box(Modifier.width(3.dp).height(14.dp).background(if (active) Accent else Color.Transparent))
+        Spacer(Modifier.size(8.dp))
+        Text(tag, color = Accent, fontSize = 10.sp, fontFamily = Mono, modifier = Modifier.width(24.dp))
         Text(title.uppercase(), color = if (active) Color.White else TextMain, fontSize = 12.sp, fontFamily = Mono, letterSpacing = 2.sp, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal)
     }
 }
@@ -1064,11 +1090,6 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
 
             GroupTitle(if (de) "Anzeige" else "Display")
             Card {
-                SettingsRow(
-                    if (de) "Hintergrund-Animation" else "Background animation",
-                    if (de) "Aus spart Akku und läuft flüssiger" else "Off saves battery and runs smoother",
-                    if (anim) (if (de) "AN" else "ON") else (if (de) "AUS" else "OFF"),
-                ) { onAnim(!anim) }
                 SettingsRow(
                     if (de) "Bildschirm anlassen" else "Keep screen on",
                     if (de) "Display geht in der App nicht aus" else "The display stays on while the app is open",
