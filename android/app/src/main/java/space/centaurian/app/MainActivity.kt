@@ -530,7 +530,7 @@ private fun AppRoot() {
                         onSettings = { go(Screen.Settings) },
                         onSiteSearch = { q -> homeCmd(q) },
                         onFeedback = { homeCmd("!fb") },
-                        onPrivacy = { go(Screen.Web("/datenschutz", if (de) "Datenschutz" else Tr.t(lang, "Privacy"))) },
+                        onPrivacy = { go(Screen.Info(if (de) "Datenschutz" else Tr.t(lang, "Privacy"), Tr.privacy(lang), Screen.Home)) },
                         onAbout = { go(Screen.Info(aboutTitle(de, lang), aboutBody(de), Screen.Home)) },
                     )
                 }
@@ -1495,7 +1495,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
             GroupTitle(if (de) "Rechtliches" else Tr.t(lang, "Legal"))
             SetCard(
                 "shield", if (de) "Datenschutzerklärung" else Tr.t(lang, "Privacy policy"),
-                onClick = { onOpen(Screen.Web("/datenschutz", if (de) "Datenschutz" else Tr.t(lang, "Privacy"))) },
+                onClick = { onOpen(Screen.Info(if (de) "Datenschutz" else Tr.t(lang, "Privacy"), Tr.privacy(lang))) },
             )
             SetCard(
                 "layers", if (de) "Quellen & Lizenzen" else Tr.t(lang, "Sources & licenses"),
