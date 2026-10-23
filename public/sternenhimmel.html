@@ -430,7 +430,7 @@ const S = {
   lat: 52.52, lon: 13.405, place: "Berlin", tz: "Europe/Berlin",
   offsetMin: 0, dayOffset: 0,
   az: 180 * DEG, alt: 16 * DEG, fov: 70 * DEG,
-  nightMode: false, blackSky: true, showConst: true, showNames: true, showMW: true, showDSO: true, showFig: true, selConst: null, atmo: true, sensor: false,
+  nightMode: false, showConst: true, showNames: true, showMW: true, showDSO: true, showFig: true, selConst: null, atmo: true, sensor: false,
   sel: null,
 };
 const canvas = document.getElementById("sky");
@@ -1511,7 +1511,7 @@ function draw() {
   // Nachtmodus (Nutzerwunsch 06.10.2026): Himmel immer dunkel, damit man
   // auch tagsüber alle Sterne sieht; Sonne und Mond bleiben an ihrem Platz.
   const realDay = Math.min(1, Math.max(0, (sunAlt + 12) / 16));
-  const day = S.atmo && !S.nightMode && !S.blackSky ? realDay : 0;
+  const day = S.atmo && !S.nightMode ? realDay : 0;
   updateNightQuick(S.atmo && realDay > 0.35);
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   // Mondlicht (06.10.2026): ein heller Mond färbt den Nachthimmel tiefblau und
@@ -1519,10 +1519,10 @@ function draw() {
   const moonB = bodies[1];
   const moonUp = moonB && moonB.v ? Math.max(0, Math.min(1, (Math.asin(moonB.v[2]) / DEG + 2) / 12)) : 0;
   const moonIll = moonB && moonB.v ? (1 - (sun.v[0] * moonB.v[0] + sun.v[1] * moonB.v[1] + sun.v[2] * moonB.v[2])) / 2 : 0;
-  const moonLit = S.atmo && !S.nightMode && !S.blackSky ? moonUp * Math.pow(moonIll, 1.5) * (1 - day) : 0;
-  const top = S.blackSky ? [0, 0, 0] : mix(mix([1, 2, 7], [7, 13, 32], moonLit), [28, 92, 196], day), hor = S.blackSky ? [0, 0, 0] : mix(mix([16, 21, 36], [30, 40, 64], moonLit), [165, 205, 245], day);
+  const moonLit = S.atmo && !S.nightMode ? moonUp * Math.pow(moonIll, 1.5) * (1 - day) : 0;
+  const top = mix(mix([0, 0, 0], [3, 5, 12], moonLit), [28, 92, 196], day), hor = mix(mix([3, 4, 8], [10, 13, 22], moonLit), [165, 205, 245], day);
   // Himmel: Verlauf zum Horizont, Dämmerungsglühen auf der Sonnenseite
-  const water = S.blackSky ? [0, 0, 2] : mix([4, 7, 19], [55, 95, 145], day); // 06.10.2026: nachts dunkler, wie auf Fotos
+  const water = mix([0, 0, 2], [55, 95, 145], day); // 06.10.2026: nachts dunkler, wie auf Fotos
   if (glSky) {
     // Himmel, Milchstraße und Wasser zeichnet die Grafikkarte darunter
     glSky.render(day, S.atmo ? Math.pow(1 - day, 3) * (1 - 0.55 * moonLit) : 1, top, hor, water);
