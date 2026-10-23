@@ -91,6 +91,8 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.withStyle
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.graphics.Color
@@ -527,7 +529,7 @@ private fun AppRoot() {
                     DrawerContent(
                         lang,
                         anim,
-                        onHome = { screen = Screen.Home; scope.launch { drawer.close() } },
+                        onHome = { homeCmd("!home") },
                         onOpen = { openSection(it) },
                         onTools = { go(Screen.Tools) },
                         onSettings = { go(Screen.Settings) },
@@ -782,6 +784,12 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
     LaunchedEffect(searchReq) {
         val r = searchReq ?: return@LaunchedEffect
         val w = web ?: return@LaunchedEffect
+        if (r.second == "!home") {
+            val p0 = try { Uri.parse(w.url ?: "").path ?: "/" } catch (_: Exception) { "/" }
+            if (p0 == "/" || (p0.length <= 3 && p0.startsWith("/"))) w.evaluateJavascript("window.scrollTo({top:0,behavior:'smooth'})", null)
+            else w.loadUrl(siteUrl("/", lang))
+            return@LaunchedEffect
+        }
         if (r.second == "!fb") {
             kotlinx.coroutines.delay(300)
             w.evaluateJavascript("window.postMessage({centaurianFeedback:true},location.origin)", null)
@@ -1055,14 +1063,39 @@ private fun DrawerContent(
 ) {
     val de = lang == "de"
     var q by remember { mutableStateOf("") }
+    val inf = androidx.compose.animation.core.rememberInfiniteTransition(label = "menu")
+    val pulse by inf.animateFloat(0f, 1f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(1800, easing = androidx.compose.animation.core.FastOutSlowInEasing), androidx.compose.animation.core.RepeatMode.Reverse), label = "pulse")
+    val scan by inf.animateFloat(0f, 1f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(5200, easing = androidx.compose.animation.core.LinearEasing)), label = "scan")
     Box(Modifier.fillMaxSize()) {
         if (anim) ParticleBackground(Modifier.fillMaxSize())
+        Canvas(Modifier.fillMaxSize()) {
+            val y = size.height * scan
+            drawRect(
+                androidx.compose.ui.graphics.Brush.verticalGradient(
+                    listOf(Color.Transparent, Accent.copy(alpha = 0.16f), Color.Transparent), startY = y - 90f, endY = y + 90f,
+                ),
+                topLeft = Offset(0f, y - 90f), size = androidx.compose.ui.geometry.Size(size.width, 180f),
+            )
+        }
         Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = 12.dp)) {
             Row(Modifier.fillMaxWidth().clickable { onHome() }.padding(horizontal = 18.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Image(painterResource(R.mipmap.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(32.dp))
+                Box(
+                    Modifier.size(38.dp).drawBehind {
+                        drawCircle(Accent.copy(alpha = 0.10f + 0.22f * pulse), radius = size.minDimension / 2f * (0.85f + 0.2f * pulse))
+                    },
+                    contentAlignment = Alignment.Center,
+                ) { Image(painterResource(R.mipmap.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(32.dp)) }
                 Spacer(Modifier.size(8.dp))
-                Text("CENTAURIAN", color = TextMain, fontSize = 13.sp, fontWeight = FontWeight.Bold, letterSpacing = 5.sp)
+                Column {
+                    Text("CENTAURIAN", color = TextMain, fontSize = 13.sp, fontWeight = FontWeight.Bold, letterSpacing = 5.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(Modifier.size(5.dp).background(Color(0xFF4DFF9A).copy(alpha = 0.4f + 0.6f * pulse), CircleShape))
+                        Spacer(Modifier.size(6.dp))
+                        Text("ONLINE", color = TextMuted, fontSize = 8.sp, fontFamily = Mono, letterSpacing = 3.sp)
+                    }
+                }
             }
+            Box(Modifier.fillMaxWidth().padding(horizontal = 18.dp).height(1.dp).background(androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(Accent.copy(alpha = 0.9f), Accent.copy(alpha = 0.15f), Color.Transparent))))
             SearchBar(q, if (de) "Planeten, Songs, Reiche…" else Tr.t(lang, "Planets, songs, empires…"), { q = it }, Modifier.padding(horizontal = 14.dp, vertical = 2.dp), onSearch = { onSiteSearch(it) })
             if (q.isNotBlank()) {
                 DrawerRow("⌕", (if (de) "„" else Tr.t(lang, "\"")) + q.trim() + (if (de) "“ auf der Webseite suchen" else Tr.t(lang, "\" – search everything")), false) { onSiteSearch(q.trim()) }
@@ -1081,8 +1114,8 @@ private fun DrawerContent(
                     val isOpen = q.isNotBlank() || openGroup == title
                     Row(
                         Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp).clip(RoundedCornerShape(10.dp))
-                            .background(if (isOpen) Color(0x22FF5A4D) else Color(0x0DFFFFFF))
-                            .border(BorderStroke(1.dp, if (isOpen) Accent.copy(alpha = 0.5f) else LineSoft), RoundedCornerShape(10.dp))
+                            .background(androidx.compose.ui.graphics.Brush.horizontalGradient(if (isOpen) listOf(Color(0x44FF5A4D), Color(0x0FFF5A4D)) else listOf(Color(0x1AFFFFFF), Color(0x05FFFFFF))))
+                            .border(BorderStroke(1.dp, if (isOpen) Accent.copy(alpha = 0.35f + 0.45f * pulse) else LineSoft), RoundedCornerShape(10.dp))
                             .clickable { if (q.isBlank()) openGroup = if (isOpen) null else title }
                             .padding(horizontal = 14.dp, vertical = 11.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -1092,9 +1125,15 @@ private fun DrawerContent(
                         Spacer(Modifier.size(10.dp))
                         Text(if (isOpen) "–" else "+", color = Accent, fontSize = 15.sp, fontFamily = Mono)
                     }
-                    if (isOpen) {
-                        f.forEach { sec -> DrawerRow("%02d".format(all.indexOf(sec) + 1), if (de) sec.de else sec.en, false) { onOpen(sec) } }
-                        Spacer(Modifier.height(4.dp))
+                    androidx.compose.animation.AnimatedVisibility(
+                        visible = isOpen,
+                        enter = androidx.compose.animation.expandVertically() + androidx.compose.animation.fadeIn(),
+                        exit = androidx.compose.animation.shrinkVertically() + androidx.compose.animation.fadeOut(),
+                    ) {
+                        Column {
+                            f.forEach { sec -> DrawerRow("%02d".format(all.indexOf(sec) + 1), if (de) sec.de else sec.en, false) { onOpen(sec) } }
+                            Spacer(Modifier.height(4.dp))
+                        }
                     }
                 }
             }
@@ -1132,15 +1171,19 @@ private fun DrawerContent(
 
 @Composable
 private fun DrawerRow(tag: String, title: String, active: Boolean, onClick: () -> Unit) {
+    val src = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }
+    val pressed by src.collectIsPressedAsState()
     Row(
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 14.dp, vertical = 1.dp)
-            .clickable { onClick() }
+            .clip(RoundedCornerShape(8.dp))
+            .background(if (pressed) Color(0x33FF5A4D) else Color.Transparent)
+            .clickable(interactionSource = src, indication = null) { onClick() }
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.width(3.dp).height(14.dp).background(if (active) Accent else Color.Transparent))
+        Box(Modifier.width(3.dp).height(if (pressed) 20.dp else 14.dp).background(if (active || pressed) Accent else Accent.copy(alpha = 0.35f)))
         Spacer(Modifier.size(8.dp))
         Text(tag, color = Accent, fontSize = 10.sp, fontFamily = Mono, modifier = Modifier.width(24.dp))
         Text(title.uppercase(), color = if (active) Color.White else TextMain, fontSize = 12.sp, fontFamily = Mono, letterSpacing = 2.sp, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal)
