@@ -1214,6 +1214,50 @@ private fun Card(content: @Composable () -> Unit) {
 }
 
 @Composable
+private fun SetCard(
+    icon: String,
+    title: String,
+    sub: String = "",
+    onClick: (() -> Unit)? = null,
+    trailing: @Composable () -> Unit = { Text("›", color = Accent, fontSize = 20.sp) },
+    extra: (@Composable () -> Unit)? = null,
+) {
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(Color(0x1FFF5A4D), Color(0x0DFFFFFF))))
+            .border(BorderStroke(1.dp, Accent.copy(alpha = 0.28f)), RoundedCornerShape(16.dp)),
+    ) {
+        Row(
+            Modifier.fillMaxWidth().then(if (onClick != null) Modifier.clickable { onClick() } else Modifier).padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(
+                Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(Accent.copy(alpha = 0.16f))
+                    .border(BorderStroke(1.dp, Accent.copy(alpha = 0.4f)), RoundedCornerShape(12.dp)),
+                contentAlignment = Alignment.Center,
+            ) { Text(icon, fontSize = 18.sp) }
+            Spacer(Modifier.size(14.dp))
+            Column(Modifier.weight(1f)) {
+                Text(title, color = TextMain, fontSize = 14.sp, fontWeight = FontWeight.Medium)
+                if (sub.isNotEmpty()) Text(sub, color = TextMuted, fontSize = 11.sp, modifier = Modifier.padding(top = 2.dp))
+            }
+            trailing()
+        }
+        extra?.invoke()
+    }
+}
+
+@Composable
+private fun SetSwitch(on: Boolean) {
+    Box(
+        Modifier.width(46.dp).height(26.dp).clip(RoundedCornerShape(50))
+            .background(if (on) Accent else Color(0x33FFFFFF)).padding(3.dp),
+        contentAlignment = if (on) Alignment.CenterEnd else Alignment.CenterStart,
+    ) { Box(Modifier.size(20.dp).clip(RoundedCornerShape(50)).background(Color.White)) }
+}
+
+@Composable
 private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLang: (String) -> Unit, onAnim: (Boolean) -> Unit, onFeedback: () -> Unit, onOpen: (Screen) -> Unit) {
     val ctx = LocalContext.current
     val de = lang == "de"
@@ -1231,84 +1275,112 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
     Column(Modifier.fillMaxSize()) {
         TopBar(if (de) "Einstellungen" else "Settings", { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack)
         Column(Modifier.fillMaxSize().navigationBarsPadding().verticalScroll(rememberScrollState())) {
-            GroupTitle(if (de) "Sprache" else "Language")
-            Card {
-                SettingsRow("${cur.flag}  ${cur.name}", trailing = if (langOpen) "−" else "+") { langOpen = !langOpen }
-                if (langOpen) {
-                    LANGS.chunked(3).forEach { rowItems ->
-                        Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 3.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                            rowItems.forEach { l ->
-                                Box(
-                                    Modifier.weight(1f).clip(RoundedCornerShape(6.dp))
-                                        .border(BorderStroke(1.dp, if (l.code == lang) Accent else LineSoft), RoundedCornerShape(6.dp))
-                                        .clickable { onLang(l.code); langOpen = false }.padding(vertical = 8.dp),
-                                    contentAlignment = Alignment.Center,
-                                ) { Text("${l.flag} ${l.name}", color = if (l.code == lang) Color.White else TextMuted, fontSize = 11.sp, maxLines = 1) }
-                            }
-                            repeat(3 - rowItems.size) { Spacer(Modifier.weight(1f)) }
-                        }
-                    }
-                    Spacer(Modifier.height(8.dp))
+            Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+                Image(painterResource(R.mipmap.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(56.dp))
+                Spacer(Modifier.size(10.dp))
+                Column {
+                    Text("CENTAURIAN", color = TextMain, fontSize = 16.sp, fontFamily = Mono, fontWeight = FontWeight.Bold, letterSpacing = 4.sp)
+                    Text("Version $version", color = TextMuted, fontSize = 11.sp, fontFamily = Mono, modifier = Modifier.padding(top = 3.dp))
                 }
             }
 
-            GroupTitle(if (de) "Anzeige" else "Display")
-            Card {
-                SettingsRow(
-                    if (de) "Bildschirm anlassen" else "Keep screen on",
-                    if (de) "Display geht in der App nicht aus" else "The display stays on while the app is open",
-                    if (keepOn) (if (de) "AN" else "ON") else (if (de) "AUS" else "OFF"),
-                ) {
+            GroupTitle(if (de) "Allgemein" else "General")
+            SetCard(
+                "🌐", if (de) "Sprache" else "Language", "${cur.flag}  ${cur.name}",
+                onClick = { langOpen = !langOpen },
+                trailing = { Text(if (langOpen) "−" else "+", color = Accent, fontSize = 20.sp) },
+                extra = if (langOpen) ({
+                    Column(Modifier.padding(start = 10.dp, end = 10.dp, bottom = 12.dp)) {
+                        LANGS.chunked(3).forEach { rowItems ->
+                            Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                rowItems.forEach { l ->
+                                    Box(
+                                        Modifier.weight(1f).clip(RoundedCornerShape(10.dp))
+                                            .background(if (l.code == lang) Accent.copy(alpha = 0.22f) else Color.Transparent)
+                                            .border(BorderStroke(1.dp, if (l.code == lang) Accent else LineSoft), RoundedCornerShape(10.dp))
+                                            .clickable { onLang(l.code); langOpen = false }.padding(vertical = 9.dp),
+                                        contentAlignment = Alignment.Center,
+                                    ) { Text("${l.flag} ${l.name}", color = if (l.code == lang) Color.White else TextMuted, fontSize = 11.sp, maxLines = 1) }
+                                }
+                                repeat(3 - rowItems.size) { Spacer(Modifier.weight(1f)) }
+                            }
+                        }
+                    }
+                }) else null,
+            )
+            SetCard(
+                "💡", if (de) "Bildschirm anlassen" else "Keep screen on",
+                if (de) "Display geht in der App nicht aus" else "The display stays on while the app is open",
+                onClick = {
                     keepOn = !keepOn
                     prefs.edit().putBoolean("keepon", keepOn).apply()
                     (ctx as? MainActivity)?.setKeepOn(keepOn)
-                }
-            }
+                },
+                trailing = { SetSwitch(keepOn) },
+            )
 
             GroupTitle("App")
-            Card {
-                SettingsRow(
-                    if (de) "Nach Updates suchen" else "Check for updates",
-                    when (Updater.msg) {
-                        "…" -> if (de) "Suche läuft …" else "Checking …"
-                        "ok" -> if (de) "Du hast die neueste Version" else "You have the latest version"
-                        "?" -> if (de) "Keine Verbindung" else "No connection"
-                        else -> (if (de) "Version " else "Version ") + version
-                    },
-                ) { Updater.check(ctx, true) }
-            }
+            SetCard(
+                "⬇️", if (de) "Nach Updates suchen" else "Check for updates",
+                when (Updater.msg) {
+                    "…" -> if (de) "Suche läuft …" else "Checking …"
+                    "ok" -> if (de) "Du hast die neueste Version" else "You have the latest version"
+                    "?" -> if (de) "Keine Verbindung" else "No connection"
+                    else -> "Version $version"
+                },
+                onClick = { Updater.check(ctx, true) },
+            )
+            SetCard(
+                "🔗", if (de) "App teilen" else "Share app", if (de) "Link an Freunde schicken" else "Send the link to friends",
+                onClick = {
+                    val i = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, BASE) }
+                    ctx.startActivity(Intent.createChooser(i, "Centaurian"))
+                },
+                trailing = { Text("↗", color = Accent, fontSize = 18.sp) },
+            )
+            SetCard(
+                "🧹", if (de) "Zwischenspeicher leeren" else "Clear cache",
+                if (de) "Gespeicherte Daten der Ansichten löschen" else "Delete saved data of the views",
+                onClick = {
+                    try { WebView(ctx).apply { clearCache(true); destroy() } } catch (_: Exception) { }
+                    Toast.makeText(ctx, if (de) "Gelöscht" else "Cleared", Toast.LENGTH_SHORT).show()
+                },
+            )
+            SetCard(
+                "🔐", if (de) "Berechtigungen" else "Permissions",
+                if (de) "Standort & Benachrichtigungen in Android" else "Location and notifications in Android",
+                onClick = {
+                    try {
+                        ctx.startActivity(Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + ctx.packageName)))
+                    } catch (_: Exception) { }
+                },
+                trailing = { Text("↗", color = Accent, fontSize = 18.sp) },
+            )
 
-            GroupTitle("Feedback")
-            Card {
-                SettingsRow(
-                    if (de) "Feedback senden" else "Send feedback",
-                    if (de) "Fehler melden oder Ideen schicken" else "Report a bug or share an idea",
-                ) { onFeedback() }
-            }
-
-            GroupTitle(if (de) "Über Centaurian" else "About Centaurian")
-            Card {
-                SettingsRow(
-                    if (de) "Über die App" else "About the app",
-                    if (de) "Was dich hier erwartet" else "What to expect here",
-                ) {
-                    onOpen(
-                        Screen.Info(aboutTitle(de), aboutBody(de)))
-                }
-            }
+            GroupTitle("Support")
+            SetCard(
+                "💬", if (de) "Feedback senden" else "Send feedback",
+                if (de) "Fehler melden oder Ideen schicken" else "Report a bug or share an idea",
+                onClick = { onFeedback() },
+            )
+            SetCard(
+                "ℹ️", if (de) "Über die App" else "About the app",
+                if (de) "Was dich hier erwartet" else "What to expect here",
+                onClick = { onOpen(Screen.Info(aboutTitle(de), aboutBody(de))) },
+            )
 
             GroupTitle(if (de) "Kontakt" else "Contact")
-            Card {
-                SettingsRow("Telegram", trailing = "↗") { open("https://t.me/Perseus641") }
-                SettingsRow("X", trailing = "↗") { open("https://x.com/capone_835") }
-            }
+            SetCard("✈️", "Telegram", "t.me/Perseus641", onClick = { open("https://t.me/Perseus641") }, trailing = { Text("↗", color = Accent, fontSize = 18.sp) })
+            SetCard("✖️", "X", "x.com/capone_835", onClick = { open("https://x.com/capone_835") }, trailing = { Text("↗", color = Accent, fontSize = 18.sp) })
 
             GroupTitle(if (de) "Rechtliches" else "Legal")
-            Card {
-                SettingsRow(if (de) "Datenschutzerklärung" else "Privacy policy") {
-                    onOpen(Screen.Web("/datenschutz", if (de) "Datenschutz" else "Privacy"))
-                }
-                SettingsRow(if (de) "Quellen & Lizenzen" else "Sources & licenses") {
+            SetCard(
+                "🛡️", if (de) "Datenschutzerklärung" else "Privacy policy",
+                onClick = { onOpen(Screen.Web("/datenschutz", if (de) "Datenschutz" else "Privacy")) },
+            )
+            SetCard(
+                "📚", if (de) "Quellen & Lizenzen" else "Sources & licenses",
+                onClick = {
                     onOpen(
                         Screen.Info(
                             if (de) "Quellen & Lizenzen" else "Sources & licenses",
@@ -1316,35 +1388,9 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                                 SOURCES.joinToString("\n") { "• ${it.first} — ${it.second}" },
                         ),
                     )
-                }
-            }
+                },
+            )
 
-            GroupTitle("App")
-            Card {
-                SettingsRow(if (de) "App teilen" else "Share app", if (de) "Link an Freunde schicken" else "Send the link to friends", "↗") {
-                    val i = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, BASE) }
-                    ctx.startActivity(Intent.createChooser(i, "Centaurian"))
-                }
-                SettingsRow(
-                    if (de) "Zwischenspeicher leeren" else "Clear cache",
-                    if (de) "Gespeicherte Daten der Ansichten löschen" else "Delete saved data of the views",
-                ) {
-                    try {
-                        WebView(ctx).apply { clearCache(true); destroy() }
-                    } catch (_: Exception) { }
-                    Toast.makeText(ctx, if (de) "Gelöscht" else "Cleared", Toast.LENGTH_SHORT).show()
-                }
-                SettingsRow(
-                    if (de) "Berechtigungen" else "Permissions",
-                    if (de) "Standort & Co. in den Android-Einstellungen" else "Location and more in Android settings",
-                    "↗",
-                ) {
-                    try {
-                        ctx.startActivity(Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + ctx.packageName)))
-                    } catch (_: Exception) { }
-                }
-                SettingsRow(if (de) "Version" else "Version", trailing = version)
-            }
             Text(
                 "CENTAURIAN · centaurianspace.com",
                 color = TextMuted.copy(alpha = 0.6f), fontSize = 10.sp, letterSpacing = 3.sp,
