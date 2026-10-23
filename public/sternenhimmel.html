@@ -2059,10 +2059,16 @@ const PL_SIZE = { mercury: 1.6, venus: 2.4, mars: 2.0, jupiter: 3.1, saturn: 2.6
 function planetIconR(id) {
   const f = S.fov / DEG;
   if (f > 30 || !PL_SIZE[id]) return 0; // erst ab ~2,5× Zoom als Scheibe, vorher Lichtpunkt wie mit bloßem Auge
-  let r = Math.min(24, PL_SIZE[id] * Math.pow(70 / f, 0.62) * 1.25);
+  let r = Math.min(90, PL_SIZE[id] * Math.pow(70 / f, 0.62) * 1.25); // wächst beim Reinzoomen stetig weiter (Nutzer 23.10.2026)
   if (f < 1.2) { // 17.10.2026: ganz nah -> echte Winkelgroesse, damit die Monde sichtbar werden
     const bb = bodies.find((x) => x.id === id), F = BODY_FACTS[id];
-    if (bb && F && F.d) { const tr2 = F.d / 2 / bb.distKm * cam.scale, t = Math.max(0, Math.min(1, (f - 0.5) / 0.7)); r = Math.min(160, r * t + Math.max(6, tr2) * (1 - t)); }
+    if (bb && F && F.d) {
+      // 23.10.2026: beim Reinzoomen darf der Planet nie kleiner werden. Vorher wurde zur echten Winkelgröße
+      // übergeblendet, die kleiner als das Symbol ist -> Saturn schrumpfte. Jetzt gilt immer das Größere von
+      // Symbol und echter Größe; die echte wächst mit dem Zoom weiter (bis zur Bildschirmgröße).
+      const tr2 = F.d / 2 / bb.distKm * cam.scale;
+      r = Math.min(Math.max(W, H) * 1.5, Math.max(r, tr2));
+    }
   }
   return r;
 }
