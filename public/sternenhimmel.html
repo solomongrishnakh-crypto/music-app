@@ -3457,9 +3457,15 @@ function onOrient(e) {
     if (isAbs) { sensorAz = use.az + magDecl * DEG; return; } // nur Versatz aktualisiert, Lage bleibt vom Gyro
   }
   updateMagDecl();
-  sensorAz = use.az + magDecl * DEG; // magnetisch → geografisch Nord
-  sensorAlt = use.alt;
-  sensorRoll = use.roll;
+  const tAz = use.az + magDecl * DEG; // magnetisch → geografisch Nord
+  if (sensorAz === null) { sensorAz = tAz; sensorAlt = use.alt; sensorRoll = use.roll; return; }
+  // Geschwindigkeitsabhängige Glättung: kleine Sprünge (Sensorrauschen, < ~1°) werden stark gedämpft,
+  // echte Bewegung (> ~3°) geht ungebremst durch → Himmel steht bei ruhigem Handy still.
+  const dd = Math.hypot(wrap(tAz - sensorAz) * Math.cos(use.alt), use.alt - sensorAlt) / DEG;
+  const f = dd < 0.4 ? 0.04 : dd > 3 ? 1 : 0.04 + (dd - 0.4) / 2.6 * 0.96;
+  sensorAz += wrap(tAz - sensorAz) * f;
+  sensorAlt += (use.alt - sensorAlt) * f;
+  sensorRoll += wrap(use.roll - sensorRoll) * f;
 }
 // Knopf „Zum Horizont“, wenn man steil nach unten oder oben schaut
 const horizonBtn = document.getElementById("horizonBtn");
