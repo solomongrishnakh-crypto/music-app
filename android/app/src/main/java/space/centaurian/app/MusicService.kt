@@ -62,6 +62,9 @@ object MusicBridge {
     val openReq = mutableIntStateOf(0)
     val backReq = mutableIntStateOf(0)
     @Volatile var want = false
+    /** Nutzer hat selbst pausiert (Benachrichtigung/Kopfhoerer): die Auto-Fortsetzung darf dann nicht wieder starten. */
+    @Volatile var userPaused = false
+    @Volatile var userPausedAt = 0L
     @Volatile var cover = ""
     @Volatile var pos = 0.0
     @Volatile var dur = 0.0
@@ -119,14 +122,15 @@ object MusicBridge {
             if (playing != p) MusicBridge.log("Musik " + (if (p) "spielt" else "pausiert") + (if (guard) " (andere Seite offen)" else ""))
             title = t; artist = a; playing = p; cover = c; pos = cur; dur = d; stamp = System.currentTimeMillis()
             vizSync(p)
-            if (p) { want = true; ensureService() } else if (!guard) want = false
+            if (userPaused && p && System.currentTimeMillis() - userPausedAt > 4000) userPaused = false
+            if (p) { if (!userPaused) want = true; ensureService() } else if (!guard) want = false
         }
         @JavascriptInterface fun shown(): Boolean = !MusicBridge.guard && MusicBridge.fg
         @JavascriptInterface fun level(): Float = MusicBridge.level
         @JavascriptInterface fun heroBack() { backReq.intValue = backReq.intValue + 1 }
         @JavascriptInterface fun playing(): Boolean = MusicBridge.playing
         @JavascriptInterface fun want(): Boolean = MusicBridge.want
-        @JavascriptInterface fun resume(): Boolean = MusicBridge.want && MusicBridge.guard
+        @JavascriptInterface fun resume(): Boolean = MusicBridge.want && MusicBridge.guard && !MusicBridge.userPaused
         @JavascriptInterface fun cmd(): String { val c = cmd; cmd = ""; return c }
     }
 
@@ -147,7 +151,7 @@ object MusicBridge {
         val js = "(function(){try{var ps=document.querySelectorAll(\"$sel\");for(var i=0;i<ps.length;i++){var b=ps[i].closest('button');if(b&&b.offsetParent!==null){b.click();break;}}}catch(e){}})()"
         val w = web ?: return
         cmd = kind
-        if (kind == "pp" && playing) want = false
+        if (kind == "pp") { if (playing) { want = false; userPaused = true; userPausedAt = System.currentTimeMillis() } else userPaused = false }
         // Falls die Seite den Befehl nicht innerhalb von 1,5 s abholt: direkt klicken.
         w.postDelayed({ if (cmd == kind) { cmd = ""; w.evaluateJavascript(js, null) } }, 1500)
         // Zweite Absicherung: hat der Befehl nach ~3 s nichts bewirkt (Seite hat ihn geholt, aber nichts passiert),
