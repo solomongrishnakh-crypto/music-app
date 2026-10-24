@@ -1773,10 +1773,12 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                 },
                 trailing = { Text("↗", color = Accent, fontSize = 18.sp) },
             )
+            var diagOpen by remember { mutableStateOf(false) }
             SetCard(
                 "chat", if (de) "Diagnose" else Tr.t(lang, "Diagnostics"),
-                lastExits(ctx) + "\n" + MusicBridge.logText(),
-                onClick = { },
+                if (diagOpen) lastExits(ctx) + "\n" + MusicBridge.logText() else "",
+                onClick = { diagOpen = !diagOpen },
+                trailing = { Text(if (diagOpen) "▴" else "▾", color = Accent, fontSize = 16.sp) },
             )
 
             GroupTitle("Support")

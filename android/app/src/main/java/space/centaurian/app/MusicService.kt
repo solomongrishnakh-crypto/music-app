@@ -151,18 +151,32 @@ object MusicBridge {
             "pause" -> "path[d^=\\\"M6 5h4v14h\\\"]"
             else -> "path[d^=\\\"M8 5v14l11-7z\\\"]"
         }
-        val js = "(function(){try{var ps=document.querySelectorAll(\"$sel\");for(var i=0;i<ps.length;i++){var b=ps[i].closest('button');if(b&&b.offsetParent!==null){b.click();break;}}}catch(e){}})()"
+        val btn = "(function(){try{var ps=document.querySelectorAll(\"$sel\");for(var i=0;i<ps.length;i++){var b=ps[i].closest('button');if(b&&b.offsetParent!==null){b.click();return 'btn';}}}catch(e){}return 'none';})()"
         val w = web ?: return
         log("Befehl: $kind" + (if (kind0 != kind) " (aus $kind0)" else ""))
-        cmd = kind
         if (kind == "pause") { want = false; userPaused = true; userPausedAt = System.currentTimeMillis() }
         if (kind == "play") { userPaused = false }
-        // Falls die Seite den Befehl nicht innerhalb von 1,5 s abholt: direkt klicken (der Knopf zeigt nur das passende Symbol, also kein Hin-und-her).
-        w.postDelayed({ if (cmd == kind) { cmd = ""; w.evaluateJavascript(js, null) } }, 1500)
-        val oldTitle = title
-        w.postDelayed({
-            val stuck = when (kind) { "pause" -> playing; "play" -> !playing; else -> title == oldTitle }
-            if (stuck) w.evaluateJavascript(js, null)
+        val act = when (kind) {
+            "pause" -> "if(c.isPlaying)c.togglePlayback();"
+            "play" -> "if(!c.isPlaying)c.togglePlayback();"
+            "next" -> "c.next();"
+            "prev" -> "c.previous();"
+            else -> ""
+        }
+        // Sofort und direkt auf der Haupt-Seite ausfuehren (nicht erst auf deren Abfrage warten, die bei verdeckter Seite hakt).
+        val direct = "(function(){try{var c=window.__cenCtx&&window.__cenCtx();if(!c)return 'noctx';$act return 'ok';}catch(e){return 'err';}})()"
+        w.post {
+            w.evaluateJavascript(direct) { r ->
+                if (r == null || !r.contains("ok")) {
+                    log("Direkt fehlgeschlagen ($r), klicke Knopf")
+                    w.evaluateJavascript(btn, null)
+                }
+            }
+        }
+        // Nach 3 s Kontrolle bei Play/Pause: hat es nicht geklappt, den passenden Knopf klicken (Knopf zeigt nur das richtige Symbol, kein Hin und Her).
+        if (kind == "pause" || kind == "play") w.postDelayed({
+            val stuck = if (kind == "pause") playing else !playing
+            if (stuck) { log("Nach 3 s noch nicht erledigt, klicke Knopf"); w.evaluateJavascript(btn, null) }
         }, 3000)
     }
 
