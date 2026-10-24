@@ -3406,7 +3406,7 @@ let sensorAz = null, sensorAlt = null, sensorRoll = 0, absSeen = false;
 // schwankt und wandert, der reine Gyro (relatives Ereignis) ist ruhig, kennt aber
 // kein Nord. Darum: Bewegung kommt vom Gyro, der Kompass korrigiert nur den festen
 // Versatz sehr langsam (Zeitkonstante ~8 s) – wie bei Star Walk & Co.
-let absP = null, relP = null, relT = 0, yawOff = null, offT = 0;
+let absP = null, relP = null, relT = 0, yawOff = null, offT = 0, relRate = 0;
 function parseOrient(e, alpha) {
   const a = alpha * DEG, b = e.beta * DEG, g = e.gamma * DEG;
   const cA = Math.cos(a), sA = Math.sin(a), cB = Math.cos(b), sB = Math.sin(b), cG = Math.cos(g), sG = Math.sin(g);
@@ -3435,12 +3435,17 @@ function onOrient(e) {
   if (alpha == null || e.beta == null || e.gamma == null) return;
   const P = parseOrient(e, alpha), now = performance.now();
   let use = P;
-  if (isAbs) absP = P; else { relP = P; relT = now; }
+  if (isAbs) absP = P;
+  else {
+    // Drehgeschwindigkeit (°/s) aus dem Gyro: nur im Ruhigen korrigieren, denn der Kompass hinkt bei schneller Bewegung hinterher
+    if (relP && now > relT) relRate = Math.hypot(wrap(P.az - relP.az) * Math.cos(P.alt), P.alt - relP.alt) / DEG / ((now - relT) / 1000);
+    relP = P; relT = now;
+  }
   if (absP && relP) {
     // Versatz Kompass–Gyro nur bei frischen Werten und nicht beim Blick steil nach oben/unten
-    if (isAbs && now - relT < 300 && Math.abs(P.alt) < 65 * DEG && Math.abs(relP.alt) < 65 * DEG) {
+    if (isAbs && now - relT < 300 && relRate < 25 && Math.abs(P.alt) < 65 * DEG && Math.abs(relP.alt) < 65 * DEG) {
       const d = wrap(P.az - relP.az);
-      if (yawOff === null) yawOff = d; else yawOff += wrap(d - yawOff) * (1 - Math.exp(-Math.min(500, now - offT) / 8000));
+      if (yawOff === null) yawOff = d; else { const err = wrap(d - yawOff); yawOff += err * (1 - Math.exp(-Math.min(500, now - offT) / (Math.abs(err) > 12 * DEG ? 1500 : 6000))); }
       offT = now;
     }
     if (!isAbs) use = { az: P.az + (yawOff || 0), alt: P.alt, roll: P.roll };
