@@ -15,8 +15,8 @@ import ContactSection from "@/components/home/ContactSection";
 import AboutSiteSection from "@/components/home/AboutSiteSection";
 import TypedWordmark from "@/components/ui/TypedWordmark";
 import InfoHint from "@/components/ui/InfoHint";
-import PlaylistsSection from "@/components/playlist/PlaylistsSection";
-import { parseYoutubeListId } from "@/lib/history/playlists";
+import Link from "next/link";
+import { MUSIC_TEXT } from "@/lib/musicPageText";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
 import { Song } from "@/types/music";
 import { usePlayer } from "@/contexts/PlayerContext";
@@ -31,7 +31,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
  */
 export default function Home() {
   const player = usePlayer();
-  const { t, lang } = useLanguage();
+  const { t, lang, localePath } = useLanguage();
   const ht = homeText(lang);
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Song[]>([]);
@@ -41,7 +41,6 @@ export default function Home() {
   const [musicAsked, setMusicAsked] = useState(false);
   const [showHero, setShowHero] = useState(false);
   const [showAllFavorites, setShowAllFavorites] = useState(false);
-  const [importReq, setImportReq] = useState<{ id: string; n: number } | null>(null);
   const requestIdRef = useRef(0);
 
   // Aktuelle Suchergebnisse laufend als "Weiter"-Warteschlange im globalen
@@ -108,13 +107,6 @@ export default function Home() {
   }
 
   async function handleSearch(q: string) {
-    // YouTube-Playlist-Link in der Suchleiste: als Playlist importieren
-    const listId = parseYoutubeListId(q);
-    if (listId) {
-      setImportReq((r) => ({ id: listId, n: (r?.n ?? 0) + 1 }));
-      setQuery("");
-      return;
-    }
     setQuery(q);
     setMusicAsked(false);
     if (!q.trim()) {
@@ -216,8 +208,21 @@ export default function Home() {
           </header>
         )}
 
-        <div className="mx-auto w-full max-w-2xl">
-          <SearchBar onSearch={handleSearch} placeholder={ht.placeholder} ariaLabel={ht.aria} />
+        <div className="mx-auto flex w-full max-w-2xl items-stretch gap-2">
+          {/* Musik-Symbol links neben der Suche: führt direkt zur Musik-Seite */}
+          <Link
+            href={localePath("/musik")}
+            aria-label={(MUSIC_TEXT[lang] ?? MUSIC_TEXT.en).tag}
+            title={(MUSIC_TEXT[lang] ?? MUSIC_TEXT.en).tag}
+            className="flex w-12 shrink-0 items-center justify-center border border-border bg-background/70 text-accent backdrop-blur-md transition-colors hover:border-accent sm:w-14"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-6 w-6" aria-hidden="true">
+              <path d="M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm12-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </Link>
+          <div className="min-w-0 flex-1">
+            <SearchBar onSearch={handleSearch} placeholder={ht.placeholder} ariaLabel={ht.aria} />
+          </div>
         </div>
 
         {!showHero && (
@@ -233,14 +238,6 @@ export default function Home() {
           </div>
         )}
 
-        {!query.trim() && (
-          <PlaylistsSection
-            favorites={player.favorites}
-            activeSongId={player.currentSong?.id}
-            onPlay={handlePlayList}
-            importRequest={importReq}
-          />
-        )}
 
         {showFavorites && (
           <div className="glass-card mx-auto mt-3 flex w-full max-w-2xl items-center justify-between gap-3 px-3 py-2">
