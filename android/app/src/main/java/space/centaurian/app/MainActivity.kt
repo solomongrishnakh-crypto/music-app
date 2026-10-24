@@ -458,6 +458,11 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         MusicBridge.appCtx = applicationContext
         Offline.start(applicationContext)
+        try {
+            @Suppress("DEPRECATION")
+            val best = windowManager.defaultDisplay.supportedModes.maxByOrNull { it.refreshRate }
+            if (best != null) { val lp = window.attributes; lp.preferredDisplayModeId = best.modeId; window.attributes = lp }
+        } catch (_: Exception) { }
         OfflineStore.init(applicationContext)
         if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
@@ -974,6 +979,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
                                 }
 
                                 override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                                    view?.evaluateJavascript("try{Object.defineProperty(window,'devicePixelRatio',{get:function(){return 1;},configurable:true});}catch(e){}", null)
                                     failed = false
                                     loading = true
                                     view?.evaluateJavascript("try{localStorage.setItem('centaurian-lang','$langNow');}catch(e){}", null)
