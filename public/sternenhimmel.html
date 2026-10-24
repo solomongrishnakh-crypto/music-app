@@ -3406,7 +3406,7 @@ let sensorAz = null, sensorAlt = null, sensorRoll = 0, absSeen = false;
 // schwankt und wandert, der reine Gyro (relatives Ereignis) ist ruhig, kennt aber
 // kein Nord. Darum: Bewegung kommt vom Gyro, der Kompass korrigiert nur den festen
 // Versatz sehr langsam (Zeitkonstante ~8 s) – wie bei Star Walk & Co.
-let absP = null, relP = null, relT = 0, yawOff = null, offT = 0, relRate = 0, dbgAbs = 0, dbgRel = 0;
+let absP = null, relP = null, relT = 0, yawOff = null, offT = 0, relRate = 0, dbgAbs = 0, dbgRel = 0, absT = 0;
 // Diagnose-Anzeige: Seite mit ?dbg=1 öffnen → zeigt, welche Sensor-Ströme ankommen
 if (new URLSearchParams(location.search).get("dbg") === "1") {
   const box = document.createElement("div");
@@ -3448,25 +3448,13 @@ function onOrient(e) {
   const P = parseOrient(e, alpha), now = performance.now();
   if (isAbs) dbgAbs++; else dbgRel++;
   let use = P;
-  if (isAbs) absP = P;
+  // Das absolute Ereignis (Android: deviceorientationabsolute) ist schon vom System aus Gyro, Beschleunigung
+  // und Kompass verrechnet → ruhig UND nach Nord ausgerichtet. Darum nur dieses verwenden; das relative
+  // Ereignis (driftet beim Gieren, kennt kein Nord) nur als Notlösung, wenn nie ein absolutes ankommt.
+  if (isAbs) { absP = P; absT = now; }
   else {
-    // Drehgeschwindigkeit (°/s) aus dem Gyro: nur im Ruhigen korrigieren, denn der Kompass hinkt bei schneller Bewegung hinterher
-    if (relP && now > relT) relRate = Math.hypot(wrap(P.az - relP.az) * Math.cos(P.alt), P.alt - relP.alt) / DEG / ((now - relT) / 1000);
     relP = P; relT = now;
-  }
-  if (absP && relP) {
-    // Der Gyro-Ereignisstrom ruht, wenn das Handy still liegt (Chrome meldet nur Änderungen). Der Kompass
-    // darf dann NIE direkt die Anzeige steuern (er rauscht → Himmel wandert von allein), sondern nur den
-    // festen Versatz langsam nachziehen. Ausgabe = letzter Gyro-Wert + Versatz.
-    const still = now - relT > 300;
-    if (still) relRate = 0;
-    if (isAbs && relRate < 25 && Math.abs(P.alt) < 65 * DEG && Math.abs(relP.alt) < 65 * DEG) {
-      const d = wrap(P.az - relP.az);
-      if (yawOff === null) yawOff = d; else { const err = wrap(d - yawOff); if (Math.abs(err) > 3 * DEG) yawOff += err * (1 - Math.exp(-Math.min(500, now - offT) / (Math.abs(err) > 12 * DEG ? 1500 : 15000))); }
-      offT = now;
-    }
-    if (isAbs && !still) return; // Gyro liefert gerade die Bewegung
-    use = { az: relP.az + (yawOff || 0), alt: relP.alt, roll: relP.roll };
+    if (absP && now - absT < 3000) return;
   }
   updateMagDecl();
   const tAz = use.az + magDecl * DEG; // magnetisch → geografisch Nord
@@ -3474,7 +3462,7 @@ function onOrient(e) {
   // Geschwindigkeitsabhängige Glättung: kleine Sprünge (Sensorrauschen, < ~1°) werden stark gedämpft,
   // echte Bewegung (> ~3°) geht ungebremst durch → Himmel steht bei ruhigem Handy still.
   const dd = Math.hypot(wrap(tAz - sensorAz) * Math.cos(use.alt), use.alt - sensorAlt) / DEG;
-  const f = dd < 0.4 ? 0.04 : dd > 3 ? 1 : 0.04 + (dd - 0.4) / 2.6 * 0.96;
+  const f = dd < 1.2 ? 0.03 : dd > 5 ? 1 : 0.03 + (dd - 1.2) / 3.8 * 0.97;
   sensorAz += wrap(tAz - sensorAz) * f;
   sensorAlt += (use.alt - sensorAlt) * f;
   sensorRoll += wrap(use.roll - sensorRoll) * f;
