@@ -38,6 +38,16 @@ object MusicBridge {
     @Volatile var appCtx: Context? = null
     @Volatile var serviceUp = false
     @Volatile private var lastStart = 0L
+    private val events = java.util.ArrayDeque<String>()
+    /** Kurzes Ereignis-Protokoll fuer die Diagnose (die letzten 14 Eintraege). */
+    fun log(msg: String) {
+        synchronized(events) {
+            val t = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.GERMANY).format(java.util.Date())
+            events.addLast("$t $msg")
+            while (events.size > 14) events.removeFirst()
+        }
+    }
+    fun logText(): String = synchronized(events) { events.joinToString("\n") }
 
     /** Startet die Benachrichtigung, sobald Musik laeuft (auch bei geoeffneter App). */
     fun ensureService() {
@@ -106,6 +116,7 @@ object MusicBridge {
             vizSync(p)
         }
         @JavascriptInterface fun update2(t: String, a: String, p: Boolean, c: String, cur: Double, d: Double) {
+            if (playing != p) MusicBridge.log("Musik " + (if (p) "spielt" else "pausiert") + (if (guard) " (andere Seite offen)" else ""))
             title = t; artist = a; playing = p; cover = c; pos = cur; dur = d; stamp = System.currentTimeMillis()
             vizSync(p)
             if (p) { want = true; ensureService() } else if (!guard) want = false

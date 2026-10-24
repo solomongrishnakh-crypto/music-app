@@ -432,6 +432,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
+        MusicBridge.log("App im Hintergrund")
         MusicBridge.fg = false
         // Spielt Musik, dann Vordergrund-Dienst starten, damit der Ton im Hintergrund weiterlaeuft.
         try {
@@ -447,8 +448,14 @@ class MainActivity : ComponentActivity() {
         if (intent.getBooleanExtra("np", false)) { intent.removeExtra("np"); MusicBridge.openReq.intValue = MusicBridge.openReq.intValue + 1 }
     }
 
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        MusicBridge.log("Speicherwarnung Stufe $level")
+    }
+
     override fun onResume() {
         super.onResume()
+        MusicBridge.log("App im Vordergrund")
         MusicBridge.fg = true
         Updater.check(this, false)
         OfflineStore.autoUpdate(applicationContext, offlinePages(getSharedPreferences("cn", Context.MODE_PRIVATE).getString("lang", "de") ?: "de"))
@@ -1001,6 +1008,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
                                 }
 
                                 override fun onRenderProcessGone(view: WebView?, detail: android.webkit.RenderProcessGoneDetail?): Boolean {
+                                    MusicBridge.log("Startseite: Render-Prozess beendet" + (if (detail?.didCrash() == true) " (Absturz)" else " (vom System beendet)"))
                                     failed = true
                                     return true
                                 }
@@ -1447,6 +1455,7 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
                             }
 
                             override fun onRenderProcessGone(view: WebView?, detail: android.webkit.RenderProcessGoneDetail?): Boolean {
+                                MusicBridge.log("Unterseite: Render-Prozess beendet" + (if (detail?.didCrash() == true) " (Absturz)" else " (vom System beendet)"))
                                 failed = true
                                 return true
                             }
@@ -1456,11 +1465,12 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
                             }
                         }
                         addJavascriptInterface(MusicBridge.Js(), "CenNative")
+                        MusicBridge.log("Unterseite geoeffnet: " + s.path)
                         loadUrl(siteUrl(s.path, lang))
                         web = this
                     }
                 },
-                onRelease = { v -> try { v.stopLoading(); v.loadUrl("about:blank"); v.destroy() } catch (_: Exception) { } },
+                onRelease = { v -> MusicBridge.log("Unterseite geschlossen"); try { v.stopLoading(); v.loadUrl("about:blank"); v.destroy() } catch (_: Exception) { } },
             )
             if (loading && !failed) LoadingCover(lang)
             if (failed) {
@@ -1760,7 +1770,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
             )
             SetCard(
                 "chat", if (de) "Diagnose" else Tr.t(lang, "Diagnostics"),
-                remember { lastExits(ctx) },
+                lastExits(ctx) + "\n" + MusicBridge.logText(),
                 onClick = { },
             )
 
