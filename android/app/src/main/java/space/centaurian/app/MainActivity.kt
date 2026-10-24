@@ -20,6 +20,7 @@ import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebStorage
 import android.webkit.WebView
+import android.webkit.WebResourceResponse
 import android.webkit.WebViewClient
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -67,6 +68,7 @@ import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -441,12 +443,14 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         MusicBridge.fg = true
         Updater.check(this, false)
+        OfflineStore.autoUpdate(applicationContext)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         MusicBridge.appCtx = applicationContext
         Offline.start(applicationContext)
+        OfflineStore.init(applicationContext)
         if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
         }
@@ -929,6 +933,11 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
                                 }
                             }
                             webViewClient = object : WebViewClient() {
+                                override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
+                                    val r = request ?: return null
+                                    return try { OfflineStore.serve(c, r) } catch (_: Exception) { null }
+                                }
+
                                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                                     val uri = request?.url ?: return false
                                     val host = uri.host ?: return false
@@ -1363,6 +1372,11 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
                             }
                         }
                         webViewClient = object : WebViewClient() {
+                            override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
+                                val r = request ?: return null
+                                return try { OfflineStore.serve(c, r) } catch (_: Exception) { null }
+                            }
+
                             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                                 val uri = request?.url ?: return false
                                 val host = uri.host ?: return false
@@ -1632,6 +1646,47 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                 },
                 trailing = { SetSwitch(bassOn && (ctx as? MainActivity)?.micGranted?.value == true) },
             )
+
+            run {
+                val offBusy = OfflineStore.busy
+                var offWifi by remember { mutableStateOf(prefs.getBoolean("off_wifi", true)) }
+                val mb = "%.1f MB".format(OfflineStore.bytes / 1048576.0)
+                val sub = when {
+                    offBusy -> (if (de) "Lädt" else Tr.t(lang, "Downloading")) + " … ${OfflineStore.pct}%"
+                    OfflineStore.failed -> if (de) "Fehlgeschlagen, tippen für neuen Versuch" else Tr.t(lang, "Failed, tap to retry")
+                    OfflineStore.ready -> (if (de) "Bereit" else Tr.t(lang, "Ready")) + " · $mb"
+                    else -> if (de) "Sternenhimmel funktioniert ohne Internet" else Tr.t(lang, "Night sky works without internet")
+                }
+                SetCard(
+                    "info", if (de) "Offline-Inhalte" else Tr.t(lang, "Offline content"), sub,
+                    onClick = {
+                        if (!offBusy) {
+                            if (!Offline.online) {
+                                Toast.makeText(ctx, if (de) "Kein Internet" else Tr.t(lang, "No connection"), Toast.LENGTH_SHORT).show()
+                            } else if (offWifi && !OfflineStore.isUnmetered(ctx)) {
+                                Toast.makeText(ctx, if (de) "Erst mit WLAN verbinden oder „Nur WLAN“ ausschalten" else Tr.t(lang, "Connect to Wi-Fi first, or switch off Wi-Fi only"), Toast.LENGTH_LONG).show()
+                            } else {
+                                OfflineStore.update(ctx) { ok ->
+                                    if (ok) Toast.makeText(ctx, if (de) "Offline-Inhalte bereit" else Tr.t(lang, "Offline content is ready"), Toast.LENGTH_SHORT).show()
+                                }
+                            }
+                        }
+                    },
+                    trailing = { if (offBusy) CircularProgressIndicator(Modifier.size(20.dp), color = Accent, strokeWidth = 2.dp) else Text(if (OfflineStore.ready) "⟳" else "↓", color = Accent, fontSize = 20.sp) },
+                    extra = {
+                        Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Row(Modifier.weight(1f).clickable { offWifi = !offWifi; prefs.edit().putBoolean("off_wifi", offWifi).apply() }, verticalAlignment = Alignment.CenterVertically) {
+                                SetSwitch(offWifi)
+                                Spacer(Modifier.size(8.dp))
+                                Text(if (de) "Nur WLAN" else Tr.t(lang, "Wi-Fi only"), color = TextMuted, fontSize = 12.sp)
+                            }
+                            if (OfflineStore.ready && !offBusy) {
+                                Text(if (de) "Löschen" else Tr.t(lang, "Delete"), color = Accent, fontSize = 13.sp, modifier = Modifier.clickable { OfflineStore.delete(ctx) }.padding(8.dp))
+                            }
+                        }
+                    },
+                )
+            }
 
             GroupTitle("App")
             SetCard(

@@ -22,6 +22,11 @@ jobs:
       - uses: gradle/actions/setup-gradle@v4
         with:
           gradle-version: "8.9"
+      - name: Offline-Dateiliste erzeugen
+        run: |
+          mkdir -p android/app/src/main/assets
+          (cd public && { echo "/sternenhimmel.html"; ls sky-*.js kepler-data.json 2>/dev/null | sed 's#^#/#'; find sky-art sky-data sky-audio -type f | sed 's#^#/#' | sort; }) > android/app/src/main/assets/offline_sky.txt
+          wc -l android/app/src/main/assets/offline_sky.txt
       - name: Test-APK bauen
         env:
           KS_B64: ${{ secrets.KEYSTORE_B64 }}
