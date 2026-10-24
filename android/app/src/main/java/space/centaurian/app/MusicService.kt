@@ -142,24 +142,27 @@ object MusicBridge {
             "var p=window.__cenPlaying===true;" +
             "return JSON.stringify({t:t.trim(),a:a.trim(),p:p});}catch(e){return '';}})()"
 
-    fun click(kind: String) {
+    fun click(kind0: String) {
+        // Play/Pause immer eindeutig (nie "umschalten"): doppelte Signale (Benachrichtigung + Kopfhoerer) heben sich sonst gegenseitig auf.
+        val kind = if (kind0 == "pp") (if (playing) "pause" else "play") else kind0
         val sel = when (kind) {
             "prev" -> "path[d^=\\\"M6 6h2v12H6z\\\"]"
             "next" -> "path[d^=\\\"M16 6h2v12h-2z\\\"]"
-            else -> "path[d^=\\\"M6 5h4v14h\\\"],path[d^=\\\"M8 5v14l11-7z\\\"]"
+            "pause" -> "path[d^=\\\"M6 5h4v14h\\\"]"
+            else -> "path[d^=\\\"M8 5v14l11-7z\\\"]"
         }
         val js = "(function(){try{var ps=document.querySelectorAll(\"$sel\");for(var i=0;i<ps.length;i++){var b=ps[i].closest('button');if(b&&b.offsetParent!==null){b.click();break;}}}catch(e){}})()"
         val w = web ?: return
+        log("Befehl: $kind" + (if (kind0 != kind) " (aus $kind0)" else ""))
         cmd = kind
-        if (kind == "pp") { if (playing) { want = false; userPaused = true; userPausedAt = System.currentTimeMillis() } else userPaused = false }
-        // Falls die Seite den Befehl nicht innerhalb von 1,5 s abholt: direkt klicken.
+        if (kind == "pause") { want = false; userPaused = true; userPausedAt = System.currentTimeMillis() }
+        if (kind == "play") { userPaused = false }
+        // Falls die Seite den Befehl nicht innerhalb von 1,5 s abholt: direkt klicken (der Knopf zeigt nur das passende Symbol, also kein Hin-und-her).
         w.postDelayed({ if (cmd == kind) { cmd = ""; w.evaluateJavascript(js, null) } }, 1500)
-        // Zweite Absicherung: hat der Befehl nach ~3 s nichts bewirkt (Seite hat ihn geholt, aber nichts passiert),
-        // dann den Knopf der Seite direkt klicken.
-        val wasPlaying = playing; val oldTitle = title
+        val oldTitle = title
         w.postDelayed({
-            val changed = if (kind == "pp") playing != wasPlaying else title != oldTitle
-            if (!changed) w.evaluateJavascript(js, null)
+            val stuck = when (kind) { "pause" -> playing; "play" -> !playing; else -> title == oldTitle }
+            if (stuck) w.evaluateJavascript(js, null)
         }, 3000)
     }
 
@@ -306,8 +309,8 @@ class MusicService : Service() {
         if (session == null) {
             session = MediaSession(this, "Centaurian").apply {
                 setCallback(object : MediaSession.Callback() {
-                    override fun onPlay() = MusicBridge.click("pp")
-                    override fun onPause() = MusicBridge.click("pp")
+                    override fun onPlay() = MusicBridge.click("play")
+                    override fun onPause() = MusicBridge.click("pause")
                     override fun onSkipToNext() = MusicBridge.click("next")
                     override fun onSkipToPrevious() = MusicBridge.click("prev")
                     override fun onSeekTo(pos: Long) { MusicBridge.cmd = "seek:" + (pos / 1000.0); MusicBridge.seekPos = pos / 1000.0; MusicBridge.seekAt = System.currentTimeMillis(); updateState() }
