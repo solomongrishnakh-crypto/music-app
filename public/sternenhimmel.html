@@ -3442,14 +3442,19 @@ function onOrient(e) {
     relP = P; relT = now;
   }
   if (absP && relP) {
-    // Versatz Kompass–Gyro nur bei frischen Werten und nicht beim Blick steil nach oben/unten
-    if (isAbs && now - relT < 300 && relRate < 25 && Math.abs(P.alt) < 65 * DEG && Math.abs(relP.alt) < 65 * DEG) {
+    // Der Gyro-Ereignisstrom ruht, wenn das Handy still liegt (Chrome meldet nur Änderungen). Der Kompass
+    // darf dann NIE direkt die Anzeige steuern (er rauscht → Himmel wandert von allein), sondern nur den
+    // festen Versatz langsam nachziehen. Ausgabe = letzter Gyro-Wert + Versatz.
+    const still = now - relT > 300;
+    if (still) relRate = 0;
+    if (isAbs && relRate < 25 && Math.abs(P.alt) < 65 * DEG && Math.abs(relP.alt) < 65 * DEG) {
       const d = wrap(P.az - relP.az);
-      if (yawOff === null) yawOff = d; else { const err = wrap(d - yawOff); yawOff += err * (1 - Math.exp(-Math.min(500, now - offT) / (Math.abs(err) > 12 * DEG ? 1500 : 6000))); }
+      if (yawOff === null) yawOff = d; else { const err = wrap(d - yawOff); if (Math.abs(err) > 3 * DEG) yawOff += err * (1 - Math.exp(-Math.min(500, now - offT) / (Math.abs(err) > 12 * DEG ? 1500 : 15000))); }
       offT = now;
     }
-    if (!isAbs) use = { az: P.az + (yawOff || 0), alt: P.alt, roll: P.roll };
-    else if (now - relT < 300) return; // Gyro liefert die Bewegung, der Kompass nur den Versatz
+    if (isAbs && !still) return; // Gyro liefert gerade die Bewegung
+    use = { az: relP.az + (yawOff || 0), alt: relP.alt, roll: relP.roll };
+    if (isAbs) { sensorAz = use.az + magDecl * DEG; return; } // nur Versatz aktualisiert, Lage bleibt vom Gyro
   }
   updateMagDecl();
   sensorAz = use.az + magDecl * DEG; // magnetisch → geografisch Nord
