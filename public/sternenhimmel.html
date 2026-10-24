@@ -3406,7 +3406,19 @@ let sensorAz = null, sensorAlt = null, sensorRoll = 0, absSeen = false;
 // schwankt und wandert, der reine Gyro (relatives Ereignis) ist ruhig, kennt aber
 // kein Nord. Darum: Bewegung kommt vom Gyro, der Kompass korrigiert nur den festen
 // Versatz sehr langsam (Zeitkonstante ~8 s) – wie bei Star Walk & Co.
-let absP = null, relP = null, relT = 0, yawOff = null, offT = 0, relRate = 0;
+let absP = null, relP = null, relT = 0, yawOff = null, offT = 0, relRate = 0, dbgAbs = 0, dbgRel = 0;
+// Diagnose-Anzeige: Seite mit ?dbg=1 öffnen → zeigt, welche Sensor-Ströme ankommen
+if (new URLSearchParams(location.search).get("dbg") === "1") {
+  const box = document.createElement("div");
+  box.style.cssText = "position:fixed;left:6px;top:calc(env(safe-area-inset-top,0px) + 4px);z-index:99;font:10px/1.3 monospace;color:#9f9;background:rgba(0,0,0,.65);padding:4px 6px;pointer-events:none;white-space:pre";
+  document.body.appendChild(box);
+  setInterval(() => {
+    const f = (x) => (x == null ? "–" : (x / DEG).toFixed(1));
+    box.textContent = "abs/s " + (dbgAbs * 2) + "  rel/s " + (dbgRel * 2) + "\nabsAz " + f(absP && absP.az) + "  relAz " + f(relP && relP.az) +
+      "\noff " + f(yawOff) + "  decl " + magDecl.toFixed(1) + "\nsensAz " + f(sensorAz) + "  alt " + f(sensorAlt);
+    dbgAbs = 0; dbgRel = 0;
+  }, 500);
+}
 function parseOrient(e, alpha) {
   const a = alpha * DEG, b = e.beta * DEG, g = e.gamma * DEG;
   const cA = Math.cos(a), sA = Math.sin(a), cB = Math.cos(b), sB = Math.sin(b), cG = Math.cos(g), sG = Math.sin(g);
@@ -3434,6 +3446,7 @@ function onOrient(e) {
   let alpha = hasCompass ? 360 - e.webkitCompassHeading : e.alpha;
   if (alpha == null || e.beta == null || e.gamma == null) return;
   const P = parseOrient(e, alpha), now = performance.now();
+  if (isAbs) dbgAbs++; else dbgRel++;
   let use = P;
   if (isAbs) absP = P;
   else {
@@ -3454,7 +3467,6 @@ function onOrient(e) {
     }
     if (isAbs && !still) return; // Gyro liefert gerade die Bewegung
     use = { az: relP.az + (yawOff || 0), alt: relP.alt, roll: relP.roll };
-    if (isAbs) { sensorAz = use.az + magDecl * DEG; return; } // nur Versatz aktualisiert, Lage bleibt vom Gyro
   }
   updateMagDecl();
   const tAz = use.az + magDecl * DEG; // magnetisch → geografisch Nord
