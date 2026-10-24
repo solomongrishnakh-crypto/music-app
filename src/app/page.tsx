@@ -15,6 +15,8 @@ import ContactSection from "@/components/home/ContactSection";
 import AboutSiteSection from "@/components/home/AboutSiteSection";
 import TypedWordmark from "@/components/ui/TypedWordmark";
 import InfoHint from "@/components/ui/InfoHint";
+import PlaylistsSection from "@/components/playlist/PlaylistsSection";
+import { parseYoutubeListId } from "@/lib/history/playlists";
 import Link from "next/link";
 import { MUSIC_TEXT } from "@/lib/musicPageText";
 import LanguageSwitcher from "@/components/ui/LanguageSwitcher";
@@ -40,6 +42,12 @@ export default function Home() {
   const [cosmos, setCosmos] = useState<CosmosHit[]>([]);
   const [musicAsked, setMusicAsked] = useState(false);
   const [showHero, setShowHero] = useState(false);
+  const [importReq, setImportReq] = useState<{ id: string; n: number } | null>(null);
+  // In der Android-App (eigene Brücke) bleiben die Playlists sichtbar; auf der Webseite nicht.
+  const [inApp, setInApp] = useState<boolean | null>(null);
+  useEffect(() => {
+    setInApp(typeof (window as unknown as { CenNative?: unknown }).CenNative !== "undefined");
+  }, []);
   const [showAllFavorites, setShowAllFavorites] = useState(false);
   const requestIdRef = useRef(0);
 
@@ -107,6 +115,13 @@ export default function Home() {
   }
 
   async function handleSearch(q: string) {
+    // YouTube-Playlist-Link in der Suchleiste: als Playlist importieren (nur in der App)
+    const listId = inApp ? parseYoutubeListId(q) : null;
+    if (listId) {
+      setImportReq((r) => ({ id: listId, n: (r?.n ?? 0) + 1 }));
+      setQuery("");
+      return;
+    }
     setQuery(q);
     setMusicAsked(false);
     if (!q.trim()) {
@@ -214,7 +229,7 @@ export default function Home() {
             href={localePath("/musik")}
             aria-label={(MUSIC_TEXT[lang] ?? MUSIC_TEXT.en).tag}
             title={(MUSIC_TEXT[lang] ?? MUSIC_TEXT.en).tag}
-            className="flex w-12 shrink-0 items-center justify-center border border-border bg-background/70 text-accent backdrop-blur-md transition-colors hover:border-accent sm:w-14"
+            className={inApp === true ? "hidden" : "flex w-12 shrink-0 items-center justify-center border border-border bg-background/70 text-accent backdrop-blur-md transition-colors hover:border-accent sm:w-14" + (inApp === null ? " invisible" : "")}
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-6 w-6" aria-hidden="true">
               <path d="M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm12-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" strokeLinecap="round" strokeLinejoin="round" />
@@ -238,6 +253,15 @@ export default function Home() {
           </div>
         )}
 
+
+        {inApp === true && !query.trim() && (
+          <PlaylistsSection
+            favorites={player.favorites}
+            activeSongId={player.currentSong?.id}
+            onPlay={handlePlayList}
+            importRequest={importReq}
+          />
+        )}
 
         {showFavorites && (
           <div className="glass-card mx-auto mt-3 flex w-full max-w-2xl items-center justify-between gap-3 px-3 py-2">
