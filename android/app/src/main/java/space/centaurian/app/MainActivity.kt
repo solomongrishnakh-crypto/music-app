@@ -334,6 +334,14 @@ private val SOURCES = listOf(
     "Wikipedia & Wikimedia Commons" to "CC BY-SA",
 )
 
+private fun offlinePages(lang: String): List<String> {
+    val base = listOf("/sternenhimmel", "/universum", "/sonnensystem", "/groessenvergleich", "/reisezeit")
+    val out = LinkedHashSet<String>()
+    base.forEach { out.add(siteUrl(it, "de").substringBefore("?")) }
+    if (lang != "de") base.forEach { out.add(siteUrl(it, lang).substringBefore("?")) }
+    return out.toList()
+}
+
 private sealed interface Screen {
     data object Home : Screen
     data class Web(val path: String, val title: String, val afterJs: String? = null) : Screen
@@ -443,7 +451,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         MusicBridge.fg = true
         Updater.check(this, false)
-        OfflineStore.autoUpdate(applicationContext)
+        OfflineStore.autoUpdate(applicationContext, offlinePages(getSharedPreferences("cn", Context.MODE_PRIVATE).getString("lang", "de") ?: "de"))
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -1666,7 +1674,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                             } else if (offWifi && !OfflineStore.isUnmetered(ctx)) {
                                 Toast.makeText(ctx, if (de) "Erst mit WLAN verbinden oder „Nur WLAN“ ausschalten" else Tr.t(lang, "Connect to Wi-Fi first, or switch off Wi-Fi only"), Toast.LENGTH_LONG).show()
                             } else {
-                                OfflineStore.update(ctx) { ok ->
+                                OfflineStore.update(ctx, offlinePages(lang)) { ok ->
                                     if (ok) Toast.makeText(ctx, if (de) "Offline-Inhalte bereit" else Tr.t(lang, "Offline content is ready"), Toast.LENGTH_SHORT).show()
                                 }
                             }

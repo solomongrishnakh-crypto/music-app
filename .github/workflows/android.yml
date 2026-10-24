@@ -25,7 +25,7 @@ jobs:
       - name: Offline-Dateiliste erzeugen
         run: |
           mkdir -p android/app/src/main/assets
-          (cd public && { echo "/sternenhimmel.html"; ls sky-*.js kepler-data.json 2>/dev/null | sed 's#^#/#'; find sky-art sky-data sky-audio -type f | sed 's#^#/#' | sort; }) > android/app/src/main/assets/offline_sky.txt
+          python3 scripts/offline-list.py > android/app/src/main/assets/offline_sky.txt
           wc -l android/app/src/main/assets/offline_sky.txt
       - name: Test-APK bauen
         env:

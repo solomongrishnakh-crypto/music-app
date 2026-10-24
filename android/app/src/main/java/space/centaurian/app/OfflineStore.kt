@@ -29,7 +29,9 @@ import java.security.MessageDigest
  */
 object OfflineStore {
     private const val HOST = "centaurianspace.com"
-    private val PAGES = listOf("https://centaurianspace.com/sternenhimmel", "https://centaurianspace.com/night-sky")
+    private const val PACK = 2
+    private val EXT = setOf("commons.wikimedia.org", "upload.wikimedia.org", "images-assets.nasa.gov", "cdn.eso.org")
+    private const val UA = "CentaurianApp/1.0 (https://centaurianspace.com)"
 
     class Entry(val file: String, val mime: String, val etag: String, val lm: String, val size: Long)
 
@@ -72,12 +74,15 @@ object OfflineStore {
     fun lastUpdate(ctx: Context): Long = File(cur(ctx), "index.json").lastModified()
 
     fun keyOf(host: String, path: String) = host + path
+    /** Eigene Seite: ohne Parameter. Fremde Bildserver: mit Parameter (Breite zaehlt). */
+    fun keyQ(host: String, path: String, q: String?) = if (host == HOST || host == "www.$HOST" || q.isNullOrEmpty()) host + path else "$host$path?$q"
 
     private fun sha(s: String): String = MessageDigest.getInstance("SHA-1").digest(s.toByteArray()).joinToString("") { "%02x".format(it) }
 
     private fun allowed(host: String, path: String): Boolean {
         if (host == HOST || host == "www.$HOST") return !path.startsWith("/api/")
-        return host == "cdn.eso.org" && path.startsWith("/images/")
+        if (host == "cdn.eso.org") return path.startsWith("/images/")
+        return host in EXT
     }
 
     // ---------------- Ausliefern (ohne Netz) ----------------
@@ -87,8 +92,8 @@ object OfflineStore {
         if (!req.method.equals("GET", true)) return null
         val u = req.url
         val host = u.host ?: return null
-        val path = u.path ?: "/"
-        if (host != HOST && host != "www.$HOST" && host != "cdn.eso.org") return null
+        val path = u.encodedPath ?: "/"
+        if (host != HOST && host != "www.$HOST" && host !in EXT) return null
         val m = load(ctx)
         if (m.isEmpty()) return null
         // Seiten-Wechsel per Next.js-Datenabruf: fehlschlagen lassen, dann laedt Next die Seite komplett neu
@@ -98,7 +103,7 @@ object OfflineStore {
             }
             return null
         }
-        val e = m[keyOf(host, path)] ?: m[keyOf(host, path.trimEnd('/'))] ?: return null
+        val e = m[keyQ(host, path, u.encodedQuery)] ?: m[keyQ(host, path.trimEnd('/'), u.encodedQuery)] ?: return null
         val f = File(cur(ctx), e.file)
         if (!f.exists()) return null
         val total = f.length()
@@ -155,7 +160,7 @@ object OfflineStore {
         /** Datei holen (mit Nachfrage "geaendert?") und ablegen. Gibt true bei Erfolg. */
         fun fetch(url: String, headers: Map<String, String>? = null): Boolean {
             val u = Uri(url)
-            val key = keyOf(u.host, u.path)
+            val key = keyQ(u.host, u.path, u.query)
             synchronized(out) { if (out.containsKey(key)) return true }
             val o = old[key]
             var conn: HttpURLConnection? = null
@@ -163,7 +168,8 @@ object OfflineStore {
                 conn = URL(url).openConnection() as HttpURLConnection
                 conn.connectTimeout = 15000; conn.readTimeout = 30000
                 conn.instanceFollowRedirects = true
-                headers?.forEach { (k, v) -> if (k.lowercase() in listOf("user-agent", "accept", "accept-language", "referer")) conn.setRequestProperty(k, v) }
+                conn.setRequestProperty("User-Agent", UA)
+                headers?.forEach { (k, v) -> if (k.lowercase() in listOf("accept", "accept-language")) conn.setRequestProperty(k, v) }
                 if (o != null && File(oldDir, o.file).exists()) {
                     if (o.etag.isNotEmpty()) conn.setRequestProperty("If-None-Match", o.etag)
                     if (o.lm.isNotEmpty()) conn.setRequestProperty("If-Modified-Since", o.lm)
@@ -190,7 +196,7 @@ object OfflineStore {
 
         fun response(url: String): WebResourceResponse? {
             val u = Uri(url)
-            val e = synchronized(out) { out[keyOf(u.host, u.path)] } ?: return null
+            val e = synchronized(out) { out[keyQ(u.host, u.path, u.query)] } ?: return null
             val f = File(tmp, e.file)
             val mime = e.mime.substringBefore(';').trim().ifEmpty { "application/octet-stream" }
             val enc = if (mime.startsWith("text/") || mime.contains("json") || mime.contains("javascript")) "utf-8" else null
@@ -201,16 +207,17 @@ object OfflineStore {
     private class Uri(url: String) {
         val host: String
         val path: String
+        val query: String?
         init {
             val u = URL(url)
-            host = u.host; path = if (u.path.isEmpty()) "/" else u.path
+            host = u.host; path = if (u.path.isEmpty()) "/" else u.path; query = u.query
         }
     }
 
     @Volatile private var running = false
 
     /** Laedt/aktualisiert die Offline-Inhalte. Laeuft im Hintergrund; Fortschritt ueber busy/pct. */
-    fun update(ctx0: Context, onDone: ((Boolean) -> Unit)? = null) {
+    fun update(ctx0: Context, pages: List<String>, onDone: ((Boolean) -> Unit)? = null) {
         val ctx = ctx0.applicationContext
         if (running) return
         running = true
@@ -224,23 +231,27 @@ object OfflineStore {
                 val old = load(ctx)
                 val job = Job(ctx, tmp, old, cur(ctx))
                 // 1) Seiten im unsichtbaren Browser laden, dabei jede Datei mitnehmen
-                for ((i, page) in PAGES.withIndex()) {
+                for ((i, page) in pages.withIndex()) {
                     runPage(ctx, job, page)
-                    main.post { pct = 5 + (i + 1) * 35 }
+                    val pp = 5 + (i + 1) * 40 / maxOf(1, pages.size)
+                    main.post { pct = pp }
                 }
                 // 2) feste Liste (Bilder, Daten, Musik …)
                 val list = try { ctx.assets.open("offline_sky.txt").bufferedReader().readLines().map { it.trim() }.filter { it.isNotEmpty() && !it.startsWith("#") } } catch (_: Exception) { emptyList() }
                 var n = 0
                 for (p in list) {
-                    if (!job.fetch("https://$HOST$p")) job.extraFail++
+                    val full = if (p.startsWith("http")) p else "https://$HOST$p"
+                    val ext = !full.startsWith("https://$HOST")
+                    if (!job.fetch(full) && !ext) job.extraFail++
+                    if (ext) try { Thread.sleep(120) } catch (_: Exception) { }
                     n++
-                    val pp = 5 + 70 + (n * 25 / maxOf(1, list.size))
+                    val pp = 45 + (n * 55 / maxOf(1, list.size))
                     main.post { pct = pp }
                 }
                 // 3) pruefen: Hauptseiten da, nichts Wichtiges fehlt
                 val keys = job.out.keys
                 val haveSky = keys.contains(keyOf(HOST, "/sternenhimmel")) && keys.contains(keyOf(HOST, "/sternenhimmel.html")) && keys.contains(keyOf(HOST, "/sky-audio/music.mp3")) && keys.contains(keyOf(HOST, "/sky-data/stars.bin"))
-                if (haveSky && job.extraFail <= list.size / 20) {
+                if (haveSky && job.extraFail <= 10) {
                     val o = JSONObject()
                     job.out.forEach { (k, e) ->
                         o.put(k, JSONObject().put("f", e.file).put("m", e.mime).put("e", e.etag).put("l", e.lm).put("s", e.size))
@@ -255,6 +266,7 @@ object OfflineStore {
                         idx = null
                         oldD.deleteRecursively()
                         ok = true
+                        ctx.getSharedPreferences("cn", Context.MODE_PRIVATE).edit().putInt("off_pack", PACK).apply()
                     } else if (oldD.exists()) oldD.renameTo(curD)
                 } else tmp.deleteRecursively()
             } catch (_: Exception) { ok = false }
@@ -285,7 +297,7 @@ object OfflineStore {
                         if (!r.method.equals("GET", true)) return null
                         val u = r.url
                         val h = u.host ?: return null
-                        val p = u.path ?: "/"
+                        val p = u.encodedPath ?: "/"
                         if (u.scheme != "https" || !allowed(h, p)) return null
                         if (u.getQueryParameter("_rsc") != null) return null
                         job.lastReq = System.currentTimeMillis()
@@ -303,7 +315,7 @@ object OfflineStore {
         job.lastReq = start
         while (System.currentTimeMillis() - start < 80000) {
             Thread.sleep(500)
-            if (System.currentTimeMillis() - job.lastReq > 12000 && System.currentTimeMillis() - start > 15000) break
+            if (System.currentTimeMillis() - job.lastReq > 9000 && System.currentTimeMillis() - start > 12000) break
         }
         main.post {
             try { wv?.stopLoading(); wv?.destroy() } catch (_: Exception) { }
@@ -328,14 +340,15 @@ object OfflineStore {
     }
 
     /** Taeglich leise aktualisieren, nur im WLAN. */
-    fun autoUpdate(ctx: Context) {
+    fun autoUpdate(ctx: Context, pages: List<String>) {
         try {
             val prefs = ctx.getSharedPreferences("cn", Context.MODE_PRIVATE)
             if (!ready || busy || !Offline.online) return
             if (!prefs.getBoolean("off_auto", true)) return
-            if (System.currentTimeMillis() - lastUpdate(ctx) < 24L * 3600 * 1000) return
+            val newPack = prefs.getInt("off_pack", 1) != PACK
+            if (!newPack && System.currentTimeMillis() - lastUpdate(ctx) < 24L * 3600 * 1000) return
             if (prefs.getBoolean("off_wifi", true) && !isUnmetered(ctx)) return
-            update(ctx)
+            update(ctx, pages)
         } catch (_: Exception) { }
     }
 }
