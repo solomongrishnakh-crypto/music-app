@@ -7,7 +7,7 @@ import { ALL_LANGS, BASE_URL, hreflang, langPath, OG_LOCALE } from "@/lib/seoI18
  * Download-Seite der Android-App (/app, /en/app, /es/app …).
  * Text pro Sprache als Liste aus src/lib/appPageText.ts, Reihenfolge siehe I.
  */
-const APK_URL = "https://github.com/solomongrishnakh-crypto/music-app/releases/download/app-latest/Centaurian.apk";
+const APK_URL = "https://github.com/solomongrishnakh-crypto/music-app/releases/download/app-latest/Centaurian-web.apk";
 
 const I = {
   title: 0, lead: 1, btn: 2, meta: 3,
