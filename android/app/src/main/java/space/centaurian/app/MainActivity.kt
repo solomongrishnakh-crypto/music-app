@@ -1662,7 +1662,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                 val sub = when {
                     offBusy -> (if (de) "Lädt" else Tr.t(lang, "Downloading")) + " … ${OfflineStore.pct}%"
                     OfflineStore.failed -> if (de) "Fehlgeschlagen, tippen für neuen Versuch" else Tr.t(lang, "Failed, tap to retry")
-                    OfflineStore.ready -> (if (de) "Bereit" else Tr.t(lang, "Ready")) + " · $mb"
+                    OfflineStore.ready -> (if (de) "Bereit" else Tr.t(lang, "Ready")) + " · $mb · v${prefs.getInt("off_pack", 1)}" + (prefs.getInt("off_miss", 0).let { if (it > 0) " · ⚠$it" else "" })
                     else -> if (de) "Sternenhimmel funktioniert ohne Internet" else Tr.t(lang, "Night sky works without internet")
                 }
                 SetCard(

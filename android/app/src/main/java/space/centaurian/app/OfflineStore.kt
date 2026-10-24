@@ -155,6 +155,7 @@ object OfflineStore {
         @Volatile var lastReq = System.currentTimeMillis()
         @Volatile var mainOk = 0
         @Volatile var extraFail = 0
+        @Volatile var extMiss = 0
         var total = 0L
 
         /** Datei holen (mit Nachfrage "geaendert?") und ablegen. Gibt true bei Erfolg. */
@@ -174,7 +175,15 @@ object OfflineStore {
                     if (o.etag.isNotEmpty()) conn.setRequestProperty("If-None-Match", o.etag)
                     if (o.lm.isNotEmpty()) conn.setRequestProperty("If-Modified-Since", o.lm)
                 }
-                val code = conn.responseCode
+                var code = conn.responseCode
+                if (code == 429 || code == 503) {
+                    try { Thread.sleep(2500) } catch (_: Exception) { }
+                    conn.disconnect()
+                    conn = URL(url).openConnection() as HttpURLConnection
+                    conn.connectTimeout = 15000; conn.readTimeout = 30000
+                    conn.setRequestProperty("User-Agent", UA)
+                    code = conn.responseCode
+                }
                 val name = sha(key)
                 val dst = File(tmp, name)
                 if (code == 304 && o != null) {
@@ -242,7 +251,7 @@ object OfflineStore {
                 for (p in list) {
                     val full = if (p.startsWith("http")) p else "https://$HOST$p"
                     val ext = !full.startsWith("https://$HOST")
-                    if (!job.fetch(full) && !ext) job.extraFail++
+                    if (!job.fetch(full)) { if (ext) job.extMiss++ else job.extraFail++ }
                     if (ext) try { Thread.sleep(120) } catch (_: Exception) { }
                     n++
                     val pp = 45 + (n * 55 / maxOf(1, list.size))
@@ -266,7 +275,7 @@ object OfflineStore {
                         idx = null
                         oldD.deleteRecursively()
                         ok = true
-                        ctx.getSharedPreferences("cn", Context.MODE_PRIVATE).edit().putInt("off_pack", PACK).apply()
+                        ctx.getSharedPreferences("cn", Context.MODE_PRIVATE).edit().putInt("off_pack", PACK).putInt("off_miss", job.extMiss).apply()
                     } else if (oldD.exists()) oldD.renameTo(curD)
                 } else tmp.deleteRecursively()
             } catch (_: Exception) { ok = false }
