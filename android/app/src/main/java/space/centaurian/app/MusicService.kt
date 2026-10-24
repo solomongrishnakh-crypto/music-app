@@ -139,6 +139,13 @@ object MusicBridge {
         if (kind == "pp" && playing) want = false
         // Falls die Seite den Befehl nicht innerhalb von 1,5 s abholt: direkt klicken.
         w.postDelayed({ if (cmd == kind) { cmd = ""; w.evaluateJavascript(js, null) } }, 1500)
+        // Zweite Absicherung: hat der Befehl nach ~3 s nichts bewirkt (Seite hat ihn geholt, aber nichts passiert),
+        // dann den Knopf der Seite direkt klicken.
+        val wasPlaying = playing; val oldTitle = title
+        w.postDelayed({
+            val changed = if (kind == "pp") playing != wasPlaying else title != oldTitle
+            if (!changed) w.evaluateJavascript(js, null)
+        }, 3000)
     }
 
     fun state(cb: (String, String, Boolean) -> Unit) {
