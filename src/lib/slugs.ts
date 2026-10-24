@@ -23,6 +23,7 @@ export const SLUG_PAIRS: ReadonlyArray<readonly [string, string]> = [
   ["/weltraum-rechner", "/space-calculator"],
   ["/maschine-der-ewigkeit", "/eternity-machine"],
   ["/reisezeit", "/travel-time"],
+  ["/musik", "/music"],
 ];
 
 function swap(path: string, from: 0 | 1): string {

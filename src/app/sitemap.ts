@@ -58,6 +58,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...withLangs("/geburtstag", 0.8, "monthly"),
     ...DESTS.flatMap((d) => VEHICLES.flatMap((v) => withLangs(travelPath(d, v), 0.6, "yearly"))),
     ...withLangs("/app", 0.8, "monthly"),
+    ...withLangs("/musik", 0.9, "monthly"),
     ...withLangs("/maschine-der-ewigkeit", 0.7, "yearly"),
     ...deEn("/objekte", 0.8),
     ...FAMOUS.flatMap((o) => deEn(`/objekte/${o.id}`, 0.8)),
