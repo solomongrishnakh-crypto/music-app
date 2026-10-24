@@ -1660,7 +1660,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                 SetCard(
                     "info", if (de) "Offline-Inhalte" else Tr.t(lang, "Offline content"), sub,
                     onClick = {
-                        if (!offBusy) {
+                        if (!offBusy && !OfflineStore.ready) {
                             if (!Offline.online) {
                                 Toast.makeText(ctx, if (de) "Kein Internet" else Tr.t(lang, "No connection"), Toast.LENGTH_SHORT).show()
                             } else if (offWifi && !OfflineStore.isUnmetered(ctx)) {
@@ -1672,7 +1672,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                             }
                         }
                     },
-                    trailing = { if (offBusy) CircularProgressIndicator(Modifier.size(20.dp), color = Accent, strokeWidth = 2.dp) else Text(if (OfflineStore.ready) "⟳" else "↓", color = Accent, fontSize = 20.sp) },
+                    trailing = { if (offBusy) CircularProgressIndicator(Modifier.size(20.dp), color = Accent, strokeWidth = 2.dp) else Text(if (OfflineStore.ready) "✓" else "↓", color = Accent, fontSize = 20.sp) },
                     extra = {
                         Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Row(Modifier.weight(1f).clickable { offWifi = !offWifi; prefs.edit().putBoolean("off_wifi", offWifi).apply() }, verticalAlignment = Alignment.CenterVertically) {
