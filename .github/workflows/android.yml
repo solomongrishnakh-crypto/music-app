@@ -62,7 +62,6 @@ jobs:
           BODY=$(gh api repos/${{ github.repository }}/releases/tags/app-latest --jq '.body' 2>/dev/null || echo "")
           PREV=$(echo "$BODY" | grep -oE 'web-downloads: [0-9]+' | grep -oE '[0-9]+' | head -1)
           TOTAL=$(( ${PREV:-0} + ${OLD:-0} ))
-          gh release edit app-latest --notes "Automatische Updates fuer die Centaurian-App
-web-downloads: $TOTAL" || true
+          gh release edit app-latest --notes "$(printf 'Automatische Updates fuer die Centaurian-App\nweb-downloads: %s' "$TOTAL")" || true
           cp out/Centaurian.apk out/Centaurian-web.apk
           gh release upload app-latest out/Centaurian.apk out/Centaurian-web.apk out/version.json --clobber
