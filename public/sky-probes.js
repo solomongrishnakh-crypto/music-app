@@ -57,7 +57,10 @@
   const cx = cv.getContext("2d");
   const chip = document.createElement("button"); chip.id = "prbChip"; chip.type = "button"; chip.hidden = true; document.body.appendChild(chip);
   const panel = document.createElement("div"); panel.id = "prbPanel"; panel.hidden = true; document.body.appendChild(panel);
-  const lb = document.createElement("div"); lb.id = "prbLb"; lb.hidden = true; document.body.appendChild(lb); lb.onclick = () => { lb.hidden = true; lb.innerHTML = ""; };
+  const lb = document.createElement("div"); lb.id = "prbLb"; lb.hidden = true; document.body.appendChild(lb); // Bildansicht (26.10.2026): sichtbarer ✕-Knopf; die Handy-Zurücktaste schliesst nur das Bild, nicht die ganze Seite
+  const closeLb = () => { if (lb.hidden) return; lb.hidden = true; lb.innerHTML = ""; if (history.state && history.state.prbLb) { try { history.back(); } catch (e) { /* egal */ } } };
+  lb.onclick = closeLb;
+  addEventListener("popstate", () => { if (!lb.hidden) { lb.hidden = true; lb.innerHTML = ""; } });
   let sel = -1, live = null; const mk = new Array(N).fill(null);
   function el(tag, cls, txt) { const e = document.createElement(tag); if (cls) e.className = cls; if (txt !== undefined) e.textContent = txt; return e; }
   function loop() {
@@ -111,17 +114,21 @@
     }
   });
   function showImg(list, j) {
-    const im0 = list[j]; lb.innerHTML = "";
+    const im0 = list[j], wasHidden = lb.hidden; lb.innerHTML = "";
     const im = document.createElement("img"); im.referrerPolicy = "no-referrer"; im.alt = im0[0]; im.src = fp(im0[0], 1600); im.onclick = (e) => e.stopPropagation();
     const d = el("div", "", (de ? im0[1] : im0[2]) + " · " + (j + 1) + "/" + list.length + " · "); const a = document.createElement("a");
     a.href = "https://commons.wikimedia.org/wiki/File:" + encodeURIComponent(im0[0].replace(/ /g, "_")); a.target = "_blank"; a.rel = "noopener"; a.textContent = "Commons ↗"; a.style.color = "inherit"; a.onclick = (e) => e.stopPropagation();
     d.appendChild(a); lb.appendChild(im); lb.appendChild(d);
+    const xb = el("button", "", "✕"); xb.type = "button"; xb.setAttribute("aria-label", de ? "Schließen" : "Close");
+    xb.style.cssText = "position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:14px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(20,24,48,.85);color:#fff;font-size:20px;cursor:pointer;z-index:1";
+    xb.onclick = (e) => { e.stopPropagation(); closeLb(); }; lb.appendChild(xb);
     if (list.length > 1) {
       const nx = el("button", "", "›"); nx.style.cssText = "position:absolute;right:10px;top:50%;font-size:34px;background:none;border:0;color:#fff;cursor:pointer;padding:14px"; nx.onclick = (e) => { e.stopPropagation(); showImg(list, (j + 1) % list.length); };
       const pv = el("button", "", "‹"); pv.style.cssText = "position:absolute;left:10px;top:50%;font-size:34px;background:none;border:0;color:#fff;cursor:pointer;padding:14px"; pv.onclick = (e) => { e.stopPropagation(); showImg(list, (j - 1 + list.length) % list.length); };
       lb.append(pv, nx);
     }
     lb.hidden = false;
+    if (wasHidden) { try { history.pushState({ prbLb: 1 }, ""); } catch (e) { /* egal */ } }
   }
   function stat(label, id, wide) { const c = el("div", wide ? "c wide" : "c"); c.append(el("small", "", label)); const b = el("b"); b.id = id; c.append(b); return c; }
   function open(i) {
