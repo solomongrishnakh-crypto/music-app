@@ -585,7 +585,7 @@ void main(){
     float cosI = clamp(-dot(e, n), 0.0, 1.0);
     float F = 0.02 + 0.98 * pow(1.0 - cosI, 5.0);
     vec3 sky = mix(uHor, uTop, smoothstep(0.0, 0.55, r.z));
-    if (uMW > 0.5) sky += milkyWay(r) * uFade * 0.55;
+    if (uMW > 0.5) sky += milkyWay(r) * uFade * 0.7;
     // Spiegelung von Mond und Sonne (Nutzerwunsch 25.10.2026): echte Scheibe, vom Wellengang
     // verzerrt, dazu Lichthof und ein Glitzerpfad aus vielen kleinen Wellenflaechen
     vec3 nS = normalize(vec3(-gx * amp * 0.55, 1.0));
@@ -595,16 +595,19 @@ void main(){
     vec3 rF = reflect(e, normalize(vec3(-sl, 1.0))); rF.z = max(rF.z, 0.002); rF = normalize(rF);
     float dmS = max(dot(rS, uMoon), 0.0), dsS = max(dot(rS, uSun), 0.0);
     float dmF = max(dot(rF, uMoon), 0.0), dsF = max(dot(rF, uSun), 0.0);
-    float angM = acos(clamp(dmS, 0.0, 1.0)), angS = acos(clamp(dsS, 0.0, 1.0));
+    // Spiegelbild wird auf dem Wasser senkrecht in die Laenge gezogen und flackert leicht
+    vec3 dM = rS - uMoon, dS = rS - uSun;
+    float angM = sqrt(dot(dM.xy, dM.xy) + 0.25 * dM.z * dM.z) * (1.0 + 0.12 * sin(t * 2.3 + wp.x * 3.0));
+    float angS = sqrt(dot(dS.xy, dS.xy) + 0.25 * dS.z * dS.z) * (1.0 + 0.12 * sin(t * 2.1 + wp.x * 3.0));
     vec2 eh = normalize(e.xy + 1e-5);
     float azM = acos(clamp(dot(eh, normalize(uMoon.xy + 1e-5)), -1.0, 1.0)), azS = acos(clamp(dot(eh, normalize(uSun.xy + 1e-5)), -1.0, 1.0));
-    float colM = exp(-pow(azM / (0.025 + 0.14 * d), 2.0)) * (0.11 + 0.13 * glit) * smoothstep(0.02, 0.25, d) * wA; // weiche Lichtsaeule unter dem Mond
+    float colM = exp(-pow(azM / (0.02 + 0.12 * d), 2.0)) * (0.18 + 0.2 * glit) * smoothstep(0.02, 0.25, d) * wA; // weiche Lichtsaeule unter dem Mond
     float colS = exp(-pow(azS / (0.03 + 0.18 * d), 2.0)) * (0.14 + 0.18 * glit) * smoothstep(0.02, 0.25, d) * wA;
     float discM = smoothstep(0.0062, 0.0032, angM), discS = smoothstep(0.0066, 0.0034, angS);
     vec3 lit = vec3(1.0, 0.96, 0.86) * (discM * 3.2 + exp(-(1.0 - dmS) / 0.0012) * 0.5 + exp(-(1.0 - dmS) / 0.02) * 0.2 * glit + pow(dmF, 2600.0) * 9.0 * wA + exp(-(1.0 - dmF) / 0.004) * 0.12 * glit * wB + colM) * uMoonI;
     sky += vec3(0.5, 0.58, 0.78) * uMoonI * (0.05 * exp(-(1.0 - dmS) / 0.1) + 0.02) * uAtmo; // Mondhof im gespiegelten Himmel
     lit += vec3(1.0, 0.9, 0.72) * (discS * 6.0 + exp(-(1.0 - dsS) / 0.0012) * 0.8 + exp(-(1.0 - dsS) / 0.02) * 0.4 * glit + pow(dsF, 2600.0) * 14.0 * wA + exp(-(1.0 - dsF) / 0.004) * 0.2 * glit * wB + colS) * uSunI;
-    vec3 body = uWater * (0.32 + 0.68 * smoothstep(0.0, 0.7, d)) + vec3(0.0, 0.008, 0.02) + vec3(0.012, 0.022, 0.036) * (0.25 + uMoonI) * (0.5 + 0.5 * dot(gx, vec2(0.6, 0.8))) * uFade * near;
+    vec3 body = uWater * (0.32 + 0.68 * smoothstep(0.0, 0.7, d)) + vec3(0.0, 0.008, 0.02) + vec3(0.012, 0.022, 0.036) * (0.25 + uMoonI) * (0.5 + 0.5 * dot(gx, vec2(0.6, 0.8))) * uFade * near + vec3(0.05, 0.07, 0.11) * uMoonI * exp(-pow(azM / 0.55, 2.0)) * smoothstep(0.02, 0.3, d) * (0.6 + 0.4 * dot(gx, vec2(0.6, 0.8)));
     col = mix(body, sky, F) + lit * (0.16 + 0.84 * F); // helle Lichter (Mond, Sonne) spiegeln viel staerker als der Himmel
     // leichte Schaumkämme / Lichtkräuselung in der Nähe
     col += uHor * 0.18 * smoothstep(0.55, 1.0, n3(vec3(wp * 4.0, t * 0.7))) * smoothstep(0.02, 0.25, d);
@@ -711,7 +714,7 @@ void main(){
         const zx = Math.log2(scr / tex), zt = Math.max(0, Math.min(1, (zx - 1) / 2.5));
         gl.uniform1f(U.uMWBias, Math.max(0, (zx + 2.7) * zt));
         gl.uniform1f(U.uMWBlur, Math.max(0, zx) + 3.5);
-        gl.uniform1f(U.uMWGain, 7.0 * Math.max(0.35, Math.min(1, S.fov / DEG / 35)));
+        gl.uniform1f(U.uMWGain, 8.4 * Math.max(0.35, Math.min(1, S.fov / DEG / 35)));
       }
       if (mwOn) { gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D, mwTex); }
       gl.uniform3fv(U.uF, cam.f); gl.uniform3fv(U.uR, cam.r); gl.uniform3fv(U.uU, cam.u);
@@ -1538,9 +1541,9 @@ function draw() {
   const moonUp = moonB && moonB.v ? Math.max(0, Math.min(1, (Math.asin(moonB.v[2]) / DEG + 2) / 12)) : 0;
   const moonIll = moonB && moonB.v ? (1 - (sun.v[0] * moonB.v[0] + sun.v[1] * moonB.v[1] + sun.v[2] * moonB.v[2])) / 2 : 0;
   const moonLit = S.atmo && !S.nightMode ? moonUp * Math.pow(moonIll, 1.5) * (1 - day) : 0;
-  const top = mix(mix([0, 0, 0], [3, 5, 12], moonLit), [28, 92, 196], day), hor = mix(mix([3, 4, 8], [10, 13, 22], moonLit), [165, 205, 245], day);
+  const top = mix(mix([4, 7, 17], [10, 18, 40], moonLit), [28, 92, 196], day), hor = mix(mix([10, 14, 28], [28, 38, 64], moonLit), [165, 205, 245], day); // 25.10.2026: Nachthimmel heller (Nutzerwunsch)
   // Himmel: Verlauf zum Horizont, Dämmerungsglühen auf der Sonnenseite
-  const water = mix([0, 0, 2], [55, 95, 145], day); // 06.10.2026: nachts dunkler, wie auf Fotos
+  const water = mix(mix([5, 10, 22], [12, 26, 48], moonLit), [55, 95, 145], day); // 06.10.2026: nachts dunkler, wie auf Fotos
   if (glSky) {
     // Himmel, Milchstraße und Wasser zeichnet die Grafikkarte darunter
     glSky.render(day, S.atmo ? Math.pow(1 - day, 3) * (1 - 0.55 * moonLit) : 1, top, hor, water);
