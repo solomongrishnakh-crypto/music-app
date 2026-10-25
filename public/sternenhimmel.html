@@ -601,10 +601,15 @@ void main(){
     float angS = sqrt(dot(dS.xy, dS.xy) + 0.25 * dS.z * dS.z) * (1.0 + 0.12 * sin(t * 2.1 + wp.x * 3.0));
     vec2 eh = normalize(e.xy + 1e-5);
     float azM = acos(clamp(dot(eh, normalize(uMoon.xy + 1e-5)), -1.0, 1.0)), azS = acos(clamp(dot(eh, normalize(uSun.xy + 1e-5)), -1.0, 1.0));
+    // Spiegelbild auf bewegtem Wasser: Scheibe in waagerechte Streifen zerlegt, Pfad aus kurzen Lichtstrichen
+    vec2 dirM = normalize(uMoon.xy + 1e-5), perM = vec2(-dirM.y, dirM.x);
+    float alongM = dot(wp, dirM), acrossM = dot(wp, perM);
+    float stripM = 0.25 + 0.75 * smoothstep(-0.15, 0.55, sin(alongM * 3.1 + t * 0.8 + 2.4 * n3(vec3(wp * 0.6, t * 0.25))));
+    float strokeM = smoothstep(0.6, 0.9, n3(vec3(acrossM * 2.4, alongM * 15.0, t * 1.3)));
     float colM = exp(-pow(azM / (0.02 + 0.12 * d), 2.0)) * (0.18 + 0.2 * glit) * smoothstep(0.02, 0.25, d) * wA; // weiche Lichtsaeule unter dem Mond
     float colS = exp(-pow(azS / (0.03 + 0.18 * d), 2.0)) * (0.14 + 0.18 * glit) * smoothstep(0.02, 0.25, d) * wA;
     float discM = smoothstep(0.0062, 0.0032, angM), discS = smoothstep(0.0066, 0.0034, angS);
-    vec3 lit = vec3(1.0, 0.96, 0.86) * (discM * 3.2 + exp(-(1.0 - dmS) / 0.0012) * 0.5 + exp(-(1.0 - dmS) / 0.02) * 0.2 * glit + pow(dmF, 2600.0) * 9.0 * wA + exp(-(1.0 - dmF) / 0.004) * 0.12 * glit * wB + colM) * uMoonI;
+    vec3 lit = vec3(1.0, 0.96, 0.86) * (discM * stripM * 3.4 + exp(-angM / 0.025) * 0.18 * stripM + strokeM * exp(-pow(azM / (0.045 + 0.2 * d), 2.0)) * smoothstep(0.03, 0.3, d) * 0.9 * wA * wA + exp(-(1.0 - dmS) / 0.0012) * 0.5 + exp(-(1.0 - dmS) / 0.02) * 0.2 * glit + pow(dmF, 2600.0) * 9.0 * wA + exp(-(1.0 - dmF) / 0.004) * 0.12 * glit * wB + colM) * uMoonI;
     sky += vec3(0.5, 0.58, 0.78) * uMoonI * (0.05 * exp(-(1.0 - dmS) / 0.1) + 0.02) * uAtmo; // Mondhof im gespiegelten Himmel
     lit += vec3(1.0, 0.9, 0.72) * (discS * 6.0 + exp(-(1.0 - dsS) / 0.0012) * 0.8 + exp(-(1.0 - dsS) / 0.02) * 0.4 * glit + pow(dsF, 2600.0) * 14.0 * wA + exp(-(1.0 - dsF) / 0.004) * 0.2 * glit * wB + colS) * uSunI;
     vec3 body = uWater * (0.32 + 0.68 * smoothstep(0.0, 0.7, d)) + vec3(0.0, 0.008, 0.02) + vec3(0.012, 0.022, 0.036) * (0.25 + uMoonI) * (0.5 + 0.5 * dot(gx, vec2(0.6, 0.8))) * uFade * near + vec3(0.05, 0.07, 0.11) * uMoonI * exp(-pow(azM / 0.55, 2.0)) * smoothstep(0.02, 0.3, d) * (0.6 + 0.4 * dot(gx, vec2(0.6, 0.8)));

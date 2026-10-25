@@ -120,7 +120,10 @@ object MusicBridge {
         }
         @JavascriptInterface fun update2(t: String, a: String, p: Boolean, c: String, cur: Double, d: Double) {
             if (playing != p) MusicBridge.log("Musik " + (if (p) "spielt" else "pausiert") + (if (guard) " (andere Seite offen)" else ""))
-            title = t; artist = a; playing = p; cover = c; pos = cur; dur = d; stamp = System.currentTimeMillis()
+            // Livestreams melden eine absurde, staendig wachsende Laenge (Tausende Minuten): als "ohne Laenge" behandeln,
+            // sonst wird die Benachrichtigung jede Sekunde neu gebaut und die App haengt.
+            val live = d > 21600.0
+            title = t; artist = a; playing = p; cover = c; pos = if (live) 0.0 else cur; dur = if (live) 0.0 else d; stamp = System.currentTimeMillis()
             vizSync(p)
             if (userPaused && p && System.currentTimeMillis() - userPausedAt > 4000) userPaused = false
             if (p) { if (!userPaused) want = true; ensureService() } else if (!guard) want = false
