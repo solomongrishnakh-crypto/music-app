@@ -1238,8 +1238,9 @@ function drawDSOs(fade) {
       // Plejaden (18.10.2026): mit blossem Auge nur ein schwacher Schimmer um die Sterne; der blaue
       // Reflexionsnebel und seine Struktur erscheinen erst beim Hineinzoomen
       const zz = Math.max(0, Math.min(1, (w - 14) / 190));
-      a *= 0.1 + 0.9 * zz * zz * (3 - 2 * zz);
+      a = 0; // 26.10.2026: kein Nebel mehr, nur die Sterne
     }
+    if (o.id === "M45") { dsoVis.push({ o, x: sx, y: sy, r: Math.max(w, h) / 2 }); continue; }
     if (!o.spr) {
       // Bilder nach und nach berechnen (max. 3 pro Bild), damit nichts ruckelt
       if (dsoBudget-- > 0 || (!isMoving() && performance.now() - dsoT0 < 6)) o.spr = makeDsoSprite(o);
@@ -1663,6 +1664,9 @@ function draw() {
     tmpV[2] = Uu;
     // Atmosphäre: Luftmasse → Extinktion (dunkler) und Rötung nahe am Horizont
     let mag = s.mag, red = 0, airX = 1;
+    // Plejaden (26.10.2026): die Sterne des Haufens etwas heller, damit das Siebengestirn wie mit blossem Auge hervortritt
+    if (s.pl === undefined) { const dd = Math.asin(s.sd) - 24.1 * DEG, dr = (s.ra - 56.75 * DEG) * 0.913; s.pl = Math.hypot(dd, dr) < 2.2 * DEG; }
+    if (s.pl) mag -= 0.55;
     if (S.atmo && !under) {
       const h = Math.max(0, tmpV[2]);
       airX = 1 / (h + 0.025 * Math.exp(-11 * h));
