@@ -21,10 +21,15 @@ interface NowPlayingHeroProps {
 
 function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
-  const m = Math.floor(seconds / 60);
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
   const s = Math.floor(seconds % 60);
+  if (h > 0) return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
+
+/** Livestreams melden eine absurde, wachsende Länge (Tausende Minuten) – dort statt Zeit "LIVE" zeigen. */
+const LIVE_SECONDS = 6 * 3600;
 
 /**
  * Großes, zentrales "Now Playing"-Titelbild. Ersetzt visuell den YouTube-
@@ -138,6 +143,12 @@ export default function NowPlayingHero({
       {/* Fortschrittsbalken — dieselbe Funktion wie in der unteren Leiste
           (dort während dieser Ansicht ausgeblendet), nur hier direkt unter
           Play/Pause/Vor/Zurück platziert. */}
+      {duration > LIVE_SECONDS ? (
+        <div className="mt-5 flex w-full items-center justify-center gap-2 text-[11px] uppercase tracking-[0.3em] text-accent">
+          <span className="inline-block h-2 w-2 animate-pulse rounded-full bg-accent shadow-[0_0_10px_#ff5a4d]" />
+          LIVE
+        </div>
+      ) : (
       <div className="mt-5 flex w-full items-center gap-2">
         <span className="w-9 shrink-0 text-right text-[10px] tabular-nums text-muted">
           {formatTime(displayTime)}
@@ -171,6 +182,7 @@ export default function NowPlayingHero({
           {formatTime(duration)}
         </span>
       </div>
+      )}
     </div>
   );
 }

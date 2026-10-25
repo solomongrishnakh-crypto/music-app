@@ -80,8 +80,10 @@ function loadYoutubeIframeApi(): Promise<void> {
 
 function formatTime(seconds: number): string {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
-  const m = Math.floor(seconds / 60);
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
   const s = Math.floor(seconds % 60);
+  if (h > 0) return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
   return `${m}:${s.toString().padStart(2, "0")}`;
 }
 
@@ -411,6 +413,12 @@ export default function YoutubePlayer({
         </div>
 
         {/* Fortschrittsbalken: an jede Stelle im Song springen */}
+        {duration > 6 * 3600 ? (
+          <div className="flex items-center justify-center gap-2 py-0.5 text-[10px] uppercase tracking-[0.3em] text-accent">
+            <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
+            LIVE
+          </div>
+        ) : (
         <div className="flex items-center gap-2">
           <span className="w-9 shrink-0 text-right text-[10px] tabular-nums text-muted">
             {formatTime(currentTime)}
@@ -435,6 +443,7 @@ export default function YoutubePlayer({
             {formatTime(duration)}
           </span>
         </div>
+        )}
       </div>
       </div>
       )}
