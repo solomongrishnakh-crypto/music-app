@@ -118,10 +118,10 @@
     const im = document.createElement("img"); im.referrerPolicy = "no-referrer"; im.alt = im0[0]; im.src = fp(im0[0], 1600); im.onclick = (e) => e.stopPropagation();
     const d = el("div", "", (de ? im0[1] : im0[2]) + " · " + (j + 1) + "/" + list.length + " · "); const a = document.createElement("a");
     a.href = "https://commons.wikimedia.org/wiki/File:" + encodeURIComponent(im0[0].replace(/ /g, "_")); a.target = "_blank"; a.rel = "noopener"; a.textContent = "Commons ↗"; a.style.color = "inherit"; a.onclick = (e) => e.stopPropagation();
-    d.appendChild(a); lb.appendChild(im); lb.appendChild(d);
+    d.appendChild(a); const wr = el("span"); wr.style.cssText = "position:relative;display:inline-block;max-width:100%;line-height:0"; wr.onclick = (e) => e.stopPropagation(); wr.appendChild(im); lb.appendChild(wr); lb.appendChild(d);
     const xb = el("button", "", "✕"); xb.type = "button"; xb.setAttribute("aria-label", de ? "Schließen" : "Close");
-    xb.style.cssText = "position:absolute;top:calc(14px + env(safe-area-inset-top,0px));right:14px;width:46px;height:46px;border-radius:50%;border:1px solid rgba(255,255,255,.35);background:rgba(20,24,48,.85);color:#fff;font-size:20px;cursor:pointer;z-index:1";
-    xb.onclick = (e) => { e.stopPropagation(); closeLb(); }; lb.appendChild(xb);
+    xb.style.cssText = "position:absolute;top:8px;right:8px;width:34px;height:34px;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,.4);background:rgba(8,10,24,.7);color:#fff;font:inherit;font-size:15px;line-height:32px;text-align:center;cursor:pointer;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)";
+    xb.onclick = (e) => { e.stopPropagation(); closeLb(); }; wr.appendChild(xb);
     if (list.length > 1) {
       const nx = el("button", "", "›"); nx.style.cssText = "position:absolute;right:10px;top:50%;font-size:34px;background:none;border:0;color:#fff;cursor:pointer;padding:14px"; nx.onclick = (e) => { e.stopPropagation(); showImg(list, (j + 1) % list.length); };
       const pv = el("button", "", "‹"); pv.style.cssText = "position:absolute;left:10px;top:50%;font-size:34px;background:none;border:0;color:#fff;cursor:pointer;padding:14px"; pv.onclick = (e) => { e.stopPropagation(); showImg(list, (j - 1 + list.length) % list.length); };
