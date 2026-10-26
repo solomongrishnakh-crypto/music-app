@@ -576,7 +576,7 @@ private fun AppRoot() {
             drawerState = drawer,
             gesturesEnabled = drawer.currentValue == DrawerValue.Open || drawer.targetValue == DrawerValue.Open,
             drawerContent = {
-                ModalDrawerSheet(drawerContainerColor = Color(0xFF060203)) {
+                ModalDrawerSheet(modifier = Modifier.width(300.dp), drawerContainerColor = Color(0xFF060203)) {
                     DrawerContent(
                         lang,
                         anim,
