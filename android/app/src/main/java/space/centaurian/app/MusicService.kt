@@ -42,7 +42,7 @@ object MusicBridge {
     /** Kurzes Ereignis-Protokoll fuer die Diagnose (die letzten 14 Eintraege). */
     fun log(msg: String) {
         synchronized(events) {
-            val t = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.GERMANY).format(java.util.Date())
+            val t = java.text.SimpleDateFormat("HH:mm:ss", java.util.Locale.US).format(java.util.Date())
             events.addLast("$t $msg")
             while (events.size > 14) events.removeFirst()
         }
@@ -119,7 +119,7 @@ object MusicBridge {
             vizSync(p)
         }
         @JavascriptInterface fun update2(t: String, a: String, p: Boolean, c: String, cur: Double, d: Double) {
-            if (playing != p) MusicBridge.log("Musik " + (if (p) "spielt" else "pausiert") + (if (guard) " (andere Seite offen)" else ""))
+            if (playing != p) MusicBridge.log("Music " + (if (p) "playing" else "paused") + (if (guard) " (other page open)" else ""))
             // Livestreams melden eine absurde, staendig wachsende Laenge (Tausende Minuten): als "ohne Laenge" behandeln,
             // sonst wird die Benachrichtigung jede Sekunde neu gebaut und die App haengt.
             val live = d > 21600.0
@@ -133,6 +133,7 @@ object MusicBridge {
         @JavascriptInterface fun heroBack() { backReq.intValue = backReq.intValue + 1 }
         @JavascriptInterface fun playing(): Boolean = MusicBridge.playing
         @JavascriptInterface fun want(): Boolean = MusicBridge.want
+        @JavascriptInterface fun click() { ClickSound.play() }
         @JavascriptInterface fun resume(): Boolean = MusicBridge.want && MusicBridge.guard && !MusicBridge.userPaused
         @JavascriptInterface fun cmd(): String { val c = cmd; cmd = ""; return c }
     }
@@ -156,7 +157,7 @@ object MusicBridge {
         }
         val btn = "(function(){try{var ps=document.querySelectorAll(\"$sel\");for(var i=0;i<ps.length;i++){var b=ps[i].closest('button');if(b&&b.offsetParent!==null){b.click();return 'btn';}}}catch(e){}return 'none';})()"
         val w = web ?: return
-        log("Befehl: $kind" + (if (kind0 != kind) " (aus $kind0)" else ""))
+        log("Command: $kind" + (if (kind0 != kind) " (from $kind0)" else ""))
         if (kind == "pause") { want = false; userPaused = true; userPausedAt = System.currentTimeMillis() }
         if (kind == "play") { userPaused = false }
         val act = when (kind) {
@@ -171,7 +172,7 @@ object MusicBridge {
         w.post {
             w.evaluateJavascript(direct) { r ->
                 if (r == null || !r.contains("ok")) {
-                    log("Direkt fehlgeschlagen ($r), klicke Knopf")
+                    log("Direct failed ($r), clicking button")
                     w.evaluateJavascript(btn, null)
                 }
             }
@@ -179,7 +180,7 @@ object MusicBridge {
         // Nach 3 s Kontrolle bei Play/Pause: hat es nicht geklappt, den passenden Knopf klicken (Knopf zeigt nur das richtige Symbol, kein Hin und Her).
         if (kind == "pause" || kind == "play") w.postDelayed({
             val stuck = if (kind == "pause") playing else !playing
-            if (stuck) { log("Nach 3 s noch nicht erledigt, klicke Knopf"); w.evaluateJavascript(btn, null) }
+            if (stuck) { log("Not done after 3 s, clicking button"); w.evaluateJavascript(btn, null) }
         }, 3000)
     }
 

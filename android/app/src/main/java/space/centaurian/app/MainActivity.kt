@@ -31,7 +31,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -322,7 +321,7 @@ private val LANGS = listOf(
     Lng("fr", "🇫🇷", "Français"), Lng("pt", "🇵🇹", "Português"), Lng("tr", "🇹🇷", "Türkçe"),
     Lng("ru", "🇷🇺", "Русский"), Lng("el", "🇬🇷", "Ελληνικά"), Lng("ar", "🇸🇦", "العربية"),
     Lng("hi", "🇮🇳", "हिन्दी"), Lng("zh", "🇨🇳", "中文"), Lng("ja", "🇯🇵", "日本語"),
-    Lng("ko", "🇰🇷", "한국어"), Lng("id", "🇮🇩", "Indonesia"), Lng("fa", "🇮🇷", "فارسی"),
+    Lng("ko", "🇰🇷", "한국어"), Lng("id", "🇮🇩", "Bahasa Indonesia"), Lng("fa", "🇮🇷", "فارسی"),
 )
 
 private val SOURCES = listOf(
@@ -436,7 +435,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onPause() {
         super.onPause()
-        MusicBridge.log("App im Hintergrund")
+        MusicBridge.log("App in background")
         MusicBridge.fg = false
         // Spielt Musik, dann Vordergrund-Dienst starten, damit der Ton im Hintergrund weiterlaeuft.
         try {
@@ -454,12 +453,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
-        MusicBridge.log("Speicherwarnung Stufe $level")
+        MusicBridge.log("Memory warning level $level")
     }
 
     override fun onResume() {
         super.onResume()
-        MusicBridge.log("App im Vordergrund")
+        MusicBridge.log("App in foreground")
         MusicBridge.fg = true
         Updater.check(this, false)
         OfflineStore.autoUpdate(applicationContext, offlinePages(getSharedPreferences("cn", Context.MODE_PRIVATE).getString("lang", "de") ?: "de"))
@@ -468,6 +467,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         MusicBridge.appCtx = applicationContext
+        ClickSound.init(applicationContext)
         Offline.start(applicationContext)
         try {
             @Suppress("DEPRECATION")
@@ -702,6 +702,7 @@ private fun animJs(on: Boolean): String =
         "if(!st){st=document.createElement('style');st.id='cn-still';st.textContent='*:not([class*=spin]),*:not([class*=spin])::before,*:not([class*=spin])::after{animation:none!important}';(document.head||de).appendChild(st);}}" +
         "else{if(window.__cnFz){delete de.dataset.bgpause;window.__cnFz=0;}if(window.__cnOv){delete de.dataset.overlay;window.__cnOv=0;}if(st)st.remove();}};" +
         "f();if(!window.__cnAnimIv)window.__cnAnimIv=setInterval(f,700);" +
+        "if(!window.__cnClick){window.__cnClick=1;document.addEventListener('click',function(e){try{var t=e.target&&e.target.closest&&e.target.closest('a,button,[role=button],summary,label,input,select');if(t&&window.CenNative&&CenNative.click)CenNative.click();}catch(x){}},true);}" +
         "var o=document.getElementById('cn-anim');if(o)o.remove();" +
         (if (on) "" else "if(!keep){var s=document.createElement('style');s.id='cn-anim';s.textContent='html,body{background:#000!important}';(document.head||document.documentElement).appendChild(s);}") +
         "}catch(e){}})()"
@@ -1025,7 +1026,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
                                 }
 
                                 override fun onRenderProcessGone(view: WebView?, detail: android.webkit.RenderProcessGoneDetail?): Boolean {
-                                    MusicBridge.log("Startseite: Render-Prozess beendet" + (if (detail?.didCrash() == true) " (Absturz)" else " (vom System beendet)"))
+                                    MusicBridge.log("Home: render process gone" + (if (detail?.didCrash() == true) " (crash)" else " (vom System beendet)"))
                                     failed = true
                                     return true
                                 }
@@ -1135,7 +1136,7 @@ private fun ToolTile(index: Int, title: String, modifier: Modifier, onClick: () 
 
 @Composable
 private fun GroupTitle(text: String) {
-    Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, top = 16.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, top = 12.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(text.uppercase(), color = Accent, fontSize = 10.sp, fontFamily = Mono, letterSpacing = 3.sp)
         Spacer(Modifier.size(10.dp))
         Box(Modifier.weight(1f).height(1.dp).background(androidx.compose.ui.graphics.Brush.horizontalGradient(listOf(Accent.copy(alpha = 0.7f), Color(0x00FFFFFF)))))
@@ -1367,6 +1368,8 @@ private fun DrawerRow(tag: String, title: String, active: Boolean, onClick: () -
 private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boolean) -> Unit, onHome: () -> Unit, onBack: () -> Unit) {
     val ctx = LocalContext.current
     val activity = ctx as MainActivity
+    val skyPage = BARE_ALL.any { s.path.startsWith(it) }
+    androidx.compose.runtime.DisposableEffect(skyPage) { ClickSound.muted = skyPage; onDispose { ClickSound.muted = false } }
     var progress by remember { mutableStateOf(0) }
     var failed by remember { mutableStateOf(false) }
     var web by remember { mutableStateOf<WebView?>(null) }
@@ -1472,7 +1475,7 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
                             }
 
                             override fun onRenderProcessGone(view: WebView?, detail: android.webkit.RenderProcessGoneDetail?): Boolean {
-                                MusicBridge.log("Unterseite: Render-Prozess beendet" + (if (detail?.didCrash() == true) " (Absturz)" else " (vom System beendet)"))
+                                MusicBridge.log("Page: render process gone" + (if (detail?.didCrash() == true) " (crash)" else " (vom System beendet)"))
                                 failed = true
                                 return true
                             }
@@ -1482,12 +1485,12 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
                             }
                         }
                         addJavascriptInterface(MusicBridge.Js(), "CenNative")
-                        MusicBridge.log("Unterseite geoeffnet: " + s.path)
+                        MusicBridge.log("Page opened: " + s.path)
                         loadUrl(siteUrl(s.path, lang))
                         web = this
                     }
                 },
-                onRelease = { v -> MusicBridge.log("Unterseite geschlossen"); try { v.stopLoading(); v.loadUrl("about:blank"); v.destroy() } catch (_: Exception) { } },
+                onRelease = { v -> MusicBridge.log("Page closed"); try { v.stopLoading(); v.loadUrl("about:blank"); v.destroy() } catch (_: Exception) { } },
             )
             if (loading && !failed) LoadingCover(lang)
             if (failed) {
@@ -1539,8 +1542,8 @@ private fun Card(content: @Composable () -> Unit) {
 }
 
 @Composable
-private fun SetIcon(kind: String) {
-    androidx.compose.foundation.Canvas(Modifier.size(22.dp)) {
+private fun SetIcon(kind: String, sz: androidx.compose.ui.unit.Dp = 22.dp) {
+    androidx.compose.foundation.Canvas(Modifier.size(sz)) {
         val w = size.width
         val h = size.height
         val sw = 1.8.dp.toPx()
@@ -1583,9 +1586,24 @@ private fun SetIcon(kind: String) {
             "x" -> { line(0.2f, 0.2f, 0.8f, 0.8f); line(0.8f, 0.2f, 0.2f, 0.8f) }
             "shield" -> { poly(true, 0.5f, 0.08f, 0.86f, 0.22f, 0.84f, 0.52f, 0.5f, 0.92f, 0.16f, 0.52f, 0.14f, 0.22f); poly(false, 0.34f, 0.5f, 0.46f, 0.62f, 0.68f, 0.38f) }
             "layers" -> { poly(true, 0.5f, 0.1f, 0.9f, 0.3f, 0.5f, 0.5f, 0.1f, 0.3f); poly(false, 0.1f, 0.5f, 0.5f, 0.7f, 0.9f, 0.5f); poly(false, 0.1f, 0.7f, 0.5f, 0.9f, 0.9f, 0.7f) }
+            "sound" -> {
+                poly(true, 0.12f, 0.4f, 0.3f, 0.4f, 0.52f, 0.2f, 0.52f, 0.8f, 0.3f, 0.6f, 0.12f, 0.6f)
+                drawArc(c, -45f, 90f, false, o(0.34f, 0.3f), androidx.compose.ui.geometry.Size(0.4f * w, 0.4f * h), style = st)
+                drawArc(c, -45f, 90f, false, o(0.22f, 0.12f), androidx.compose.ui.geometry.Size(0.64f * w, 0.76f * h), style = st)
+            }
             else -> drawCircle(c, 0.3f * w, o(0.5f, 0.5f), style = st)
         }
     }
+}
+
+@Composable
+private fun SetGroup(content: @Composable () -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 3.dp)
+            .clip(RoundedCornerShape(14.dp))
+            .background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(Color(0x1FFF5A4D), Color(0x0DFFFFFF))))
+            .border(BorderStroke(1.dp, Accent.copy(alpha = 0.28f)), RoundedCornerShape(14.dp)),
+    ) { content() }
 }
 
 @Composable
@@ -1596,26 +1614,23 @@ private fun SetCard(
     onClick: (() -> Unit)? = null,
     trailing: @Composable () -> Unit = { Text("›", color = Accent, fontSize = 20.sp) },
     extra: (@Composable () -> Unit)? = null,
+    first: Boolean = false,
 ) {
-    Column(
-        Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(Color(0x1FFF5A4D), Color(0x0DFFFFFF))))
-            .border(BorderStroke(1.dp, Accent.copy(alpha = 0.28f)), RoundedCornerShape(16.dp)),
-    ) {
+    Column(Modifier.fillMaxWidth()) {
+        if (!first) Box(Modifier.fillMaxWidth().padding(start = 56.dp).height(1.dp).background(Accent.copy(alpha = 0.14f)))
         Row(
-            Modifier.fillMaxWidth().then(if (onClick != null) Modifier.clickable { onClick() } else Modifier).padding(horizontal = 14.dp, vertical = 12.dp),
+            Modifier.fillMaxWidth().then(if (onClick != null) Modifier.clickable { onClick() } else Modifier).padding(horizontal = 12.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
-                Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(Accent.copy(alpha = 0.16f))
-                    .border(BorderStroke(1.dp, Accent.copy(alpha = 0.4f)), RoundedCornerShape(12.dp)),
+                Modifier.size(32.dp).clip(RoundedCornerShape(10.dp)).background(Accent.copy(alpha = 0.16f))
+                    .border(BorderStroke(1.dp, Accent.copy(alpha = 0.4f)), RoundedCornerShape(10.dp)),
                 contentAlignment = Alignment.Center,
-            ) { SetIcon(icon) }
-            Spacer(Modifier.size(14.dp))
+            ) { SetIcon(icon, 18.dp) }
+            Spacer(Modifier.size(12.dp))
             Column(Modifier.weight(1f)) {
                 Text(title, color = TextMain, fontSize = 14.sp, fontWeight = FontWeight.Medium)
-                if (sub.isNotEmpty()) Text(sub, color = TextMuted, fontSize = 11.sp, modifier = Modifier.padding(top = 2.dp))
+                if (sub.isNotEmpty()) Text(sub, color = TextMuted, fontSize = 11.sp, lineHeight = 15.sp, modifier = Modifier.padding(top = 1.dp))
             }
             trailing()
         }
@@ -1640,6 +1655,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
     val prefs = remember { ctx.getSharedPreferences("cn", Context.MODE_PRIVATE) }
     var keepOn by remember { mutableStateOf(prefs.getBoolean("keepon", false)) }
     var bassOn by remember { mutableStateOf(prefs.getBoolean("bass", true)) }
+    var clickOn by remember { mutableStateOf(prefs.getBoolean("click", true)) }
     val cur = LANGS.first { it.code == lang }
     val version = try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName ?: "" } catch (_: Exception) { "" }
 
@@ -1651,8 +1667,8 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
     Column(Modifier.fillMaxSize()) {
         TopBar(if (de) "Einstellungen" else Tr.t(lang, "Settings"), { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack)
         Column(Modifier.fillMaxSize().navigationBarsPadding().verticalScroll(rememberScrollState())) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 14.dp), verticalAlignment = Alignment.CenterVertically) {
-                Image(painterResource(R.mipmap.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(56.dp))
+            Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Image(painterResource(R.mipmap.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(44.dp))
                 Spacer(Modifier.size(10.dp))
                 Column {
                     Text("CENTAURIAN", color = TextMain, fontSize = 16.sp, fontFamily = Mono, fontWeight = FontWeight.Bold, letterSpacing = 4.sp)
@@ -1660,193 +1676,220 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                 }
             }
 
-            GroupTitle(if (de) "Allgemein" else Tr.t(lang, "General"))
-            SetCard(
-                "lang", if (de) "Sprache" else Tr.t(lang, "Language"), "${cur.flag}  ${cur.name}",
-                onClick = { langOpen = !langOpen },
-                trailing = { Text(if (langOpen) "−" else "+", color = Accent, fontSize = 20.sp) },
-                extra = if (langOpen) ({
-                    Column(Modifier.padding(start = 10.dp, end = 10.dp, bottom = 12.dp)) {
-                        LANGS.chunked(3).forEach { rowItems ->
-                            Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                rowItems.forEach { l ->
-                                    Box(
-                                        Modifier.weight(1f).clip(RoundedCornerShape(10.dp))
-                                            .background(if (l.code == lang) Accent.copy(alpha = 0.22f) else Color.Transparent)
-                                            .border(BorderStroke(1.dp, if (l.code == lang) Accent else LineSoft), RoundedCornerShape(10.dp))
-                                            .clickable { onLang(l.code); langOpen = false }.padding(vertical = 9.dp),
-                                        contentAlignment = Alignment.Center,
-                                    ) { Text("${l.flag} ${l.name}", color = if (l.code == lang) Color.White else TextMuted, fontSize = 11.sp, maxLines = 1) }
+            GroupTitle(if (de) "Darstellung & Sprache" else Tr.t(lang, "Appearance & language"))
+            SetGroup {
+                SetCard(
+                    "lang", if (de) "Sprache" else Tr.t(lang, "Language"), cur.name,
+                    onClick = { langOpen = !langOpen },
+                    trailing = { Text(if (langOpen) "−" else "+", color = Accent, fontSize = 20.sp) },
+                    extra = if (langOpen) ({
+                        Column(Modifier.padding(start = 10.dp, end = 10.dp, bottom = 12.dp)) {
+                            LANGS.chunked(3).forEach { rowItems ->
+                                Row(Modifier.fillMaxWidth().padding(vertical = 3.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    rowItems.forEach { l ->
+                                        Box(
+                                            Modifier.weight(1f).clip(RoundedCornerShape(10.dp))
+                                                .background(if (l.code == lang) Accent.copy(alpha = 0.22f) else Color.Transparent)
+                                                .border(BorderStroke(1.dp, if (l.code == lang) Accent else LineSoft), RoundedCornerShape(10.dp))
+                                                .clickable { onLang(l.code); langOpen = false }.padding(vertical = 9.dp),
+                                            contentAlignment = Alignment.Center,
+                                        ) { Text(l.name, color = if (l.code == lang) Color.White else TextMuted, fontSize = 11.sp, maxLines = 1) }
+                                    }
+                                    repeat(3 - rowItems.size) { Spacer(Modifier.weight(1f)) }
                                 }
-                                repeat(3 - rowItems.size) { Spacer(Modifier.weight(1f)) }
                             }
                         }
+                    }) else null,
+                    first = true,
+                )
+                SetCard(
+                    "screen", if (de) "Akkusparmodus" else Tr.t(lang, "Battery saver"),
+                    if (de) "Keine Partikel, überall einfacher schwarzer Hintergrund" else Tr.t(lang, "No particles, plain black background everywhere"),
+                    onClick = { onAnim(!anim) },
+                    trailing = { SetSwitch(!anim) },
+                )
+                SetCard(
+                    "sound", if (de) "Klick-Sound" else Tr.t(lang, "Click sound"),
+                    if (de) "Kurzer Signalton bei Antippen (nicht im Sternenhimmel)" else Tr.t(lang, "Short signal sound on taps (not in the night sky)"),
+                    onClick = {
+                        clickOn = !clickOn
+                        prefs.edit().putBoolean("click", clickOn).apply()
+                        ClickSound.enabled = clickOn
+                    if (clickOn) ClickSound.play()
+                    },
+                    trailing = { SetSwitch(clickOn) },
+                )
+            }
+            GroupTitle(if (de) "Wiedergabe" else Tr.t(lang, "Playback"))
+            SetGroup {
+                SetCard(
+                    "screen", if (de) "Bildschirm anlassen" else Tr.t(lang, "Keep screen on"),
+                    if (de) "Display geht in der App nicht aus" else Tr.t(lang, "The display stays on while the app is open"),
+                    onClick = {
+                        keepOn = !keepOn
+                        prefs.edit().putBoolean("keepon", keepOn).apply()
+                        (ctx as? MainActivity)?.setKeepOn(keepOn)
+                    },
+                    trailing = { SetSwitch(keepOn) },
+                    first = true,
+                )
+                SetCard(
+                    "screen", if (de) "Bass-Reaktion im Cover" else Tr.t(lang, "Bass reaction in cover"),
+                    if (de) "Partikel reagieren auf die Musik (braucht Audio-Erlaubnis, nimmt nichts auf)" else Tr.t(lang, "Particles react to the music (needs audio permission, records nothing)"),
+                    onClick = {
+                        val on = !(bassOn && (ctx as? MainActivity)?.micGranted?.value == true)
+                        bassOn = on
+                        prefs.edit().putBoolean("bass", on).apply()
+                        if (on) (ctx as? MainActivity)?.askMic()
+                        if (!on) MusicBridge.vizSync(false)
+                    },
+                    trailing = { SetSwitch(bassOn && (ctx as? MainActivity)?.micGranted?.value == true) },
+                )
+            }
+            GroupTitle(if (de) "Daten & Speicher" else Tr.t(lang, "Data & storage"))
+            SetGroup {
+                run {
+                    val offBusy = OfflineStore.busy
+                    var offWifi by remember { mutableStateOf(prefs.getBoolean("off_wifi", true)) }
+                    val mb = "%.1f MB".format(OfflineStore.bytes / 1048576.0)
+                    val sub = when {
+                        offBusy -> (if (de) "Lädt" else Tr.t(lang, "Downloading")) + " … ${OfflineStore.pct}%"
+                        OfflineStore.failed -> if (de) "Fehlgeschlagen, tippen für neuen Versuch" else Tr.t(lang, "Failed, tap to retry")
+                        OfflineStore.ready -> (if (de) "Bereit" else Tr.t(lang, "Ready")) + " · $mb · v${prefs.getInt("off_pack", 1)}" + (prefs.getInt("off_miss", 0).let { if (it > 0) " · ⚠$it" else "" })
+                        else -> if (de) "Sternenhimmel funktioniert ohne Internet" else Tr.t(lang, "Night sky works without internet")
                     }
-                }) else null,
-            )
-            SetCard(
-                "screen", if (de) "Bildschirm anlassen" else Tr.t(lang, "Keep screen on"),
-                if (de) "Display geht in der App nicht aus" else Tr.t(lang, "The display stays on while the app is open"),
-                onClick = {
-                    keepOn = !keepOn
-                    prefs.edit().putBoolean("keepon", keepOn).apply()
-                    (ctx as? MainActivity)?.setKeepOn(keepOn)
-                },
-                trailing = { SetSwitch(keepOn) },
-            )
-            SetCard(
-                "screen", if (de) "Bass-Reaktion im Cover" else Tr.t(lang, "Bass reaction in cover"),
-                if (de) "Partikel reagieren auf die Musik (braucht Audio-Erlaubnis, nimmt nichts auf)" else Tr.t(lang, "Particles react to the music (needs audio permission, records nothing)"),
-                onClick = {
-                    val on = !(bassOn && (ctx as? MainActivity)?.micGranted?.value == true)
-                    bassOn = on
-                    prefs.edit().putBoolean("bass", on).apply()
-                    if (on) (ctx as? MainActivity)?.askMic()
-                    if (!on) MusicBridge.vizSync(false)
-                },
-                trailing = { SetSwitch(bassOn && (ctx as? MainActivity)?.micGranted?.value == true) },
-            )
-            SetCard(
-                "screen", if (de) "Akkusparmodus" else Tr.t(lang, "Battery saver"),
-                if (de) "Keine Partikel, überall einfacher schwarzer Hintergrund" else Tr.t(lang, "No particles, plain black background everywhere"),
-                onClick = { onAnim(!anim) },
-                trailing = { SetSwitch(!anim) },
-            )
-
-            run {
-                val offBusy = OfflineStore.busy
-                var offWifi by remember { mutableStateOf(prefs.getBoolean("off_wifi", true)) }
-                val mb = "%.1f MB".format(OfflineStore.bytes / 1048576.0)
-                val sub = when {
-                    offBusy -> (if (de) "Lädt" else Tr.t(lang, "Downloading")) + " … ${OfflineStore.pct}%"
-                    OfflineStore.failed -> if (de) "Fehlgeschlagen, tippen für neuen Versuch" else Tr.t(lang, "Failed, tap to retry")
-                    OfflineStore.ready -> (if (de) "Bereit" else Tr.t(lang, "Ready")) + " · $mb · v${prefs.getInt("off_pack", 1)}" + (prefs.getInt("off_miss", 0).let { if (it > 0) " · ⚠$it" else "" })
-                    else -> if (de) "Sternenhimmel funktioniert ohne Internet" else Tr.t(lang, "Night sky works without internet")
+                    SetCard(
+                        "info", if (de) "Offline-Inhalte" else Tr.t(lang, "Offline content"), sub,
+                        onClick = {
+                            if (!offBusy && !OfflineStore.ready) {
+                                if (!Offline.online) {
+                                    Toast.makeText(ctx, if (de) "Kein Internet" else Tr.t(lang, "No connection"), Toast.LENGTH_SHORT).show()
+                                } else if (offWifi && !OfflineStore.isUnmetered(ctx)) {
+                                    Toast.makeText(ctx, if (de) "Erst mit WLAN verbinden oder „Nur WLAN“ ausschalten" else Tr.t(lang, "Connect to Wi-Fi first, or switch off Wi-Fi only"), Toast.LENGTH_LONG).show()
+                                } else {
+                                    OfflineStore.update(ctx, offlinePages(lang)) { ok ->
+                                        if (ok) Toast.makeText(ctx, if (de) "Offline-Inhalte bereit" else Tr.t(lang, "Offline content is ready"), Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            }
+                        },
+                        trailing = { if (offBusy) CircularProgressIndicator(Modifier.size(20.dp), color = Accent, strokeWidth = 2.dp) else Text(if (OfflineStore.ready) "✓" else "↓", color = Accent, fontSize = 20.sp) },
+                        extra = {
+                            Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Row(Modifier.weight(1f).clickable { offWifi = !offWifi; prefs.edit().putBoolean("off_wifi", offWifi).apply() }, verticalAlignment = Alignment.CenterVertically) {
+                                    SetSwitch(offWifi)
+                                    Spacer(Modifier.size(8.dp))
+                                    Text(if (de) "Nur WLAN" else Tr.t(lang, "Wi-Fi only"), color = TextMuted, fontSize = 12.sp)
+                                }
+                                if (OfflineStore.ready && !offBusy) {
+                                    Text(if (de) "Löschen" else Tr.t(lang, "Delete"), color = Accent, fontSize = 13.sp, modifier = Modifier.clickable { OfflineStore.delete(ctx) }.padding(8.dp))
+                                }
+                            }
+                        },
+                        first = true,
+                    )
                 }
                 SetCard(
-                    "info", if (de) "Offline-Inhalte" else Tr.t(lang, "Offline content"), sub,
+                    "clean", if (de) "Zwischenspeicher leeren" else Tr.t(lang, "Clear cache"),
+                    if (de) "Gespeicherte Daten der Ansichten löschen" else Tr.t(lang, "Delete saved data of the views"),
                     onClick = {
-                        if (!offBusy && !OfflineStore.ready) {
-                            if (!Offline.online) {
-                                Toast.makeText(ctx, if (de) "Kein Internet" else Tr.t(lang, "No connection"), Toast.LENGTH_SHORT).show()
-                            } else if (offWifi && !OfflineStore.isUnmetered(ctx)) {
-                                Toast.makeText(ctx, if (de) "Erst mit WLAN verbinden oder „Nur WLAN“ ausschalten" else Tr.t(lang, "Connect to Wi-Fi first, or switch off Wi-Fi only"), Toast.LENGTH_LONG).show()
-                            } else {
-                                OfflineStore.update(ctx, offlinePages(lang)) { ok ->
-                                    if (ok) Toast.makeText(ctx, if (de) "Offline-Inhalte bereit" else Tr.t(lang, "Offline content is ready"), Toast.LENGTH_SHORT).show()
-                                }
-                            }
-                        }
-                    },
-                    trailing = { if (offBusy) CircularProgressIndicator(Modifier.size(20.dp), color = Accent, strokeWidth = 2.dp) else Text(if (OfflineStore.ready) "✓" else "↓", color = Accent, fontSize = 20.sp) },
-                    extra = {
-                        Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Row(Modifier.weight(1f).clickable { offWifi = !offWifi; prefs.edit().putBoolean("off_wifi", offWifi).apply() }, verticalAlignment = Alignment.CenterVertically) {
-                                SetSwitch(offWifi)
-                                Spacer(Modifier.size(8.dp))
-                                Text(if (de) "Nur WLAN" else Tr.t(lang, "Wi-Fi only"), color = TextMuted, fontSize = 12.sp)
-                            }
-                            if (OfflineStore.ready && !offBusy) {
-                                Text(if (de) "Löschen" else Tr.t(lang, "Delete"), color = Accent, fontSize = 13.sp, modifier = Modifier.clickable { OfflineStore.delete(ctx) }.padding(8.dp))
-                            }
-                        }
+                        try { WebView(ctx).apply { clearCache(true); destroy() } } catch (_: Exception) { }
+                        Toast.makeText(ctx, if (de) "Gelöscht" else Tr.t(lang, "Cleared"), Toast.LENGTH_SHORT).show()
                     },
                 )
             }
-
             GroupTitle("App")
-            SetCard(
-                "update", if (de) "Nach Updates suchen" else Tr.t(lang, "Check for updates"),
-                when (Updater.msg) {
-                    "…" -> if (de) "Suche läuft …" else Tr.t(lang, "Checking …")
-                    "ok" -> if (de) "Du hast die neueste Version" else Tr.t(lang, "You have the latest version")
-                    "?" -> if (de) "Keine Verbindung" else Tr.t(lang, "No connection")
-                    else -> "Version $version"
-                },
-                onClick = { Updater.check(ctx, true) },
-            )
-            SetCard(
-                "share", if (de) "App teilen" else Tr.t(lang, "Share app"), if (de) "Link an Freunde schicken" else Tr.t(lang, "Send the link to friends"),
-                onClick = {
-                    val i = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, BASE) }
-                    ctx.startActivity(Intent.createChooser(i, "Centaurian"))
-                },
-                trailing = { Text("↗", color = Accent, fontSize = 18.sp) },
-            )
-            SetCard(
-                "clean", if (de) "Zwischenspeicher leeren" else Tr.t(lang, "Clear cache"),
-                if (de) "Gespeicherte Daten der Ansichten löschen" else Tr.t(lang, "Delete saved data of the views"),
-                onClick = {
-                    try { WebView(ctx).apply { clearCache(true); destroy() } } catch (_: Exception) { }
-                    Toast.makeText(ctx, if (de) "Gelöscht" else Tr.t(lang, "Cleared"), Toast.LENGTH_SHORT).show()
-                },
-            )
-            SetCard(
-                "lock", if (de) "Berechtigungen" else Tr.t(lang, "Permissions"),
-                if (de) "Standort & Benachrichtigungen in Android" else Tr.t(lang, "Location and notifications in Android"),
-                onClick = {
-                    try {
-                        ctx.startActivity(Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + ctx.packageName)))
-                    } catch (_: Exception) { }
-                },
-                trailing = { Text("↗", color = Accent, fontSize = 18.sp) },
-            )
-            var diagOpen by remember { mutableStateOf(false) }
-            SetCard(
-                "chat", if (de) "Diagnose" else Tr.t(lang, "Diagnostics"),
-                if (diagOpen) lastExits(ctx) + "\n" + MusicBridge.logText() else "",
-                onClick = { diagOpen = !diagOpen },
-                trailing = { Text(if (diagOpen) "▴" else "▾", color = Accent, fontSize = 16.sp) },
-            )
-
-            GroupTitle("Support")
-            SetCard(
-                "chat", if (de) "Feedback senden" else Tr.t(lang, "Send feedback"),
-                if (de) "Fehler melden oder Ideen schicken" else Tr.t(lang, "Report a bug or share an idea"),
-                onClick = { onFeedback() },
-            )
-            SetCard(
-                "info", if (de) "Über die App" else Tr.t(lang, "About the app"),
-                if (de) "Was dich hier erwartet" else Tr.t(lang, "What to expect here"),
-                onClick = { onOpen(Screen.Info(aboutTitle(de, lang), aboutBody(lang))) },
-            )
-
+            SetGroup {
+                SetCard(
+                    "update", if (de) "Nach Updates suchen" else Tr.t(lang, "Check for updates"),
+                    when (Updater.msg) {
+                        "…" -> if (de) "Suche läuft …" else Tr.t(lang, "Checking …")
+                        "ok" -> if (de) "Du hast die neueste Version" else Tr.t(lang, "You have the latest version")
+                        "?" -> if (de) "Keine Verbindung" else Tr.t(lang, "No connection")
+                        else -> "Version $version"
+                    },
+                    onClick = { Updater.check(ctx, true) },
+                    first = true,
+                )
+                SetCard(
+                    "share", if (de) "App teilen" else Tr.t(lang, "Share app"), if (de) "Link an Freunde schicken" else Tr.t(lang, "Send the link to friends"),
+                    onClick = {
+                        val i = Intent(Intent.ACTION_SEND).apply { type = "text/plain"; putExtra(Intent.EXTRA_TEXT, BASE) }
+                        ctx.startActivity(Intent.createChooser(i, "Centaurian"))
+                    },
+                    trailing = { Text("↗", color = Accent, fontSize = 18.sp) },
+                )
+                SetCard(
+                    "lock", if (de) "Berechtigungen" else Tr.t(lang, "Permissions"),
+                    if (de) "Standort & Benachrichtigungen in Android" else Tr.t(lang, "Location and notifications in Android"),
+                    onClick = {
+                        try {
+                            ctx.startActivity(Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + ctx.packageName)))
+                        } catch (_: Exception) { }
+                    },
+                    trailing = { Text("↗", color = Accent, fontSize = 18.sp) },
+                )
+            }
+            GroupTitle(if (de) "Hilfe & Support" else Tr.t(lang, "Help & support"))
+            SetGroup {
+                SetCard(
+                    "chat", if (de) "Feedback senden" else Tr.t(lang, "Send feedback"),
+                    if (de) "Fehler melden oder Ideen schicken" else Tr.t(lang, "Report a bug or share an idea"),
+                    onClick = { onFeedback() },
+                    first = true,
+                )
+                SetCard(
+                    "info", if (de) "Über die App" else Tr.t(lang, "About the app"),
+                    if (de) "Was dich hier erwartet" else Tr.t(lang, "What to expect here"),
+                    onClick = { onOpen(Screen.Info(aboutTitle(de, lang), aboutBody(lang))) },
+                )
+                var diagOpen by remember { mutableStateOf(false) }
+                SetCard(
+                    "chat", "Diagnostics",
+                    if (diagOpen) lastExits(ctx) + "\n" + MusicBridge.logText() else "",
+                    onClick = { diagOpen = !diagOpen },
+                    trailing = { Text(if (diagOpen) "▴" else "▾", color = Accent, fontSize = 16.sp) },
+                )
+            }
             GroupTitle(if (de) "Kontakt" else Tr.t(lang, "Contact"))
             Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 listOf("plane" to "https://t.me/Perseus641", "x" to "https://x.com/capone_835").forEach { (ic, url) ->
                     Box(
-                        Modifier.weight(1f).height(64.dp).clip(RoundedCornerShape(16.dp))
+                        Modifier.weight(1f).height(46.dp).clip(RoundedCornerShape(16.dp))
                             .background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(Color(0x1FFF5A4D), Color(0x0DFFFFFF))))
                             .border(BorderStroke(1.dp, Accent.copy(alpha = 0.28f)), RoundedCornerShape(16.dp))
                             .clickable { open(url) },
                         contentAlignment = Alignment.Center,
                     ) {
                         Box(
-                            Modifier.size(40.dp).clip(RoundedCornerShape(12.dp)).background(Accent.copy(alpha = 0.16f))
-                                .border(BorderStroke(1.dp, Accent.copy(alpha = 0.4f)), RoundedCornerShape(12.dp)),
+                            Modifier.size(32.dp).clip(RoundedCornerShape(10.dp)).background(Accent.copy(alpha = 0.16f))
+                                .border(BorderStroke(1.dp, Accent.copy(alpha = 0.4f)), RoundedCornerShape(10.dp)),
                             contentAlignment = Alignment.Center,
-                        ) { SetIcon(ic) }
+                        ) { SetIcon(ic, 18.dp) }
                     }
                 }
             }
 
             GroupTitle(if (de) "Rechtliches" else Tr.t(lang, "Legal"))
-            SetCard(
-                "shield", if (de) "Datenschutzerklärung" else Tr.t(lang, "Privacy policy"),
-                onClick = { onOpen(Screen.Info(if (de) "Datenschutz" else Tr.t(lang, "Privacy"), Tr.privacy(lang))) },
-            )
-            SetCard(
-                "layers", if (de) "Quellen & Lizenzen" else Tr.t(lang, "Sources & licenses"),
-                onClick = {
-                    onOpen(
-                        Screen.Info(
-                            if (de) "Quellen & Lizenzen" else Tr.t(lang, "Sources & licenses"),
-                            (if (de) "Alle Daten stammen aus offenen, öffentlich dokumentierten Quellen:\n\n" else Tr.t(lang, "All data comes from open, publicly documented sources:\n\n")) +
-                                SOURCES.joinToString("\n") { "• ${it.first} — ${it.second}" },
-                        ),
-                    )
-                },
-            )
+            SetGroup {
+                SetCard(
+                    "shield", if (de) "Datenschutzerklärung" else Tr.t(lang, "Privacy policy"),
+                    onClick = { onOpen(Screen.Info(if (de) "Datenschutz" else Tr.t(lang, "Privacy"), Tr.privacy(lang))) },
+                    first = true,
+                )
+                SetCard(
+                    "layers", if (de) "Quellen & Lizenzen" else Tr.t(lang, "Sources & licenses"),
+                    onClick = {
+                        onOpen(
+                            Screen.Info(
+                                if (de) "Quellen & Lizenzen" else Tr.t(lang, "Sources & licenses"),
+                                (if (de) "Alle Daten stammen aus offenen, öffentlich dokumentierten Quellen:\n\n" else Tr.t(lang, "All data comes from open, publicly documented sources:\n\n")) +
+                                    SOURCES.joinToString("\n") { "• ${it.first} — ${it.second}" },
+                            ),
+                        )
+                    },
+                )
+            }
 
             Text(
                 "CENTAURIAN · centaurianspace.com",
