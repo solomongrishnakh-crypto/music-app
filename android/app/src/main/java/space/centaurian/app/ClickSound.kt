@@ -21,7 +21,7 @@ object ClickSound {
     fun init(ctx: Context) {
         if (pool != null) return
         try {
-            enabled = ctx.getSharedPreferences("cn", Context.MODE_PRIVATE).getBoolean("click", true)
+            enabled = ctx.getSharedPreferences("cn", Context.MODE_PRIVATE).getBoolean("click", false)
             val attrs = AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)

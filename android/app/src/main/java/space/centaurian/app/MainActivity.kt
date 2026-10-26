@@ -1659,7 +1659,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
     val prefs = remember { ctx.getSharedPreferences("cn", Context.MODE_PRIVATE) }
     var keepOn by remember { mutableStateOf(prefs.getBoolean("keepon", false)) }
     var bassOn by remember { mutableStateOf(prefs.getBoolean("bass", true)) }
-    var clickOn by remember { mutableStateOf(prefs.getBoolean("click", true)) }
+    var clickOn by remember { mutableStateOf(prefs.getBoolean("click", false)) }
     val cur = LANGS.first { it.code == lang }
     val version = try { ctx.packageManager.getPackageInfo(ctx.packageName, 0).versionName ?: "" } catch (_: Exception) { "" }
 
