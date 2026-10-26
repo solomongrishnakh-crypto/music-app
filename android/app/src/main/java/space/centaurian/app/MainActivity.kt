@@ -387,7 +387,9 @@ private fun nativeJs(hideNews: Boolean, anim: Boolean): String =
         "#space-news .grid>*{padding:10px!important;border-radius:12px!important;background:rgba(255,255,255,0.04)!important}" +
         "#space-news .grid p.label-mono{font-size:11px!important;margin-top:6px!important}" +
         "#space-news .grid p.line-clamp-3{font-size:14px!important;line-height:1.35!important;-webkit-line-clamp:5!important;min-height:0!important;text-transform:none!important;letter-spacing:0!important}" +
-        "#space-news>button{padding-bottom:14px!important}';}" +
+        "#space-news>button{padding-bottom:14px!important;pointer-events:none!important}" +
+        "#space-news>button span[aria-hidden]{display:none!important}" +
+        "html,body{background-color:#000!important}canvas{display:none!important}';}" +
         "function inj(d){try{if(!d||!d.head||d.getElementById('cn-native'))return;var s=d.createElement('style');" +
         "s.id='cn-native';s.textContent=css;d.head.appendChild(s);}catch(e){}}" +
         "function all(){inj(document);var f=document.querySelectorAll('iframe');" +
