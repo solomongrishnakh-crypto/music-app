@@ -4,6 +4,7 @@ import { ALL_LANGS, BASE_URL, hreflang, langPath } from "@/lib/seoI18n";
 import { SPACE_BODIES } from "@/components/space/bodies";
 import { CONSTELLATIONS } from "@/components/space/ConstView";
 import { FAMOUS } from "@/lib/famousObjects";
+import { STARS } from "@/lib/starPages";
 import { DESTS, VEHICLES, travelPath } from "@/lib/travelTime";
 
 /**
@@ -62,6 +63,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...withLangs("/maschine-der-ewigkeit", 0.7, "yearly"),
     ...deEn("/objekte", 0.8),
     ...FAMOUS.flatMap((o) => deEn(`/objekte/${o.id}`, 0.8)),
+    ...deEn("/sterne", 0.8),
+    ...STARS.flatMap((s) => deEn(`/sterne/${s[0]}`, 0.7)),
     ...withLangs("/sternbilder", 0.7, "monthly"),
     ...CONSTELLATIONS.flatMap((c) => withLangs(`/sternbilder/${c.slug}`, 0.6, "yearly")),
   ];
