@@ -694,7 +694,11 @@ private fun animJs(on: Boolean): String =
         "if(on||keep)continue;var cs=getComputedStyle(e);var big=e.offsetWidth>=innerWidth*0.9&&e.offsetHeight>=innerHeight*0.6;" +
         "var fx=cs.position==='fixed';for(var p=e.parentElement;!fx&&p&&p!==document.body;p=p.parentElement){if(getComputedStyle(p).position==='fixed')fx=true;}" +
         "if(cs.position==='fixed'||(fx&&big)||(cs.pointerEvents==='none'&&big)){e.style.setProperty('display','none','important');e.dataset.cnh='1';}}" +
-        "if(!on&&!keep){if(!de.dataset.bgpause){de.dataset.bgpause='freeze';window.__cnFz=1;}}else if(window.__cnFz){delete de.dataset.bgpause;window.__cnFz=0;}};" +
+        "var st=document.getElementById('cn-still');" +
+        "if(!on&&!keep){if(!de.dataset.bgpause){de.dataset.bgpause='freeze';window.__cnFz=1;}" +
+        "if(de.dataset.overlay!=='1'){de.dataset.overlay='1';window.__cnOv=1;}" +
+        "if(!st){st=document.createElement('style');st.id='cn-still';st.textContent='*:not([class*=spin]),*:not([class*=spin])::before,*:not([class*=spin])::after{animation:none!important}';(document.head||de).appendChild(st);}}" +
+        "else{if(window.__cnFz){delete de.dataset.bgpause;window.__cnFz=0;}if(window.__cnOv){delete de.dataset.overlay;window.__cnOv=0;}if(st)st.remove();}};" +
         "f();if(!window.__cnAnimIv)window.__cnAnimIv=setInterval(f,700);" +
         "var o=document.getElementById('cn-anim');if(o)o.remove();" +
         (if (on) "" else "if(!keep){var s=document.createElement('style');s.id='cn-anim';s.textContent='html,body{background:#000!important}';(document.head||document.documentElement).appendChild(s);}") +
