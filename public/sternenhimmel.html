@@ -324,7 +324,25 @@ function buildStarArrays() {
   SEX = new Float32Array(n); SEY = new Float32Array(n); SSD = new Float32Array(n); SMAG = new Float32Array(n);
   for (let i = 0; i < n; i++) { const t = stars[i]; SEX[i] = t.cd * Math.cos(t.ra); SEY[i] = t.cd * Math.sin(t.ra); SSD[i] = t.sd; SMAG[i] = t.mag; }
 }
+// Echte Farben der bekannten Sterne (27.10.2026): Farbindex B-V nach Messwerten,
+// Zuordnung über die Position (die Kataloge liefern bei manchen Sternen keinen/falschen Wert)
+function applyKnownStars() {
+  const T = [[101.287,-16.716,0.00],[95.988,-52.696,0.15],[213.915,19.182,1.23],[279.235,38.784,0.00],[79.172,45.998,0.80],
+    [78.634,-8.202,-0.03],[114.825,5.225,0.42],[88.793,7.407,1.85],[24.429,-57.237,-0.16],[210.956,-60.373,-0.23],
+    [297.696,8.868,0.22],[186.650,-63.099,-0.24],[68.980,16.509,1.54],[247.352,-26.432,1.83],[201.298,-11.161,-0.23],
+    [116.329,28.026,1.00],[344.413,-29.622,0.09],[310.358,45.280,0.09],[152.093,11.967,-0.11],[81.283,6.350,-0.22],
+    [86.939,-9.670,-0.17],[85.190,-1.943,-0.21],[84.053,-1.202,-0.18],[83.002,-0.299,-0.22],[191.930,-59.689,-0.23],
+    [113.650,31.888,0.03],[81.573,28.608,-0.13],[83.784,9.934,-0.16],[165.932,61.751,1.07],[193.507,55.960,-0.02]];
+  const n = stars.length;
+  for (const [ra, dec, bv] of T) {
+    const r = ra * DEG, d = dec * DEG, x = Math.cos(d) * Math.cos(r), y = Math.cos(d) * Math.sin(r), z = Math.sin(d);
+    let best = -1, bd = Math.cos(0.12 * DEG);
+    for (let i = 0; i < n; i++) { const dd = SEX[i] * x + SEY[i] * y + SSD[i] * z; if (dd > bd) { bd = dd; best = i; } }
+    if (best >= 0) { const t = stars[best]; t.bv = bv; t.col = bvColor(bv); t.c2 = null; t.css = null; }
+  }
+}
 buildStarArrays();
+applyKnownStars();
 // Großer Katalog nachladen: HYG-Datenbank (CC BY-SA 4.0), ~108.000 Sterne bis 10 mag,
 // mit Entfernung, Spektraltyp, Katalognummern. Bis dahin reicht der eingebaute.
 const SPC = "OBAFGKMWCSNDLTY";
@@ -351,7 +369,7 @@ const LUMC = ["", "Ia0", "Ia", "Iab", "Ib", "II", "III", "IV", "V", "VI", "D"];
         hip, des: x ? x[0] : "", vr: x ? x[1] : "", hd: x ? x[2] : "",
       };
     }
-    stars = arr; visStars.length = 0; buildStarArrays();
+    stars = arr; visStars.length = 0; buildStarArrays(); applyKnownStars();
   } catch (e) { /* offline / Vorschau: eingebauter Katalog bleibt */ }
 })();
 
@@ -1234,6 +1252,8 @@ function drawDSOs(fade) {
     if (w > 28) a = Math.min(1, a + 0.3); // herangezoomt: kräftiger, wie auf Fotos
     a *= fade * (under ? 0.4 : 1);
     if (o.t === "oc" || o.t === "pos") a *= 0.6;
+    // Orion-Nebel (27.10.2026): aus der Ferne deutlich schwächer, erst beim Hineinzoomen kräftiger
+    if (o.id === "M42" || o.id === "M43" || o.id === "M78" || o.id === "NGC 1977" || o.id === "NGC 2024") a *= 0.3 + 0.5 * Math.max(0, Math.min(1, (w - 60) / 240));
     if (o.id === "M45") {
       // Plejaden (18.10.2026): mit blossem Auge nur ein schwacher Schimmer um die Sterne; der blaue
       // Reflexionsnebel und seine Struktur erscheinen erst beim Hineinzoomen
@@ -1574,7 +1594,7 @@ function draw() {
   const starFade = S.atmo ? Math.pow(1 - day, 3) : 1; // Linien, Milchstraße, Nebel: erst bei echter Dunkelheit
   // Nutzerwunsch 06.10.2026: bei 1× nur die gut sichtbaren Sterne, schwache und
   // ferne kommen beim Hineinzoomen gleitend dazu (weiche Einblendung, kein Aufblitzen)
-  const nightLimit = Math.min(10.5, 7.0 + 1.9 * Math.log2(72 * DEG / S.fov) - (W * H < 600000 ? 0.2 : 0)) - 1.6 * moonLit;
+  const nightLimit = Math.min(10.5, 5.7 + 2.0 * Math.log2(72 * DEG / S.fov) - (W * H < 600000 ? 0.2 : 0)) - 1.6 * moonLit;
   // Tag/Dämmerung: nur die hellsten Sterne bleiben (am Tag ca. 1 mag → gut ein Dutzend)
   const dayK = S.atmo ? day : 0;
   const magLimit = dayK > 0 ? nightLimit + (1.1 - nightLimit) * Math.sqrt(dayK) : nightLimit;
@@ -1667,6 +1687,9 @@ function draw() {
     // Plejaden (26.10.2026): die Haufensterne etwas dunkler und ohne Leuchthof: einzelne scharfe Sterne wie mit blossem Auge, kein heller Nebel
     if (s.pl === undefined) { const dd = Math.asin(s.sd) - 24.1 * DEG, dr = (s.ra - 56.75 * DEG) * 0.913; s.pl = Math.hypot(dd, dr) < 2.2 * DEG; }
     if (s.pl) mag += 0.35;
+    // Oriongürtel (27.10.2026): die drei Gürtelsterne klar und etwas heller
+    if (s.bt === undefined) { s.bt = false; if (s.mag < 3) { const dd = Math.asin(s.sd) / DEG; for (const [br, bd] of [[85.190, -1.943], [84.053, -1.202], [83.002, -0.299]]) { const dr = (s.ra / DEG - br) * s.cd; if (Math.hypot(dr, dd - bd) < 0.15) s.bt = true; } } }
+    if (s.bt) mag -= 0.7;
     if (S.atmo && !under) {
       const h = Math.max(0, tmpV[2]);
       airX = 1 / (h + 0.025 * Math.exp(-11 * h));
