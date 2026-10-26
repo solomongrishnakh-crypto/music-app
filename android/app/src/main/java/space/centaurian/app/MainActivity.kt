@@ -526,7 +526,7 @@ private fun AppRoot() {
     var screen by remember { mutableStateOf<Screen>(Screen.Home) }
     var webBack by remember { mutableStateOf<Screen>(Screen.Home) }
     var returnTo by remember { mutableStateOf<Screen?>(null) }
-    val anim = true
+    var anim by remember { mutableStateOf(!prefs.getBoolean("saver", false)) }
     val drawer = rememberDrawerState(DrawerValue.Closed)
     val scope = rememberCoroutineScope()
     val de = lang == "de"
@@ -610,7 +610,7 @@ private fun AppRoot() {
                         prefs.edit().putString("lang", code).apply()
                         lang = code
                     },
-                    onAnim = { },
+                    onAnim = { on -> anim = on; prefs.edit().putBoolean("saver", !on).apply() },
                     onFeedback = { homeCmd("!fb") },
                     onOpen = { webBack = Screen.Settings; screen = it },
                 )
@@ -1695,6 +1695,12 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                     if (!on) MusicBridge.vizSync(false)
                 },
                 trailing = { SetSwitch(bassOn && (ctx as? MainActivity)?.micGranted?.value == true) },
+            )
+            SetCard(
+                "screen", if (de) "Akkusparmodus" else Tr.t(lang, "Battery saver"),
+                if (de) "Keine Partikel, überall einfacher schwarzer Hintergrund" else Tr.t(lang, "No particles, plain black background everywhere"),
+                onClick = { onAnim(!anim) },
+                trailing = { SetSwitch(!anim) },
             )
 
             run {
