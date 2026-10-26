@@ -687,10 +687,13 @@ private fun AppRoot() {
 // ---------------------------------------------------------------- Startseite = echte Webseite
 private fun animJs(on: Boolean): String =
     "(function(){try{window.__cnAnim=" + on + ";" +
-        "var keep=/sternenhimmel|night-sky|sternbilder|constellations|himmel-heute|sky-today|sonnensystem|solar-system/.test(location.pathname);" +
-        "var f=function(){var on=window.__cnAnim;var c=document.querySelectorAll('canvas');for(var i=0;i<c.length;i++){var e=c[i];var cs=getComputedStyle(e);" +
-        "var bg=cs.position==='fixed'||(cs.pointerEvents==='none'&&e.offsetWidth>=innerWidth*0.9&&e.offsetHeight>=innerHeight*0.6);" +
-        "if(!bg)continue;if(on||keep){if(e.dataset.cnh){e.style.removeProperty('display');delete e.dataset.cnh;}}else{e.style.setProperty('display','none','important');e.dataset.cnh='1';}}};" +
+        "var kp=function(){return /sternenhimmel|night-sky|sternbilder|constellations|himmel-heute|sky-today|sonnensystem|solar-system/.test(location.pathname);};var keep=kp();" +
+        "var f=function(){var on=window.__cnAnim;var keep=kp();var de=document.documentElement;var c=document.querySelectorAll('canvas');for(var i=0;i<c.length;i++){var e=c[i];" +
+        "if(e.dataset.cnh){if(on||keep){e.style.removeProperty('display');delete e.dataset.cnh;}continue;}" +
+        "if(on||keep)continue;var cs=getComputedStyle(e);var big=e.offsetWidth>=innerWidth*0.9&&e.offsetHeight>=innerHeight*0.6;" +
+        "var fx=cs.position==='fixed';for(var p=e.parentElement;!fx&&p&&p!==document.body;p=p.parentElement){if(getComputedStyle(p).position==='fixed')fx=true;}" +
+        "if(cs.position==='fixed'||(fx&&big)||(cs.pointerEvents==='none'&&big)){e.style.setProperty('display','none','important');e.dataset.cnh='1';}}" +
+        "if(!on&&!keep){if(!de.dataset.bgpause){de.dataset.bgpause='freeze';window.__cnFz=1;}}else if(window.__cnFz){delete de.dataset.bgpause;window.__cnFz=0;}};" +
         "f();if(!window.__cnAnimIv)window.__cnAnimIv=setInterval(f,700);" +
         "var o=document.getElementById('cn-anim');if(o)o.remove();" +
         (if (on) "" else "if(!keep){var s=document.createElement('style');s.id='cn-anim';s.textContent='html,body{background:#000!important}';(document.head||document.documentElement).appendChild(s);}") +
