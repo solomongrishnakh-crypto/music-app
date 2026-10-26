@@ -1686,7 +1686,7 @@ function draw() {
     let mag = s.mag, red = 0, airX = 1;
     // Plejaden (26.10.2026): die Haufensterne etwas dunkler und ohne Leuchthof: einzelne scharfe Sterne wie mit blossem Auge, kein heller Nebel
     if (s.pl === undefined) { const dd = Math.asin(s.sd) - 24.1 * DEG, dr = (s.ra - 56.75 * DEG) * 0.913; s.pl = Math.hypot(dd, dr) < 2.2 * DEG; }
-    if (s.pl) mag += 0.35;
+    if (s.pl) mag -= 0.9; // 27.10.2026: wie mit blossem Auge – 6 bis 7 Sterne klar erkennbar, auch bei 1×
     // Oriongürtel (27.10.2026): die drei Gürtelsterne klar und etwas heller
     if (s.bt === undefined) { s.bt = false; if (s.mag < 3) { const dd = Math.asin(s.sd) / DEG; for (const [br, bd] of [[85.190, -1.943], [84.053, -1.202], [83.002, -0.299]]) { const dr = (s.ra / DEG - br) * s.cd; if (Math.hypot(dr, dd - bd) < 0.15) s.bt = true; } } }
     if (s.bt) mag -= 0.7;
