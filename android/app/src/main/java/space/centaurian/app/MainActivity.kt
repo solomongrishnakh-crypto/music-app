@@ -698,7 +698,7 @@ private fun animJs(on: Boolean): String =
         "if(!on&&!keep){if(!de.dataset.bgpause){de.dataset.bgpause='freeze';window.__cnFz=1;}" +
         "var cc=document.querySelectorAll('canvas'),fresh=false;for(var j=0;j<cc.length;j++){var r=cc[j].getBoundingClientRect();" +
         "if(r.width>0&&r.bottom>0&&r.top<innerHeight){var sn=cc[j].dataset.cnSeen;if(sn==='1')continue;fresh=true;cc[j].dataset.cnSeen=(sn==='0')?'1':'0';}}" +
-        "if(fresh){if(window.__cnOv){delete de.dataset.overlay;window.__cnOv=0;}}else if(de.dataset.overlay!=='1'){de.dataset.overlay='1';window.__cnOv=1;}" +
+        "if(fresh||document.getElementById('maschine')){if(window.__cnOv){delete de.dataset.overlay;window.__cnOv=0;}}else if(de.dataset.overlay!=='1'){de.dataset.overlay='1';window.__cnOv=1;}" +
         "if(!st){st=document.createElement('style');st.id='cn-still';st.textContent='*:not([class*=spin]),*:not([class*=spin])::before,*:not([class*=spin])::after{animation:none!important}';(document.head||de).appendChild(st);}}" +
         "else{if(window.__cnFz){delete de.dataset.bgpause;window.__cnFz=0;}if(window.__cnOv){delete de.dataset.overlay;window.__cnOv=0;}if(st)st.remove();}};" +
         "f();if(!window.__cnAnimIv)window.__cnAnimIv=setInterval(f,700);" +
