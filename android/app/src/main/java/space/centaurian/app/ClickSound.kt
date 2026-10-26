@@ -14,7 +14,8 @@ object ClickSound {
     @Volatile var muted = false
     private var pool: SoundPool? = null
     private var id = 0
-    private var ready = false
+    private var idBack = 0
+    private val ready = java.util.Collections.synchronizedSet(HashSet<Int>())
     private var last = 0L
 
     fun init(ctx: Context) {
@@ -26,24 +27,26 @@ object ClickSound {
                 .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
                 .build()
             val p = SoundPool.Builder().setMaxStreams(2).setAudioAttributes(attrs).build()
-            p.setOnLoadCompleteListener { _, _, status -> ready = status == 0 }
+            p.setOnLoadCompleteListener { _, sampleId, status -> if (status == 0) ready.add(sampleId) }
             id = p.load(ctx.applicationContext, R.raw.click_signal, 1)
+            idBack = p.load(ctx.applicationContext, R.raw.click_back, 1)
             pool = p
         } catch (_: Exception) { }
     }
 
-    fun play() {
-        if (!enabled || muted || !ready) return
+    fun play(back: Boolean = false) {
+        val sid = if (back) idBack else id
+        if (!enabled || muted || !ready.contains(sid)) return
         val now = System.currentTimeMillis()
         if (now - last < 60) return
         last = now
-        try { pool?.play(id, 0.5f, 0.5f, 1, 0, 1f) } catch (_: Exception) { }
+        try { pool?.play(sid, 0.5f, 0.5f, 1, 0, 1f) } catch (_: Exception) { }
     }
 }
 
 /** Wie clickable, spielt aber zusaetzlich den Klick-Sound. */
-fun Modifier.clickable(enabled: Boolean = true, onClick: () -> Unit): Modifier =
-    this.foundationClickable(enabled = enabled) { ClickSound.play(); onClick() }
+fun Modifier.clickable(enabled: Boolean = true, back: Boolean = false, onClick: () -> Unit): Modifier =
+    this.foundationClickable(enabled = enabled) { ClickSound.play(back); onClick() }
 
 fun Modifier.clickable(interactionSource: MutableInteractionSource?, indication: Indication?, enabled: Boolean = true, onClick: () -> Unit): Modifier =
     this.foundationClickable(interactionSource = interactionSource, indication = indication, enabled = enabled) { ClickSound.play(); onClick() }

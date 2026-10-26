@@ -134,6 +134,7 @@ object MusicBridge {
         @JavascriptInterface fun playing(): Boolean = MusicBridge.playing
         @JavascriptInterface fun want(): Boolean = MusicBridge.want
         @JavascriptInterface fun click() { ClickSound.play() }
+        @JavascriptInterface fun clickBack() { ClickSound.play(true) }
         @JavascriptInterface fun resume(): Boolean = MusicBridge.want && MusicBridge.guard && !MusicBridge.userPaused
         @JavascriptInterface fun cmd(): String { val c = cmd; cmd = ""; return c }
     }

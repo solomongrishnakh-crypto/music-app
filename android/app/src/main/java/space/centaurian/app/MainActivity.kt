@@ -545,6 +545,7 @@ private fun AppRoot() {
     }
 
     BackHandler(enabled = screen != Screen.Home) {
+        ClickSound.play(true)
         val cur = screen
         screen = if (cur is Screen.Info) cur.backTo else Screen.Home
     }
@@ -637,6 +638,7 @@ private fun AppRoot() {
         }
     }
     BackHandler(enabled = returnTo != null && screen == Screen.Home) {
+        ClickSound.play(true)
         MusicBridge.web?.evaluateJavascript("var b=document.querySelector('div.mx-auto.max-w-2xl.flex-col.items-center button.self-start');if(b)b.click();", null)
         val r = returnTo
         returnTo = null
@@ -682,7 +684,7 @@ private fun AppRoot() {
             },
         )
     }
-    BackHandler(enabled = drawer.currentValue == DrawerValue.Open) { scope.launch { drawer.close() } }
+    BackHandler(enabled = drawer.currentValue == DrawerValue.Open) { ClickSound.play(true); scope.launch { drawer.close() } }
 }
 
 // ---------------------------------------------------------------- Startseite = echte Webseite
@@ -702,7 +704,7 @@ private fun animJs(on: Boolean): String =
         "if(!st){st=document.createElement('style');st.id='cn-still';st.textContent='*:not([class*=spin]),*:not([class*=spin])::before,*:not([class*=spin])::after{animation:none!important}';(document.head||de).appendChild(st);}}" +
         "else{if(window.__cnFz){delete de.dataset.bgpause;window.__cnFz=0;}if(window.__cnOv){delete de.dataset.overlay;window.__cnOv=0;}if(st)st.remove();}};" +
         "f();if(!window.__cnAnimIv)window.__cnAnimIv=setInterval(f,700);" +
-        "if(!window.__cnClick){window.__cnClick=1;document.addEventListener('click',function(e){try{var t=e.target&&e.target.closest&&e.target.closest('a,button,[role=button],summary,label,input,select');if(t&&window.CenNative&&CenNative.click)CenNative.click();}catch(x){}},true);}" +
+        "if(!window.__cnClick){window.__cnClick=1;document.addEventListener('click',function(e){try{var t=e.target&&e.target.closest&&e.target.closest('a,button,[role=button],summary,label,input,select');if(t&&window.CenNative){var tx=(t.textContent||'').trim();var bk=t.getAttribute('aria-expanded')==='true'||(tx.length<24&&(tx.charAt(0)==='\u2190'||tx.charAt(0)==='\u2039'));if(bk&&CenNative.clickBack)CenNative.clickBack();else if(CenNative.click)CenNative.click();}}catch(x){}},true);}" +
         "var o=document.getElementById('cn-anim');if(o)o.remove();" +
         (if (on) "" else "if(!keep){var s=document.createElement('style');s.id='cn-anim';s.textContent='html,body{background:#000!important}';(document.head||document.documentElement).appendChild(s);}") +
         "}catch(e){}})()"
@@ -919,7 +921,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
         }
     }
     LaunchedEffect(anim) { web?.evaluateJavascript(animJs(anim), null) }
-    BackHandler(enabled = visible && canBack) { web?.goBack() }
+    BackHandler(enabled = visible && canBack) { ClickSound.play(true); web?.goBack() }
     LaunchedEffect(searchReq) {
         val r = searchReq ?: return@LaunchedEffect
         val w = web ?: return@LaunchedEffect
@@ -1079,12 +1081,12 @@ private fun LoadingCover(lang: String) {
 }
 
 @Composable
-private fun TopBar(title: String, icon: @Composable () -> Unit, onIcon: () -> Unit, onTitle: (() -> Unit)? = null) {
+private fun TopBar(title: String, icon: @Composable () -> Unit, onIcon: () -> Unit, onTitle: (() -> Unit)? = null, back: Boolean = false) {
     Row(
         Modifier.fillMaxWidth().background(Color(0xB3030206)).statusBarsPadding().height(48.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(48.dp).clickable { onIcon() }, contentAlignment = Alignment.Center) { icon() }
+        Box(Modifier.size(48.dp).clickable(back = back) { onIcon() }, contentAlignment = Alignment.Center) { icon() }
         Text(
             title.uppercase(),
             color = TextMain,
@@ -1247,7 +1249,7 @@ private fun DrawerContent(
                         Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp).clip(RoundedCornerShape(10.dp))
                             .background(androidx.compose.ui.graphics.Brush.horizontalGradient(if (isOpen) listOf(Color(0x44FF5A4D), Color(0x0FFF5A4D)) else listOf(Color(0x1AFFFFFF), Color(0x05FFFFFF))))
                             .border(BorderStroke(1.dp, if (isOpen) Accent.copy(alpha = 0.35f + 0.45f * pulse) else LineSoft), RoundedCornerShape(10.dp))
-                            .clickable { if (q.isBlank()) openGroup = if (isOpen) null else title }
+                            .clickable(back = isOpen) { if (q.isBlank()) openGroup = if (isOpen) null else title }
                             .padding(horizontal = 14.dp, vertical = 11.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -1387,6 +1389,7 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
     }
 
     BackHandler(enabled = true) {
+        ClickSound.play(true)
         val w = web
         if (w != null && w.canGoBack()) w.goBack() else onBack()
     }
@@ -1402,7 +1405,7 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
             TopBar(s.title, { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, {
                 val w = web
                 if (w != null && w.canGoBack()) w.goBack() else onBack()
-            }, onTitle = onHome)
+            }, onTitle = onHome, back = true)
         }
         if (progress in 1..99) {
             LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth().height(2.dp), color = Accent, trackColor = Color.Transparent)
@@ -1615,11 +1618,12 @@ private fun SetCard(
     trailing: @Composable () -> Unit = { Text("›", color = Accent, fontSize = 20.sp) },
     extra: (@Composable () -> Unit)? = null,
     first: Boolean = false,
+    closing: Boolean = false,
 ) {
     Column(Modifier.fillMaxWidth()) {
         if (!first) Box(Modifier.fillMaxWidth().padding(start = 56.dp).height(1.dp).background(Accent.copy(alpha = 0.14f)))
         Row(
-            Modifier.fillMaxWidth().then(if (onClick != null) Modifier.clickable { onClick() } else Modifier).padding(horizontal = 12.dp, vertical = 9.dp),
+            Modifier.fillMaxWidth().then(if (onClick != null) Modifier.clickable(back = closing) { onClick() } else Modifier).padding(horizontal = 12.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
@@ -1665,7 +1669,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
 
     Box(Modifier.fillMaxSize().background(BgDark)) {
     Column(Modifier.fillMaxSize()) {
-        TopBar(if (de) "Einstellungen" else Tr.t(lang, "Settings"), { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack)
+        TopBar(if (de) "Einstellungen" else Tr.t(lang, "Settings"), { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack, back = true)
         Column(Modifier.fillMaxSize().navigationBarsPadding().verticalScroll(rememberScrollState())) {
             Row(Modifier.fillMaxWidth().padding(horizontal = 18.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Image(painterResource(R.mipmap.ic_launcher_foreground), contentDescription = null, modifier = Modifier.size(44.dp))
@@ -1681,6 +1685,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                 SetCard(
                     "lang", if (de) "Sprache" else Tr.t(lang, "Language"), cur.name,
                     onClick = { langOpen = !langOpen },
+                closing = langOpen,
                     trailing = { Text(if (langOpen) "−" else "+", color = Accent, fontSize = 20.sp) },
                     extra = if (langOpen) ({
                         Column(Modifier.padding(start = 10.dp, end = 10.dp, bottom = 12.dp)) {
@@ -1848,6 +1853,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                     "chat", "Diagnostics",
                     if (diagOpen) lastExits(ctx) + "\n" + MusicBridge.logText() else "",
                     onClick = { diagOpen = !diagOpen },
+                closing = diagOpen,
                     trailing = { Text(if (diagOpen) "▴" else "▾", color = Accent, fontSize = 16.sp) },
                 )
             }
@@ -1904,7 +1910,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
 @Composable
 private fun ToolsHub(de: Boolean, lang: String, onBack: () -> Unit, onOpen: (Section) -> Unit) {
     Column(Modifier.fillMaxSize()) {
-        TopBar(if (de) "Werkzeuge" else Tr.t(lang, "Tools"), { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack)
+        TopBar(if (de) "Werkzeuge" else Tr.t(lang, "Tools"), { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack, back = true)
         Column(Modifier.fillMaxSize().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(top = 10.dp, bottom = 20.dp)) {
             TOOLS.forEachIndexed { i, sec ->
                 NumberedCard(i + 1, if (de) sec.de else sec.en, if (de) sec.descDe else sec.descEn) { onOpen(sec) }
@@ -1934,7 +1940,7 @@ private fun InfoScreen(title: String, body: String, onBack: () -> Unit) {
         }
     }
     Column(Modifier.fillMaxSize()) {
-        TopBar(title, { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack)
+        TopBar(title, { Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = TextMain) }, onBack, back = true)
         Text(
             styled,
             color = TextMain, fontSize = 15.sp, lineHeight = 24.sp,
