@@ -104,6 +104,9 @@ const EMPIRE_NAME_KEYWORDS = [
 
 function isEmpireName(name: string): boolean {
   const lower = name.toLowerCase();
+  // 27.10.2026: Sammelgebiete wie "Holy Roman Empire Minor States" (viele kleine
+  // Fürstentümer) sind kein "Großes Imperium", auch wenn "Empire" im Namen steht.
+  if (/minor states|\bstatelets?\b|principalities/.test(lower)) return false;
   return EMPIRE_NAME_KEYWORDS.some((kw) => lower.includes(kw));
 }
 
