@@ -51,6 +51,8 @@ function Icon({ d }: { d: string }) {
   );
 }
 
+// Reihenfolge der Funktionen: Sternenhimmel, Universum, Weltgeschichte, Musik, Werkzeuge
+const FEAT_ORDER = [2, 1, 3, 0, 4];
 const FEAT_ICONS = [
   "M9 18V5l12-2v13M9 18a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm12-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z",
   "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18Zm0 0c2.5 2.4 4 5.6 4 9s-1.5 6.6-4 9m0-18c-2.5 2.4-4 5.6-4 9s1.5 6.6 4 9M3 12h18",
@@ -90,12 +92,12 @@ export default function AppView({ lang }: { lang: Lang }) {
         <Link href={langPath("/", lang)} className="hover:text-accent">{a[I.back]}</Link>
       </nav>
 
-      <header className="app-hero relative overflow-hidden border border-accent/40 bg-surface-elevated p-6 sm:p-10">
+      <header className="app-hero relative overflow-hidden border border-accent/40 bg-surface-elevated p-5 sm:p-8">
         <div className="app-orbit" aria-hidden="true"><i /><i /><i /></div>
         <p className="label-mono relative text-xs uppercase tracking-[0.3em] text-accent">Android · APK · 2026</p>
         <h1 className="relative mt-3 font-display text-3xl font-bold text-foreground sm:text-5xl">{a[I.title]}</h1>
-        <p className="relative mt-5 max-w-xl leading-relaxed text-foreground/90">{a[I.lead]}</p>
-        <div className="relative mt-7 flex flex-wrap items-center gap-4">
+        <p className="relative mt-4 max-w-xl text-sm leading-relaxed text-foreground/90 sm:text-base">{a[I.lead]}</p>
+        <div className="relative mt-6 flex flex-wrap items-center gap-3">
           <a
             href={APK_URL}
             rel="noopener"
@@ -110,93 +112,89 @@ export default function AppView({ lang }: { lang: Lang }) {
         </div>
       </header>
 
-      <section className="mt-10">
-        <h2 className="app-h font-display text-xl font-bold text-foreground">{a[I.hHow]}</h2>
-        <ol className="app-flow mt-4 grid gap-3 sm:grid-cols-3">
-          {pairs(a, I.how, 3).map(([h, p], i) => (
-            <li key={h} className="relative border border-border bg-surface-elevated p-4">
-              <span className="label-mono text-xs text-accent">0{i + 1}</span>
-              <h3 className="mt-1 font-bold text-foreground">{h}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-foreground/80">{p}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      <section className="mt-10">
-        <h2 className="app-h font-display text-xl font-bold text-foreground">{a[I.hFeat]}</h2>
-        <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-          {feats.map(([h, p], i) => (
-            <li key={h} className={"flex gap-3 border border-border bg-surface-elevated p-4" + (i === 4 ? " sm:col-span-2" : "")}>
-              <Icon d={FEAT_ICONS[i]} />
-              <div>
-                <h3 className="font-bold text-foreground">{h}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-foreground/80">{p}</p>
-              </div>
-            </li>
-          ))}
+      <section className="mt-8">
+        <h2 className="app-h font-display text-lg font-bold text-foreground">{a[I.hFeat]}</h2>
+        <ul className="mt-3 grid grid-cols-2 gap-2">
+          {FEAT_ORDER.map((k, n) => {
+            const [h, p] = feats[k];
+            return (
+              <li key={h} className={"flex gap-2.5 border border-border bg-surface-elevated p-3" + (n === FEAT_ORDER.length - 1 ? " col-span-2" : "")}>
+                <Icon d={FEAT_ICONS[k]} />
+                <div className="min-w-0">
+                  <h3 className="text-sm font-bold text-foreground">{h}</h3>
+                  <p className="mt-0.5 line-clamp-2 text-xs leading-snug text-foreground/75">{p}</p>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       </section>
 
-      <section className="mt-10">
-        <h2 className="app-h font-display text-xl font-bold text-foreground">{a[I.hSteps]}</h2>
-        <ol className="mt-4 space-y-3">
-          {steps.map(([h, p], i) => (
-            <li key={h} className="flex gap-4 border border-border bg-surface-elevated p-4">
-              <span className="label-mono flex h-8 w-8 shrink-0 items-center justify-center border border-accent text-sm text-accent">{i + 1}</span>
-              <div>
-                <h3 className="font-bold text-foreground">{h}</h3>
-                <p className="mt-1 text-sm leading-relaxed text-foreground/80">{p}</p>
+      <section className="mt-8">
+        <h2 className="app-h font-display text-lg font-bold text-foreground">{a[I.hSteps]}</h2>
+        <ol className="mt-3 space-y-2">
+          {steps.slice(0, 3).map(([h, p], i) => (
+            <li key={h} className="flex gap-3 border border-border bg-surface-elevated p-3">
+              <span className="label-mono flex h-7 w-7 shrink-0 items-center justify-center border border-accent text-sm text-accent">{i + 1}</span>
+              <div className="min-w-0">
+                <h3 className="text-sm font-bold text-foreground">{h}</h3>
+                <p className="mt-0.5 text-xs leading-snug text-foreground/75">{p}</p>
               </div>
             </li>
           ))}
         </ol>
-        <p className="mt-3 text-xs leading-relaxed text-muted">{a[I.note]}</p>
+        <p className="mt-2 text-xs leading-relaxed text-muted">{a[I.note]}</p>
       </section>
 
-      <section className="mt-10">
-        <h2 className="app-h font-display text-xl font-bold text-foreground">{a[I.hPerm]}</h2>
-        <p className="mt-2 text-sm leading-relaxed text-foreground/85">{a[I.permIntro]}</p>
-        <dl className="mt-4 divide-y divide-border border border-border">
-          {perms.map(([h, p]) => (
-            <div key={h} className="grid gap-1 p-4 sm:grid-cols-[11rem_1fr] sm:gap-4">
-              <dt className="font-bold text-accent">{h}</dt>
-              <dd className="text-sm leading-relaxed text-foreground/85">{p}</dd>
-            </div>
-          ))}
-        </dl>
-      </section>
+      <div className="mt-8 space-y-2">
+        <details className="app-fold border border-border bg-surface-elevated">
+          <summary className="cursor-pointer select-none p-3 font-display text-sm font-bold text-foreground">{a[I.hPerm]}</summary>
+          <div className="border-t border-border p-3">
+            <p className="text-xs leading-relaxed text-foreground/85">{a[I.permIntro]}</p>
+            <dl className="mt-3 divide-y divide-border">
+              {perms.map(([h, p]) => (
+                <div key={h} className="grid gap-0.5 py-2 sm:grid-cols-[10rem_1fr] sm:gap-4">
+                  <dt className="text-sm font-bold text-accent">{h}</dt>
+                  <dd className="text-xs leading-relaxed text-foreground/85">{p}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        </details>
 
-      <section className="mt-10">
-        <h2 className="app-h font-display text-xl font-bold text-foreground">{a[I.hSafe]}</h2>
-        <ul className="mt-4 space-y-2">
-          {safe.map((s) => (
-            <li key={s} className="flex gap-3 text-sm leading-relaxed text-foreground/85">
-              <span className="mt-0.5 text-accent" aria-hidden="true">✓</span>
-              <span>{s}</span>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-4 text-sm">
-          <Link href={langPath("/datenschutz", lang)} className="text-accent underline underline-offset-4 hover:no-underline">
-            {PRIVACY_LABEL[lang] ?? PRIVACY_LABEL.en}
-          </Link>
-        </p>
-      </section>
+        <details className="app-fold border border-border bg-surface-elevated">
+          <summary className="cursor-pointer select-none p-3 font-display text-sm font-bold text-foreground">{a[I.hSafe]}</summary>
+          <div className="border-t border-border p-3">
+            <ul className="space-y-2">
+              {safe.map((t) => (
+                <li key={t} className="flex gap-2.5 text-xs leading-relaxed text-foreground/85">
+                  <span className="text-accent" aria-hidden="true">✓</span>
+                  <span>{t}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-3 text-xs">
+              <Link href={langPath("/datenschutz", lang)} className="text-accent underline underline-offset-4 hover:no-underline">
+                {PRIVACY_LABEL[lang] ?? PRIVACY_LABEL.en}
+              </Link>
+            </p>
+          </div>
+        </details>
 
-      <section className="mt-10">
-        <h2 className="app-h font-display text-xl font-bold text-foreground">{a[I.hFaq]}</h2>
-        <div className="mt-4 space-y-3">
-          {faqs.map(([q, ans]) => (
-            <div key={q} className="border border-border bg-surface-elevated p-4">
-              <h3 className="font-bold text-foreground">{q}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-foreground/80">{ans}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+        <details className="app-fold border border-border bg-surface-elevated">
+          <summary className="cursor-pointer select-none p-3 font-display text-sm font-bold text-foreground">{a[I.hFaq]}</summary>
+          <div className="space-y-3 border-t border-border p-3">
+            {faqs.map(([q, ans]) => (
+              <div key={q}>
+                <h3 className="text-sm font-bold text-foreground">{q}</h3>
+                <p className="mt-0.5 text-xs leading-relaxed text-foreground/80">{ans}</p>
+              </div>
+            ))}
+          </div>
+        </details>
+      </div>
 
-      <div className="mt-10 flex justify-center">
+      <div className="mt-8 flex justify-center">
         <a
           href={APK_URL}
           rel="noopener"
