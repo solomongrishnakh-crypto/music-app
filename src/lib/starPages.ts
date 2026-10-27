@@ -119,8 +119,8 @@ export const STARS: StarRow[] = [
 0.61,
 390.0,
 "B1III",
-"",
-""
+"Zweithellster Stern im Zentaur. Zusammen mit Rigil Kentaurus zeigt er auf das Kreuz des Südens.",
+"The second-brightest star in Centaurus. Together with Rigil Kentaurus it points to the Southern Cross."
 ],
 [
 "altair",
@@ -207,8 +207,8 @@ export const STARS: StarRow[] = [
 1.25,
 280.0,
 "B0.5III",
-"",
-""
+"Zweithellster Stern im Kreuz des Südens.",
+"The second-brightest star in the Southern Cross."
 ],
 [
 "deneb",
@@ -240,8 +240,8 @@ export const STARS: StarRow[] = [
 1.5,
 430.0,
 "B2II",
-"",
-""
+"Zweithellster Stern im Großen Hund. Vor rund 4,7 Millionen Jahren war er der hellste Stern am ganzen Himmel.",
+"The second-brightest star in Canis Major. About 4.7 million years ago it was the brightest star in the whole sky."
 ],
 [
 "castor",
@@ -262,8 +262,8 @@ export const STARS: StarRow[] = [
 1.59,
 88.0,
 "M3.5III",
-"",
-""
+"Roter Riese an der Spitze des Kreuzes des Südens – der nächste rote Riese zur Sonne.",
+"A red giant at the top of the Southern Cross – the nearest red giant to the Sun."
 ],
 [
 "shaula",
@@ -273,8 +273,8 @@ export const STARS: StarRow[] = [
 1.62,
 570.0,
 "B2IV",
-"",
-""
+"Bildet den Stachel am Schwanz des Skorpions.",
+"Marks the sting at the end of the Scorpion's tail."
 ],
 [
 "bellatrix",
@@ -284,8 +284,8 @@ export const STARS: StarRow[] = [
 1.64,
 250.0,
 "B2III",
-"",
-""
+"Schulterstern des Orion. Der Name ist lateinisch und bedeutet „Kriegerin“.",
+"A shoulder star of Orion. The Latin name means \"female warrior\"."
 ],
 [
 "elnath",
@@ -295,8 +295,8 @@ export const STARS: StarRow[] = [
 1.65,
 130.0,
 "B7III",
-"",
-""
+"Spitze des nördlichen Horns des Stiers. Der arabische Name bedeutet „der Stoßende“.",
+"The tip of the Bull's northern horn. The Arabic name means \"the butting one\"."
 ],
 [
 "miaplacidus",
@@ -306,8 +306,8 @@ export const STARS: StarRow[] = [
 1.67,
 113.0,
 "A1III",
-"",
-""
+"Zweithellster Stern im Sternbild Kiel des Schiffs (Carina).",
+"The second-brightest star in the constellation Carina (the Keel)."
 ],
 [
 "alnilam",
@@ -328,8 +328,8 @@ export const STARS: StarRow[] = [
 1.73,
 101.0,
 "B6V",
-"",
-""
+"Hellster Stern im Sternbild Kranich.",
+"The brightest star in the constellation Grus (the Crane)."
 ],
 [
 "alnitak",
@@ -372,8 +372,8 @@ export const STARS: StarRow[] = [
 1.79,
 510.0,
 "F5Ib",
-"",
-""
+"Hellster Stern im Perseus. Er steht mitten in einem lockeren Sternhaufen, dem Alpha-Persei-Haufen.",
+"The brightest star in Perseus. It sits in the middle of a loose star cluster, the Alpha Persei Cluster."
 ],
 [
 "kaus-australis",
@@ -383,8 +383,8 @@ export const STARS: StarRow[] = [
 1.79,
 143.0,
 "B9.5III",
-"",
-""
+"Hellster Stern im Schützen, Teil der Sternfigur „Teekessel“.",
+"The brightest star in Sagittarius, part of the \"Teapot\" asterism."
 ],
 [
 "dubhe",
@@ -405,8 +405,8 @@ export const STARS: StarRow[] = [
 1.83,
 1600.0,
 "F8Ia",
-"",
-""
+"Ein Überriese im Großen Hund. Der arabische Name bedeutet „Gewicht“.",
+"A supergiant in Canis Major. The Arabic name means \"weight\"."
 ],
 [
 "alkaid",
@@ -427,8 +427,8 @@ export const STARS: StarRow[] = [
 1.86,
 610.0,
 "K3III",
-"",
-""
+"Stern im Kiel des Schiffs; er bildet mit drei anderen Sternen das „Falsche Kreuz“.",
+"A star in Carina; together with three other stars it forms the \"False Cross\"."
 ],
 [
 "sargas",
@@ -438,8 +438,8 @@ export const STARS: StarRow[] = [
 1.86,
 300.0,
 "F1II",
-"",
-""
+"Stern im Schwanz des Skorpions.",
+"A star in the tail of the Scorpion."
 ],
 [
 "menkalinan",
@@ -460,8 +460,8 @@ export const STARS: StarRow[] = [
 1.91,
 390.0,
 "K2Ib",
-"",
-""
+"Hellster Stern im Südlichen Dreieck. Der Name ist aus „Alpha Trianguli Australis“ zusammengezogen.",
+"The brightest star in Triangulum Australe. Its name is a contraction of \"Alpha Trianguli Australis\"."
 ],
 [
 "alhena",
@@ -471,8 +471,8 @@ export const STARS: StarRow[] = [
 1.93,
 109.0,
 "A1.5IV",
-"",
-""
+"Dritthellster Stern der Zwillinge, am Fuß des Zwillings Pollux.",
+"The third-brightest star in Gemini, at the foot of the twin Pollux."
 ],
 [
 "peacock",
@@ -482,8 +482,8 @@ export const STARS: StarRow[] = [
 1.94,
 180.0,
 "B2IV",
-"",
-""
+"Hellster Stern im Pfau. Den Namen bekam er in den 1930er-Jahren für die Navigation der britischen Luftwaffe.",
+"The brightest star in Pavo (the Peacock). It got its name in the 1930s for navigation by the Royal Air Force."
 ],
 [
 "polaris",
@@ -504,8 +504,8 @@ export const STARS: StarRow[] = [
 1.98,
 500.0,
 "B1II",
-"",
-""
+"Stern im Großen Hund. Der Name bedeutet „der Ankündiger“, weil er kurz vor Sirius aufgeht.",
+"A star in Canis Major. Its name means \"the herald\", because it rises shortly before Sirius."
 ],
 [
 "alphard",
@@ -515,8 +515,8 @@ export const STARS: StarRow[] = [
 1.99,
 180.0,
 "K3II",
-"",
-""
+"Hellster Stern der Wasserschlange. Der Name bedeutet „der Einsame“ – er steht allein in einer sternarmen Gegend.",
+"The brightest star in Hydra. Its name means \"the solitary one\" – it stands alone in a region with few bright stars."
 ],
 [
 "hamal",
@@ -548,8 +548,8 @@ export const STARS: StarRow[] = [
 2.04,
 96.0,
 "K0III",
-"",
-""
+"Hellster Stern im Walfisch.",
+"The brightest star in Cetus (the Whale)."
 ],
 [
 "nunki",
@@ -559,8 +559,8 @@ export const STARS: StarRow[] = [
 2.05,
 228.0,
 "B2.5V",
-"",
-""
+"Zweithellster Stern im Schützen.",
+"The second-brightest star in Sagittarius."
 ],
 [
 "menkent",
@@ -570,8 +570,8 @@ export const STARS: StarRow[] = [
 2.06,
 59.0,
 "K0III",
-"",
-""
+"Stern im Zentaur, an der Schulter der Sagengestalt.",
+"A star in Centaurus, at the shoulder of the mythical figure."
 ],
 [
 "alpheratz",
@@ -581,8 +581,8 @@ export const STARS: StarRow[] = [
 2.07,
 97.0,
 "B8IV",
-"",
-""
+"Hellster Stern der Andromeda und zugleich eine Ecke des Pegasus-Quadrats.",
+"The brightest star in Andromeda and at the same time a corner of the Great Square of Pegasus."
 ],
 [
 "mirach",
@@ -603,8 +603,8 @@ export const STARS: StarRow[] = [
 2.07,
 650.0,
 "B0.5Ia",
-"",
-""
+"Südöstlicher Eckstern des Orion. Der arabische Name bedeutet „Schwert“.",
+"The south-eastern corner star of Orion. The Arabic name means \"sword\"."
 ],
 [
 "kochab",
@@ -614,8 +614,8 @@ export const STARS: StarRow[] = [
 2.07,
 131.0,
 "K4III",
-"",
-""
+"Hellster Stern im Kleinen Wagen nach dem Polarstern; einer der beiden „Wächter des Pols“.",
+"The brightest star in the Little Dipper after Polaris; one of the two \"Guardians of the Pole\"."
 ],
 [
 "rasalhague",
@@ -625,8 +625,8 @@ export const STARS: StarRow[] = [
 2.08,
 49.0,
 "A5III",
-"",
-""
+"Hellster Stern im Schlangenträger. Der Name bedeutet „Kopf des Schlangenbeschwörers“.",
+"The brightest star in Ophiuchus. Its name means \"head of the serpent charmer\"."
 ],
 [
 "algol",
@@ -658,8 +658,8 @@ export const STARS: StarRow[] = [
 2.14,
 36.0,
 "A3V",
-"",
-""
+"Schwanzspitze des Löwen; der Name bedeutet „Schwanz des Löwen“.",
+"The tip of the Lion's tail; the name means \"tail of the lion\"."
 ],
 [
 "navi",
@@ -669,8 +669,8 @@ export const STARS: StarRow[] = [
 2.15,
 550.0,
 "B0.5IVe",
-"",
-""
+"Mittlerer Stern im „W“ der Kassiopeia. Den Namen gab ihm der Astronaut Gus Grissom – sein zweiter Vorname Ivan rückwärts.",
+"The middle star of Cassiopeia's \"W\". The astronaut Gus Grissom named it – his middle name Ivan spelled backwards."
 ],
 [
 "alphecca",
@@ -680,8 +680,8 @@ export const STARS: StarRow[] = [
 2.22,
 75.0,
 "A0V",
-"",
-""
+"Hellster Stern der Nördlichen Krone.",
+"The brightest star in Corona Borealis (the Northern Crown)."
 ],
 [
 "mizar",
@@ -713,8 +713,8 @@ export const STARS: StarRow[] = [
 2.23,
 1800.0,
 "F8Ib",
-"",
-""
+"Mitte des „Nordkreuzes“, die Brust des Schwans.",
+"The centre of the \"Northern Cross\", the breast of the Swan."
 ],
 [
 "shedar",
@@ -724,8 +724,8 @@ export const STARS: StarRow[] = [
 2.24,
 228.0,
 "K0III",
-"",
-""
+"Ein oranger Riese im „W“ der Kassiopeia.",
+"An orange giant in Cassiopeia's \"W\"."
 ],
 [
 "eltanin",
@@ -735,8 +735,8 @@ export const STARS: StarRow[] = [
 2.24,
 154.0,
 "K5III",
-"",
-""
+"Hellster Stern im Drachen.",
+"The brightest star in Draco (the Dragon)."
 ],
 [
 "mintaka",
@@ -757,8 +757,8 @@ export const STARS: StarRow[] = [
 2.28,
 55.0,
 "F2III",
-"",
-""
+"Stern am Ende des „W“ der Kassiopeia.",
+"A star at the end of Cassiopeia's \"W\"."
 ],
 [
 "merak",
@@ -779,8 +779,8 @@ export const STARS: StarRow[] = [
 2.35,
 200.0,
 "K0III",
-"",
-""
+"Prächtiger Doppelstern im Bärenhüter: im Teleskop orange und bläulich.",
+"A beautiful double star in Boötes: orange and bluish in a telescope."
 ],
 [
 "enif",
@@ -790,8 +790,8 @@ export const STARS: StarRow[] = [
 2.38,
 690.0,
 "K2Ib",
-"",
-""
+"Hellster Stern im Pegasus, die „Nase“ des geflügelten Pferdes.",
+"The brightest star in Pegasus, the \"nose\" of the winged horse."
 ],
 [
 "ankaa",
@@ -801,8 +801,8 @@ export const STARS: StarRow[] = [
 2.4,
 85.0,
 "K0.5III",
-"",
-""
+"Hellster Stern im Phönix.",
+"The brightest star in Phoenix."
 ],
 [
 "phecda",
@@ -812,8 +812,8 @@ export const STARS: StarRow[] = [
 2.41,
 84.0,
 "A0V",
-"",
-""
+"Eckstern des Großen Wagens.",
+"A corner star of the Big Dipper."
 ],
 [
 "sabik",
@@ -823,8 +823,8 @@ export const STARS: StarRow[] = [
 2.43,
 88.0,
 "A1V",
-"",
-""
+"Zweithellster Stern im Schlangenträger.",
+"The second-brightest star in Ophiuchus."
 ],
 [
 "scheat",
@@ -834,8 +834,8 @@ export const STARS: StarRow[] = [
 2.44,
 196.0,
 "M2.5III",
-"",
-""
+"Roter Riese an einer Ecke des Pegasus-Quadrats.",
+"A red giant at one corner of the Great Square of Pegasus."
 ],
 [
 "aludra",
@@ -845,8 +845,8 @@ export const STARS: StarRow[] = [
 2.45,
 2000.0,
 "B5Ia",
-"",
-""
+"Stern am Schwanz des Großen Hundes.",
+"A star at the tail of Canis Major."
 ],
 [
 "alderamin",
@@ -867,8 +867,8 @@ export const STARS: StarRow[] = [
 2.49,
 133.0,
 "B9III",
-"",
-""
+"Eckstern des Pegasus-Quadrats.",
+"A corner star of the Great Square of Pegasus."
 ],
 [
 "menkar",
@@ -878,8 +878,8 @@ export const STARS: StarRow[] = [
 2.54,
 250.0,
 "M1.5III",
-"",
-""
+"Roter Riese im Walfisch, die „Nase“ des Seeungeheuers.",
+"A red giant in Cetus, the \"nose\" of the sea monster."
 ],
 [
 "zosma",
@@ -889,8 +889,8 @@ export const STARS: StarRow[] = [
 2.56,
 58.0,
 "A4V",
-"",
-""
+"Stern am Rücken des Löwen.",
+"A star on the Lion's back."
 ],
 [
 "arneb",
@@ -900,8 +900,8 @@ export const STARS: StarRow[] = [
 2.58,
 2200.0,
 "F0Ib",
-"",
-""
+"Hellster Stern im Hasen; der Name bedeutet „Hase“.",
+"The brightest star in Lepus; the name means \"hare\"."
 ],
 [
 "gienah",
@@ -911,8 +911,8 @@ export const STARS: StarRow[] = [
 2.58,
 154.0,
 "B8III",
-"",
-""
+"Hellster Stern im Raben.",
+"The brightest star in Corvus (the Crow)."
 ],
 [
 "ascella",
@@ -922,8 +922,8 @@ export const STARS: StarRow[] = [
 2.6,
 88.0,
 "A2.5V",
-"",
-""
+"Stern im „Teekessel“ des Schützen; eigentlich ein enges Sternpaar.",
+"A star in the \"Teapot\" of Sagittarius; actually a close pair of stars."
 ],
 [
 "aljanah",
@@ -933,8 +933,8 @@ export const STARS: StarRow[] = [
 2.48,
 72.0,
 "K0III",
-"",
-""
+"Stern im Flügel des Schwans; der Name bedeutet „der Flügel“.",
+"A star in the Swan's wing; the name means \"the wing\"."
 ],
 [
 "albireo",
@@ -955,8 +955,8 @@ export const STARS: StarRow[] = [
 2.77,
 360.0,
 "M5Ib",
-"",
-""
+"Riesiger roter Stern am Kopf des Herkules.",
+"A huge red star at the head of Hercules."
 ],
 [
 "unukalhai",
@@ -966,8 +966,8 @@ export const STARS: StarRow[] = [
 2.63,
 74.0,
 "K2III",
-"",
-""
+"Hellster Stern der Schlange; der Name bedeutet „Hals der Schlange“.",
+"The brightest star in Serpens; the name means \"neck of the serpent\"."
 ],
 [
 "thuban",
@@ -1054,8 +1054,8 @@ export const STARS: StarRow[] = [
 2.9,
 110.0,
 "A0V",
-"",
-""
+"Hellster Stern der Jagdhunde. Der Name bedeutet „Herz Karls“, nach König Karl I. von England.",
+"The brightest star in Canes Venatici. The name means \"Charles's heart\", after King Charles I of England."
 ],
 [
 "megrez",
@@ -1076,8 +1076,8 @@ export const STARS: StarRow[] = [
 2.73,
 395.0,
 "K3II",
-"",
-""
+"Oranger Stern im Adler, direkt neben Altair.",
+"An orange star in Aquila, right next to Altair."
 ],
 [
 "sheliak",
@@ -1098,8 +1098,8 @@ export const STARS: StarRow[] = [
 3.27,
 620.0,
 "B9III",
-"",
-""
+"Zweithellster Stern der Leier, nahe dem Ringnebel M57.",
+"The second-brightest star in Lyra, near the Ring Nebula M57."
 ],
 [
 "vindemiatrix",
@@ -1109,8 +1109,8 @@ export const STARS: StarRow[] = [
 2.87,
 110.0,
 "G8III",
-"",
-""
+"Stern in der Jungfrau. Der Name bedeutet „Winzerin“, weil er früher zur Weinlese am Morgenhimmel erschien.",
+"A star in Virgo. The name means \"grape gatherer\", because it once appeared in the morning sky at harvest time."
 ],
 [
 "porrima",
@@ -1131,8 +1131,8 @@ export const STARS: StarRow[] = [
 2.6,
 185.0,
 "B8V",
-"",
-""
+"Hellster Stern der Waage. Der Name bedeutet „nördliche Schere“ – früher gehörte er zum Skorpion.",
+"The brightest star in Libra. The name means \"northern claw\" – it once belonged to the Scorpion."
 ],
 [
 "zubenelgenubi",
@@ -1142,8 +1142,8 @@ export const STARS: StarRow[] = [
 2.77,
 75.0,
 "A3IV",
-"",
-""
+"Die „südliche Schere“ der Waage; schon im Fernglas als Doppelstern zu sehen.",
+"The \"southern claw\" of Libra; already visible as a double star in binoculars."
 ],
 [
 "pherkad",
@@ -1153,8 +1153,8 @@ export const STARS: StarRow[] = [
 3.0,
 487.0,
 "A3II",
-"",
-""
+"Einer der beiden „Wächter des Pols“ im Kleinen Wagen.",
+"One of the two \"Guardians of the Pole\" in the Little Dipper."
 ],
 [
 "errai",
@@ -1175,8 +1175,8 @@ export const STARS: StarRow[] = [
 2.67,
 99.0,
 "A5IV",
-"",
-""
+"Stern im „W“ der Kassiopeia; der Name bedeutet „Knie“.",
+"A star in Cassiopeia's \"W\"; the name means \"knee\"."
 ],
 [
 "algenib",
@@ -1186,8 +1186,8 @@ export const STARS: StarRow[] = [
 2.83,
 390.0,
 "B2IV",
-"",
-""
+"Eckstern des Pegasus-Quadrats.",
+"A corner star of the Great Square of Pegasus."
 ],
 [
 "matar",
@@ -1197,8 +1197,8 @@ export const STARS: StarRow[] = [
 2.93,
 214.0,
 "G2II",
-"",
-""
+"Gelber Riese im Pegasus.",
+"A yellow giant in Pegasus."
 ],
 [
 "sadalmelik",
@@ -1208,8 +1208,8 @@ export const STARS: StarRow[] = [
 2.97,
 520.0,
 "G2Ib",
-"",
-""
+"Stern im Wassermann; der Name bedeutet „Glücksstern des Königs“.",
+"A star in Aquarius; the name means \"lucky star of the king\"."
 ],
 [
 "sadalsuud",
@@ -1219,8 +1219,8 @@ export const STARS: StarRow[] = [
 2.9,
 540.0,
 "G0Ib",
-"",
-""
+"Hellster Stern im Wassermann; der Name bedeutet „Glück der Glücke“.",
+"The brightest star in Aquarius; the name means \"luckiest of the lucky\"."
 ],
 [
 "deneb-algedi",
@@ -1230,8 +1230,8 @@ export const STARS: StarRow[] = [
 2.87,
 39.0,
 "A7III",
-"",
-""
+"Hellster Stern im Steinbock; der Name bedeutet „Schwanz des Bocks“.",
+"The brightest star in Capricornus; the name means \"tail of the goat\"."
 ],
 [
 "gomeisa",
@@ -1241,8 +1241,8 @@ export const STARS: StarRow[] = [
 2.9,
 160.0,
 "B8V",
-"",
-""
+"Zweithellster Stern im Kleinen Hund, neben Procyon.",
+"The second-brightest star in Canis Minor, next to Procyon."
 ],
 [
 "acubens",
@@ -1252,8 +1252,8 @@ export const STARS: StarRow[] = [
 4.27,
 174.0,
 "A5m",
-"",
-""
+"Stern im Krebs; der Name bedeutet „die Schere“.",
+"A star in Cancer; the name means \"the claw\"."
 ],
 [
 "tianguan",
@@ -1263,8 +1263,8 @@ export const STARS: StarRow[] = [
 2.97,
 440.0,
 "B2IV",
-"",
-""
+"Stern an der Hornspitze des Stiers, nahe dem Krebsnebel. Der chinesische Name bedeutet „Himmelstor“.",
+"A star at the tip of the Bull's horn, near the Crab Nebula. The Chinese name means \"heavenly gate\"."
 ],
 [
 "ain",
@@ -1285,8 +1285,8 @@ export const STARS: StarRow[] = [
 2.7,
 490.0,
 "K3II",
-"",
-""
+"Oranger Riese im Fuhrmann.",
+"An orange giant in Auriga."
 ],
 [
 "haedus",
@@ -1296,8 +1296,8 @@ export const STARS: StarRow[] = [
 3.17,
 240.0,
 "B3V",
-"",
-""
+"Eines der „Böckchen“ im Fuhrmann, neben Capella.",
+"One of the \"Kids\" in Auriga, next to Capella."
 ],
 [
 "almaaz",
@@ -1318,8 +1318,8 @@ export const STARS: StarRow[] = [
 2.87,
 230.0,
 "M3III",
-"",
-""
+"Roter Riese am Fuß der Zwillinge.",
+"A red giant at the foot of Gemini."
 ],
 [
 "mebsuta",
@@ -1329,8 +1329,8 @@ export const STARS: StarRow[] = [
 3.07,
 840.0,
 "G8Ib",
-"",
-""
+"Gelber Überriese in den Zwillingen.",
+"A yellow supergiant in Gemini."
 ],
 [
 "wasat",
@@ -1340,8 +1340,8 @@ export const STARS: StarRow[] = [
 3.5,
 60.0,
 "F0IV",
-"",
-""
+"Stern in den Zwillingen, nahe der Ekliptik. In seiner Nähe entdeckte Clyde Tombaugh 1930 den Pluto.",
+"A star in Gemini, close to the ecliptic. Clyde Tombaugh discovered Pluto near it in 1930."
 ],
 [
 "rasalas",
@@ -1351,8 +1351,8 @@ export const STARS: StarRow[] = [
 3.87,
 124.0,
 "K2III",
-"",
-""
+"Stern im Kopf des Löwen.",
+"A star in the Lion's head."
 ],
 [
 "adhafera",
@@ -1362,8 +1362,8 @@ export const STARS: StarRow[] = [
 3.43,
 260.0,
 "F0III",
-"",
-""
+"Stern in der Mähne des Löwen.",
+"A star in the Lion's mane."
 ],
 [
 "chertan",
@@ -1373,8 +1373,8 @@ export const STARS: StarRow[] = [
 3.33,
 165.0,
 "A2V",
-"",
-""
+"Stern an der Hüfte des Löwen.",
+"A star on the Lion's hip."
 ],
 [
 "seginus",
@@ -1384,8 +1384,8 @@ export const STARS: StarRow[] = [
 3.03,
 87.0,
 "A7III",
-"",
-""
+"Stern im Bärenhüter.",
+"A star in Boötes."
 ],
 [
 "nekkar",
@@ -1395,8 +1395,8 @@ export const STARS: StarRow[] = [
 3.5,
 225.0,
 "G8III",
-"",
-""
+"Stern am Kopf des Bärenhüters.",
+"A star at the head of Boötes."
 ],
 [
 "muphrid",
@@ -1406,8 +1406,8 @@ export const STARS: StarRow[] = [
 2.67,
 37.0,
 "G0IV",
-"",
-""
+"Stern im Bärenhüter, nur rund 3 Lichtjahre von Arktur entfernt.",
+"A star in Boötes, only about 3 light-years from Arcturus."
 ],
 [
 "cebalrai",
@@ -1417,8 +1417,8 @@ export const STARS: StarRow[] = [
 2.77,
 82.0,
 "K2III",
-"",
-""
+"Oranger Riese im Schlangenträger.",
+"An orange giant in Ophiuchus."
 ],
 [
 "yed-prior",
@@ -1428,8 +1428,8 @@ export const STARS: StarRow[] = [
 2.73,
 171.0,
 "M0.5III",
-"",
-""
+"Roter Riese, die „Hand“ des Schlangenträgers.",
+"A red giant, the \"hand\" of Ophiuchus."
 ],
 [
 "kornephoros",
@@ -1439,8 +1439,8 @@ export const STARS: StarRow[] = [
 2.77,
 139.0,
 "G7III",
-"",
-""
+"Hellster Stern im Herkules; der Name bedeutet „Keulenträger“.",
+"The brightest star in Hercules; the name means \"club bearer\"."
 ],
 [
 "sarin",
@@ -1450,8 +1450,8 @@ export const STARS: StarRow[] = [
 3.13,
 75.0,
 "A1V",
-"",
-""
+"Stern im Herkules.",
+"A star in Hercules."
 ],
 [
 "rastaban",
@@ -1461,8 +1461,8 @@ export const STARS: StarRow[] = [
 2.8,
 380.0,
 "G2Ib",
-"",
-""
+"Stern im Kopf des Drachen; der Name bedeutet „Kopf der Schlange“.",
+"A star in the Dragon's head; the name means \"head of the serpent\"."
 ],
 [
 "alshain",
@@ -1472,8 +1472,8 @@ export const STARS: StarRow[] = [
 3.7,
 45.0,
 "G9.5IV",
-"",
-""
+"Stern im Adler, neben Altair.",
+"A star in Aquila, next to Altair."
 ],
 [
 "sualocin",
@@ -1483,8 +1483,8 @@ export const STARS: StarRow[] = [
 3.77,
 254.0,
 "B9IV",
-"",
-""
+"Hellster Stern im Delfin. Rückwärts gelesen ergibt sein Name „Nicolaus“ – ein Scherz eines Assistenten der Sternwarte Palermo (Niccolò Cacciatore).",
+"The brightest star in Delphinus. Read backwards its name gives \"Nicolaus\" – a joke by an assistant at Palermo Observatory (Niccolò Cacciatore)."
 ],
 [
 "rotanev",
@@ -1494,8 +1494,8 @@ export const STARS: StarRow[] = [
 3.63,
 101.0,
 "F5IV",
-"",
-""
+"Stern im Delfin. Rückwärts gelesen ergibt sein Name „Venator“, die latinisierte Form von Cacciatore.",
+"A star in Delphinus. Read backwards its name gives \"Venator\", the Latin form of Cacciatore."
 ],
 [
 "kaus-borealis",
@@ -1505,8 +1505,8 @@ export const STARS: StarRow[] = [
 2.83,
 78.0,
 "K1III",
-"",
-""
+"Spitze des „Teekessels“ im Schützen; der Name bedeutet „nördlicher Bogen“.",
+"The top of the \"Teapot\" in Sagittarius; the name means \"northern bow\"."
 ],
 [
 "alnasl",
@@ -1516,8 +1516,8 @@ export const STARS: StarRow[] = [
 2.97,
 97.0,
 "K0III",
-"",
-""
+"Pfeilspitze des Schützen; der Name bedeutet „die Spitze“.",
+"The arrow tip of Sagittarius; the name means \"the point\"."
 ],
 [
 "rukbat",
@@ -1527,8 +1527,8 @@ export const STARS: StarRow[] = [
 3.97,
 180.0,
 "B8V",
-"",
-""
+"Alpha-Stern des Schützen – aber bei weitem nicht der hellste.",
+"The alpha star of Sagittarius – but far from the brightest."
 ],
 [
 "acamar",
@@ -1538,8 +1538,8 @@ export const STARS: StarRow[] = [
 2.87,
 161.0,
 "A3IV",
-"",
-""
+"Stern im Eridanus. Der Name bedeutet „Ende des Flusses“ – früher endete das Sternbild hier.",
+"A star in Eridanus. The name means \"end of the river\" – the constellation once ended here."
 ],
 [
 "zaurak",
@@ -1549,8 +1549,8 @@ export const STARS: StarRow[] = [
 2.97,
 203.0,
 "M1III",
-"",
-""
+"Roter Riese im Eridanus.",
+"A red giant in Eridanus."
 ],
 [
 "cursa",
@@ -1560,8 +1560,8 @@ export const STARS: StarRow[] = [
 2.77,
 89.0,
 "A3III",
-"",
-""
+"Stern am Anfang des Eridanus, nahe Rigel.",
+"A star at the start of Eridanus, near Rigel."
 ],
 [
 "phact",
@@ -1571,8 +1571,8 @@ export const STARS: StarRow[] = [
 2.67,
 260.0,
 "B7IV",
-"",
-""
+"Hellster Stern im Sternbild Taube.",
+"The brightest star in Columba (the Dove)."
 ],
 [
 "nihal",
@@ -1582,8 +1582,8 @@ export const STARS: StarRow[] = [
 2.8,
 160.0,
 "G5II",
-"",
-""
+"Stern im Hasen.",
+"A star in Lepus."
 ],
 [
 "meissa",
@@ -1593,8 +1593,8 @@ export const STARS: StarRow[] = [
 3.4,
 1100.0,
 "O8III",
-"",
-""
+"Der Kopf des Orion: ein sehr heißer Stern in einem großen Ring aus leuchtendem Gas.",
+"The head of Orion: a very hot star inside a large ring of glowing gas."
 ],
 [
 "sheratan",
@@ -1604,8 +1604,8 @@ export const STARS: StarRow[] = [
 2.63,
 60.0,
 "A5V",
-"",
-""
+"Stern am Horn des Widders.",
+"A star at the horn of Aries."
 ],
 [
 "menkib",
@@ -1615,8 +1615,8 @@ export const STARS: StarRow[] = [
 3.97,
 1200.0,
 "O7.5III",
-"",
-""
+"Extrem heißer Stern im Perseus, der den Kalifornien-Nebel zum Leuchten bringt.",
+"An extremely hot star in Perseus that makes the California Nebula glow."
 ],
 [
 "talitha",
@@ -1626,8 +1626,8 @@ export const STARS: StarRow[] = [
 3.13,
 48.0,
 "A7V",
-"",
-""
+"Stern an der Pfote des Großen Bären.",
+"A star at the paw of the Great Bear."
 ],
 [
 "yildun",
@@ -1637,8 +1637,8 @@ export const STARS: StarRow[] = [
 4.37,
 172.0,
 "A1V",
-"",
-""
+"Stern im Kleinen Wagen; der Name kommt vom türkischen Wort für „Stern“.",
+"A star in the Little Dipper; the name comes from the Turkish word for \"star\"."
 ],
 [
 "homam",
@@ -1648,8 +1648,8 @@ export const STARS: StarRow[] = [
 3.4,
 204.0,
 "B8V",
-"",
-""
+"Stern im Pegasus.",
+"A star in Pegasus."
 ],
 [
 "skat",
@@ -1659,8 +1659,8 @@ export const STARS: StarRow[] = [
 3.27,
 113.0,
 "A3V",
-"",
-""
+"Stern im Wassermann; der Name bedeutet „Schienbein“.",
+"A star in Aquarius; the name means \"shin\"."
 ],
 [
 "algorab",
@@ -1670,8 +1670,8 @@ export const STARS: StarRow[] = [
 2.93,
 87.0,
 "A0IV",
-"",
-""
+"Stern im Raben; im Teleskop ein Doppelstern.",
+"A star in Corvus; a double star in a telescope."
 ],
 [
 "kraz",
@@ -1681,8 +1681,8 @@ export const STARS: StarRow[] = [
 2.67,
 140.0,
 "G5II",
-"",
-""
+"Gelber Riese im Raben.",
+"A yellow giant in Corvus."
 ],
 [
 "alchiba",
@@ -1692,8 +1692,8 @@ export const STARS: StarRow[] = [
 4.03,
 49.0,
 "F1V",
-"",
-""
+"Alpha-Stern des Raben, aber nur einer der schwächeren Sterne des Sternbilds.",
+"The alpha star of Corvus, but only one of the fainter stars of the constellation."
 ],
 [
 "alkes",
@@ -1703,8 +1703,8 @@ export const STARS: StarRow[] = [
 4.07,
 159.0,
 "K1III",
-"",
-""
+"Alpha-Stern im Sternbild Becher; der Name bedeutet „Becher“.",
+"The alpha star of Crater; the name means \"cup\"."
 ],
 [
 "zavijava",
@@ -1714,8 +1714,8 @@ export const STARS: StarRow[] = [
 3.6,
 36.0,
 "F9V",
-"",
-""
+"Sonnenähnlicher Stern in der Jungfrau, etwas größer und heller als die Sonne.",
+"A Sun-like star in Virgo, somewhat larger and brighter than the Sun."
 ],
 [
 "heze",
@@ -1725,8 +1725,8 @@ export const STARS: StarRow[] = [
 3.37,
 74.0,
 "A2IV",
-"",
-""
+"Stern in der Jungfrau.",
+"A star in Virgo."
 ],
 [
 "diadem",
@@ -1736,8 +1736,8 @@ export const STARS: StarRow[] = [
 4.33,
 58.0,
 "F5V",
-"",
-""
+"Alpha-Stern im Haar der Berenike; im Teleskop ein enger Doppelstern.",
+"The alpha star of Coma Berenices; a close double star in a telescope."
 ],
 [
 "alrescha",
@@ -1747,8 +1747,8 @@ export const STARS: StarRow[] = [
 3.83,
 151.0,
 "A0p",
-"",
-""
+"Der Knoten, der die beiden Fische verbindet; der Name bedeutet „das Seil“.",
+"The knot that ties the two Fishes together; the name means \"the cord\"."
 ],
 [
 "baten-kaitos",
@@ -1758,8 +1758,8 @@ export const STARS: StarRow[] = [
 3.73,
 235.0,
 "K0III",
-"",
-""
+"Stern im Walfisch; der Name bedeutet „Bauch des Wals“.",
+"A star in Cetus; the name means \"belly of the whale\"."
 ],
 [
 "titawin",
@@ -1791,8 +1791,8 @@ export const STARS: StarRow[] = [
 3.07,
 97.0,
 "G9III",
-"",
-""
+"Stern im Drachen.",
+"A star in Draco."
 ],
 [
 "albali",
@@ -1802,8 +1802,8 @@ export const STARS: StarRow[] = [
 3.77,
 210.0,
 "A1V",
-"",
-""
+"Stern im Wassermann.",
+"A star in Aquarius."
 ],
 [
 "algedi",
@@ -1813,7 +1813,7 @@ export const STARS: StarRow[] = [
 3.57,
 109.0,
 "G9III",
-"",
-""
+"Mit bloßem Auge als Doppelstern im Steinbock zu sehen – die beiden Sterne stehen aber nur zufällig in derselben Richtung.",
+"Visible to the naked eye as a double star in Capricornus – but the two stars only happen to lie in the same direction."
 ]
 ];
