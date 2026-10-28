@@ -1449,13 +1449,14 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
                                 if (request?.isForMainFrame == true && !Offline.retryFromCache(view)) failed = true
                             }
                         }
-                        addJavascriptInterface(MusicBridge.Js(), "CenNative")
+                        addJavascriptInterface(MusicBridge.Js(true), "CenNative")
+                        MusicBridge.pageWeb = this
                         MusicBridge.log("Page opened: " + s.path)
                         loadUrl(siteUrl(s.path, lang))
                         web = this
                     }
                 },
-                onRelease = { v -> MusicBridge.log("Page closed"); try { v.stopLoading(); v.loadUrl("about:blank"); v.destroy() } catch (_: Exception) { } },
+                onRelease = { v -> MusicBridge.log("Page closed"); if (MusicBridge.pageWeb === v) MusicBridge.pageClosed(); try { v.stopLoading(); v.loadUrl("about:blank"); v.destroy() } catch (_: Exception) { } },
             )
             if (loading && !failed) LoadingCover(lang)
             if (failed) {

@@ -28,6 +28,11 @@ import org.json.JSONTokener
 /** Verbindung zum Player der Webseite (in der Startseiten-WebView): Knoepfe klicken und Titel lesen. */
 object MusicBridge {
     @Volatile var web: WebView? = null
+    /** Zweite WebView (z. B. Sternenhimmel), falls dort gerade eine Seite offen ist: auch dort kann Musik laufen. */
+    @Volatile var pageWeb: WebView? = null
+    @Volatile private var homeP = false
+    @Volatile private var pageP = false
+    fun pageClosed() { pageWeb = null; pageP = false; playing = homeP }
     @Volatile var title = ""
     @Volatile var artist = ""
     @Volatile var playing = false
@@ -113,20 +118,25 @@ object MusicBridge {
     }
 
     /** Wird von der Seite aufgerufen (auch im Hintergrund): meldet Titel/Status und holt Befehle ab. */
-    class Js {
+    class Js(private val page: Boolean = false) {
         @JavascriptInterface fun update(t: String, a: String, p: Boolean) {
             title = t; artist = a; playing = p; stamp = System.currentTimeMillis()
             vizSync(p)
         }
         @JavascriptInterface fun update2(t: String, a: String, p: Boolean, c: String, cur: Double, d: Double) {
-            if (playing != p) MusicBridge.log("Music " + (if (p) "playing" else "paused") + (if (guard) " (other page open)" else ""))
+            // Zwei WebViews melden getrennt: spielt eine davon, darf die andere (pausierte) den Status nicht ueberschreiben.
+            if (page) pageP = p else homeP = p
+            val other = if (page) homeP else pageP
+            val any = homeP || pageP
+            if (playing != any) MusicBridge.log("Music " + (if (any) "playing" else "paused") + (if (guard) " (other page open)" else ""))
+            if (!p && other) { playing = true; stamp = System.currentTimeMillis(); vizSync(true); return }
             // Livestreams melden eine absurde, staendig wachsende Laenge (Tausende Minuten): als "ohne Laenge" behandeln,
             // sonst wird die Benachrichtigung jede Sekunde neu gebaut und die App haengt.
             val live = d > 21600.0
-            title = t; artist = a; playing = p; cover = c; pos = if (live) 0.0 else cur; dur = if (live) 0.0 else d; stamp = System.currentTimeMillis()
-            vizSync(p)
-            if (userPaused && p && System.currentTimeMillis() - userPausedAt > 4000) userPaused = false
-            if (p) { if (!userPaused) want = true; ensureService() } else if (!guard) want = false
+            title = t; artist = a; playing = any; cover = c; pos = if (live) 0.0 else cur; dur = if (live) 0.0 else d; stamp = System.currentTimeMillis()
+            vizSync(any)
+            if (userPaused && any && System.currentTimeMillis() - userPausedAt > 4000) userPaused = false
+            if (any) { if (!userPaused) want = true; ensureService() } else if (!guard) want = false
         }
         @JavascriptInterface fun shown(): Boolean = !MusicBridge.guard && MusicBridge.fg
         @JavascriptInterface fun level(): Float = MusicBridge.level
@@ -157,7 +167,7 @@ object MusicBridge {
             else -> "path[d^=\\\"M8 5v14l11-7z\\\"]"
         }
         val btn = "(function(){try{var ps=document.querySelectorAll(\"$sel\");for(var i=0;i<ps.length;i++){var b=ps[i].closest('button');if(b&&b.offsetParent!==null){b.click();return 'btn';}}}catch(e){}return 'none';})()"
-        val w = web ?: return
+        val w = web ?: pageWeb ?: return
         log("Command: $kind" + (if (kind0 != kind) " (from $kind0)" else ""))
         if (kind == "pause") { want = false; userPaused = true; userPausedAt = System.currentTimeMillis() }
         if (kind == "play") { userPaused = false }
@@ -170,18 +180,19 @@ object MusicBridge {
         }
         // Sofort und direkt auf der Haupt-Seite ausfuehren (nicht erst auf deren Abfrage warten, die bei verdeckter Seite hakt).
         val direct = "(function(){try{var c=window.__cenCtx&&window.__cenCtx();if(!c)return 'noctx';$act return 'ok';}catch(e){return 'err';}})()"
-        w.post {
-            w.evaluateJavascript(direct) { r ->
+        // Auch in der zweiten WebView (offene Seite wie Sternenhimmel) ausfuehren: dort kann der Player laufen.
+        for (v in listOfNotNull(web, pageWeb)) v.post {
+            v.evaluateJavascript(direct) { r ->
                 if (r == null || !r.contains("ok")) {
                     log("Direct failed ($r), clicking button")
-                    w.evaluateJavascript(btn, null)
+                    v.evaluateJavascript(btn, null)
                 }
             }
         }
         // Nach 3 s Kontrolle bei Play/Pause: hat es nicht geklappt, den passenden Knopf klicken (Knopf zeigt nur das richtige Symbol, kein Hin und Her).
         if (kind == "pause" || kind == "play") w.postDelayed({
             val stuck = if (kind == "pause") playing else !playing
-            if (stuck) { log("Not done after 3 s, clicking button"); w.evaluateJavascript(btn, null) }
+            if (stuck) { log("Not done after 3 s, clicking button"); for (v in listOfNotNull(web, pageWeb)) v.evaluateJavascript(btn, null) }
         }, 3000)
     }
 
