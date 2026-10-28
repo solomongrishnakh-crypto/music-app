@@ -491,7 +491,14 @@ class MainActivity : ComponentActivity() {
                     onSurface = TextMain,
                     onBackground = TextMain,
                 ),
-            ) { Box(Modifier.fillMaxSize().imePadding()) { AppRoot() } }
+            ) {
+                var intro by remember { mutableStateOf(!IntroState.shown) }
+                SideEffect { IntroState.shown = true }
+                Box(Modifier.fillMaxSize().imePadding()) {
+                    AppRoot()
+                    if (intro) StartIntro(saver = sp.getBoolean("saver", false), onDone = { intro = false })
+                }
+            }
         }
     }
 }
@@ -1069,15 +1076,8 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
 // ---------------------------------------------------------------- Bausteine
 @Composable
 private fun LoadingCover(lang: String) {
-    Box(Modifier.fillMaxSize().background(BgDark).pointerInput(Unit) { }, contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            androidx.compose.material3.CircularProgressIndicator(color = Accent, strokeWidth = 2.dp, modifier = Modifier.size(34.dp))
-            Text(
-                if (lang == "de") "Lädt …" else Tr.t(lang, "Loading …"),
-                color = TextMuted, fontSize = 12.sp, fontFamily = Mono, letterSpacing = 2.sp, modifier = Modifier.padding(top = 14.dp),
-            )
-        }
-    }
+    // Seitenwechsel: dünne Lichtlinie (Nutzerwunsch 28.10.2026); blendet erst nach ~0,1 s ein
+    Box(Modifier.fillMaxSize().background(BgDark).pointerInput(Unit) { }) { LineLoader(Modifier.fillMaxSize()) }
 }
 
 @Composable
