@@ -1844,6 +1844,21 @@ export default function ImperienClient() {
     };
   }, [leafletReady, lang, antikSeas]);
 
+  // Solange das Info-Fenster offen ist, darf die Seite dahinter nicht mitscrollen
+  // (Wischen auf dem Fenster schob sonst die Seite darunter hin und her).
+  useEffect(() => {
+    if (!selected) return;
+    const html = document.documentElement;
+    const body = document.body;
+    const prev = [html.style.overflow, body.style.overflow];
+    html.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+    return () => {
+      html.style.overflow = prev[0];
+      body.style.overflow = prev[1];
+    };
+  }, [selected]);
+
   // Ausführliche Info (Wikipedia) nachladen, sobald ein Gebiet angeklickt wurde.
   useEffect(() => {
     if (!selected) {
@@ -2295,8 +2310,8 @@ export default function ImperienClient() {
             // die Box über die GESAMTE Bildschirmhöhe, unabhängig vom
             // Kartenrahmen, Schließen-Button und Scrollen funktionieren
             // dadurch zuverlässig.
-            <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/60 p-3">
-              <div className="hud-card relative max-h-[85vh] w-full max-w-md overflow-y-auto border border-border p-4 pt-10 sm:max-w-lg sm:p-5 sm:pt-5">
+            <div className="fixed inset-0 z-[2000] flex touch-none items-center justify-center overscroll-contain bg-black/60 p-3">
+              <div className="hud-card relative max-h-[85vh] w-full max-w-md touch-pan-y overflow-y-auto overscroll-contain border border-border p-4 pt-10 sm:max-w-lg sm:p-5 sm:pt-5">
                 <button
                   type="button"
                   onClick={() => setSelected(null)}
