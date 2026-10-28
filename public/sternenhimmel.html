@@ -3399,23 +3399,30 @@ document.getElementById("now").onclick = () => { S.offsetMin = 0; S.dayOffset = 
 
 // ---------------- Ort ----------------
 const PREFERRED = { "Europe/Berlin": "Berlin", "Europe/Vienna": "Wien", "Europe/Zurich": "Zürich", "Asia/Kabul": "Kabul", "Europe/Istanbul": "Istanbul", "America/New_York": "New York", "Europe/London": "London", "Europe/Paris": "Paris", "Asia/Tehran": "Teheran" };
-function setLocation(name, lat, lon, tz, country, auto) {
+function setLocation(name, lat, lon, tz, country, auto, gps) {
   S.lat = lat; S.lon = lon; S.place = name; S.tz = tz || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   document.getElementById("place").textContent = name;
-  try { localStorage.setItem("sky-loc", JSON.stringify({ name, lat, lon, tz: S.tz, auto: !!auto })); } catch {}
+  try { localStorage.setItem("sky-loc", JSON.stringify({ name, lat, lon, tz: S.tz, auto: !!auto, gps: !!gps, v: 2 })); } catch {}
   document.getElementById("pill").title = `${name}${country ? ", " + country : ""} · ${nf.format(Math.abs(lat))}° ${lat >= 0 ? "N" : "S"}, ${nf.format(Math.abs(lon))}° ${lon >= 0 ? "O" : "W"}`;
 }
 (function initLocation() {
-  try { const sv = JSON.parse(localStorage.getItem("sky-loc") || "null"); if (sv && typeof sv.lat === "number" && !sv.auto) { setLocation(sv.name, sv.lat, sv.lon, sv.tz); return; } } catch {}
+  // Nur ein Ort, den der Nutzer selbst gewählt hat (v:2, nicht auto), bleibt fest. Alte Einträge (ohne v:2) waren oft nur
+  // die Ersatzstadt (z. B. Berlin) und blieben für immer hängen → der ganze Himmel stand um mehrere Grad falsch.
+  let sv = null;
+  try { sv = JSON.parse(localStorage.getItem("sky-loc") || "null"); } catch {}
+  if (sv && typeof sv.lat === "number" && sv.v === 2 && !sv.auto) { setLocation(sv.name, sv.lat, sv.lon, sv.tz); return; }
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
-  const c = CITIES.find((x) => x[0] === PREFERRED[tz]) || CITIES.find((x) => x[4] === tz);
-  if (c) setLocation(c[0], c[1], c[2], c[4], c[3], true);
-  else setLocation("Greenwich", 51.477, 0, "Europe/London", "Vereinigtes Königreich", true);
+  if (sv && typeof sv.lat === "number" && sv.v === 2 && sv.gps) setLocation(sv.name, sv.lat, sv.lon, sv.tz, "", true, true); // letzter echter Standort als Start
+  else {
+    const c = CITIES.find((x) => x[0] === PREFERRED[tz]) || CITIES.find((x) => x[4] === tz);
+    if (c) setLocation(c[0], c[1], c[2], c[4], c[3], true);
+    else setLocation("Greenwich", 51.477, 0, "Europe/London", "Vereinigtes Königreich", true);
+  }
   // Erster Start: echten Standort nehmen statt der Ersatzstadt (sonst steht der Himmel um mehrere Grad falsch)
   try {
-    if (navigator.geolocation && localStorage.getItem("sky-geo-denied") !== "1") {
+    if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition((p) => {
-        setLocation(tr("myPlace"), p.coords.latitude, p.coords.longitude, Intl.DateTimeFormat().resolvedOptions().timeZone);
+        setLocation(tr("myPlace"), p.coords.latitude, p.coords.longitude, Intl.DateTimeFormat().resolvedOptions().timeZone, "", true, true);
         try { document.getElementById("tLoc").setAttribute("aria-pressed", "true"); } catch {}
       }, (e) => { if (e && e.code === 1) { try { localStorage.setItem("sky-geo-denied", "1"); } catch {} } }, { timeout: 15000, maximumAge: 600000 });
     }
@@ -3425,7 +3432,7 @@ const locQ = document.getElementById("locQ"), locRes = document.getElementById("
 function cityButton(name, sub, lat, lon, tz, country) {
   const li = document.createElement("li"), bt = document.createElement("button");
   bt.innerHTML = "<b></b><span></span>"; bt.firstChild.textContent = name; bt.lastChild.textContent = sub;
-  bt.onclick = () => { setLocation(name, lat, lon, tz, country); openSheet(null); locQ.value = ""; document.getElementById("tLoc").setAttribute("aria-pressed", "false"); };
+  bt.onclick = () => { setLocation(name, lat, lon, tz, country, false, false); openSheet(null); locQ.value = ""; document.getElementById("tLoc").setAttribute("aria-pressed", "false"); };
   li.appendChild(bt); return li;
 }
 function showCities(qRaw) {
@@ -3469,7 +3476,7 @@ document.getElementById("tLoc").onclick = () => {
   if (!navigator.geolocation) { locNote.textContent = tr("noGeo"); return; }
   locNote.textContent = tr("locating");
   navigator.geolocation.getCurrentPosition((p) => {
-    setLocation(tr("myPlace"), p.coords.latitude, p.coords.longitude, Intl.DateTimeFormat().resolvedOptions().timeZone);
+    setLocation(tr("myPlace"), p.coords.latitude, p.coords.longitude, Intl.DateTimeFormat().resolvedOptions().timeZone, "", true, true);
     document.getElementById("tLoc").setAttribute("aria-pressed", "true"); openSheet(null);
   }, () => { locNote.textContent = tr("geoDenied"); }, { timeout: 10000 });
 };
@@ -3607,7 +3614,7 @@ document.getElementById("tSensor").onclick = async () => {
   window.addEventListener("deviceorientation", onOrient);
   S.sensor = true; btn.setAttribute("aria-pressed", "true");
   msg.hidden = false; msg.textContent = tr("holdUp");
-  setTimeout(() => { if (S.sensor && sensorAz === null) msg.textContent = tr("noSensor"); else if (S.sensor) { msg.hidden = true; calShow(true); } }, 1500);
+  setTimeout(() => { if (S.sensor && sensorAz === null) msg.textContent = tr("noSensor"); else if (S.sensor) msg.hidden = true; }, 1500);
 };
 
 // ?g=1 (Link „Sternenhimmel mit Gyroskop“ aus dem Sonnensystem): Lagesensor gleich starten.
