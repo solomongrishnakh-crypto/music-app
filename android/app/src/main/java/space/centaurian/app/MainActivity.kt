@@ -689,21 +689,8 @@ private fun animJs(on: Boolean): String =
         "if(!window.__cnClick){window.__cnClick=1;document.addEventListener('click',function(e){try{var t=e.target&&e.target.closest&&e.target.closest('a,button,[role=button],summary,label,input,select');if(t&&window.CenNative){var tx=(t.textContent||'').trim();var bk=t.getAttribute('aria-expanded')==='true'||(tx.length<24&&(tx.charAt(0)==='\u2190'||tx.charAt(0)==='\u2039'));if(bk&&CenNative.clickBack)CenNative.clickBack();else if(CenNative.click)CenNative.click();}}catch(x){}},true);}" +
         "var o=document.getElementById('cn-anim');if(o)o.remove();" +
         (if (on) "" else "if(!keep){var s=document.createElement('style');s.id='cn-anim';s.textContent='html,body{background:#000!important}';(document.head||document.documentElement).appendChild(s);}") +
-        SCROLL_LITE_JS +
         "}catch(e){}})()"
 
-/**
- * Beim Scrollen zeichnet der Hintergrund so viele Partikel, wie fuer ca. 60+ Bilder/s noetig sind (misst die Bildzeit, 6-70 %, weich).
- * Das Schwarze Loch (Dreiecksflaeche) und die Aufloesung bleiben unveraendert. Greift in die WebGL-Aufrufe der Seite ein,
- * die Webseite selbst wird nicht veraendert.
- */
-private const val SCROLL_LITE_JS =
-    "if(!window.__cnSl){window.__cnSl=1;var act=false,tm2=0,k=1,lt=performance.now(),tgt=0.4,ema=16,pf=0;" +
-        "var loop2=function(t){if(!act){pf=0;return;}if(pf){var d=t-pf;if(d>0&&d<120){ema+=(d-ema)*0.15;if(ema>15.5)tgt=Math.max(0.06,tgt*0.94);else if(ema<12.5)tgt=Math.min(0.7,tgt*1.025);}}pf=t;requestAnimationFrame(loop2);};" +
-        "var on2=function(){var was=act;act=true;clearTimeout(tm2);tm2=setTimeout(function(){act=false;},250);if(!was){pf=0;requestAnimationFrame(loop2);}};" +
-        "addEventListener('scroll',on2,{passive:true,capture:true});addEventListener('touchmove',on2,{passive:true,capture:true});" +
-        "['WebGL2RenderingContext','WebGLRenderingContext'].forEach(function(n){var C=window[n];if(!C||!C.prototype)return;var o=C.prototype.drawArrays;" +
-        "C.prototype.drawArrays=function(m,f,c){if(m===0&&c>600){var t=performance.now(),d=t-lt;if(d>4){lt=t;var g=act?tgt:1;k+=(g-k)*Math.min(1,d/180);}c=Math.max(1,(c*k)|0);}return o.call(this,m,f,c);};});}"
 
 /** Kompakte, futuristische Suchergebnisse (Zeilen statt grosser Kacheln) - nur in der App. */
 private const val RESULTS_CSS =
