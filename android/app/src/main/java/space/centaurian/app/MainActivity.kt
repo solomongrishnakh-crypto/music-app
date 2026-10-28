@@ -66,7 +66,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
@@ -653,44 +652,7 @@ private fun AppRoot() {
     }
 
     LaunchedEffect(Unit) { Updater.check(ctx, false) }
-    val upd = Updater.avail
-    if (upd != null) {
-        AlertDialog(
-            onDismissRequest = { if (Updater.progress < 0) Updater.avail = null },
-            containerColor = Color(0xFF14090B),
-            title = { Text(if (de) "Update verfügbar" else Tr.t(lang, "Update available"), color = TextMain, fontFamily = Mono, fontSize = 15.sp) },
-            text = {
-                Column {
-                    Text(
-                        (if (de) "Neue Version " else Tr.t(lang, "New version ")) + upd.name +
-                            (if (de) ". Die App lädt das Update und startet die Installation." else Tr.t(lang, ". The app downloads the update and starts the installation.")),
-                        color = TextMuted, fontSize = 13.sp,
-                    )
-                    if (Updater.progress >= 0) {
-                        Spacer(Modifier.height(10.dp))
-                        LinearProgressIndicator(progress = { Updater.progress / 100f }, modifier = Modifier.fillMaxWidth().height(3.dp), color = Accent, trackColor = LineSoft)
-                    }
-                    if (Updater.msg == "!") {
-                        Spacer(Modifier.height(8.dp))
-                        Text(if (de) "Download fehlgeschlagen. Versuch es nochmal." else Tr.t(lang, "Download failed. Try again."), color = Accent, fontSize = 12.sp)
-                    }
-                }
-            },
-            confirmButton = {
-                Text(
-                    if (Updater.progress >= 0) "…" else if (de) "JETZT AKTUALISIEREN" else Tr.t(lang, "UPDATE NOW"),
-                    color = Accent, fontFamily = Mono, fontSize = 12.sp, fontWeight = FontWeight.Bold,
-                    modifier = Modifier.clickable(enabled = Updater.progress < 0) { Updater.msg = ""; Updater.start(ctx) }.padding(12.dp),
-                )
-            },
-            dismissButton = {
-                if (Updater.progress < 0) Text(
-                    if (de) "SPÄTER" else Tr.t(lang, "LATER"), color = TextMuted, fontFamily = Mono, fontSize = 12.sp,
-                    modifier = Modifier.clickable { Updater.avail = null }.padding(12.dp),
-                )
-            },
-        )
-    }
+    UpdateDialog(lang)
     BackHandler(enabled = drawer.currentValue == DrawerValue.Open) { ClickSound.play(true); scope.launch { drawer.close() } }
 }
 
