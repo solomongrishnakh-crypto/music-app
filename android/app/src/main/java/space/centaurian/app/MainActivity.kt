@@ -410,6 +410,19 @@ class MainActivity : ComponentActivity() {
             pendingGeo = null
         }
 
+    private var pendingCam: ((Boolean) -> Unit)? = null
+    private val camLauncher =
+        registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+            pendingCam?.invoke(granted)
+            pendingCam = null
+        }
+
+    /** Kamera-Erlaubnis fuer den Kamera-Modus des Sternenhimmels (fragt nur beim ersten Mal). */
+    fun withCameraPermission(onResult: (Boolean) -> Unit) {
+        if (checkSelfPermission(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) onResult(true)
+        else { pendingCam = onResult; camLauncher.launch(Manifest.permission.CAMERA) }
+    }
+
     fun withLocationPermission(onGranted: () -> Unit) {
         val ok = checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
         if (ok) {
@@ -1409,6 +1422,16 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
 
                             override fun onGeolocationPermissionsShowPrompt(origin: String?, callback: GeolocationPermissions.Callback?) {
                                 activity.withLocationPermission { callback?.invoke(origin, true, false) }
+                            }
+
+                            override fun onPermissionRequest(request: android.webkit.PermissionRequest?) {
+                                val r = request ?: return
+                                val host = r.origin?.host ?: ""
+                                val video = r.resources.contains(android.webkit.PermissionRequest.RESOURCE_VIDEO_CAPTURE)
+                                if (!video || !(host == "centaurianspace.com" || host.endsWith(".centaurianspace.com"))) { r.deny(); return }
+                                activity.withCameraPermission { ok ->
+                                    if (ok) r.grant(arrayOf(android.webkit.PermissionRequest.RESOURCE_VIDEO_CAPTURE)) else r.deny()
+                                }
                             }
                         }
                         webViewClient = object : WebViewClient() {

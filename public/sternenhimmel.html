@@ -27,6 +27,14 @@ body { margin: 0; background: var(--night); color: var(--ink); font-family: var(
 #skygl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; pointer-events: none; }
 #sky { position: fixed; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; display: block; }
 #sky.drag { cursor: grabbing; }
+/* Kamera-Modus (AR): Kamerabild liegt unter dem Himmel, der Regler blendet den gerechneten Himmel aus */
+#camVid { position: fixed; inset: 0; width: 100%; height: 100%; object-fit: cover; display: none; background: #000; pointer-events: none; }
+body.cam #camVid { display: block; }
+#tCam { top: calc(70px + env(safe-area-inset-top, 0px)); left: 16px; }
+#camBox { position: fixed; z-index: 4; right: 10px; top: 50%; width: 44px; height: 40vh; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; justify-content: space-between; color: var(--ink); font: 600 13px/1 var(--font-sans); }
+#camBox[hidden] { display: none; }
+#camBox .rng { position: relative; flex: 1; width: 100%; margin: 10px 0; }
+#camAlpha { position: absolute; left: 50%; top: 50%; width: 30vh; height: 28px; margin: -14px 0 0 -15vh; transform: rotate(-90deg); background: transparent; accent-color: #ff5a4d; touch-action: none; }
 .round { position: fixed; z-index: 4; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; background: var(--glass); border: 1px solid var(--line); color: var(--ink); cursor: pointer; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); padding: 0; }
 .round svg { width: 24px; height: 24px; }
 .round[aria-pressed="true"] { border-color: rgba(255, 90, 77, 0.8); box-shadow: 0 0 0 1px rgba(255, 90, 77, 0.4), 0 0 14px rgba(255, 90, 77, 0.35); }
@@ -145,6 +153,7 @@ button.chip[aria-pressed="true"] { box-shadow: 0 0 14px -5px rgba(255, 90, 77, 0
 #wikiText.clamp { max-height: 22em; }
 </style>
 
+<video id="camVid" playsinline muted autoplay aria-hidden="true"></video>
 <canvas id="skygl" aria-hidden="true"></canvas>
 <canvas id="sky" data-i18n-aria="skyAria" aria-label="Interaktiver Sternenhimmel"></canvas>
 
@@ -162,6 +171,10 @@ button.chip[aria-pressed="true"] { box-shadow: 0 0 14px -5px rgba(255, 90, 77, 0
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
 </button>
 
+<button class="round" id="tCam" aria-pressed="false" data-i18n-aria="camBtn" data-i18n-title="camBtn" aria-label="Kamera-Modus (AR)" title="Kamera-Modus (AR)">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M3 8.5A1.5 1.5 0 0 1 4.5 7H8l1.4-2h5.2L16 7h3.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/><circle cx="12" cy="13" r="3.6"/></svg>
+</button>
+<div id="camBox" hidden><span aria-hidden="true">+</span><div class="rng"><input type="range" id="camAlpha" min="0" max="100" value="80" data-i18n-aria="camView" aria-label="Kamerabild"></div><span aria-hidden="true">−</span></div>
 <div id="sensorMsg" hidden></div>
 <button id="horizonBtn" class="chip" hidden data-i18n="toHorizon">↑ Zum Horizont</button>
 <button id="calBtn" class="chip" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" aria-hidden="true"><circle cx="12" cy="12" r="6.5"/><circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none"/><path d="M12 1.5v4M12 18.5v4M1.5 12h4M18.5 12h4"/><path d="M4.5 7V4.5H7M17 4.5h2.5V7M19.5 17v2.5H17M7 19.5H4.5V17" stroke-width="1"/></svg><span data-i18n="calBtn">Ausrichten</span></button>
@@ -296,6 +309,7 @@ Object.assign(I18N.de, { properMotion: "Eigenbewegung", radialVel: "Radialgeschw
 Object.assign(I18N.en, { properMotion: "Proper motion", radialVel: "Radial velocity", dataSrc: "Data source", simbadWait: "loading data …" });
 // Ausrichten (28.10.2026), alle 15 Sprachen
 { const CAL = {"de": {"calBtn": "Ausrichten", "calHelp": "Halte das Handy hoch, sodass der echte Mond (oder Sonne, ein Planet, ein heller Stern) genau hinter der Mitte des Handys steht, und tippe dann „Fertig“. Tipp: Schwenke das Handy vorher 3× in einer Acht.", "calDone": "Fertig", "calReset": "Zurücksetzen", "calCancel": "Abbrechen", "calOk": "Ausgerichtet auf {o} ✓", "calNone": "Kein heller Himmelskörper in der Nähe der Mitte – ziele auf Mond, Sonne, einen Planeten oder hellen Stern.", "calResetOk": "Ausrichtung zurückgesetzt"}, "en": {"calBtn": "Align", "calHelp": "Hold the phone up so the real Moon (or Sun, a planet, a bright star) is exactly behind the centre of the phone, then tap “Done”. Tip: first wave the phone in a figure-8 three times.", "calDone": "Done", "calReset": "Reset", "calCancel": "Cancel", "calOk": "Aligned on {o} ✓", "calNone": "No bright object near the centre – aim at the Moon, Sun, a planet or a bright star.", "calResetOk": "Alignment reset"}, "fr": {"calBtn": "Aligner", "calHelp": "Tenez le téléphone de sorte que la vraie Lune (ou le Soleil, une planète, une étoile brillante) soit exactement derrière le centre du téléphone, puis touchez « Terminé ». Astuce : agitez d’abord le téléphone 3 fois en forme de 8.", "calDone": "Terminé", "calReset": "Réinitialiser", "calCancel": "Annuler", "calOk": "Aligné sur {o} ✓", "calNone": "Aucun objet brillant près du centre – visez la Lune, le Soleil, une planète ou une étoile brillante.", "calResetOk": "Alignement réinitialisé"}, "es": {"calBtn": "Alinear", "calHelp": "Sostén el móvil de modo que la Luna real (o el Sol, un planeta, una estrella brillante) quede justo detrás del centro del móvil y toca «Listo». Consejo: antes mueve el móvil 3 veces en forma de 8.", "calDone": "Listo", "calReset": "Restablecer", "calCancel": "Cancelar", "calOk": "Alineado con {o} ✓", "calNone": "No hay ningún objeto brillante cerca del centro: apunta a la Luna, el Sol, un planeta o una estrella brillante.", "calResetOk": "Alineación restablecida"}, "pt": {"calBtn": "Alinhar", "calHelp": "Segure o celular de modo que a Lua real (ou o Sol, um planeta, uma estrela brilhante) fique exatamente atrás do centro do celular e toque em “Pronto”. Dica: antes, mova o celular 3 vezes em forma de 8.", "calDone": "Pronto", "calReset": "Redefinir", "calCancel": "Cancelar", "calOk": "Alinhado com {o} ✓", "calNone": "Nenhum objeto brilhante perto do centro – mire na Lua, no Sol, num planeta ou numa estrela brilhante.", "calResetOk": "Alinhamento redefinido"}, "tr": {"calBtn": "Hizala", "calHelp": "Telefonu, gerçek Ay (ya da Güneş, bir gezegen, parlak bir yıldız) tam telefonun ortasının arkasında kalacak şekilde tutun ve “Tamam”a dokunun. İpucu: Önce telefonu 3 kez 8 çizerek sallayın.", "calDone": "Tamam", "calReset": "Sıfırla", "calCancel": "İptal", "calOk": "{o} üzerine hizalandı ✓", "calNone": "Ortaya yakın parlak bir gök cismi yok – Ay'a, Güneş'e, bir gezegene ya da parlak bir yıldıza nişan alın.", "calResetOk": "Hizalama sıfırlandı"}, "ru": {"calBtn": "Выровнять", "calHelp": "Держите телефон так, чтобы настоящая Луна (или Солнце, планета, яркая звезда) была точно за центром телефона, и нажмите «Готово». Совет: сначала 3 раза поводите телефоном восьмёркой.", "calDone": "Готово", "calReset": "Сбросить", "calCancel": "Отмена", "calOk": "Выровнено по: {o} ✓", "calNone": "Рядом с центром нет яркого объекта — наведите на Луну, Солнце, планету или яркую звезду.", "calResetOk": "Выравнивание сброшено"}, "el": {"calBtn": "Ευθυγράμμιση", "calHelp": "Κρατήστε το κινητό ώστε η πραγματική Σελήνη (ή ο Ήλιος, ένας πλανήτης, ένα λαμπρό αστέρι) να βρίσκεται ακριβώς πίσω από το κέντρο του κινητού και πατήστε «Τέλος». Συμβουλή: πρώτα κουνήστε το κινητό 3 φορές σε σχήμα 8.", "calDone": "Τέλος", "calReset": "Επαναφορά", "calCancel": "Ακύρωση", "calOk": "Ευθυγράμμιση με: {o} ✓", "calNone": "Κανένα λαμπρό αντικείμενο κοντά στο κέντρο – στοχεύστε τη Σελήνη, τον Ήλιο, έναν πλανήτη ή ένα λαμπρό αστέρι.", "calResetOk": "Η ευθυγράμμιση επαναφέρθηκε"}, "id": {"calBtn": "Sejajarkan", "calHelp": "Pegang ponsel sehingga Bulan asli (atau Matahari, planet, bintang terang) tepat berada di belakang tengah ponsel, lalu ketuk “Selesai”. Tips: gerakkan ponsel membentuk angka 8 sebanyak 3 kali terlebih dulu.", "calDone": "Selesai", "calReset": "Atur ulang", "calCancel": "Batal", "calOk": "Disejajarkan ke {o} ✓", "calNone": "Tidak ada objek terang di dekat tengah – arahkan ke Bulan, Matahari, planet, atau bintang terang.", "calResetOk": "Penjajaran diatur ulang"}, "hi": {"calBtn": "संरेखित करें", "calHelp": "फ़ोन को ऐसे पकड़ें कि असली चाँद (या सूरज, कोई ग्रह, कोई चमकीला तारा) ठीक फ़ोन के बीच के पीछे हो, फिर “हो गया” दबाएँ। सुझाव: पहले फ़ोन को 3 बार 8 के आकार में घुमाएँ।", "calDone": "हो गया", "calReset": "रीसेट", "calCancel": "रद्द करें", "calOk": "{o} पर संरेखित ✓", "calNone": "बीच के पास कोई चमकीला पिंड नहीं – चाँद, सूरज, किसी ग्रह या चमकीले तारे की ओर करें।", "calResetOk": "संरेखण रीसेट हुआ"}, "zh": {"calBtn": "校准", "calHelp": "举起手机，让真实的月亮（或太阳、行星、亮星）正好位于手机中心的后方，然后点“完成”。提示：先把手机按 8 字形挥动 3 次。", "calDone": "完成", "calReset": "重置", "calCancel": "取消", "calOk": "已对准{o} ✓", "calNone": "中心附近没有明亮天体——请对准月亮、太阳、行星或亮星。", "calResetOk": "校准已重置"}, "ja": {"calBtn": "位置合わせ", "calHelp": "本物の月（または太陽・惑星・明るい星）がスマホの中心のちょうど真後ろに来るように持ち、「完了」をタップしてください。ヒント：先にスマホを8の字に3回振ってください。", "calDone": "完了", "calReset": "リセット", "calCancel": "キャンセル", "calOk": "{o}に合わせました ✓", "calNone": "中心付近に明るい天体がありません。月・太陽・惑星・明るい星に向けてください。", "calResetOk": "位置合わせをリセットしました"}, "ko": {"calBtn": "보정", "calHelp": "실제 달(또는 태양, 행성, 밝은 별)이 휴대폰 중앙 바로 뒤에 오도록 들고 “완료”를 누르세요. 팁: 먼저 휴대폰을 8자 모양으로 3번 흔드세요.", "calDone": "완료", "calReset": "초기화", "calCancel": "취소", "calOk": "{o}에 맞춤 ✓", "calNone": "중앙 근처에 밝은 천체가 없습니다. 달, 태양, 행성 또는 밝은 별을 향하세요.", "calResetOk": "보정 초기화됨"}, "ar": {"calBtn": "معايرة", "calHelp": "أمسك الهاتف بحيث يكون القمر الحقيقي (أو الشمس أو كوكب أو نجم ساطع) خلف منتصف الهاتف تمامًا، ثم اضغط «تم». نصيحة: حرّك الهاتف أولًا على شكل الرقم 8 ثلاث مرات.", "calDone": "تم", "calReset": "إعادة ضبط", "calCancel": "إلغاء", "calOk": "تمت المعايرة على {o} ✓", "calNone": "لا يوجد جرم ساطع قرب المنتصف – وجّه الهاتف نحو القمر أو الشمس أو كوكب أو نجم ساطع.", "calResetOk": "تمت إعادة ضبط المعايرة"}, "fa": {"calBtn": "تنظیم", "calHelp": "گوشی را طوری بگیرید که ماه واقعی (یا خورشید، یک سیاره، یک ستارهٔ پرنور) دقیقاً پشت وسط گوشی باشد، سپس «تمام» را بزنید. نکته: اول گوشی را ۳ بار به شکل عدد ۸ تکان دهید.", "calDone": "تمام", "calReset": "بازنشانی", "calCancel": "لغو", "calOk": "روی {o} تنظیم شد ✓", "calNone": "هیچ جرم پرنوری نزدیک وسط نیست – گوشی را به سمت ماه، خورشید، یک سیاره یا ستارهٔ پرنور بگیرید.", "calResetOk": "تنظیم بازنشانی شد"}};
+{ const CAM = {"de": {"camBtn": "Kamera-Modus (AR)", "camDenied": "Kamera nicht erlaubt oder nicht verfügbar", "camView": "Kamerabild"}, "en": {"camBtn": "Camera mode (AR)", "camDenied": "Camera not allowed or unavailable", "camView": "Camera view"}, "fr": {"camBtn": "Mode caméra (RA)", "camDenied": "Caméra non autorisée ou indisponible", "camView": "Image de la caméra"}, "es": {"camBtn": "Modo cámara (RA)", "camDenied": "Cámara no permitida o no disponible", "camView": "Imagen de la cámara"}, "pt": {"camBtn": "Modo câmera (RA)", "camDenied": "Câmera não permitida ou indisponível", "camView": "Imagem da câmera"}, "tr": {"camBtn": "Kamera modu (AR)", "camDenied": "Kamera izni yok veya kullanılamıyor", "camView": "Kamera görüntüsü"}, "ru": {"camBtn": "Режим камеры (AR)", "camDenied": "Камера не разрешена или недоступна", "camView": "Изображение камеры"}, "el": {"camBtn": "Λειτουργία κάμερας (AR)", "camDenied": "Η κάμερα δεν επιτρέπεται ή δεν είναι διαθέσιμη", "camView": "Εικόνα κάμερας"}, "id": {"camBtn": "Mode kamera (AR)", "camDenied": "Kamera tidak diizinkan atau tidak tersedia", "camView": "Tampilan kamera"}, "hi": {"camBtn": "कैमरा मोड (AR)", "camDenied": "कैमरा की अनुमति नहीं है या उपलब्ध नहीं है", "camView": "कैमरा दृश्य"}, "zh": {"camBtn": "相机模式 (AR)", "camDenied": "相机未获允许或不可用", "camView": "相机画面"}, "ja": {"camBtn": "カメラモード (AR)", "camDenied": "カメラが許可されていないか、利用できません", "camView": "カメラ映像"}, "ko": {"camBtn": "카메라 모드 (AR)", "camDenied": "카메라가 허용되지 않았거나 사용할 수 없습니다", "camView": "카메라 화면"}, "ar": {"camBtn": "وضع الكاميرا (AR)", "camDenied": "الكاميرا غير مسموحة أو غير متاحة", "camView": "صورة الكاميرا"}, "fa": {"camBtn": "حالت دوربین (AR)", "camDenied": "دوربین مجاز یا در دسترس نیست", "camView": "تصویر دوربین"}}; for (const l in CAM) if (I18N[l]) Object.assign(I18N[l], CAM[l]); }
   for (const l in CAL) if (I18N[l]) Object.assign(I18N[l], CAL[l]); }
 const TX = I18N[LANG];
 // Persian (fa) names for constellations, stars and deep-sky objects (from Persian Wikipedia titles / traditional Arabic-Persian star names)
@@ -482,6 +496,7 @@ resize();
 // Koordinaten → Milchstraße aus mehrstufigem Rauschen: Grundschleier,
 // körnige Sternwolken, verästelte Staubbahnen (Großer Riss, Kohlensack)
 // und rötliche Gasnebel. Unter dem Horizont: Spiegelung im Wasser.
+let camOn = false;
 const glCanvas = document.getElementById("skygl");
 const glSky = (() => {
   let gl = null;
@@ -1597,7 +1612,7 @@ function draw() {
     grad.addColorStop(0, rgb(top)); grad.addColorStop(1, rgb(hor));
     ctx.fillStyle = grad; ctx.fillRect(0, 0, W, H);
   }
-  if (S.atmo && !S.nightMode && sunAlt > -18 && sunAlt < 8) {
+  if (S.atmo && !camOn && !S.nightMode && sunAlt > -18 && sunAlt < 8) {
     const sv = eqToEnu(sun.ra, sun.sd, sun.cd, tmpV);
     const sa = vecToAltAz(sv);
     if (project(enu(sa.az, 0), P)) {
@@ -1810,7 +1825,7 @@ function draw() {
      if (S.sel && S.sel.type === "body" && (S.sel.id === "sun" || S.sel.id === "moon")) drawSunPath(S.sel.id, jd);
 
   // Boden mit Horizontlinie
-  if (S.atmo) drawGround(day);
+  if (S.atmo && !camOn) drawGround(day);
   else drawHorizonLine();
 
   // Beschriftungen
@@ -3596,6 +3611,7 @@ horizonBtn.onclick = () => {
   anim = { az0: S.az, alt0: S.alt, fov0: S.fov, az1: S.az, alt1: 15 * DEG, fov1: Math.max(S.fov, 60 * DEG), t0: performance.now() };
 };
 function stopSensor() {
+  if (camOn) camStop();
   S.sensor = false; document.getElementById("tSensor").setAttribute("aria-pressed", "false");
   window.removeEventListener("deviceorientationabsolute", onOrient); window.removeEventListener("deviceorientation", onOrient);
 }
@@ -3616,6 +3632,42 @@ document.getElementById("tSensor").onclick = async () => {
   msg.hidden = false; msg.textContent = tr("holdUp");
   setTimeout(() => { if (S.sensor && sensorAz === null) msg.textContent = tr("noSensor"); else if (S.sensor) msg.hidden = true; }, 1500);
 };
+
+// Kamera-Modus (AR, Nutzerwunsch 28.10.2026): echtes Kamerabild als Hintergrund, die Sterne liegen darüber.
+// Der Regler (rechts) blendet den berechneten Himmel aus bzw. das Kamerabild ein. Braucht den Lagesensor.
+const camVid = document.getElementById("camVid"), tCam = document.getElementById("tCam"), camBox = document.getElementById("camBox"), camAlpha = document.getElementById("camAlpha");
+let camStream = null, camFov0 = null;
+try { const a = localStorage.getItem("sky-cam-a"); if (a !== null && isFinite(+a)) camAlpha.value = String(Math.max(0, Math.min(100, +a))); } catch {}
+function camApply() {
+  glCanvas.style.opacity = String(1 - (+camAlpha.value) / 100);
+  try { localStorage.setItem("sky-cam-a", camAlpha.value); } catch {}
+}
+camAlpha.oninput = camApply;
+function camFail() {
+  const m = document.getElementById("sensorMsg"); m.hidden = false; m.textContent = tr("camDenied");
+  clearTimeout(camFail.t); camFail.t = setTimeout(() => { if (!S.sensor) m.hidden = true; }, 5000);
+}
+async function camStart() {
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) { camFail(); return; }
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 }, height: { ideal: 720 } }, audio: false });
+  } catch { camFail(); return; }
+  camVid.srcObject = camStream;
+  try { await camVid.play(); } catch {}
+  camOn = true; document.body.classList.add("cam"); tCam.setAttribute("aria-pressed", "true"); camBox.hidden = false;
+  // Bildwinkel an die Hauptkamera anpassen (~68° senkrecht), sonst passen Sterne und Kamerabild nicht zusammen
+  camFov0 = S.fov; S.fov = 68 * DEG; camApply();
+  if (!S.sensor) document.getElementById("tSensor").click();
+}
+function camStop() {
+  try { if (camStream) camStream.getTracks().forEach((t) => t.stop()); } catch {}
+  camStream = null; camVid.srcObject = null;
+  camOn = false; document.body.classList.remove("cam"); tCam.setAttribute("aria-pressed", "false"); camBox.hidden = true;
+  glCanvas.style.opacity = "";
+  if (camFov0 !== null) { S.fov = camFov0; camFov0 = null; }
+}
+tCam.onclick = () => { if (camOn) camStop(); else camStart(); };
+window.addEventListener("pagehide", () => { if (camOn) camStop(); });
 
 // ?g=1 (Link „Sternenhimmel mit Gyroskop“ aus dem Sonnensystem): Lagesensor gleich starten.
 // iOS verlangt dafür eine Berührung (Erlaubnis-Dialog), Android startet sofort.

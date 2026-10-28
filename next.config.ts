@@ -17,7 +17,7 @@ const securityHeaders = [
     key: "Permissions-Policy",
     // geolocation=(self): der Sternenhimmel darf (nach Nachfrage) den
     // eigenen Standort nutzen — fremde Seiten weiterhin nicht.
-    value: "camera=(), microphone=(), geolocation=(self), payment=()",
+    value: "camera=(self), microphone=(), geolocation=(self), payment=()",
   },
   // Erzwingt HTTPS bei allen zukünftigen Aufrufen (nur wirksam, sobald
   // die Seite tatsächlich per HTTPS ausgeliefert wird).
