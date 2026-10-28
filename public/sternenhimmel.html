@@ -3551,9 +3551,10 @@ function onOrient(e) {
 // dessen genaue Lage und merkt sich den Unterschied als Versatz (Richtung + Höhe).
 const PI2 = Math.PI / 2;
 let cal = { az: 0, alt: 0 }, calMode = false;
-try { const c = JSON.parse(localStorage.getItem("sky-cal") || "null"); if (c && isFinite(c.az) && isFinite(c.alt)) cal = { az: c.az, alt: c.alt }; } catch {}
+// Der Kompassfehler ist bei jedem Start anders (Ort, Metall, Magnetfeld) → ein alter Versatz würde nur schaden: nicht mehr laden.
+try { localStorage.removeItem("sky-cal"); } catch {}
 const calBtn = document.getElementById("calBtn"), calPanel = document.getElementById("calPanel"), calCross = document.getElementById("calCross");
-function calSave() { try { localStorage.setItem("sky-cal", JSON.stringify(cal)); } catch {} }
+function calSave() { /* absichtlich nicht gespeichert, siehe oben */ }
 function calShow(on) { calMode = on; calPanel.hidden = !on; calCross.toggleAttribute("hidden", !on); calBtn.hidden = on || !S.sensor; }
 function calMsg(t) { const m = document.getElementById("sensorMsg"); m.hidden = false; m.textContent = t; clearTimeout(calMsg.t); calMsg.t = setTimeout(() => { m.hidden = true; }, 4000); }
 setInterval(() => { if (!calMode) calBtn.hidden = !S.sensor; else if (!S.sensor) calShow(false); }, 400);
@@ -3601,11 +3602,12 @@ document.getElementById("tSensor").onclick = async () => {
     }
   } catch { msg.hidden = false; msg.textContent = tr("sensorDenied"); setTimeout(() => { if (!S.sensor) msg.hidden = true; }, 9000); return; }
   sensorAz = null; absSeen = false; absP = null; relP = null; yawOff = null;
+  cal = { az: 0, alt: 0 };
   window.addEventListener("deviceorientationabsolute", onOrient);
   window.addEventListener("deviceorientation", onOrient);
   S.sensor = true; btn.setAttribute("aria-pressed", "true");
   msg.hidden = false; msg.textContent = tr("holdUp");
-  setTimeout(() => { if (S.sensor && sensorAz === null) msg.textContent = tr("noSensor"); else if (S.sensor) msg.hidden = true; }, 1500);
+  setTimeout(() => { if (S.sensor && sensorAz === null) msg.textContent = tr("noSensor"); else if (S.sensor) { msg.hidden = true; calShow(true); } }, 1500);
 };
 
 // ?g=1 (Link „Sternenhimmel mit Gyroskop“ aus dem Sonnensystem): Lagesensor gleich starten.
