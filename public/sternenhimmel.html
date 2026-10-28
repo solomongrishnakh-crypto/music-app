@@ -78,6 +78,15 @@ button.chip[aria-pressed="true"] { color: var(--ink); border-color: rgba(255, 90
 #wikiSrc { color: var(--muted); font-size: 11px; }
 #horizonBtn { position: fixed; z-index: 3; left: 50%; transform: translateX(-50%); top: calc(104px + env(safe-area-inset-top, 0px)); font: 500 13px/1 var(--font-sans); color: var(--ink); background: var(--glass); border: 1px solid var(--line); border-radius: 999px; padding: 9px 14px; cursor: pointer; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 #horizonBtn[hidden] { display: none; }
+/* Ausrichten (28.10.2026): Kompass-/Neigungsfehler des Handys an Mond/Stern korrigieren */
+#calBtn { position: fixed; z-index: 3; left: 50%; transform: translateX(-50%); bottom: calc(96px + env(safe-area-inset-bottom, 0px)); font: 500 13px/1 var(--font-sans); color: var(--ink); background: var(--glass); border: 1px solid var(--line); border-radius: 999px; padding: 10px 16px; cursor: pointer; }
+#calBtn[hidden], #calPanel[hidden], #calCross[hidden] { display: none; }
+#calCross { position: fixed; z-index: 3; left: 50%; top: 50%; width: 56px; height: 56px; margin: -28px 0 0 -28px; pointer-events: none; }
+#calPanel { position: fixed; z-index: 4; left: 50%; transform: translateX(-50%); bottom: calc(24px + env(safe-area-inset-bottom, 0px)); width: min(340px, calc(100vw - 32px)); box-sizing: border-box; font: 400 13px/1.45 var(--font-sans); color: var(--ink); background: var(--glass); border: 1px solid var(--line); border-radius: 10px; padding: 12px 14px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+#calPanel p { margin: 0 0 10px; }
+#calPanel .row { display: flex; gap: 8px; flex-wrap: wrap; }
+#calPanel .row button { flex: 1; }
+#calDone { color: #fff !important; border-color: rgba(255,90,77,.7) !important; background: rgba(255,90,77,.28) !important; }
 #nightQuick { white-space: nowrap; position: fixed; z-index: 3; left: 50%; transform: translateX(-50%); top: calc(66px + env(safe-area-inset-top, 0px)); font: 500 11px/1 var(--font-sans); color: var(--ink); background: var(--glass); border: 1px solid var(--line); border-radius: 999px; padding: 5px 10px; opacity: 0.85; cursor: pointer; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 #nightQuick[hidden] { display: none; }
 #sensorMsg { position: fixed; z-index: 3; left: 50%; transform: translateX(-50%); top: calc(64px + env(safe-area-inset-top, 0px)); font-size: 13px; color: var(--ink); background: rgba(255, 90, 77, 0.25); border: 1px solid rgba(255, 90, 77, 0.5); border-radius: 10px; padding: 6px 12px; max-width: calc(100% - 40px); text-align: center; }
@@ -154,6 +163,9 @@ button.chip[aria-pressed="true"] { box-shadow: 0 0 14px -5px rgba(255, 90, 77, 0
 
 <div id="sensorMsg" hidden></div>
 <button id="horizonBtn" class="chip" hidden data-i18n="toHorizon">↑ Zum Horizont</button>
+<button id="calBtn" class="chip" hidden data-i18n="calBtn">🎯 Ausrichten</button>
+<svg id="calCross" hidden viewBox="0 0 56 56" fill="none" stroke="#ff5a4d" stroke-width="1.6"><circle cx="28" cy="28" r="14"/><path d="M28 2v14M28 40v14M2 28h14M40 28h14"/></svg>
+<div id="calPanel" hidden><p data-i18n="calHelp"></p><div class="row"><button class="chip" id="calDone" data-i18n="calDone">Fertig</button><button class="chip" id="calReset" data-i18n="calReset">Zurücksetzen</button><button class="chip" id="calCancel" data-i18n="calCancel">Abbrechen</button></div></div>
 <button id="nightQuick" hidden></button>
 
 <div class="sheet" id="timeSheet" hidden>
@@ -281,6 +293,9 @@ const LANG = (() => {
 })();
 Object.assign(I18N.de, { properMotion: "Eigenbewegung", radialVel: "Radialgeschwindigkeit", dataSrc: "Datenquelle", simbadWait: "lade Daten …" });
 Object.assign(I18N.en, { properMotion: "Proper motion", radialVel: "Radial velocity", dataSrc: "Data source", simbadWait: "loading data …" });
+// Ausrichten (28.10.2026), alle 15 Sprachen
+{ const CAL = {"de": {"calBtn": "🎯 Ausrichten", "calHelp": "Halte das Handy hoch, sodass der echte Mond (oder Sonne, ein Planet, ein heller Stern) genau hinter der Mitte des Handys steht, und tippe dann „Fertig“. Tipp: Schwenke das Handy vorher 3× in einer Acht.", "calDone": "Fertig", "calReset": "Zurücksetzen", "calCancel": "Abbrechen", "calOk": "Ausgerichtet auf {o} ✓", "calNone": "Kein heller Himmelskörper in der Nähe der Mitte – ziele auf Mond, Sonne, einen Planeten oder hellen Stern.", "calResetOk": "Ausrichtung zurückgesetzt"}, "en": {"calBtn": "🎯 Align", "calHelp": "Hold the phone up so the real Moon (or Sun, a planet, a bright star) is exactly behind the centre of the phone, then tap “Done”. Tip: first wave the phone in a figure-8 three times.", "calDone": "Done", "calReset": "Reset", "calCancel": "Cancel", "calOk": "Aligned on {o} ✓", "calNone": "No bright object near the centre – aim at the Moon, Sun, a planet or a bright star.", "calResetOk": "Alignment reset"}, "fr": {"calBtn": "🎯 Aligner", "calHelp": "Tenez le téléphone de sorte que la vraie Lune (ou le Soleil, une planète, une étoile brillante) soit exactement derrière le centre du téléphone, puis touchez « Terminé ». Astuce : agitez d’abord le téléphone 3 fois en forme de 8.", "calDone": "Terminé", "calReset": "Réinitialiser", "calCancel": "Annuler", "calOk": "Aligné sur {o} ✓", "calNone": "Aucun objet brillant près du centre – visez la Lune, le Soleil, une planète ou une étoile brillante.", "calResetOk": "Alignement réinitialisé"}, "es": {"calBtn": "🎯 Alinear", "calHelp": "Sostén el móvil de modo que la Luna real (o el Sol, un planeta, una estrella brillante) quede justo detrás del centro del móvil y toca «Listo». Consejo: antes mueve el móvil 3 veces en forma de 8.", "calDone": "Listo", "calReset": "Restablecer", "calCancel": "Cancelar", "calOk": "Alineado con {o} ✓", "calNone": "No hay ningún objeto brillante cerca del centro: apunta a la Luna, el Sol, un planeta o una estrella brillante.", "calResetOk": "Alineación restablecida"}, "pt": {"calBtn": "🎯 Alinhar", "calHelp": "Segure o celular de modo que a Lua real (ou o Sol, um planeta, uma estrela brilhante) fique exatamente atrás do centro do celular e toque em “Pronto”. Dica: antes, mova o celular 3 vezes em forma de 8.", "calDone": "Pronto", "calReset": "Redefinir", "calCancel": "Cancelar", "calOk": "Alinhado com {o} ✓", "calNone": "Nenhum objeto brilhante perto do centro – mire na Lua, no Sol, num planeta ou numa estrela brilhante.", "calResetOk": "Alinhamento redefinido"}, "tr": {"calBtn": "🎯 Hizala", "calHelp": "Telefonu, gerçek Ay (ya da Güneş, bir gezegen, parlak bir yıldız) tam telefonun ortasının arkasında kalacak şekilde tutun ve “Tamam”a dokunun. İpucu: Önce telefonu 3 kez 8 çizerek sallayın.", "calDone": "Tamam", "calReset": "Sıfırla", "calCancel": "İptal", "calOk": "{o} üzerine hizalandı ✓", "calNone": "Ortaya yakın parlak bir gök cismi yok – Ay'a, Güneş'e, bir gezegene ya da parlak bir yıldıza nişan alın.", "calResetOk": "Hizalama sıfırlandı"}, "ru": {"calBtn": "🎯 Выровнять", "calHelp": "Держите телефон так, чтобы настоящая Луна (или Солнце, планета, яркая звезда) была точно за центром телефона, и нажмите «Готово». Совет: сначала 3 раза поводите телефоном восьмёркой.", "calDone": "Готово", "calReset": "Сбросить", "calCancel": "Отмена", "calOk": "Выровнено по: {o} ✓", "calNone": "Рядом с центром нет яркого объекта — наведите на Луну, Солнце, планету или яркую звезду.", "calResetOk": "Выравнивание сброшено"}, "el": {"calBtn": "🎯 Ευθυγράμμιση", "calHelp": "Κρατήστε το κινητό ώστε η πραγματική Σελήνη (ή ο Ήλιος, ένας πλανήτης, ένα λαμπρό αστέρι) να βρίσκεται ακριβώς πίσω από το κέντρο του κινητού και πατήστε «Τέλος». Συμβουλή: πρώτα κουνήστε το κινητό 3 φορές σε σχήμα 8.", "calDone": "Τέλος", "calReset": "Επαναφορά", "calCancel": "Ακύρωση", "calOk": "Ευθυγράμμιση με: {o} ✓", "calNone": "Κανένα λαμπρό αντικείμενο κοντά στο κέντρο – στοχεύστε τη Σελήνη, τον Ήλιο, έναν πλανήτη ή ένα λαμπρό αστέρι.", "calResetOk": "Η ευθυγράμμιση επαναφέρθηκε"}, "id": {"calBtn": "🎯 Sejajarkan", "calHelp": "Pegang ponsel sehingga Bulan asli (atau Matahari, planet, bintang terang) tepat berada di belakang tengah ponsel, lalu ketuk “Selesai”. Tips: gerakkan ponsel membentuk angka 8 sebanyak 3 kali terlebih dulu.", "calDone": "Selesai", "calReset": "Atur ulang", "calCancel": "Batal", "calOk": "Disejajarkan ke {o} ✓", "calNone": "Tidak ada objek terang di dekat tengah – arahkan ke Bulan, Matahari, planet, atau bintang terang.", "calResetOk": "Penjajaran diatur ulang"}, "hi": {"calBtn": "🎯 संरेखित करें", "calHelp": "फ़ोन को ऐसे पकड़ें कि असली चाँद (या सूरज, कोई ग्रह, कोई चमकीला तारा) ठीक फ़ोन के बीच के पीछे हो, फिर “हो गया” दबाएँ। सुझाव: पहले फ़ोन को 3 बार 8 के आकार में घुमाएँ।", "calDone": "हो गया", "calReset": "रीसेट", "calCancel": "रद्द करें", "calOk": "{o} पर संरेखित ✓", "calNone": "बीच के पास कोई चमकीला पिंड नहीं – चाँद, सूरज, किसी ग्रह या चमकीले तारे की ओर करें।", "calResetOk": "संरेखण रीसेट हुआ"}, "zh": {"calBtn": "🎯 校准", "calHelp": "举起手机，让真实的月亮（或太阳、行星、亮星）正好位于手机中心的后方，然后点“完成”。提示：先把手机按 8 字形挥动 3 次。", "calDone": "完成", "calReset": "重置", "calCancel": "取消", "calOk": "已对准{o} ✓", "calNone": "中心附近没有明亮天体——请对准月亮、太阳、行星或亮星。", "calResetOk": "校准已重置"}, "ja": {"calBtn": "🎯 位置合わせ", "calHelp": "本物の月（または太陽・惑星・明るい星）がスマホの中心のちょうど真後ろに来るように持ち、「完了」をタップしてください。ヒント：先にスマホを8の字に3回振ってください。", "calDone": "完了", "calReset": "リセット", "calCancel": "キャンセル", "calOk": "{o}に合わせました ✓", "calNone": "中心付近に明るい天体がありません。月・太陽・惑星・明るい星に向けてください。", "calResetOk": "位置合わせをリセットしました"}, "ko": {"calBtn": "🎯 보정", "calHelp": "실제 달(또는 태양, 행성, 밝은 별)이 휴대폰 중앙 바로 뒤에 오도록 들고 “완료”를 누르세요. 팁: 먼저 휴대폰을 8자 모양으로 3번 흔드세요.", "calDone": "완료", "calReset": "초기화", "calCancel": "취소", "calOk": "{o}에 맞춤 ✓", "calNone": "중앙 근처에 밝은 천체가 없습니다. 달, 태양, 행성 또는 밝은 별을 향하세요.", "calResetOk": "보정 초기화됨"}, "ar": {"calBtn": "🎯 معايرة", "calHelp": "أمسك الهاتف بحيث يكون القمر الحقيقي (أو الشمس أو كوكب أو نجم ساطع) خلف منتصف الهاتف تمامًا، ثم اضغط «تم». نصيحة: حرّك الهاتف أولًا على شكل الرقم 8 ثلاث مرات.", "calDone": "تم", "calReset": "إعادة ضبط", "calCancel": "إلغاء", "calOk": "تمت المعايرة على {o} ✓", "calNone": "لا يوجد جرم ساطع قرب المنتصف – وجّه الهاتف نحو القمر أو الشمس أو كوكب أو نجم ساطع.", "calResetOk": "تمت إعادة ضبط المعايرة"}, "fa": {"calBtn": "🎯 تنظیم", "calHelp": "گوشی را طوری بگیرید که ماه واقعی (یا خورشید، یک سیاره، یک ستارهٔ پرنور) دقیقاً پشت وسط گوشی باشد، سپس «تمام» را بزنید. نکته: اول گوشی را ۳ بار به شکل عدد ۸ تکان دهید.", "calDone": "تمام", "calReset": "بازنشانی", "calCancel": "لغو", "calOk": "روی {o} تنظیم شد ✓", "calNone": "هیچ جرم پرنوری نزدیک وسط نیست – گوشی را به سمت ماه، خورشید، یک سیاره یا ستارهٔ پرنور بگیرید.", "calResetOk": "تنظیم بازنشانی شد"}};
+  for (const l in CAL) if (I18N[l]) Object.assign(I18N[l], CAL[l]); }
 const TX = I18N[LANG];
 // Persian (fa) names for constellations, stars and deep-sky objects (from Persian Wikipedia titles / traditional Arabic-Persian star names)
 { const FA = {"c":{"And":"آندرومدا","Ant":"تلمبه","Aps":"مرغ بهشتی","Aqr":"دلو","Aql":"عقاب","Ara":"آتشدان","Ari":"بره","Aur":"ارابه‌ران","Boo":"گاوران","Cae":"اسکنه","Cam":"زرافه","Cnc":"خرچنگ","CVn":"تازی‌ها","CMa":"سگ بزرگ","CMi":"سگ کوچک","Cap":"بزغاله","Car":"شاه‌تخته","Cas":"ذات‌الکرسی","Cen":"قنطورس","Cep":"قیفاووس","Cet":"نهنگ","Cha":"آفتاب‌پرست","Cir":"دوپرگار","Col":"کبوتر","Com":"گیسو","CrA":"تاج جنوبی","CrB":"تاج شمالی","Crv":"کلاغ","Crt":"پیاله","Cru":"چلیپا","Cyg":"ماکیان","Del":"دلفین","Dor":"ماهی زرین","Dra":"اژدها","Equ":"اسب کوچک","Eri":"جوی","For":"کوره","Gem":"دوپیکر","Gru":"درنا","Her":"زانوزده","Hor":"ساعت","Hya":"مار باریک","Hyi":"آبمار","Ind":"هندی","Lac":"چلپاسه","Leo":"شیر","LMi":"شیر کوچک","Lep":"خرگوش","Lib":"ترازو","Lup":"گرگ","Lyn":"سیاه‌گوش","Lyr":"شلیاق","Men":"کوه‌میز","Mic":"میکروسکوپ","Mon":"تک‌شاخ","Mus":"مگس جنوبی","Nor":"گونیا","Oct":"هشتک","Oph":"مارافسای","Ori":"شکارچی","Pav":"طاووس","Peg":"اسب بزرگ","Per":"برساوش","Phe":"سیمرغ","Pic":"سه‌پایه","Psc":"ماهی","PsA":"ماهی جنوبی","Pup":"کشتی‌دم","Pyx":"قطب‌نما","Ret":"تور","Sge":"پیکان","Sgr":"کمان","Sco":"کژدم","Scl":"سنگتراش","Sct":"سپر","Ser":"مار","Sex":"سدس","Tau":"گاو","Tel":"تلسکوپ","Tri":"سه‌سو","TrA":"مثلث جنوبی","Tuc":"توکان","UMa":"دب اکبر","UMi":"دب اصغر","Vel":"بادبان","Vir":"دوشیزه","Vol":"ماهی پرنده","Vul":"روباهک"},"s":{"Sirius":"شباهنگ","Canopus":"سهیل","Arcturus":"سماک رامح","Rigil Kentaurus":"رجل قنطورس","Vega":"نسر واقع","Capella":"عیوق","Rigel":"رجل الجبار","Procyon":"شعرای شامی","Achernar":"آخرالنهر","Betelgeuse":"ابط‌الجوزا","Altair":"نسر طایر","Aldebaran":"دبران","Spica":"سماک اعزل","Antares":"قلب‌العقرب","Pollux":"پولوکس","Castor":"کاستور","Fomalhaut":"فم‌الحوت","Deneb":"دنب","Regulus":"قلب‌الاسد","Adhara":"عذارا","Bellatrix":"ناجذ","Elnath":"نطح","Alnilam":"نظام","Alnitak":"نطاق","Mintaka":"منطقه","Mirfak":"مرفق‌الثریا","Dubhe":"دبه","Merak":"مراق","Phecda":"فخذ","Alkaid":"قائد","Menkalinan":"منکب ذی‌العنان","Alhena":"هنعه","Mirzam":"مرزم","Hamal":"حمل","Algieba":"جبهه","Diphda":"ضفدع ثانی","Alpheratz":"سرةالفرس","Mirach":"جنب‌المسلسله","Algol":"رأس‌الغول","Almach":"عناق‌الارض","Denebola":"ذنب‌الاسد","Caph":"کف‌الخضیب","Scheat":"ساعد الفرس","Markab":"مرکب‌الفرس","Menkar":"منخر","Zosma":"ظهرالاسد","Arneb":"ارنب","Ankaa":"عنقا","Sadr":"صدرالدجاجه","Polaris":"ستاره قطبی","Rasalhague":"رأس‌الحواء"},"d":{"M1":"سحابی خرچنگ","M6":"خوشه پروانه","M8":"سحابی مرداب","M11":"خوشه اردک وحشی","M16":"سحابی عقاب","M17":"سحابی نعل اسب","M20":"سحابی سه‌تکه","M27":"سحابی دمبل","M31":"کهکشان آندرومدا","M33":"کهکشان مثلث","M42":"سحابی شکارچی","M44":"خوشه آخور","M45":"خوشه پروین","M51":"کهکشان گرداب","M57":"سحابی حلقه","M63":"کهکشان آفتابگردان","M64":"کهکشان سیه‌چشم","M76":"سحابی دمبل کوچک","M97":"سحابی جغد","M101":"کهکشان فرفره","M104":"کهکشان کلاه‌مکزیکی","NGC 7000":"سحابی آمریکای شمالی","NGC 3372":"سحابی شاه‌تخته","NGC 5139":"امگا قنطورس","NGC 104":"۴۷ توکانا","SMC":"ابر ماژلانی کوچک","LMC":"ابر ماژلانی بزرگ","NGC 7293":"سحابی مارپیچ","NGC 2244":"سحابی گل‌سرخ","NGC 1499":"سحابی کالیفرنیا","NGC 6960":"سحابی پرده","NGC 6992":"سحابی پرده","NGC 253":"کهکشان سنگ‌تراش","NGC 5128":"قنطورس ای","NGC 6543":"سحابی چشم گربه","IC 1805":"سحابی قلب","NGC 2070":"سحابی رتیل","B 33":"سحابی سر اسب","NGC 2264":"سحابی مخروطی","NGC 6888":"سحابی هلالی","NGC 7635":"سحابی حباب","Mel 25":"قلائص","IC 5146":"سحابی پیله","NGC 6302":"سحابی پروانه","NGC 2024":"سحابی شعله"}};
@@ -3519,16 +3534,52 @@ function onOrient(e) {
     if (absP && now - absT < 3000) return;
   }
   updateMagDecl();
-  const tAz = use.az + magDecl * DEG; // magnetisch → geografisch Nord
-  if (sensorAz === null) { sensorAz = tAz; sensorAlt = use.alt; sensorRoll = use.roll; return; }
+  const tAz = use.az + magDecl * DEG + cal.az; // magnetisch → geografisch Nord (+ eigene Ausrichtung)
+  const tAlt = Math.max(-PI2, Math.min(PI2, use.alt + cal.alt));
+  if (sensorAz === null) { sensorAz = tAz; sensorAlt = tAlt; sensorRoll = use.roll; return; }
   // Geschwindigkeitsabhängige Glättung: kleine Sprünge (Sensorrauschen, < ~1°) werden stark gedämpft,
   // echte Bewegung (> ~3°) geht ungebremst durch → Himmel steht bei ruhigem Handy still.
-  const dd = Math.hypot(wrap(tAz - sensorAz) * Math.cos(use.alt), use.alt - sensorAlt) / DEG;
+  const dd = Math.hypot(wrap(tAz - sensorAz) * Math.cos(tAlt), tAlt - sensorAlt) / DEG;
   const f = dd < 1.2 ? 0.03 : dd > 5 ? 1 : 0.03 + (dd - 1.2) / 3.8 * 0.97;
   sensorAz += wrap(tAz - sensorAz) * f;
-  sensorAlt += (use.alt - sensorAlt) * f;
+  sensorAlt += (tAlt - sensorAlt) * f;
   sensorRoll += wrap(use.roll - sensorRoll) * f;
 }
+// Ausrichten (Nutzerwunsch 28.10.2026 "mit Sensor soll alles exakt stimmen"): Der Handy-Kompass liegt oft
+// 5–15° daneben, die Neigung ein paar Grad. Der Nutzer peilt einen hellen Himmelskörper an; die App kennt
+// dessen genaue Lage und merkt sich den Unterschied als Versatz (Richtung + Höhe).
+const PI2 = Math.PI / 2;
+let cal = { az: 0, alt: 0 }, calMode = false;
+try { const c = JSON.parse(localStorage.getItem("sky-cal") || "null"); if (c && isFinite(c.az) && isFinite(c.alt)) cal = { az: c.az, alt: c.alt }; } catch {}
+const calBtn = document.getElementById("calBtn"), calPanel = document.getElementById("calPanel"), calCross = document.getElementById("calCross");
+function calSave() { try { localStorage.setItem("sky-cal", JSON.stringify(cal)); } catch {} }
+function calShow(on) { calMode = on; calPanel.hidden = !on; calCross.toggleAttribute("hidden", !on); calBtn.hidden = on || !S.sensor; }
+function calMsg(t) { const m = document.getElementById("sensorMsg"); m.hidden = false; m.textContent = t; clearTimeout(calMsg.t); calMsg.t = setTimeout(() => { m.hidden = true; }, 4000); }
+setInterval(() => { if (!calMode) calBtn.hidden = !S.sensor; else if (!S.sensor) calShow(false); }, 400);
+calBtn.onclick = () => calShow(true);
+document.getElementById("calCancel").onclick = () => calShow(false);
+document.getElementById("calReset").onclick = () => {
+  if (sensorAz !== null) { sensorAz -= cal.az; sensorAlt -= cal.alt; }
+  cal = { az: 0, alt: 0 }; calSave(); calShow(false); calMsg(tr("calResetOk"));
+};
+document.getElementById("calDone").onclick = () => {
+  if (sensorAz === null) { calShow(false); return; }
+  const c = enu(sensorAz, sensorAlt), cands = [];
+  for (const b of bodies) if (b.v && !b.iss && !b.moonOf && !b.dwarf && (b.id === "sun" || b.id === "moon" || b.mag < 1.6)) cands.push({ v: b.v, name: b.name, w: b.id === "moon" || b.id === "sun" ? 0.6 : 1 });
+  for (const n of STAR_NAMES) if (n.mag < 1.6) { const d = n.dec * DEG; cands.push({ v: eqToEnu(n.ra * DEG, Math.sin(d), Math.cos(d), [0, 0, 0]), name: n.n[LANG] || n.n.en, w: 1 }); }
+  let best = null, bd = 1e9;
+  for (const o of cands) {
+    if (o.v[2] < -0.05) continue; // unter dem Horizont
+    const ang = Math.acos(Math.max(-1, Math.min(1, o.v[0] * c[0] + o.v[1] * c[1] + o.v[2] * c[2]))) * o.w;
+    if (ang < bd) { bd = ang; best = o; }
+  }
+  if (!best || bd > 30 * DEG) { calMsg(tr("calNone")); return; }
+  const oAz = Math.atan2(best.v[0], best.v[1]), oAlt = Math.asin(Math.max(-1, Math.min(1, best.v[2])));
+  const dAz = wrap(oAz - sensorAz), dAlt = oAlt - sensorAlt;
+  cal = { az: wrap(cal.az + dAz), alt: Math.max(-0.35, Math.min(0.35, cal.alt + dAlt)) };
+  sensorAz += dAz; sensorAlt += dAlt; calSave(); calShow(false);
+  calMsg(tr("calOk", { o: best.name }));
+};
 // Knopf „Zum Horizont“, wenn man steil nach unten oder oben schaut
 const horizonBtn = document.getElementById("horizonBtn");
 horizonBtn.onclick = () => {
