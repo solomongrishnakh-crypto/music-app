@@ -3383,18 +3383,27 @@ document.getElementById("now").onclick = () => { S.offsetMin = 0; S.dayOffset = 
 
 // ---------------- Ort ----------------
 const PREFERRED = { "Europe/Berlin": "Berlin", "Europe/Vienna": "Wien", "Europe/Zurich": "Zürich", "Asia/Kabul": "Kabul", "Europe/Istanbul": "Istanbul", "America/New_York": "New York", "Europe/London": "London", "Europe/Paris": "Paris", "Asia/Tehran": "Teheran" };
-function setLocation(name, lat, lon, tz, country) {
+function setLocation(name, lat, lon, tz, country, auto) {
   S.lat = lat; S.lon = lon; S.place = name; S.tz = tz || Intl.DateTimeFormat().resolvedOptions().timeZone || "UTC";
   document.getElementById("place").textContent = name;
-  try { localStorage.setItem("sky-loc", JSON.stringify({ name, lat, lon, tz: S.tz })); } catch {}
+  try { localStorage.setItem("sky-loc", JSON.stringify({ name, lat, lon, tz: S.tz, auto: !!auto })); } catch {}
   document.getElementById("pill").title = `${name}${country ? ", " + country : ""} · ${nf.format(Math.abs(lat))}° ${lat >= 0 ? "N" : "S"}, ${nf.format(Math.abs(lon))}° ${lon >= 0 ? "O" : "W"}`;
 }
 (function initLocation() {
-  try { const sv = JSON.parse(localStorage.getItem("sky-loc") || "null"); if (sv && typeof sv.lat === "number") { setLocation(sv.name, sv.lat, sv.lon, sv.tz); return; } } catch {}
+  try { const sv = JSON.parse(localStorage.getItem("sky-loc") || "null"); if (sv && typeof sv.lat === "number" && !sv.auto) { setLocation(sv.name, sv.lat, sv.lon, sv.tz); return; } } catch {}
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone || "";
   const c = CITIES.find((x) => x[0] === PREFERRED[tz]) || CITIES.find((x) => x[4] === tz);
-  if (c) setLocation(c[0], c[1], c[2], c[4], c[3]);
-  else setLocation("Greenwich", 51.477, 0, "Europe/London", "Vereinigtes Königreich");
+  if (c) setLocation(c[0], c[1], c[2], c[4], c[3], true);
+  else setLocation("Greenwich", 51.477, 0, "Europe/London", "Vereinigtes Königreich", true);
+  // Erster Start: echten Standort nehmen statt der Ersatzstadt (sonst steht der Himmel um mehrere Grad falsch)
+  try {
+    if (navigator.geolocation && localStorage.getItem("sky-geo-denied") !== "1") {
+      navigator.geolocation.getCurrentPosition((p) => {
+        setLocation(tr("myPlace"), p.coords.latitude, p.coords.longitude, Intl.DateTimeFormat().resolvedOptions().timeZone);
+        try { document.getElementById("tLoc").setAttribute("aria-pressed", "true"); } catch {}
+      }, (e) => { if (e && e.code === 1) { try { localStorage.setItem("sky-geo-denied", "1"); } catch {} } }, { timeout: 15000, maximumAge: 600000 });
+    }
+  } catch {}
 })();
 const locQ = document.getElementById("locQ"), locRes = document.getElementById("locResults"), locNote = document.getElementById("locNote");
 function cityButton(name, sub, lat, lon, tz, country) {
