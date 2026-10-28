@@ -29,10 +29,10 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 
-private val Accent = Color(0xFFFF5A4D)
-private val TextMain = Color(0xFFF0E4E2)
-private val TextMuted = Color(0xFFB49A96)
-private val Mono = FontFamily.Monospace
+private val UAccent = Color(0xFFFF5A4D)
+private val UTextMain = Color(0xFFF0E4E2)
+private val UTextMuted = Color(0xFFB49A96)
+private val UMono = FontFamily.SansSerif
 
 /** Update-Fenster: schlicht, mit grossem Prozentwert und dünnem Balken. Zustände: bereit, lädt, geladen, Fehler. */
 @Composable
@@ -82,21 +82,21 @@ fun UpdateDialog(lang: String) {
         Column(
             Modifier.fillMaxWidth().clip(shape).background(Color(0xF2100A0C)).border(1.dp, Color(0x1AFFFFFF), shape).padding(18.dp),
         ) {
-            Text(title, color = TextMain, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
+            Text(title, color = UTextMain, fontSize = 18.sp, fontWeight = FontWeight.SemiBold)
             Spacer(Modifier.height(6.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(Updater.installedName(ctx), color = TextMuted, fontFamily = Mono, fontSize = 12.sp)
-                Text("  →  ", color = Accent, fontFamily = Mono, fontSize = 12.sp)
-                Text(upd.name, color = TextMain, fontFamily = Mono, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                Text(Updater.installedName(ctx), color = UTextMuted, fontFamily = UMono, fontSize = 12.sp)
+                Text("  →  ", color = UAccent, fontFamily = UMono, fontSize = 12.sp)
+                Text(upd.name, color = UTextMain, fontFamily = UMono, fontSize = 12.sp, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(14.dp))
             if (showBar) {
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.SpaceBetween) {
                     Row(verticalAlignment = Alignment.Bottom) {
-                        Text("$pct", color = TextMain, fontFamily = Mono, fontSize = 28.sp, fontWeight = FontWeight.SemiBold)
-                        Text("%", color = TextMuted, fontFamily = Mono, fontSize = 14.sp, modifier = Modifier.padding(start = 2.dp, bottom = 3.dp))
+                        Text("$pct", color = UTextMain, fontFamily = UMono, fontSize = 28.sp, fontWeight = FontWeight.SemiBold)
+                        Text("%", color = UTextMuted, fontFamily = UMono, fontSize = 14.sp, modifier = Modifier.padding(start = 2.dp, bottom = 3.dp))
                     }
-                    Text(status.uppercase(), color = TextMuted, fontFamily = Mono, fontSize = 10.sp, letterSpacing = 1.6.sp, modifier = Modifier.padding(bottom = 4.dp))
+                    Text(status.uppercase(), color = UTextMuted, fontFamily = UMono, fontSize = 10.sp, letterSpacing = 1.6.sp, modifier = Modifier.padding(bottom = 4.dp))
                 }
                 Spacer(Modifier.height(8.dp))
                 Box(Modifier.fillMaxWidth().height(4.dp).clip(RoundedCornerShape(2.dp)).background(Color(0x12FFFFFF))) {
@@ -104,14 +104,14 @@ fun UpdateDialog(lang: String) {
                         Modifier.fillMaxHeight().fillMaxWidth(fill).background(
                             Brush.horizontalGradient(
                                 if (ready) listOf(Color(0xFF1F8F5B), Color(0xFF4BE08F))
-                                else listOf(Color(0xFFB3281F), Accent, Color(0xFFFFC2B8)),
+                                else listOf(Color(0xFFB3281F), UAccent, Color(0xFFFFC2B8)),
                             ),
                         ),
                     )
                 }
                 Spacer(Modifier.height(10.dp))
             }
-            Text(note, color = if (failed) Color(0xFFFF8F80) else TextMuted, fontSize = 12.sp, lineHeight = 18.sp)
+            Text(note, color = if (failed) Color(0xFFFF8F80) else UTextMuted, fontSize = 12.sp, lineHeight = 18.sp)
             Spacer(Modifier.height(14.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (!busy) Btn(s("SPÄTER", "LATER"), 1f, false, true) { Updater.dismissed = true }
@@ -132,7 +132,7 @@ private fun androidx.compose.foundation.layout.RowScope.Btn(text: String, weight
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text, color = if (primary) Color.White else TextMuted, fontFamily = Mono, fontSize = 11.sp,
+            text, color = if (primary) Color.White else UTextMuted, fontFamily = UMono, fontSize = 11.sp,
             fontWeight = FontWeight.SemiBold, letterSpacing = 1.2.sp,
             modifier = Modifier.padding(horizontal = 6.dp),
         )

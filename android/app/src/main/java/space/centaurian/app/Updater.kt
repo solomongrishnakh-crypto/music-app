@@ -73,22 +73,27 @@ object Updater {
         } else { msg = "…"; dismissed = false }
         Thread {
             val i = fetch()
-            main.post {
-                when {
-                    i == null -> if (manual) msg = "?"
-                    i.code > installedCode(app) -> {
-                        if (avail?.code != i.code) { // neue Version: alte Reste verwerfen
-                            if (progress < 0) wipe(app)
-                            prefs(app).edit().putInt("code", i.code).putString("name", i.name).putString("sha", i.sha).apply()
-                            ready = false; pct = 0; dismissed = false
-                        }
-                        avail = i
-                        if (manual) msg = ""
-                    }
-                    else -> { if (avail != null) { wipe(app); avail = null }; if (manual) msg = "ok" }
-                }
-            }
+            main.post { onChecked(app, i, manual) }
         }.start()
+    }
+
+    private fun onChecked(app: Context, i: Info?, manual: Boolean) {
+        if (i == null) {
+            if (manual) msg = "?"
+            return
+        }
+        if (i.code > installedCode(app)) {
+            if (avail?.code != i.code) { // neue Version: alte Reste verwerfen
+                if (progress < 0) wipe(app)
+                prefs(app).edit().putInt("code", i.code).putString("name", i.name).putString("sha", i.sha).apply()
+                ready = false; pct = 0; dismissed = false
+            }
+            avail = i
+            if (manual) msg = ""
+        } else {
+            if (avail != null) { wipe(app); avail = null }
+            if (manual) msg = "ok"
+        }
     }
 
     /** "Jetzt aktualisieren": fertige Datei sofort installieren, sonst (weiter) laden. */
