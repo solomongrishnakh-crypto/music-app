@@ -974,6 +974,16 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
                                 override fun onGeolocationPermissionsShowPrompt(origin: String?, callback: GeolocationPermissions.Callback?) {
                                     homeActivity.withLocationPermission { callback?.invoke(origin, true, false) }
                                 }
+
+                                override fun onPermissionRequest(request: android.webkit.PermissionRequest?) {
+                                    val r = request ?: return
+                                    val host = r.origin?.host ?: ""
+                                    val video = r.resources.contains(android.webkit.PermissionRequest.RESOURCE_VIDEO_CAPTURE)
+                                    if (!video || !(host == "centaurianspace.com" || host.endsWith(".centaurianspace.com"))) { r.deny(); return }
+                                    homeActivity.withCameraPermission { ok ->
+                                        if (ok) r.grant(arrayOf(android.webkit.PermissionRequest.RESOURCE_VIDEO_CAPTURE)) else r.deny()
+                                    }
+                                }
                             }
                             webViewClient = object : WebViewClient() {
                                 override fun shouldInterceptRequest(view: WebView?, request: WebResourceRequest?): WebResourceResponse? {
