@@ -772,10 +772,6 @@ var x2=wx*d.r,y2=wy*d.r*.85,z3=wz*d.r;var xa=x2*cr+z3*sr,za=-x2*sr+z3*cr;var ya=
 var pr=1/(2.1-zb*.55);var dp=(zb+1.6)/3.2;
 ball(cx+xa*R*pr*1.65,cy+ya*R*pr*1.65,d.sz*pr*(1+bass*.5),d.ph>3?2:0,(.12+dp*.4)*(.6+.4*Math.sin(t*2+d.ph))+hi*.15);}
 ctx.globalCompositeOperation='source-over';
-var cols=24,rows=6,cw=W*.86/cols,rh=H*.075,x0=W*.07,yb=H-H*.04;
-for(i=0;i<cols;i++){var lit2=Math.round(bands[i]*rows);for(j=0;j<rows;j++){var on=j<lit2;ctx.globalAlpha=1;
-ctx.fillStyle=on?(j>=rows-2?'rgba(255,230,220,.98)':'rgba(255,90,77,.95)'):'rgba(255,90,77,.12)';
-ctx.beginPath();ctx.arc(x0+cw*i+cw/2,yb-rh*j-rh/2,Math.min(cw,rh)*.26,0,6.2832);ctx.fill();}}
 ctx.globalAlpha=1;}
 size();requestAnimationFrame(frame);
 }catch(e){}};}
