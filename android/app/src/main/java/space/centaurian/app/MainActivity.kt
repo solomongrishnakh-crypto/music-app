@@ -730,7 +730,7 @@ var SH=[],N=1700,ga=Math.PI*(3-Math.sqrt(5)),i;
 for(i=0;i<N;i++){var yy=1-2*(i+.5)/N,rr0=Math.sqrt(1-yy*yy),th=ga*i+rnd(-.02,.02);var g3=(Math.random()+Math.random()+Math.random()-1.5)/1.5;
 SH.push({x:Math.cos(th)*rr0,y:yy,z:Math.sin(th)*rr0,rad:1+g3*.07,d:0,v:0,k:rnd(14,26),sz:rnd(.28,.7),ci:Math.random()<.82?(Math.random()<.55?0:1):(Math.random()<.6?2:3),ph:rnd(0,6.283),sp:Math.random()<.04});}
 var DU=[];for(i=0;i<180;i++){DU.push({u:rnd(0,6.283),w:Math.acos(rnd(-1,1)),r:rnd(1.25,1.9),s:rnd(.04,.16)*(Math.random()<.5?-1:1),sz:rnd(.25,.55),ph:rnd(0,6.283)});}
-var bands=[],pulses=[],bass=0,mid=0,hi=0,prevBass=0,rotA=0,pv=0;for(i=0;i<24;i++)bands.push(0);
+var avg=0,lastHit=0,kickN=0,bands=[],pulses=[],bass=0,mid=0,hi=0,prevBass=0,rotA=0,pv=0;for(i=0;i<24;i++)bands.push(0);
 var LX=-.55,LY=-.6,LZ=.58;
 function size(){var r=cv.getBoundingClientRect();if(!r.width)return;W=cv.width=Math.round(r.width);H=cv.height=Math.round(r.height);ctx.fillStyle='#080304';ctx.fillRect(0,0,W,H);}
 function ball(x,y,r,ci,a){ctx.globalAlpha=Math.max(0,Math.min(1,a));ctx.drawImage(SP[ci],x-r,y-r,r*2,r*2);}
@@ -741,17 +741,22 @@ if(now-last<33)return;var dt=Math.min(.06,(now-last)/1000);last=now;
 var r0=cv.getBoundingClientRect();if(r0.bottom<0||r0.top>window.innerHeight||!r0.width)return;
 if(Math.abs(r0.width-W)>1||!W)size();
 var t=(now-t0)/1000,pl=CenNative.playing(),raw=CenNative.level();
-if(raw<0){var bp=60/104,ph=(t%bp)/bp;raw=pl?Math.pow(Math.max(0,1-ph*2.2),2.2):0;}
+var real=raw>=0;
+if(!real){var bp=60/104,ph=(t%bp)/bp;raw=pl?Math.pow(Math.max(0,1-ph*2.2),2.2):0;}
 else if(!pl)raw=0;
-bass+=(raw-bass)*(raw>bass?.6:.2);
-var snr=(raw-pv>.2)?1:0;pv=raw;
-mid+=((snr*.8+raw*.25)-mid)*.4;
-hi+=(((Math.random()<.5?1:0)*raw*.7)-hi)*.5;
+avg+=(raw-avg)*(raw>avg?.04:.12);
+var flux=Math.max(0,raw-avg*1.02);
+var drv=real?Math.min(1,flux*4.5):raw;
+bass+=(drv-bass)*(drv>bass?.8:.25);
+if(real&&flux>.1&&t-lastHit>.16){lastHit=t;kickN=1;}
+var snr=kickN;kickN=0;
+mid+=((snr*.9+drv*.25)-mid)*.4;
+hi+=(((Math.random()<.5?1:0)*(raw*.5+drv*.5))-hi)*.5;
 for(i=0;i<24;i++){var f=i/23;var src=bass*(1-f)*(1-f)*1.1+mid*Math.exp(-Math.pow((f-.4)*3.2,2))*.9+hi*f*f*.9;var n=pl?.1+.08*Math.sin(t*3.1+i*1.7)+.06*Math.sin(t*6.7+i*.9):0;var v=Math.min(1,Math.max(0,src*.85+n*(1-f*.5)));bands[i]+=(v-bands[i])*(v>bands[i]?.6:.16);}
 ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;ctx.fillStyle='rgba(8,3,4,.5)';ctx.fillRect(0,0,W,H);
 var cx=W/2,cy=H*.46,m=Math.min(W,H);
 rotA+=dt*(.22+mid*.9);var cr=Math.cos(rotA),sr=Math.sin(rotA),tilt=.38,ct=Math.cos(tilt),st=Math.sin(tilt);
-var hit=Math.max(0,bass-prevBass);prevBass=bass;if(hit>.12)pulses.push({r:-.1,a:1});
+var hit=Math.max(0,bass-prevBass);prevBass=bass;if(hit>.12||snr)pulses.push({r:-.1,a:1});
 for(i=0;i<pulses.length;i++){pulses[i].r+=dt*2.3;pulses[i].a-=dt*1.1;}
 while(pulses.length&&pulses[0].a<=0)pulses.shift();
 ctx.globalCompositeOperation='lighter';
