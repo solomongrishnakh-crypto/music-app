@@ -13,6 +13,7 @@ import { toolTexts } from "@/lib/history/toolsText";
 import { useLanguage, type Lang } from "@/contexts/LanguageContext";
 import type { TranslationKey } from "@/lib/translations";
 import { translateLanguageValue } from "@/lib/languageNameTranslations";
+import { relUi } from "@/lib/religion/text";
 import { searchEmpires, type EmpireHit } from "@/lib/history/empireSearch";
 import { SEARCH_TEXT } from "@/lib/history/empireSearchText";
 import {
@@ -2682,6 +2683,23 @@ export default function ImperienClient() {
           ))}
         </div>
       </Link>
+
+        {/* Nutzerwunsch 28.10.2026: Religionskarte, direkt unter den Werkzeugen */}
+        <Link
+          href={localePath("/religionen")}
+          className="group relative mt-4 block max-w-2xl overflow-hidden rounded-xl border border-accent/40 bg-gradient-to-br from-accent/15 via-surface-elevated to-transparent p-4 shadow-[0_0_30px_-10px_var(--accent)] backdrop-blur transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-[0_0_40px_-8px_var(--accent)] sm:p-5"
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="label-mono text-[10px] uppercase tracking-widest text-accent">NEU</p>
+              <p className="font-display mt-1 text-base font-bold uppercase tracking-tight text-foreground sm:text-lg">
+                {relUi(lang as Lang).boxTitle}
+              </p>
+              <p className="mt-1 text-xs text-foreground/80 sm:text-sm">{relUi(lang as Lang).boxText}</p>
+            </div>
+            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-accent/60 text-accent transition-transform group-hover:translate-x-1 rtl:rotate-180 rtl:group-hover:-translate-x-1">→</span>
+          </div>
+        </Link>
 
         {/* Nutzerwunsch 14.10.2026: Die deutsche "01-04"-Imperien-Box ist
             entfernt (steht schon in der Karte); nur der Link zur

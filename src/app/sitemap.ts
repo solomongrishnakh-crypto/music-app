@@ -5,6 +5,7 @@ import { SPACE_BODIES } from "@/components/space/bodies";
 import { CONSTELLATIONS } from "@/components/space/ConstView";
 import { FAMOUS } from "@/lib/famousObjects";
 import { STARS } from "@/lib/starPages";
+import { REL_KEYS, REL_SLUG } from "@/lib/religion/text";
 import { DESTS, VEHICLES, travelPath } from "@/lib/travelTime";
 
 /**
@@ -52,6 +53,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...withLangs("/imperien/reiche", 0.7, "monthly"),
     ...withLangs("/imperien/werkzeuge", 0.7, "monthly"),
     ...REICHE_INDEX.flatMap((r) => withLangs(`/imperien/reich/${r.slug}`, 0.6, "yearly")),
+    ...withLangs("/religionen", 0.8, "monthly"),
+    ...REL_KEYS.flatMap((k) => deEn(`/religionen/${REL_SLUG[k]}`, 0.6)),
     ...withLangs("/sonnensystem", 0.7, "monthly"),
     ...SPACE_BODIES.flatMap((b) => withLangs(`/sonnensystem/${b.id}`, 0.6, "monthly")),
     ...withLangs("/groessenvergleich", 0.9, "monthly"),

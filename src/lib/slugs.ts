@@ -7,6 +7,19 @@
  * Reihenfolge wichtig: längere Pfade zuerst.
  */
 export const SLUG_PAIRS: ReadonlyArray<readonly [string, string]> = [
+  ["/religionen/christentum", "/religions/christianity"],
+  ["/religionen/islam", "/religions/islam"],
+  ["/religionen/hinduismus", "/religions/hinduism"],
+  ["/religionen/buddhismus", "/religions/buddhism"],
+  ["/religionen/judentum", "/religions/judaism"],
+  ["/religionen/sikhismus", "/religions/sikhism"],
+  ["/religionen/zoroastrismus", "/religions/zoroastrianism"],
+  ["/religionen/antike-goetter", "/religions/ancient-gods"],
+  ["/religionen/chinesische-religionen", "/religions/chinese-religions"],
+  ["/religionen/shinto", "/religions/shinto"],
+  ["/religionen/naturreligionen", "/religions/indigenous-religions"],
+  ["/religionen/ohne-religion", "/religions/non-religious"],
+  ["/religionen", "/religions"],
   ["/imperien/reiche", "/empires/list"],
   ["/imperien/werkzeuge", "/empires/tools"],
   ["/imperien/reich", "/empires/empire"],
