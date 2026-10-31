@@ -3,6 +3,9 @@ name: Android-App im Emulator testen
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   emulator:
     runs-on: ubuntu-latest
@@ -43,3 +46,13 @@ jobs:
           name: Emulator-Ergebnis
           path: emu-out/
           retention-days: 14
+      - name: Ergebnisse in eigenen Zweig legen (zum Ansehen)
+        if: always()
+        run: |
+          cd emu-out
+          git init -q -b emu-results
+          git config user.name "emulator-test"
+          git config user.email "emulator-test@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Emulator-Ergebnis Lauf ${{ github.run_number }}"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" emu-results
