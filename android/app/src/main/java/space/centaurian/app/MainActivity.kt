@@ -457,6 +457,15 @@ class MainActivity : ComponentActivity() {
         } catch (_: Exception) { }
     }
 
+    override fun onDestroy() {
+        // Wirklich beendet (Zurueck-Taste, nicht Drehen/Hintergrund): Musik und Dienst stoppen.
+        if (isFinishing) {
+            MusicBridge.stopAll()
+            try { stopService(Intent(this, MusicService::class.java)) } catch (_: Exception) { }
+        }
+        super.onDestroy()
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)

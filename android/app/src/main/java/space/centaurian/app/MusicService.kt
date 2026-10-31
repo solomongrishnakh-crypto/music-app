@@ -157,6 +157,18 @@ object MusicBridge {
             "var p=window.__cenPlaying===true;" +
             "return JSON.stringify({t:t.trim(),a:a.trim(),p:p});}catch(e){return '';}})()"
 
+    /** App wird wirklich geschlossen (aus der Liste gewischt / Zurueck): Musik und Seiten anhalten. */
+    fun stopAll() {
+        val js = "try{var c=window.__cenCtx&&window.__cenCtx();if(c&&c.isPlaying)c.togglePlayback();document.querySelectorAll('audio,video').forEach(function(m){try{m.pause()}catch(e){}});}catch(e){}"
+        for (w in listOf(web, pageWeb)) {
+            if (w == null) continue
+            w.post {
+                try { w.evaluateJavascript(js, null); w.loadUrl("about:blank"); w.onPause(); w.pauseTimers() } catch (_: Exception) { }
+            }
+        }
+        want = false
+    }
+
     fun click(kind0: String) {
         // Play/Pause immer eindeutig (nie "umschalten"): doppelte Signale (Benachrichtigung + Kopfhoerer) heben sich sonst gegenseitig auf.
         val kind = if (kind0 == "pp") (if (playing) "pause" else "play") else kind0
@@ -361,6 +373,14 @@ class MusicService : Service() {
         handler.removeCallbacks(tick)
         handler.post(tick)
         return START_NOT_STICKY
+    }
+
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        // Nutzer hat die App aus der Liste gewischt: nichts darf weiterlaufen.
+        MusicBridge.stopAll()
+        try { stopForeground(STOP_FOREGROUND_REMOVE) } catch (_: Exception) { }
+        stopSelf()
+        super.onTaskRemoved(rootIntent)
     }
 
     override fun onDestroy() {
