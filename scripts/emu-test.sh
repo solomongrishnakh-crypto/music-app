@@ -10,6 +10,8 @@ echo "== Emulator-Test ==" > $R
 adb install -r android/app/build/outputs/apk/debug/app-debug.apk >> $R 2>&1
 adb shell pm grant $P android.permission.POST_NOTIFICATIONS >> $R 2>&1
 adb shell pm grant $P android.permission.RECORD_AUDIO >> $R 2>&1
+adb shell pm grant $P android.permission.ACCESS_FINE_LOCATION >> $R 2>&1
+adb shell pm grant $P android.permission.ACCESS_COARSE_LOCATION >> $R 2>&1
 adb logcat -c
 adb shell am start -n $P/.MainActivity >> $R 2>&1
 sleep 45
@@ -48,7 +50,7 @@ adb shell dumpsys gfxinfo $P | grep -E "Total frames|Janky frames" >> $R
 # App aus der Liste wischen
 adb shell input keyevent KEYCODE_APP_SWITCH; sleep 3
 shot 07_uebersicht
-adb shell input swipe 540 1300 540 200 250; sleep 6
+adb shell input swipe 700 1500 700 250 200; sleep 8
 shot 08_nach_wegwischen
 echo "" >> $R
 echo "== Nach Wegwischen aus der Liste ==" >> $R
