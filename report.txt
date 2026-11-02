@@ -1,0 +1,9 @@
+== Emulator-Test ==
+Performing Streamed Install
+Success
+Starting: Intent { cmp=space.centaurian.app/.MainActivity }
+adb: device 'emulator-5554' not found
+
+== Ruckeln (gfxinfo) ==
+
+== Abstuerze / ANR waehrend des Tests ==
