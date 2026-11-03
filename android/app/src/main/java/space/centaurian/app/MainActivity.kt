@@ -683,8 +683,8 @@ private fun AppRoot() {
 // ---------------------------------------------------------------- Startseite = echte Webseite
 private fun animJs(on: Boolean): String =
     "(function(){try{window.__cnAnim=" + on + ";" +
-        "var kp=function(){return /sternenhimmel|night-sky|sternbilder|constellations|himmel-heute|sky-today|sonnensystem|solar-system/.test(location.pathname);};var keep=kp();" +
-        "var f=function(){var on=window.__cnAnim;var keep=kp();var de=document.documentElement;var c=document.querySelectorAll('canvas');for(var i=0;i<c.length;i++){var e=c[i];" +
+        "var kp=function(){return /sternenhimmel|night-sky|sternbilder|constellations|himmel-heute|sky-today|sonnensystem|solar-system/.test(location.pathname);};var kc=function(){try{var q=document.querySelectorAll('canvas.cursor-grab');for(var i=0;i<q.length;i++){var r=q[i].getBoundingClientRect();if(r.height>innerHeight*0.5&&r.width>innerWidth*0.8)return true;}}catch(e){}return false;};var keep=kp()||kc();" +
+        "var f=function(){var on=window.__cnAnim;var keep=kp()||kc();var de=document.documentElement;var c=document.querySelectorAll('canvas');for(var i=0;i<c.length;i++){var e=c[i];" +
         "if(e.dataset.cnh){if(on||keep){e.style.removeProperty('display');delete e.dataset.cnh;}continue;}" +
         "if(on||keep)continue;var cs=getComputedStyle(e);var big=e.offsetWidth>=innerWidth*0.9&&e.offsetHeight>=innerHeight*0.6;" +
         "var fx=cs.position==='fixed';for(var p=e.parentElement;!fx&&p&&p!==document.body;p=p.parentElement){if(getComputedStyle(p).position==='fixed')fx=true;}" +
