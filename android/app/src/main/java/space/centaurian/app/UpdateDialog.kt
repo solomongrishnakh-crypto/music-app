@@ -89,6 +89,7 @@ fun UpdateDialog(lang: String) {
                 Text(Updater.installedName(ctx), color = UTextMuted, fontFamily = UMono, fontSize = 12.sp)
                 Text("  →  ", color = UAccent, fontFamily = UMono, fontSize = 12.sp)
                 Text(upd.name, color = UTextMain, fontFamily = UMono, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                if (upd.size > 0) Text("  ·  " + String.format(java.util.Locale.US, "%.1f MB", upd.size / 1048576.0), color = UTextMuted, fontFamily = UMono, fontSize = 12.sp)
             }
             Spacer(Modifier.height(14.dp))
             if (showBar) {

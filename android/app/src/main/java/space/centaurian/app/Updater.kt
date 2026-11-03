@@ -26,7 +26,7 @@ object Updater {
     private const val BASE = "https://github.com/solomongrishnakh-crypto/music-app/releases/download/app-latest/"
     private const val MIN_SIZE = 1_000_000L
 
-    data class Info(val code: Int, val name: String, val sha: String = "")
+    data class Info(val code: Int, val name: String, val sha: String = "", val size: Long = 0L)
 
     var avail by mutableStateOf<Info?>(null)
     var progress by mutableIntStateOf(-1)   // -1 = kein Download aktiv, sonst 0..100
@@ -58,7 +58,7 @@ object Updater {
         val code = p.getInt("code", 0)
         if (code <= 0) return
         if (code <= installedCode(c)) { wipe(c); return } // schon installiert: Reste aufraeumen
-        avail = Info(code, p.getString("name", "") ?: "", p.getString("sha", "") ?: "")
+        avail = Info(code, p.getString("name", "") ?: "", p.getString("sha", "") ?: "", p.getLong("size", 0L))
         ready = p.getBoolean("ready", false) && apk(c).length() > MIN_SIZE
         pct = if (ready) 100 else 0
     }
@@ -85,7 +85,7 @@ object Updater {
         if (i.code > installedCode(app)) {
             if (avail?.code != i.code) { // neue Version: alte Reste verwerfen
                 if (progress < 0) wipe(app)
-                prefs(app).edit().putInt("code", i.code).putString("name", i.name).putString("sha", i.sha).apply()
+                prefs(app).edit().putInt("code", i.code).putString("name", i.name).putString("sha", i.sha).putLong("size", i.size).apply()
                 ready = false; pct = 0; dismissed = false
             }
             avail = i
@@ -140,7 +140,7 @@ object Updater {
     fun fetch(): Info? = try {
         val txt = open("version.json").inputStream.bufferedReader().use { it.readText() }
         val o = JSONObject(txt)
-        Info(o.getInt("code"), o.optString("name"), o.optString("sha256").lowercase())
+        Info(o.getInt("code"), o.optString("name"), o.optString("sha256").lowercase(), o.optLong("size", 0L))
     } catch (_: Exception) { null }
 
     private fun sha256(f: File): String {

@@ -57,7 +57,8 @@ jobs:
           mkdir -p out
           cp android/app/build/outputs/apk/debug/app-debug.apk out/Centaurian.apk
           SHA=$(sha256sum out/Centaurian.apk | cut -d' ' -f1)
-          echo "{\"code\": ${{ github.run_number }}, \"name\": \"2.${{ github.run_number }}\", \"sha256\": \"$SHA\"}" > out/version.json
+          SIZE=$(stat -c%s out/Centaurian.apk)
+          echo "{\"code\": ${{ github.run_number }}, \"name\": \"2.${{ github.run_number }}\", \"sha256\": \"$SHA\", \"size\": $SIZE}" > out/version.json
           cat out/version.json
           gh release view app-latest >/dev/null 2>&1 || gh release create app-latest --title "App-Update" --notes "Automatische Updates fuer die Centaurian-App" --latest=false
           # Download-Zaehler: Anzahl der Webseiten-Downloads bleibt ueber neue Versionen erhalten
