@@ -856,7 +856,7 @@ export const PIONEER11: PlanetData = {
     diameter: PIONEER10.facts.diameter,
     moons: { de: "≈ 11,1 km/s relativ zur Sonne", en: "≈ 11.1 km/s relative to the Sun" },
   },
-  image: commonsFile("Pioneer_11_Image_of_Saturn_and_Its_Moon_Titan.jpg"),
+  image: commonsFile("Pioneer_10-11_spacecraft.jpg"),
   description: {
     de: "Pioneer 11 flog am 3. Dezember 1974 an Jupiter vorbei (rund 43.000 km über den Wolken) und nutzte dessen Schwerkraft, um quer durchs Sonnensystem zu Saturn zu schwenken. Am 1. September 1979 wurde sie die erste Sonde am Saturn, in nur rund 21.000 km Abstand von den Wolkenobergrenzen. Sie entdeckte den dünnen F-Ring und zeigte, dass Saturns Magnetfeld sehr regelmäßig ist. Der letzte normale Kontakt war im September 1995, danach brach die Verbindung ab. Heute fliegt sie in Richtung des Sternbilds Adler. Wie Pioneer 10 trägt sie eine Plakette mit einer Botschaft an Außerirdische. Die Position hier ist berechnet (JPL Horizons), nicht gemessen.",
     en: "Pioneer 11 flew past Jupiter on December 3, 1974 (about 43,000 km above the clouds) and used its gravity to swing across the Solar System to Saturn. On September 1, 1979 it became the first probe at Saturn, passing about 21,000 km above the cloud tops. It discovered the thin F ring and showed that Saturn's magnetic field is very regular. The last routine contact was in September 1995; the connection was lost afterwards. Today it flies toward the constellation Aquila. Like Pioneer 10 it carries a plaque with a message for extraterrestrials. The position shown here is calculated (JPL Horizons), not measured.",
