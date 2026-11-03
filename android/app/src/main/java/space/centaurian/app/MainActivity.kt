@@ -389,6 +389,8 @@ private fun nativeJs(hideNews: Boolean, anim: Boolean): String =
         "#space-news>button{padding-bottom:14px!important;pointer-events:none!important}" +
         "#space-news>button span[aria-hidden]{display:none!important}" +
         "html,body{background-color:#000!important}canvas{display:none!important}';}" +
+        "var T0=Date.now(),hz=(location.hash||'').replace('#','');var HID=(hz==='space-news'||hz==='maschine');if(HID&&!window.__cnRevealed)document.documentElement.style.setProperty('visibility','hidden','important');" +
+        "function reveal(){window.__cnRevealed=1;document.documentElement.style.removeProperty('visibility');}" +
         "function inj(d){try{if(!d||!d.head||d.getElementById('cn-native'))return;var s=d.createElement('style');" +
         "s.id='cn-native';s.textContent=css;d.head.appendChild(s);}catch(e){}}" +
         "function all(){inj(document);var f=document.querySelectorAll('iframe');" +
@@ -396,7 +398,7 @@ private fun nativeJs(hideNews: Boolean, anim: Boolean): String =
         "function bk(){try{var a=document.querySelectorAll('a,button');for(var i=0;i<a.length;i++){var t=(a[i].textContent||'').trim();" +
         "if(t.length<24&&(t.charAt(0)==='\u2190'||t.charAt(0)==='\u2039')){a[i].style.setProperty('display','none','important');}}" +
         HIDE_FB_JS +
-        "var hh=(location.hash||'').replace('#','');if(hh==='space-news'||hh==='maschine'){var el=document.getElementById(hh);if(el){for(var p=el;p&&p!==document.body;p=p.parentElement){var ch=p.parentElement?p.parentElement.children:[];for(var k=0;k<ch.length;k++){var c=ch[k];if(c===p||c.tagName==='SCRIPT'||c.tagName==='STYLE'||c.tagName==='CANVAS')continue;if(getComputedStyle(c).position==='fixed')continue;c.style.setProperty('display','none','important');}}el.style.setProperty('margin-top','8px','important');}}" +
+        "var hh=(location.hash||'').replace('#','');if(hh==='space-news'||hh==='maschine'){var el=document.getElementById(hh);if(el){for(var p=el;p&&p!==document.body;p=p.parentElement){var ch=p.parentElement?p.parentElement.children:[];for(var k=0;k<ch.length;k++){var c=ch[k];if(c===p||c.tagName==='SCRIPT'||c.tagName==='STYLE'||c.tagName==='CANVAS')continue;if(getComputedStyle(c).position==='fixed')continue;c.style.setProperty('display','none','important');}}el.style.setProperty('margin-top','8px','important');reveal();}else if(Date.now()-T0>6000)reveal();}else if(HID&&Date.now()-T0>6000)reveal();" +
         (if (hideNews) "var nw=document.getElementById('space-news');if(nw)nw.style.setProperty('display','none','important');" else "") +
         "}catch(e){}}" +
         animJs(anim) + ";all();bk();var n=0;var iv=setInterval(function(){all();bk();if(++n>500)clearInterval(iv);},500);})()"
@@ -1533,6 +1535,9 @@ private fun WebScreen(s: Screen.Web, lang: String, anim: Boolean, onBare: (Boole
                             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                                 failed = false
                                 loading = true
+                                if (url != null && (url.contains("#space-news") || url.contains("#maschine"))) {
+                                    view?.evaluateJavascript("try{window.__cnRevealed=0;document.documentElement.style.setProperty('visibility','hidden','important');}catch(e){}", null)
+                                }
                             }
 
                             override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
