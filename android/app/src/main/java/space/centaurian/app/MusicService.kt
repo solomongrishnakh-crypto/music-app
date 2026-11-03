@@ -140,6 +140,7 @@ object MusicBridge {
         }
         @JavascriptInterface fun shown(): Boolean = !MusicBridge.guard && MusicBridge.fg
         @JavascriptInterface fun level(): Float = MusicBridge.level
+        @JavascriptInterface fun saver(): Boolean = try { (MusicBridge.appCtx?.getSystemService(Context.POWER_SERVICE) as? android.os.PowerManager)?.isPowerSaveMode == true } catch (_: Exception) { false }
         @JavascriptInterface fun heroBack() { backReq.intValue = backReq.intValue + 1 }
         @JavascriptInterface fun playing(): Boolean = MusicBridge.playing
         @JavascriptInterface fun want(): Boolean = MusicBridge.want
