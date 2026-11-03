@@ -95,12 +95,12 @@ function loadTex(gl, path, mip, cb, pot, fix) { const im = new Image(); im.cross
   if (!row) return;
   const st = document.createElement("style");
   st.textContent = `
-#menuSheet{padding:10px 14px 14px !important;border-radius:24px !important;max-height:min(74vh,660px);overflow-y:auto;overscroll-behavior:contain;background:linear-gradient(180deg,rgba(24,28,62,.86),rgba(9,11,26,.92)) !important;border:1px solid rgba(190,205,255,.16) !important;box-shadow:0 28px 80px -24px rgba(0,0,0,.95),inset 0 1px 0 rgba(255,255,255,.06) !important;backdrop-filter:blur(22px) saturate(1.2);-webkit-backdrop-filter:blur(22px) saturate(1.2);scrollbar-width:thin}
+#menuSheet{padding:10px 14px 14px !important;border-radius:24px !important;max-height:min(74vh,660px);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain;background:linear-gradient(180deg,rgba(24,28,62,.86),rgba(9,11,26,.92)) !important;border:1px solid rgba(190,205,255,.16) !important;box-shadow:0 28px 80px -24px rgba(0,0,0,.95),inset 0 1px 0 rgba(255,255,255,.06) !important;backdrop-filter:blur(22px) saturate(1.2);-webkit-backdrop-filter:blur(22px) saturate(1.2);scrollbar-width:thin}
 #menuSheet::after{display:none !important}
 #menuSheet::before{content:"";display:block;width:40px;height:4px;border-radius:4px;background:rgba(210,222,255,.28);margin:0 auto 12px}
 #menuSheet:not([hidden]){animation:skyUp .24s cubic-bezier(.2,.8,.2,1)}
 @keyframes skyUp{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}
-#menuSheet .row{display:grid;grid-template-columns:1fr 1fr;gap:8px;justify-content:stretch}
+#menuSheet .row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;justify-content:stretch}#menuSheet .row>*{min-width:0;max-width:100%;box-sizing:border-box}
 #menuSheet .row>.note,#menuSheet .row>a.chip,#menuSheet .row>#langBox{grid-column:1/-1}
 #menuSheet button.chip{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:start;min-height:48px;padding:11px 14px !important;border-radius:14px !important;font-size:14px;letter-spacing:0;color:var(--ink);background:rgba(255,255,255,.05);border:1px solid rgba(190,205,255,.12);box-shadow:none !important;transition:background .18s,border-color .18s}
 #menuSheet button.chip:active{transform:scale(.98)}
