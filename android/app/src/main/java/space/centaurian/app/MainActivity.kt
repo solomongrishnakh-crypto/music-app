@@ -372,6 +372,9 @@ private fun initialLang(ctx: Context): String {
 }
 
 /** JS-Schnipsel: kleines schwebendes Feedback-Symbol der Webseite ausblenden. */
+/** Seite im Leerlauf (nicht sichtbar / App im Hintergrund): Animationen pausieren bzw. stark drosseln, Musik-Logik laeuft weiter. */
+private fun cenIdleJs(on: Boolean) = "try{window.__cenIdle=$on;document.documentElement.classList.toggle('cn-idle',$on);}catch(e){}"
+
 private const val HIDE_FB_JS =
     "var bt=document.querySelectorAll('button');for(var q=0;q<bt.length;q++){var cn=bt[q].className;" +
         "if(typeof cn==='string'&&cn.indexOf('z-[3100]')>=0&&cn.indexOf('fixed')>=0&&cn.indexOf('rounded-full')>=0)" +
@@ -379,7 +382,7 @@ private const val HIDE_FB_JS =
 
 private fun nativeJs(hideNews: Boolean, anim: Boolean): String =
     "(function(){var css='html{background-color:#060203!important}body{background-color:transparent!important}.app-fab,.app-drawer,.app-scrim,#langBox,#langStrip,#fbLink,#newsLink{display:none!important}" +
-        "button[aria-haspopup=listbox]{display:none!important}';" +
+        "button[aria-haspopup=listbox]{display:none!important}html.cn-idle *,html.cn-idle *::before,html.cn-idle *::after{animation-play-state:paused!important}';" +
         "css+='#menuSheet{width:min(430px,calc(100% - 24px))!important;padding:10px!important;background:rgba(8,10,22,0.8)!important;backdrop-filter:blur(18px)!important;-webkit-backdrop-filter:blur(18px)!important}#menuSheet .row{gap:5px!important}#menuSheet button.chip,#menuSheet a.chip{font-size:11.5px!important;padding:7px 11px!important;border-radius:10px!important;letter-spacing:0.02em!important;background:rgba(255,255,255,0.05)!important;border-color:rgba(210,222,255,0.14)!important}#menuSheet button.chip[aria-pressed=true]{color:#fff!important;border-color:rgba(255,90,77,0.65)!important;background:linear-gradient(135deg,rgba(255,90,77,0.3),rgba(255,90,77,0.08))!important;box-shadow:0 0 12px -4px rgba(255,90,77,0.75)!important}#menuSheet #fbLink{padding:8px 11px!important}#menuSheet #sizeLink,#menuSheet #backLink{order:8!important}#menuSheet .note{order:9!important;font-size:9.5px!important;line-height:1.3!important;opacity:0.55!important;margin:2px 0 0!important}';" +
         "css+='" + PLAYER_CSS + "';" +
         "if((location.hash||'')==='#space-news'){css+='#space-news .grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important;background:transparent!important}" +
@@ -451,6 +454,7 @@ class MainActivity : ComponentActivity() {
         super.onPause()
         MusicBridge.log("App in background")
         MusicBridge.fg = false
+        try { MusicBridge.web?.evaluateJavascript(cenIdleJs(true), null) } catch (_: Exception) { }
         // Spielt Musik, dann Vordergrund-Dienst starten, damit der Ton im Hintergrund weiterlaeuft.
         try {
             val am = getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
@@ -483,6 +487,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         MusicBridge.log("App in foreground")
         MusicBridge.fg = true
+        try { MusicBridge.web?.evaluateJavascript(cenIdleJs(MusicBridge.guard), null) } catch (_: Exception) { }
         Updater.check(this, false)
         OfflineStore.autoUpdate(applicationContext, offlinePages(getSharedPreferences("cn", Context.MODE_PRIVATE).getString("lang", "de") ?: "de"))
     }
@@ -882,7 +887,7 @@ private fun homeJs(anim: Boolean): String =
         "';" +
         "try{Object.defineProperty(document,'hidden',{get:function(){return false;},configurable:true});Object.defineProperty(document,'visibilityState',{get:function(){return 'visible';},configurable:true});document.addEventListener('visibilitychange',function(e){e.stopImmediatePropagation();},true);}catch(x){}" +
         RESULTS_JS +
-        "if(!window.__cenRaf){window.__cenRaf=1;var oR=window.requestAnimationFrame.bind(window),oC=window.cancelAnimationFrame.bind(window),mp={},nn=0,lt=-1000;window.requestAnimationFrame=function(cb){var id=++nn;var step=function(t){if(!mp[id])return;if(t!==lt&&t-lt<14.5){mp[id]=oR(step);}else{delete mp[id];lt=t;cb(t);}};mp[id]=oR(step);return id;};window.cancelAnimationFrame=function(id){if(mp[id]){oC(mp[id]);delete mp[id];}else{oC(id);}};}" +
+        "if(!window.__cenRaf){window.__cenRaf=1;var oR=window.requestAnimationFrame.bind(window),oC=window.cancelAnimationFrame.bind(window),mp={},nn=0,lt=-1000;window.requestAnimationFrame=function(cb){var id=++nn;var step=function(t){if(!mp[id])return;if(t!==lt&&t-lt<(window.__cenIdle?600:14.5)){mp[id]=oR(step);}else{delete mp[id];lt=t;cb(t);}};mp[id]=oR(step);return id;};window.cancelAnimationFrame=function(id){if(mp[id]){oC(mp[id]);delete mp[id];}else{oC(id);}};}" +
         "if(!window.__cenBackL){window.__cenBackL=1;document.addEventListener('click',function(e){try{var b=e.target.closest&&e.target.closest('div.mx-auto.max-w-2xl.flex-col.items-center button.self-start');if(b&&window.CenNative)CenNative.heroBack();}catch(x){}},true);}" +
         "window.__cenCtx=function(){try{var c=['main','#__next','body > div'];for(var i=0;i<c.length;i++){var n=document.querySelector(c[i]);if(!n)continue;var k=null;for(var x in n){if(x.indexOf('__reactFiber')===0){k=x;break;}}if(!k)continue;var f=n[k];while(f){var p=f.memoizedProps;if(p&&p.value&&typeof p.value.toggleFavorite==='function')return p.value;f=f.return;}}}catch(e){}return null;};" +
         "if(!window.__cenPoll){window.__cenPoll=1;setInterval(function(){try{var c=window.__cenCtx();if(!window.CenNative)return;if(c&&c.currentSong)CenNative.update2(c.currentSong.title||'',c.currentSong.artist||'',!!c.isPlaying,c.currentSong.coverUrl||'',c.currentTime||0,c.duration||0);if(c&&c.currentSong&&CenNative.resume()&&!c.isPlaying&&Date.now()-(window.__cenRes||0)>2500){window.__cenRes=Date.now();c.togglePlayback();}if(!c)return;var m=CenNative.cmd();if(!m)return;if(m==='next')c.next();else if(m==='prev')c.previous();else if(m==='pause'){if(c.isPlaying)c.togglePlayback();}else if(m==='play'){if(!c.isPlaying)c.togglePlayback();}else if(m==='pp')c.togglePlayback();else if(m.indexOf('seek:')===0)c.seekTo(parseFloat(m.substring(5)));}catch(e){}},500);}" +
@@ -992,6 +997,7 @@ private fun HomeWebLayer(lang: String, visible: Boolean, searchReq: Pair<Int, St
         }
     }
     LaunchedEffect(anim) { web?.evaluateJavascript(animJs(anim), null) }
+    LaunchedEffect(visible, web) { web?.evaluateJavascript(cenIdleJs(!visible), null) }
     BackHandler(enabled = visible && canBack) { ClickSound.play(true); web?.goBack() }
     LaunchedEffect(searchReq) {
         val r = searchReq ?: return@LaunchedEffect
