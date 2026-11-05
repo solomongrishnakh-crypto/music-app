@@ -94,16 +94,15 @@ export default function MusicClient({ lang }: { lang: "de" | PrefixedLang }) {
           <h2 id="music-app-h" className="relative font-display text-xl font-bold text-foreground sm:text-2xl">{T.appH}</h2>
           <p className="relative mt-3 max-w-xl text-sm leading-relaxed text-foreground/85">{T.appP}</p>
           <div className="relative mt-5 flex flex-wrap items-center gap-3">
-            <a
+            <Link
               href="/app/download"
-              rel="noopener"
-              className="inline-flex items-center gap-2 border border-accent bg-accent px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-black transition-opacity hover:opacity-90"
+                className="inline-flex items-center gap-2 border border-accent bg-accent px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-black transition-opacity hover:opacity-90"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} className="h-4 w-4" aria-hidden="true">
                 <path d="M12 5v10m0 0-4-4m4 4 4-4M6 19h12" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
               {T.appBtn}
-            </a>
+            </Link>
             <Link href={langPath("/app", lang)} className="label-mono border border-border px-4 py-2.5 text-xs uppercase text-foreground transition-colors hover:border-accent hover:text-accent">
               {T.appMore} →
             </Link>

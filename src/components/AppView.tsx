@@ -98,16 +98,15 @@ export default function AppView({ lang }: { lang: Lang }) {
         <h1 className="relative mt-3 font-display text-3xl font-bold text-foreground sm:text-5xl">{a[I.title]}</h1>
         <p className="relative mt-4 max-w-xl text-sm leading-relaxed text-foreground/90 sm:text-base">{a[I.lead]}</p>
         <div className="relative mt-6 flex flex-wrap items-center gap-3">
-          <a
+          <Link
             href="/app/download"
-            rel="noopener"
             className="app-cta inline-flex items-center gap-3 border border-accent bg-accent px-6 py-3 font-bold uppercase tracking-wide text-black transition-opacity hover:opacity-90"
           >
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} className="h-5 w-5" aria-hidden="true">
               <path d="M12 5v10m0 0-4-4m4 4 4-4M6 19h12" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
             {a[I.btn]}
-          </a>
+          </Link>
           <span className="label-mono text-xs text-muted">{a[I.meta]}</span>
         </div>
       </header>
@@ -195,13 +194,12 @@ export default function AppView({ lang }: { lang: Lang }) {
       </div>
 
       <div className="mt-8 flex justify-center">
-        <a
+        <Link
           href="/app/download"
-          rel="noopener"
           className="inline-flex items-center gap-3 border border-accent px-6 py-3 font-bold uppercase tracking-wide text-accent transition-colors hover:bg-accent hover:text-black"
         >
           {a[I.btn]}
-        </a>
+        </Link>
       </div>
     </main>
     </>
