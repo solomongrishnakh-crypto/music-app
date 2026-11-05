@@ -893,6 +893,7 @@ private fun homeJs(anim: Boolean): String =
         "var hr=document.querySelector('div.mx-auto.max-w-2xl.flex-col.items-center');if(hr){var sb=document.getElementById('cn-save');if(!sb){sb=document.createElement('button');sb.id='cn-save';sb.type='button';sb.addEventListener('click',function(){var cc=window.__cenCtx();if(cc&&cc.currentSong)cc.toggleFavorite(cc.currentSong);setTimeout(window.__cenSave,200);});hr.appendChild(sb);}window.__cenSave();}" +
         "var kk=document.getElementById('kontakte');if(kk)kk.style.setProperty('display','none','important');" +
         "var im=document.querySelector('img[src*=\"branding/logo.jpg\"]');if(im){var sc=im.closest('section');if(sc)sc.style.setProperty('display','none','important');}" +
+        "var mc=document.querySelectorAll('p.leading-snug');for(var m=0;m<mc.length;m++){var mt=mc[m].textContent||'';if(mt.charCodeAt(0)===55356&&mt.charCodeAt(1)===57269)mc[m].style.setProperty('display','none','important');}" +
         "var fo=document.querySelectorAll('footer');for(var j=0;j<fo.length;j++){fo[j].style.setProperty('display','none','important');}" +
         "var d=document.querySelectorAll('.dl-pill');for(var i=0;i<d.length;i++){var q=d[i].parentElement||d[i];q.style.setProperty('display','none','important');}" +
         HIDE_FB_JS + "}catch(x){}}" +
