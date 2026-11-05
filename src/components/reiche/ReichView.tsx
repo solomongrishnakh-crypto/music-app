@@ -4,6 +4,7 @@ import type { Lang } from "@/contexts/LanguageContext";
 import { REICHE_INDEX, dauer, type Reich, type ReichRef } from "@/lib/history/reiche";
 import { reichNameL } from "@/lib/history/reicheNames";
 import { eraIndex, fill, reichTexts } from "@/lib/history/reicheText";
+import { reichExtra } from "@/lib/history/reichExtra";
 import ReichProfile from "@/components/reiche/ReichProfile";
 import { PROFILE_LABELS, getProfile } from "@/lib/history/reichProfiles";
 import {
@@ -23,6 +24,15 @@ import {
  * Besucher — auch international.
  */
 const LAND_KM2 = 148_940_000; // Landfläche der Erde
+const DE_KM2 = 357_600; // Fläche Deutschlands
+
+// Rangfolgen einmalig berechnen (größte Fläche / längste Dauer)
+const BY_AREA = new Map<string, number>(
+  [...REICHE_INDEX].sort((a, b) => b.peakArea - a.peakArea).map((r, i) => [r.slug, i + 1] as [string, number]),
+);
+const BY_DUR = new Map<string, number>(
+  [...REICHE_INDEX].sort((a, b) => dauer(b.from, b.to) - dauer(a.from, a.to)).map((r, i) => [r.slug, i + 1] as [string, number]),
+);
 
 function nameOf(r: { en?: string; n?: string; de: string | null }, lang: Lang): string {
   return reichNameL(r.en ?? r.n ?? "", lang, r.de);
@@ -157,6 +167,28 @@ export default function ReichView({ r, lang }: { r: Reich; lang: Lang }) {
     ],
   };
 
+  const X = reichExtra(lang);
+  const names = (refs: ReichRef[]) => refs.slice(0, 6).map((it) => nameOf(it, lang)).join(", ");
+  const ratio = r.peakArea / DE_KM2;
+  const sizeLine = ratio >= 1.5
+    ? fill(X.pBig, { x: formatNumberL(Math.round(ratio), lang) })
+    : fill(X.pSmall, { x: formatNumberL(Math.max(1, Math.round(ratio * 100)), lang) });
+  const xv = {
+    ...v,
+    n: formatNumberL(REICHE_INDEX.length, lang),
+    rankA: formatNumberL(BY_AREA.get(r.slug) ?? 0, lang),
+    rankD: formatNumberL(BY_DUR.get(r.slug) ?? 0, lang),
+  };
+  const faq: [string, string][] = [
+    [fill(X.q1, v), fill(X.a1, v)],
+    [fill(X.q2, v), fill(X.a2, v)],
+    [fill(X.q3, v), r.succ.length ? fill(X.a3, { list: names(r.succ) }) : X.a3none],
+  ];
+  (jsonLd["@graph"] as unknown[]).push({
+    "@type": "FAQPage",
+    mainEntity: faq.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a } })),
+  });
+
   const facts: [string, string][] = [
     [T.period, `${v.from} – ${v.to}`],
     [T.duration, fill(T.durationVal, v)],
@@ -228,6 +260,14 @@ export default function ReichView({ r, lang }: { r: Reich; lang: Lang }) {
       </section>
 
       <section className="mt-8">
+        <h2 className="font-display text-lg font-bold text-foreground sm:text-xl">{fill(X.h2Cmp, v)}</h2>
+        <p className="mt-3 leading-relaxed text-foreground/90">{fill(X.pRank, xv)}</p>
+        <p className="mt-3 leading-relaxed text-foreground/90">{sizeLine}</p>
+        {r.pred.length > 0 && <p className="mt-3 leading-relaxed text-foreground/90">{fill(X.pPred, { list: names(r.pred) })}</p>}
+        {r.succ.length > 0 && <p className="mt-3 leading-relaxed text-foreground/90">{fill(X.pSucc, { list: names(r.succ) })}</p>}
+      </section>
+
+      <section className="mt-8">
         <h2 className="font-display text-lg font-bold text-foreground sm:text-xl">{T.h2Rel}</h2>
         <p className="mt-3 text-sm text-muted">{T.pRel}</p>
         <h3 className="label-mono mt-4 text-xs uppercase text-accent">
@@ -248,6 +288,18 @@ export default function ReichView({ r, lang }: { r: Reich; lang: Lang }) {
         <div className="mt-3">
           <RefList items={r.cont} empty={T.noNeigh} lang={lang} />
         </div>
+      </section>
+
+      <section className="mt-8">
+        <h2 className="font-display text-lg font-bold text-foreground sm:text-xl">{fill(X.faqH2, v)}</h2>
+        <dl className="mt-3 space-y-4">
+          {faq.map(([q, a]) => (
+            <div key={q}>
+              <dt className="font-semibold text-foreground">{q}</dt>
+              <dd className="mt-1 leading-relaxed text-foreground/90">{a}</dd>
+            </div>
+          ))}
+        </dl>
       </section>
 
       <section className="mt-8">
