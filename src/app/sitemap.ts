@@ -2,6 +2,8 @@ import type { MetadataRoute } from "next";
 import { REICHE_INDEX } from "@/lib/history/reiche";
 import { ALL_LANGS, BASE_URL, hreflang, langPath } from "@/lib/seoI18n";
 import { SPACE_BODIES } from "@/components/space/bodies";
+import { SKY_ENTRIES } from "@/lib/skyPosData";
+import { TOPICS } from "@/lib/probeTopics";
 import { CONSTELLATIONS } from "@/components/space/ConstView";
 import { FAMOUS } from "@/lib/famousObjects";
 import { STARS } from "@/lib/starPages";
@@ -55,6 +57,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...REICHE_INDEX.flatMap((r) => withLangs(`/imperien/reich/${r.slug}`, 0.6, "yearly")),
     ...withLangs("/religionen", 0.8, "monthly"),
     ...REL_KEYS.flatMap((k) => deEn(`/religionen/${REL_SLUG[k]}`, 0.6)),
+    ...TOPICS.flatMap((t) => deEn(t.path, 0.7)),
+    ...withLangs("/himmelsposition", 0.8, "daily"),
+    ...SKY_ENTRIES.flatMap((e) => withLangs(`/himmelsposition/${e.id}`, e.kind === "body" ? 0.7 : 0.6, "daily")),
     ...withLangs("/sonnensystem", 0.7, "monthly"),
     ...SPACE_BODIES.flatMap((b) => withLangs(`/sonnensystem/${b.id}`, 0.6, "monthly")),
     ...withLangs("/groessenvergleich", 0.9, "monthly"),

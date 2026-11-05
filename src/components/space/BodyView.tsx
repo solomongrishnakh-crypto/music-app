@@ -7,6 +7,7 @@ import { TRANSLATIONS } from "@/lib/translations";
 import { spaceTexts } from "@/lib/spaceText";
 import { fill } from "@/lib/history/reicheText";
 import { BASE_URL, OG_LOCALE, hreflang, langPath } from "@/lib/seoI18n";
+import { SKYPOS } from "@/lib/skyPosText";
 import LiveDistance from "./LiveDistance";
 import { SPACE_BODIES } from "./bodies";
 
@@ -149,6 +150,14 @@ export default function BodyView({ b, lang }: { b: PlanetData; lang: Lang }) {
         >
           ▶ {T.open3d}
         </Link>
+        {b.id !== "earth" && (
+          <Link
+            href={langPath(`/himmelsposition/${b.id}`, lang)}
+            className="inline-block border border-border px-4 py-2.5 text-sm text-foreground transition-colors hover:border-accent hover:text-accent"
+          >
+            {SKYPOS[lang].link}
+          </Link>
+        )}
         <a
           href={`https://${lang}.wikipedia.org/w/index.php?search=${encodeURIComponent(name)}`}
           target="_blank"
