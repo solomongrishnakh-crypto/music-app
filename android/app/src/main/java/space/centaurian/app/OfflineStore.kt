@@ -285,7 +285,7 @@ object OfflineStore {
                 busy = false; pct = 0; failed = !ok
                 onDone?.invoke(ok)
             }
-        }.start()
+        }.also { it.priority = Thread.MIN_PRIORITY }.start()
     }
 
     private fun runPage(ctx: Context, job: Job, page: String) {
@@ -353,9 +353,12 @@ object OfflineStore {
         try {
             val prefs = ctx.getSharedPreferences("cn", Context.MODE_PRIVATE)
             if (!ready || busy || !Offline.online) return
-            if (!prefs.getBoolean("off_auto", true)) return
+            if (!prefs.getBoolean("off_auto", false)) return
             val newPack = prefs.getInt("off_pack", 1) != PACK
-            if (!newPack && System.currentTimeMillis() - lastUpdate(ctx) < 24L * 3600 * 1000) return
+            val now = System.currentTimeMillis()
+            if (now - prefs.getLong("off_try", 0L) < 24L * 3600 * 1000) return
+            if (!newPack && now - lastUpdate(ctx) < 24L * 3600 * 1000) return
+            prefs.edit().putLong("off_try", now).apply()
             if (prefs.getBoolean("off_wifi", true) && !isUnmetered(ctx)) return
             update(ctx, pages)
         } catch (_: Exception) { }
