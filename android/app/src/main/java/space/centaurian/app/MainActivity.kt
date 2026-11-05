@@ -797,7 +797,7 @@ if(!window.__cenDust){window.__cenDust=function(){try{
 var hero=document.querySelector('div.mx-auto.flex.w-full.max-w-2xl.flex-col.items-center');
 if(!hero||hero.querySelector('#cn-dust'))return;
 var cv=document.createElement('canvas');cv.id='cn-dust';
-cv.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;z-index:-1;pointer-events:none;border-radius:inherit;will-change:transform;transform:translateZ(0)';
+cv.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;z-index:-1;pointer-events:none;border-radius:inherit';
 hero.style.position='relative';hero.insertBefore(cv,hero.firstChild);
 var ctx=cv.getContext('2d'),W=0,H=0,D=Math.min(1.5,window.devicePixelRatio||1),scT=0,bT=0,bSh=false,bRaw=-1,bPl=false,ps=[],last=0,t0=performance.now(),saver=false,sChk=0,lv=0,i;
 function col(f){return [255,Math.round(255-f*200),Math.round(255-f*212)];}
