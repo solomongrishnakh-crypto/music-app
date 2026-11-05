@@ -797,9 +797,9 @@ if(!window.__cenDust){window.__cenDust=function(){try{
 var hero=document.querySelector('div.mx-auto.flex.w-full.max-w-2xl.flex-col.items-center');
 if(!hero||hero.querySelector('#cn-dust'))return;
 var cv=document.createElement('canvas');cv.id='cn-dust';
-cv.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;z-index:-1;pointer-events:none;border-radius:inherit';
+cv.style.cssText='position:absolute;left:0;top:0;width:100%;height:100%;z-index:-1;pointer-events:none;border-radius:inherit;will-change:transform;transform:translateZ(0)';
 hero.style.position='relative';hero.insertBefore(cv,hero.firstChild);
-var ctx=cv.getContext('2d'),W=0,H=0,D=Math.min(1.5,window.devicePixelRatio||1),scT=0,ps=[],last=0,t0=performance.now(),saver=false,sChk=0,lv=0,i;
+var ctx=cv.getContext('2d'),W=0,H=0,D=Math.min(1.5,window.devicePixelRatio||1),scT=0,bT=0,bSh=false,bRaw=-1,bPl=false,ps=[],last=0,t0=performance.now(),saver=false,sChk=0,lv=0,i;
 function col(f){return [255,Math.round(255-f*200),Math.round(255-f*212)];}
 /* scharfes Staubkorn: heller Kern, winziger Hof */
 var CORE=[],BOK=[];
@@ -821,11 +821,13 @@ function frame(now){requestAnimationFrame(frame);
 if(!document.getElementById('cn-dust'))return;
 if(now-sChk>1000){sChk=now;try{saver=!!(window.CenNative&&CenNative.saver&&CenNative.saver());}catch(e){saver=false;}cv.style.display=saver?'none':'block';}
 if(saver)return;
-if(!window.CenNative||!CenNative.shown())return;
-if(now-scT<180)return;if(now-last<40)return;var dt=Math.min(.06,(now-last)/1000);last=now;
+if(!window.CenNative)return;
+if(now-scT<180)return;if(now-last<40)return;
+if(now-bT>90){bT=now;try{bSh=!!CenNative.shown();bRaw=CenNative.level();bPl=!!CenNative.playing();}catch(e){bSh=false;}}
+if(!bSh)return;var dt=Math.min(.06,(now-last)/1000);last=now;
 var r0=cv.getBoundingClientRect();if(r0.bottom<0||r0.top>window.innerHeight||!r0.width)return;
 if(Math.abs(r0.width-W)>1||Math.abs(r0.height-H)>1||!W)size();
-var t=(now-t0)/1000,raw=CenNative.level(),pl=CenNative.playing();
+var t=(now-t0)/1000,raw=bRaw,pl=bPl;
 if(raw<0){var ph=(t%(60/104))/(60/104);raw=pl?Math.pow(Math.max(0,1-ph*2.2),2.2):0;}else if(!pl)raw=0;
 lv+=(raw-lv)*(raw>lv?.6:.15);
 ctx.clearRect(0,0,W,H);
