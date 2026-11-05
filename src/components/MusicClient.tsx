@@ -11,7 +11,6 @@ import { langPath, type PrefixedLang } from "@/lib/seoI18n";
 import { MUSIC_TEXT } from "@/lib/musicPageText";
 import type { Song } from "@/types/music";
 
-const APK_URL = "https://github.com/solomongrishnakh-crypto/music-app/releases/download/app-latest/Centaurian-web.apk";
 const RTL = new Set(["ar", "fa"]);
 
 /** Musik-Seite: Suchleiste nur für Musik, Player unten (globaler Player), Hinweis auf die App. */
@@ -96,7 +95,7 @@ export default function MusicClient({ lang }: { lang: "de" | PrefixedLang }) {
           <p className="relative mt-3 max-w-xl text-sm leading-relaxed text-foreground/85">{T.appP}</p>
           <div className="relative mt-5 flex flex-wrap items-center gap-3">
             <a
-              href={APK_URL}
+              href="/app/download"
               rel="noopener"
               className="inline-flex items-center gap-2 border border-accent bg-accent px-5 py-2.5 text-sm font-bold uppercase tracking-wide text-black transition-opacity hover:opacity-90"
             >

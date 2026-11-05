@@ -99,7 +99,7 @@ export default function AppView({ lang }: { lang: Lang }) {
         <p className="relative mt-4 max-w-xl text-sm leading-relaxed text-foreground/90 sm:text-base">{a[I.lead]}</p>
         <div className="relative mt-6 flex flex-wrap items-center gap-3">
           <a
-            href={APK_URL}
+            href="/app/download"
             rel="noopener"
             className="app-cta inline-flex items-center gap-3 border border-accent bg-accent px-6 py-3 font-bold uppercase tracking-wide text-black transition-opacity hover:opacity-90"
           >
@@ -196,7 +196,7 @@ export default function AppView({ lang }: { lang: Lang }) {
 
       <div className="mt-8 flex justify-center">
         <a
-          href={APK_URL}
+          href="/app/download"
           rel="noopener"
           className="inline-flex items-center gap-3 border border-accent px-6 py-3 font-bold uppercase tracking-wide text-accent transition-colors hover:bg-accent hover:text-black"
         >
