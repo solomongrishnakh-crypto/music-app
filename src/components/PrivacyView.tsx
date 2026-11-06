@@ -11,7 +11,7 @@ const TEXT: Record<PL, { title: string; back: string; updated: string; intro: st
     back: "Zur Startseite",
     updated: "Stand: 22. Oktober 2026",
     intro:
-      "Centaurian (centaurianspace.com) ist ein privates, nicht-kommerzielles Hobby-Projekt. Es gibt keine Benutzerkonten, keine Werbung und keine Tracking-Cookies. Hier steht, welche Daten trotzdem anfallen und wofür.",
+      "Centaurian (centaurianspace.com) ist eine private, werbefreie Plattform für Weltraum, Weltgeschichte und Musik: nicht-kommerziell, ohne Benutzerkonten und ohne Tracking-Cookies. Hier steht, welche Daten trotzdem anfallen und wofür.",
     sections: [
       ["Verantwortlicher und Kontakt", [
         "Verantwortlich ist der Betreiber der Webseite centaurianspace.com. Du erreichst ihn über die Kontakt-Links auf der Startseite (Telegram, X) oder über das Feedback-Formular. Anfragen zum Datenschutz beantworte ich dort.",
@@ -44,7 +44,7 @@ const TEXT: Record<PL, { title: string; back: string; updated: string; intro: st
     back: "Back to home",
     updated: "Last updated: 22 October 2026",
     intro:
-      "Centaurian (centaurianspace.com) is a private, non-commercial hobby project. There are no user accounts, no ads and no tracking cookies. This page explains which data is still processed and why.",
+      "Centaurian (centaurianspace.com) is a private, ad-free platform for space, world history and music: non-commercial, with no user accounts and no tracking cookies. This page explains which data is still processed and why.",
     sections: [
       ["Controller and contact", [
         "The controller is the operator of centaurianspace.com. You can reach them through the contact links on the home page (Telegram, X) or through the feedback form. Privacy requests are answered there.",
