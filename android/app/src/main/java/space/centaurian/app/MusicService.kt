@@ -84,6 +84,7 @@ object MusicBridge {
     @Synchronized fun vizSync(on: Boolean) {
         val c = appCtx ?: return
         if (on) try { Eq.ensure(c) } catch (_: Throwable) { }
+        try { Pan.sync(c, on) } catch (_: Throwable) { }
         if (!on) {
             try { viz?.enabled = false; viz?.release() } catch (_: Exception) { }
             viz = null; level = -1f; return
@@ -126,6 +127,9 @@ object MusicBridge {
         }
         @JavascriptInterface fun eqGet(): String = try { appCtx?.let { Eq.state(it) } ?: "{}" } catch (_: Exception) { "{}" }
         @JavascriptInterface fun eqSet(b: Int, m: Int, t: Int, l: Boolean): String = try { appCtx?.let { Eq.set(it, b, m, t, l); Eq.state(it) } ?: "{}" } catch (_: Exception) { "{}" }
+        @JavascriptInterface fun panGet(): String = try { appCtx?.let { Pan.state(it) } ?: "{}" } catch (_: Exception) { "{}" }
+        @JavascriptInterface fun panSet(on: Boolean, s: Int, r: Int): String = try { appCtx?.let { Pan.set(it, on, s, r, playing) } ?: "{}" } catch (_: Exception) { "{}" }
+        @JavascriptInterface fun panText(): String = try { appCtx?.let { Pan.texts(it) } ?: "{}" } catch (_: Exception) { "{}" }
         @JavascriptInterface fun eqText(): String = try { appCtx?.let { Eq.texts(it) } ?: "{}" } catch (_: Exception) { "{}" }
         @JavascriptInterface fun update2(t: String, a: String, p: Boolean, c: String, cur: Double, d: Double) {
             // Zwei WebViews melden getrennt: spielt eine davon, darf die andere (pausierte) den Status nicht ueberschreiben.
@@ -172,6 +176,7 @@ object MusicBridge {
             }
         }
         want = false
+        appCtx?.let { Pan.reset(it) }
     }
 
     fun click(kind0: String) {
@@ -391,6 +396,7 @@ class MusicService : Service() {
     override fun onDestroy() {
         MusicBridge.serviceUp = false
         handler.removeCallbacks(tick)
+        try { Pan.reset(applicationContext) } catch (_: Throwable) { }
         session?.release()
         session = null
         super.onDestroy()
