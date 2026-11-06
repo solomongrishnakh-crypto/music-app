@@ -32,6 +32,15 @@ const CSS = `
 .rmap .play{width:36px;height:36px;flex:none;border-radius:50%;border:1px solid var(--acc);background:var(--acc);color:#0a0a0a;font-size:14px;cursor:pointer}
 .rmap input[type=range]{flex:1;accent-color:var(--acc);min-width:0}
 .rmap .ticks{display:flex;justify-content:space-between;font:10px ui-monospace,Menlo,Consolas,monospace;color:var(--mut);padding:0 96px 0 40px;align-items:center;direction:ltr}
+.rmap .rul{position:relative;flex:1;min-width:0;height:48px;border:1px solid var(--line);border-radius:4px;background:rgba(0,0,0,.3);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab;outline:none}
+.rmap .rul:focus-visible{border-color:var(--acc)}.rmap .rul.drag{cursor:grabbing}
+.rmap .rul .base{position:absolute;left:0;right:0;bottom:12px;height:1px;background:rgba(255,90,77,.25);pointer-events:none}
+.rmap .rul .trk{position:absolute;left:50%;top:0;bottom:0;width:0;transition:transform .18s ease-out;pointer-events:none}
+.rmap .rul.drag .trk{transition:none}
+.rmap .rul .t{position:absolute;bottom:12px;width:1px;height:10px;background:rgba(255,255,255,.25);transform:translateX(-50%);border-radius:1px}
+.rmap .rul .t.M{height:20px;background:rgba(255,90,77,.7)}
+.rmap .rul .mid{position:absolute;left:50%;bottom:12px;width:3px;height:28px;transform:translateX(-50%);background:var(--acc);border-radius:2px;box-shadow:0 0 8px rgba(0,0,0,.6);pointer-events:none}
+.rmap .rul .rc{position:absolute;left:50%;top:5px;transform:translateX(-50%);background:var(--acc);color:#0a0a0a;font:700 11px/1 ui-monospace,Menlo,Consolas,monospace;padding:4px 9px;border-radius:2px;white-space:nowrap;pointer-events:none;box-shadow:0 2px 6px rgba(0,0,0,.4)}
 .rmap .era{font-size:12.5px;line-height:18px;height:91px;overflow-y:auto;color:var(--fg);margin:0}
 .rmap .yr{font:600 15px/1.1 ui-monospace,Menlo,Consolas,monospace;color:var(--acc);min-width:92px;text-align:right}
 .rmap .sheet{position:fixed;left:max(8px,env(safe-area-inset-left,0px));right:max(8px,env(safe-area-inset-right,0px));bottom:calc(8px + env(safe-area-inset-bottom,0px));max-width:640px;margin:0 auto;background:rgba(18,10,12,.97);border:1px solid var(--acc);border-radius:16px;padding:14px 14px 12px;box-shadow:0 0 28px rgba(255,90,77,.25),0 10px 30px rgba(0,0,0,.6);transform:translateY(130%);transition:transform .3s;z-index:60;max-height:72vh;overflow:auto;visibility:hidden}
@@ -78,6 +87,7 @@ function init(root: HTMLElement, lang: Lang): () => void {
   const sx = $("#rm-sx");
   let alive = true;
   let timer: any = null;
+  let syncRuler: () => void = () => {};
 
   // Muster für die Mischfarben
   const defs = document.createElementNS(NS, "defs");
@@ -142,6 +152,7 @@ function init(root: HTMLElement, lang: Lang): () => void {
       });
     });
     $("#rm-yr").textContent = ylab(YEARS[si]); $("#rm-era").textContent = ERA[si];
+    syncRuler();
     root.querySelectorAll(".chip").forEach((c: any) => c.classList.toggle("off", !!(filter && c.dataset.k !== filter)));
     if (sel) showInfo(sel); else if (filter) showRel(filter);
   }
@@ -187,6 +198,41 @@ function init(root: HTMLElement, lang: Lang): () => void {
     si = 0; rng.value = "0"; paint(); play.textContent = "❚❚";
     timer = setInterval(() => { if (si >= LAST) { clearInterval(timer); timer = null; play.textContent = "▶"; return; } si++; rng.value = String(si); paint(); }, 2400);
   };
+
+  // Zeitleiste als ziehbares Lineal mit Zaehnen (wie auf der Geschichts-Seite): die Mitte steht fest,
+  // das Lineal scrollt darunter durch; jede Stufe ist ein dicker Zahn, dazwischen feine Striche.
+  {
+    const rul = $("#rm-rul"), trk = $("#rm-trk"), rc = $("#rm-rchip");
+    const SP = 64;
+    trk.innerHTML = "";
+    for (let i = 0; i <= LAST; i++) {
+      const m = document.createElement("span"); m.className = "t M"; m.style.left = i * SP + "px"; trk.appendChild(m);
+      if (i < LAST) for (let j = 1; j < 5; j++) { const t = document.createElement("span"); t.className = "t"; t.style.left = i * SP + (j * SP) / 5 + "px"; trk.appendChild(t); }
+    }
+    let pos = si; let drag: any = null;
+    const show = () => { trk.style.transform = "translateX(" + -pos * SP + "px)"; };
+    const stopPlay = () => { if (timer) { clearInterval(timer); timer = null; play.textContent = "▶"; } };
+    const setIdx = (n: number) => { n = Math.max(0, Math.min(LAST, n)); if (n !== si) { si = n; rng.value = String(si); paint(); } };
+    syncRuler = () => { if (!drag) { pos = si; show(); } rc.textContent = ylab(YEARS[si]); };
+    rul.onpointerdown = (e: any) => { try { rul.setPointerCapture(e.pointerId); } catch (x) {} drag = { x: e.clientX, p: pos, moved: false }; rul.classList.add("drag"); stopPlay(); };
+    rul.onpointermove = (e: any) => {
+      if (!drag) return; const dx = e.clientX - drag.x; if (Math.abs(dx) > 3) drag.moved = true;
+      pos = Math.max(0, Math.min(LAST, drag.p - dx / SP)); show(); setIdx(Math.round(pos));
+    };
+    const up = (e: any) => {
+      if (!drag) return; const d = drag; drag = null; rul.classList.remove("drag");
+      if (!d.moved) { const r = rul.getBoundingClientRect(); setIdx(Math.round(d.p + (e.clientX - (r.left + r.width / 2)) / SP)); }
+      pos = si; show(); rc.textContent = ylab(YEARS[si]);
+    };
+    rul.onpointerup = up; rul.onpointercancel = up;
+    rul.onkeydown = (e: any) => {
+      if (e.key === "ArrowLeft") { stopPlay(); setIdx(si - 1); e.preventDefault(); }
+      else if (e.key === "ArrowRight") { stopPlay(); setIdx(si + 1); e.preventDefault(); }
+      else if (e.key === "Home") { stopPlay(); setIdx(0); e.preventDefault(); }
+      else if (e.key === "End") { stopPlay(); setIdx(LAST); e.preventDefault(); }
+    };
+    syncRuler();
+  }
 
   // Verschieben / Zoom
   const vb = { x: 400, y: -215, w: 560 }; let cw = 1, ch = 1; let first = true;
@@ -293,10 +339,16 @@ export default function ReligionMap({ lang }: { lang: Lang }) {
         <div className="ctl">
           <div className="row">
             <button className="play" id="rm-play" aria-label={ui.play}>▶</button>
-            <input type="range" id="rm-rng" min={0} max={14} step={1} defaultValue={14} aria-label={ui.title} />
+            <input type="range" id="rm-rng" min={0} max={14} step={1} defaultValue={14} aria-label={ui.title} style={{ display: "none" }} />
+            <div className="rul" id="rm-rul" role="slider" tabIndex={0} aria-label={ui.title} aria-valuemin={0} aria-valuemax={14}>
+              <div className="base" />
+              <div className="trk" id="rm-trk" />
+              <div className="mid" />
+              <div className="rc" id="rm-rchip" />
+            </div>
             <span className="yr" id="rm-yr">{ui.today}</span>
           </div>
-          <div className="ticks" id="rm-ticks" />
+          <div className="ticks" id="rm-ticks" style={{ display: "none" }} />
           <p className="era" id="rm-era" />
         </div>
       </div>
