@@ -49,6 +49,9 @@ object Eq {
         }
     }
 
+    /** Bei jedem Musikstart: Effekte wieder anlegen, falls das System sie in der Zwischenzeit entfernt hat. */
+    @Synchronized fun ensure(c: Context) { if (eq == null && supported) apply(c) }
+
     fun set(c: Context, b: Int, m: Int, t: Int, l: Boolean) {
         sp(c).edit().putInt("eq_b", b.coerceIn(-10, 10)).putInt("eq_m", m.coerceIn(-10, 10)).putInt("eq_t", t.coerceIn(-10, 10)).putBoolean("eq_l", l).apply()
         apply(c)

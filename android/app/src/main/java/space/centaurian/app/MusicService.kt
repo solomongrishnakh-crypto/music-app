@@ -83,6 +83,7 @@ object MusicBridge {
 
     @Synchronized fun vizSync(on: Boolean) {
         val c = appCtx ?: return
+        if (on) try { Eq.ensure(c) } catch (_: Throwable) { }
         if (!on) {
             try { viz?.enabled = false; viz?.release() } catch (_: Exception) { }
             viz = null; level = -1f; return
