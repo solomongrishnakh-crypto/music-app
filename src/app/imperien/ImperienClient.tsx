@@ -1121,6 +1121,7 @@ export default function ImperienClient() {
     }
 
     mapRef.current = map;
+    try { map.attributionControl?.setPrefix(false); } catch {}
 
     // Handy (Canvas): Die oberste Canvas-Ebene fängt alle Klicks ab, die
     // Reichsflächen darunter bekommen sie nie. Deshalb den Klick selbst auf
@@ -1845,18 +1846,26 @@ export default function ImperienClient() {
     };
   }, [leafletReady, lang, antikSeas]);
 
-  // Solange das Info-Fenster offen ist, darf die Seite dahinter nicht mitscrollen
-  // (Wischen auf dem Fenster schob sonst die Seite darunter hin und her).
+  // Solange das Info-Fenster offen ist, darf die Seite dahinter nicht mitscrollen.
+  // Die Seite wird dabei an ihrer Stelle eingefroren (position: fixed) und beim
+  // Schliessen exakt dorthin zurueckgesetzt - sonst sprang sie nach oben.
   useEffect(() => {
     if (!selected) return;
-    const html = document.documentElement;
+    const y = window.scrollY || document.documentElement.scrollTop || 0;
     const body = document.body;
-    const prev = [html.style.overflow, body.style.overflow];
-    html.style.overflow = "hidden";
-    body.style.overflow = "hidden";
+    const prev = { position: body.style.position, top: body.style.top, left: body.style.left, right: body.style.right, width: body.style.width };
+    body.style.position = "fixed";
+    body.style.top = `-${y}px`;
+    body.style.left = "0";
+    body.style.right = "0";
+    body.style.width = "100%";
     return () => {
-      html.style.overflow = prev[0];
-      body.style.overflow = prev[1];
+      body.style.position = prev.position;
+      body.style.top = prev.top;
+      body.style.left = prev.left;
+      body.style.right = prev.right;
+      body.style.width = prev.width;
+      window.scrollTo(0, y);
     };
   }, [selected]);
 
@@ -2059,8 +2068,11 @@ export default function ImperienClient() {
         }
         .leaflet-control-zoom a:hover { background: #1a1a18 !important; }
         .leaflet-control-attribution {
-          background: rgba(3, 3, 3, 0.7) !important;
-          color: rgba(242, 242, 240, 0.55) !important;
+          background: rgba(3, 3, 3, 0.55) !important;
+          color: rgba(242, 242, 240, 0.5) !important;
+          font-size: 9px !important;
+          padding: 1px 6px !important;
+          border-top-left-radius: 8px;
         }
         .leaflet-control-attribution a { color: rgba(242, 242, 240, 0.75) !important; }
 
@@ -2287,7 +2299,7 @@ export default function ImperienClient() {
             (70-80vh), dass Jahres-Regler und Abspiel-Buttons erst nach dem
             Scrollen sichtbar wurden. Jetzt deutlich kompakter, damit beides
             ohne Scrollen auf den Bildschirm passt. */}
-        <div className="relative h-[44vh] min-h-[280px] max-h-[460px] w-full overflow-hidden border border-border bg-surface-elevated sm:h-[56vh] sm:max-h-[620px]">
+        <div className="relative h-[44vh] min-h-[280px] max-h-[460px] w-full overflow-hidden rounded-2xl border border-[rgba(255,90,77,0.5)] bg-surface-elevated shadow-[0_0_0_1px_rgba(255,90,77,0.12),0_0_34px_rgba(255,90,77,0.16),inset_0_0_26px_rgba(0,0,0,0.55)] sm:h-[56vh] sm:max-h-[620px]">
           <div ref={mapContainerRef} className="absolute inset-0" />
           {(!leafletReady || (isLoadingBorders && !hasRenderedBorders)) && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/70">
