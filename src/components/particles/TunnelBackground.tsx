@@ -60,7 +60,7 @@ function initTunnel(canvas: HTMLCanvasElement, lite: boolean): () => void {
   var PAL = [{a:'#ff3a3a', b:'#ff9c86'}];
   var cA = new THREE.Color(), cB = new THREE.Color(), painters = [], tmp = new THREE.Color();
   /* Sterne */
-  var NS = lite ? 900 : coarse ? 1400 : 1820, sPos = new Float32Array(NS*3), sCol = new Float32Array(NS*3), sK = new Float32Array(NS), sB = new Float32Array(NS);
+  var NS = lite ? 900 : coarse ? 1400 : 1690, sPos = new Float32Array(NS*3), sCol = new Float32Array(NS*3), sK = new Float32Array(NS), sB = new Float32Array(NS);
   for (var i=0;i<NS;i++){
     var z = 30 - Math.random()*450, a = Math.random()*6.2832, r = 7 + Math.pow(Math.random(),.7)*95;
     sPos[i*3]=Math.cos(a)*r; sPos[i*3+1]=Math.sin(a)*r*.7; sPos[i*3+2]=z; sK[i]=Math.random(); sB[i]=.45+Math.random()*.55;
@@ -78,7 +78,7 @@ function initTunnel(canvas: HTMLCanvasElement, lite: boolean): () => void {
     sGeo.attributes.aCol.needsUpdate = true;
   });
   /* Bewegliche Partikel in den Bildschirm-Ecken */
-  var NC = lite ? 2500 : coarse ? 6000 : 11200, cN = new Float32Array(NC*2), cPh = new Float32Array(NC), cSp = new Float32Array(NC), cK = new Float32Array(NC), cB2 = new Float32Array(NC), cW = new Float32Array(NC), cPos = new Float32Array(NC*3), cCol = new Float32Array(NC*3);
+  var NC = lite ? 2500 : coarse ? 6000 : 10400, cN = new Float32Array(NC*2), cPh = new Float32Array(NC), cSp = new Float32Array(NC), cK = new Float32Array(NC), cB2 = new Float32Array(NC), cW = new Float32Array(NC), cPos = new Float32Array(NC*3), cCol = new Float32Array(NC*3);
   for (var ci=0;ci<NC;ci++){
     var rin = .72, rout = 2.7; cN[ci*2] = Math.sqrt(rin*rin + Math.random()*(rout*rout - rin*rin)); cN[ci*2+1] = Math.random()*6.2832;
     cPh[ci] = Math.random()*6.2832; cSp[ci] = .4 + Math.random()*1.1; cK[ci] = Math.random(); cB2[ci] = .5 + Math.random()*.5; cW[ci] = (Math.random()<.5 ? -1 : 1)*(.03 + Math.random()*.06);
@@ -126,8 +126,8 @@ function initTunnel(canvas: HTMLCanvasElement, lite: boolean): () => void {
       geo.attributes.position.needsUpdate = true;
     });
   }
-  swirl(lite ? 8000 : coarse ? 20000 : 42000, .36, 1, .75);
-  swirl(lite ? 300 : coarse ? 500 : 840, 1.1, .6, .6, function(){ return .7 + Math.random()*.6; });
+  swirl(lite ? 8000 : coarse ? 20000 : 39000, .36, 1, .75);
+  swirl(lite ? 300 : coarse ? 500 : 780, 1.1, .6, .6, function(){ return .7 + Math.random()*.6; });
 
   function setPal(i){ cA.set(PAL[i].a); cB.set(PAL[i].b); painters.forEach(function(fn){ fn(); }); }
   setPal(0);
