@@ -3704,6 +3704,19 @@ function openSheet(btnId) {
   }
 }
 for (const b of Object.keys(sheets)) document.getElementById(b).onclick = () => openSheet(b);
+// Kamera-Knopf (AR) sitzt normalerweise unter dem Kompass-Knopf. Ist oben ein Fenster offen (Zeit, Ort),
+// rutscht er darunter, statt vom Fenster verdeckt/ueberlagert zu werden.
+{
+  const camBtn = document.getElementById("tCam");
+  const topSheets = ["timeSheet", "locSheet"].map((id) => document.getElementById(id));
+  const placeCam = () => {
+    const open = topSheets.find((el) => el && !el.hidden);
+    camBtn.style.top = open ? Math.round(open.getBoundingClientRect().bottom + 12) + "px" : "";
+  };
+  if (window.ResizeObserver) { const ro = new ResizeObserver(placeCam); topSheets.forEach((el) => el && ro.observe(el)); }
+  window.addEventListener("resize", placeCam);
+  placeCam();
+}
 canvas.addEventListener("pointerdown", () => { for (const b of Object.keys(sheets)) if (b !== "timeBtn") { document.getElementById(sheets[b]).hidden = true; document.getElementById(b).setAttribute("aria-pressed", "false"); } });
 
 const norm = (t) => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, " ");
