@@ -123,6 +123,9 @@ object MusicBridge {
             title = t; artist = a; playing = p; stamp = System.currentTimeMillis()
             vizSync(p)
         }
+        @JavascriptInterface fun eqGet(): String = try { appCtx?.let { Eq.state(it) } ?: "{}" } catch (_: Exception) { "{}" }
+        @JavascriptInterface fun eqSet(b: Int, m: Int, t: Int, l: Boolean): String = try { appCtx?.let { Eq.set(it, b, m, t, l); Eq.state(it) } ?: "{}" } catch (_: Exception) { "{}" }
+        @JavascriptInterface fun eqText(): String = try { appCtx?.let { Eq.texts(it) } ?: "{}" } catch (_: Exception) { "{}" }
         @JavascriptInterface fun update2(t: String, a: String, p: Boolean, c: String, cur: Double, d: Double) {
             // Zwei WebViews melden getrennt: spielt eine davon, darf die andere (pausierte) den Status nicht ueberschreiben.
             if (page) pageP = p else homeP = p
