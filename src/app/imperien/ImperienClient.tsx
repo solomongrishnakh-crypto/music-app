@@ -2678,7 +2678,7 @@ export default function ImperienClient() {
         {/* Nutzerwunsch 17.10.2026: Geschichts-Werkzeuge direkt unter dem Kosmischen Kalender */}
       <Link
         href={localePath("/imperien/werkzeuge")}
-        className="group relative mt-6 block max-w-2xl overflow-hidden rounded-xl border border-accent/40 bg-gradient-to-br from-accent/15 via-surface-elevated to-transparent p-4 shadow-[0_0_30px_-10px_var(--accent)] backdrop-blur transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-[0_0_40px_-8px_var(--accent)] sm:p-5"
+        className="group relative mt-6 block overflow-hidden rounded-xl border border-accent/40 bg-gradient-to-br from-accent/15 via-surface-elevated to-transparent p-4 shadow-[0_0_30px_-10px_var(--accent)] backdrop-blur transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-[0_0_40px_-8px_var(--accent)] sm:p-5"
       >
         <div className="flex items-center justify-between gap-3">
           <div className="min-w-0">
@@ -2699,7 +2699,7 @@ export default function ImperienClient() {
         {/* Nutzerwunsch 28.10.2026: Religionskarte, direkt unter den Werkzeugen */}
         <Link
           href={localePath("/religionen")}
-          className="group relative mt-4 block max-w-2xl overflow-hidden rounded-xl border border-accent/40 bg-gradient-to-br from-accent/15 via-surface-elevated to-transparent p-4 shadow-[0_0_30px_-10px_var(--accent)] backdrop-blur transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-[0_0_40px_-8px_var(--accent)] sm:p-5"
+          className="group relative mt-4 block overflow-hidden rounded-xl border border-accent/40 bg-gradient-to-br from-accent/15 via-surface-elevated to-transparent p-4 shadow-[0_0_30px_-10px_var(--accent)] backdrop-blur transition-all hover:-translate-y-0.5 hover:border-accent hover:shadow-[0_0_40px_-8px_var(--accent)] sm:p-5"
         >
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
