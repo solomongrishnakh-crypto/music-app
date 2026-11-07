@@ -227,6 +227,23 @@ export default function Home() {
           </header>
         )}
 
+        {!query.trim() && (
+          <div className="mx-auto mb-4 mt-1 flex justify-center">
+            <button
+              type="button"
+              onClick={() => document.getElementById("unterstuetzen")?.scrollIntoView({ behavior: "smooth", block: "center" })}
+              className="label-mono group inline-flex items-center gap-2 rounded-full border border-accent/50 bg-accent/10 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-accent shadow-[0_0_14px_rgba(255,80,60,0.18)] backdrop-blur transition-all hover:border-accent hover:bg-accent/20 hover:shadow-[0_0_20px_rgba(255,80,60,0.35)]"
+            >
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="M12 20 C2.4 13.9 2 6.7 7.2 4.8 C10 3.8 12 6.2 12 7.7 C12 6.2 14 3.8 16.8 4.8 C22 6.7 21.6 13.9 12 20Z" fill="currentColor" fillOpacity="0.3" />
+                <ellipse cx="12" cy="12" rx="11" ry="2.6" transform="rotate(-25 12 12)" strokeWidth="1.1" />
+                <circle cx="22.3" cy="7" r="1.1" fill="currentColor" stroke="none" />
+              </svg>
+              {t("supportUs")}
+            </button>
+          </div>
+        )}
+
         <div className="mx-auto flex w-full max-w-2xl items-stretch gap-2">
           {/* Musik-Symbol links neben der Suche: führt direkt zur Musik-Seite */}
           <Link
@@ -254,23 +271,6 @@ export default function Home() {
               <p>{t("infoHintNote1")}</p>
               <p>{t("infoHintNote2")}</p>
             </InfoHint>
-          </div>
-        )}
-
-        {!query.trim() && (
-          <div className="mx-auto mt-4 flex justify-center">
-            <button
-              type="button"
-              onClick={() => document.getElementById("unterstuetzen")?.scrollIntoView({ behavior: "smooth", block: "center" })}
-              className="label-mono group inline-flex items-center gap-2 rounded-full border border-accent/50 bg-accent/10 px-3 py-1.5 text-[10px] uppercase tracking-[0.2em] text-accent shadow-[0_0_14px_rgba(255,80,60,0.18)] backdrop-blur transition-all hover:border-accent hover:bg-accent/20 hover:shadow-[0_0_20px_rgba(255,80,60,0.35)]"
-            >
-              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                <path d="M12 20 C2.4 13.9 2 6.7 7.2 4.8 C10 3.8 12 6.2 12 7.7 C12 6.2 14 3.8 16.8 4.8 C22 6.7 21.6 13.9 12 20Z" fill="currentColor" fillOpacity="0.3" />
-                <ellipse cx="12" cy="12" rx="11" ry="2.6" transform="rotate(-25 12 12)" strokeWidth="1.1" />
-                <circle cx="22.3" cy="7" r="1.1" fill="currentColor" stroke="none" />
-              </svg>
-              {t("supportUs")}
-            </button>
           </div>
         )}
 
