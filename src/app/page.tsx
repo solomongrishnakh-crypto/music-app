@@ -54,7 +54,9 @@ export default function Home() {
   // Aktuelle Suchergebnisse laufend als "Weiter"-Warteschlange im globalen
   // Player hinterlegen, damit der Nächster-Button dieselbe Reihenfolge nutzt
   // wie vorher.
+  const playlistLockRef = useRef(false);
   useEffect(() => {
+    if (playlistLockRef.current) return; // Playlist läuft: Suchergebnisse überschreiben sie nicht
     if (results.length > 0) player.setQueue(results);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [results]);
@@ -158,6 +160,7 @@ export default function Home() {
   }
 
   function handlePlay(song: Song) {
+    playlistLockRef.current = false;
     player.play(song, results.length > 0 ? results : undefined);
     setShowHero(true);
     scrollToTop();
@@ -165,6 +168,7 @@ export default function Home() {
 
   function handlePlayList(songs: Song[], start: number) {
     if (!songs[start]) return;
+    playlistLockRef.current = true;
     player.play(songs[start], songs);
     setShowHero(true);
     scrollToTop();
