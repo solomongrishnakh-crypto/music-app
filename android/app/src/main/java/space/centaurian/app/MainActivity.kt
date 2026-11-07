@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
+import androidx.compose.ui.graphics.drawscope.rotate
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -1370,17 +1371,17 @@ private fun DrawerContent(
                 }
                 val kofiCtx = androidx.compose.ui.platform.LocalContext.current
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp).clip(RoundedCornerShape(12.dp)).background(Accent.copy(alpha = 0.16f))
+                    Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp).clip(RoundedCornerShape(12.dp)).background(Accent.copy(alpha = 0.14f))
                         .border(BorderStroke(1.dp, Accent), RoundedCornerShape(12.dp))
                         .clickable { try { kofiCtx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://ko-fi.com/centaurian"))) } catch (_: Exception) { } }
-                        .padding(horizontal = 14.dp, vertical = 11.dp),
+                        .padding(horizontal = 14.dp, vertical = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text("♥", color = Accent, fontSize = 15.sp)
+                    SetIcon("support", 22.dp)
                     Spacer(Modifier.size(12.dp))
                     Column(Modifier.weight(1f)) {
-                        Text((if (de) "Centaurian unterstützen" else Tr.t(lang, "Support Centaurian")).uppercase(), color = TextMain, fontSize = 11.sp, fontFamily = Mono, letterSpacing = 2.sp, fontWeight = FontWeight.Bold)
-                        Text(if (de) "Deine Unterstützung entwickelt Centaurian weiter und hält es lebendig." else Tr.t(lang, "Your support helps Centaurian grow and keeps it alive."), color = TextMuted, fontSize = 10.sp, modifier = Modifier.padding(top = 3.dp))
+                        Text((if (de) "Centaurian unterstützen" else Tr.t(lang, "Support Centaurian")).uppercase(), color = TextMain, fontSize = 11.sp, fontFamily = Mono, letterSpacing = 2.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+                        Text(if (de) "Hilf mit, dass es weiterwächst" else Tr.t(lang, "Help it keep growing"), color = TextMuted, fontSize = 10.sp, maxLines = 1)
                     }
                     Text("↗", color = Accent, fontSize = 16.sp)
                 }
@@ -1686,6 +1687,18 @@ private fun SetIcon(kind: String, sz: androidx.compose.ui.unit.Dp = 22.dp) {
                 drawCircle(c, radius = 0.42f * w, center = o(0.5f, 0.5f), style = st)
                 drawOval(c, o(0.32f, 0.08f), androidx.compose.ui.geometry.Size(0.36f * w, 0.84f * h), style = st)
                 line(0.08f, 0.5f, 0.92f, 0.5f)
+            }
+            "support" -> {
+                val hp = androidx.compose.ui.graphics.Path()
+                hp.moveTo(0.5f * w, 0.84f * h)
+                hp.cubicTo(0.1f * w, 0.58f * h, 0.08f * w, 0.28f * h, 0.3f * w, 0.2f * h)
+                hp.cubicTo(0.42f * w, 0.16f * h, 0.5f * w, 0.26f * h, 0.5f * w, 0.32f * h)
+                hp.cubicTo(0.5f * w, 0.26f * h, 0.58f * w, 0.16f * h, 0.7f * w, 0.2f * h)
+                hp.cubicTo(0.92f * w, 0.28f * h, 0.9f * w, 0.58f * h, 0.5f * w, 0.84f * h)
+                drawPath(hp, c.copy(alpha = 0.25f))
+                drawPath(hp, c, style = st)
+                rotate(-25f, o(0.5f, 0.5f)) { drawOval(c, o(0.0f, 0.4f), androidx.compose.ui.geometry.Size(1.0f * w, 0.2f * h), style = androidx.compose.ui.graphics.drawscope.Stroke(width = 1.1.dp.toPx())) }
+                drawCircle(c, radius = 0.06f * w, center = o(0.93f, 0.3f))
             }
             "screen" -> { box(0.1f, 0.16f, 0.9f, 0.68f, 0.08f); line(0.5f, 0.68f, 0.5f, 0.84f); line(0.3f, 0.86f, 0.7f, 0.86f) }
             "update" -> { line(0.5f, 0.1f, 0.5f, 0.62f); poly(false, 0.3f, 0.44f, 0.5f, 0.64f, 0.7f, 0.44f); poly(false, 0.14f, 0.72f, 0.14f, 0.9f, 0.86f, 0.9f, 0.86f, 0.72f) }

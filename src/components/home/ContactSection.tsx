@@ -89,9 +89,14 @@ export default function ContactSection() {
           href="https://ko-fi.com/centaurian"
           target="_blank"
           rel="noopener noreferrer"
-          className="label-mono inline-flex items-center gap-2 bg-accent px-8 py-4 text-sm font-bold uppercase tracking-widest text-background transition-transform hover:scale-105"
+          className="label-mono inline-flex items-center gap-3 bg-accent px-8 py-4 text-sm font-bold uppercase tracking-widest text-background transition-transform hover:scale-105"
         >
-          ♥ {t("supportKofi")} ↗
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M12 20 C2.4 13.9 2 6.7 7.2 4.8 C10 3.8 12 6.2 12 7.7 C12 6.2 14 3.8 16.8 4.8 C22 6.7 21.6 13.9 12 20Z" fill="currentColor" fillOpacity="0.25" />
+            <ellipse cx="12" cy="12" rx="11" ry="2.6" transform="rotate(-25 12 12)" strokeWidth="1.1" />
+            <circle cx="22.3" cy="7" r="1.1" fill="currentColor" stroke="none" />
+          </svg>
+          {t("supportKofi")} ↗
         </a>
         <p className="max-w-md text-sm text-foreground">{t("supportKofiSub")}</p>
       </div>
