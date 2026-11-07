@@ -1945,6 +1945,12 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                     first = true,
                 )
                 SetCard(
+                    "chat", if (de) "Centaurian unterstützen" else Tr.t(lang, "Support Centaurian"),
+                    if (de) "Deine Unterstützung entwickelt Centaurian weiter und hält es lebendig." else Tr.t(lang, "Your support helps Centaurian grow and keeps it alive."),
+                    onClick = { open("https://ko-fi.com/centaurian") },
+                    trailing = { Text("↗", color = Accent, fontSize = 18.sp) },
+                )
+                SetCard(
                     "info", if (de) "Über die App" else Tr.t(lang, "About the app"),
                     if (de) "Was dich hier erwartet" else Tr.t(lang, "What to expect here"),
                     onClick = { onOpen(Screen.Info(aboutTitle(de, lang), aboutBody(lang))) },

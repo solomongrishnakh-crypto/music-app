@@ -1295,6 +1295,16 @@ const TRANSLATIONS_SOURCE = {
     id: "Peristiwa", fa: "رویداد",
   },
 
+  // Ko-fi (Nutzerwunsch: nur 5 Sprachen, Rest Englisch)
+  supportKofi: {
+    de: "Centaurian unterstützen", en: "Support Centaurian", es: "Apoya Centaurian", fr: "Soutenir Centaurian", pt: "Apoie o Centaurian",
+    hi: "Support Centaurian", zh: "Support Centaurian", ko: "Support Centaurian", ja: "Support Centaurian", tr: "Support Centaurian", ru: "Support Centaurian", ar: "Support Centaurian", el: "Support Centaurian", id: "Support Centaurian", fa: "Support Centaurian",
+  },
+  supportKofiSub: {
+    de: "Deine Unterstützung entwickelt Centaurian weiter und hält es lebendig.", en: "Your support helps Centaurian grow and keeps it alive.", es: "Tu apoyo hace crecer Centaurian y lo mantiene vivo.", fr: "Ton soutien fait évoluer Centaurian et le garde vivant.", pt: "Seu apoio faz o Centaurian crescer e o mantém vivo.",
+    hi: "Your support helps Centaurian grow and keeps it alive.", zh: "Your support helps Centaurian grow and keeps it alive.", ko: "Your support helps Centaurian grow and keeps it alive.", ja: "Your support helps Centaurian grow and keeps it alive.", tr: "Your support helps Centaurian grow and keeps it alive.", ru: "Your support helps Centaurian grow and keeps it alive.", ar: "Your support helps Centaurian grow and keeps it alive.", el: "Your support helps Centaurian grow and keeps it alive.", id: "Your support helps Centaurian grow and keeps it alive.", fa: "Your support helps Centaurian grow and keeps it alive.",
+  },
+
   // Sprachumschalter
   languageMenuLabel: {
     de: "Sprache", en: "Language", hi: "भाषा", zh: "语言", ko: "언어", ja: "言語",

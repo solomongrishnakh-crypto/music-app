@@ -84,6 +84,18 @@ export default function ContactSection() {
         ))}
       </nav>
 
+      <div className="mt-6 flex flex-col items-center gap-2 text-center">
+        <a
+          href="https://ko-fi.com/centaurian"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="label-mono border border-accent px-4 py-2 text-[11px] uppercase tracking-wide text-accent transition-colors hover:bg-accent hover:text-background"
+        >
+          ♥ {t("supportKofi")} ↗
+        </a>
+        <p className="max-w-md text-xs text-muted">{t("supportKofiSub")}</p>
+      </div>
+
       {/* Fußzeile: Info + Copyright (Nutzerwunsch 02.10.2026 "richtig sortieren" —
           vorher schwebten diese Texte fest in den Bildschirmecken) */}
       <div className="hud-card mt-6 flex flex-col gap-4 p-4 text-xs sm:flex-row sm:items-start sm:justify-between">
