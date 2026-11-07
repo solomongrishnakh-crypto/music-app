@@ -84,7 +84,7 @@ export default function ContactSection() {
         ))}
       </nav>
 
-      <div className="hud-card mt-6 flex flex-col items-center gap-3 border-accent p-6 text-center shadow-[0_0_28px_rgba(255,255,255,0.08)]">
+      <div id="unterstuetzen" className="hud-card mt-6 flex scroll-mt-24 flex-col items-center gap-3 border-accent p-6 text-center shadow-[0_0_28px_rgba(255,255,255,0.08)]">
         <a
           href="https://ko-fi.com/centaurian"
           target="_blank"

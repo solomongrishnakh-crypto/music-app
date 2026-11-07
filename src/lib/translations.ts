@@ -1305,6 +1305,11 @@ const TRANSLATIONS_SOURCE = {
     hi: "Your support helps Centaurian grow and keeps it alive.", zh: "Your support helps Centaurian grow and keeps it alive.", ko: "Your support helps Centaurian grow and keeps it alive.", ja: "Your support helps Centaurian grow and keeps it alive.", tr: "Your support helps Centaurian grow and keeps it alive.", ru: "Your support helps Centaurian grow and keeps it alive.", ar: "Your support helps Centaurian grow and keeps it alive.", el: "Your support helps Centaurian grow and keeps it alive.", id: "Your support helps Centaurian grow and keeps it alive.", fa: "Your support helps Centaurian grow and keeps it alive.",
   },
 
+  supportUs: {
+    de: "Unterstütze uns", en: "Support us", es: "Apóyanos", fr: "Soutiens-nous", pt: "Apoie-nos",
+    hi: "Support us", zh: "Support us", ko: "Support us", ja: "Support us", tr: "Support us", ru: "Support us", ar: "Support us", el: "Support us", id: "Support us", fa: "Support us",
+  },
+
   // Sprachumschalter
   languageMenuLabel: {
     de: "Sprache", en: "Language", hi: "भाषा", zh: "语言", ko: "언어", ja: "言語",
