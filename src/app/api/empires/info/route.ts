@@ -73,7 +73,7 @@ async function fetchWithRetry(url: string): Promise<Response | null> {
     // Erfolgreiche Treffer werden weiterhin kurz gecacht (Performance),
     // aber deutlich kuerzer, damit ein schlechter Treffer sich schnell
     // selbst heilt; Retry-Versuche umgehen den Cache komplett.
-    let res = await fetch(url, { next: { revalidate: 900 }, headers: FETCH_HEADERS });
+    let res = await fetch(url, { cache: "no-store", headers: FETCH_HEADERS });
     let wait = 500;
     for (let attempt = 0; attempt < 3 && res.status === 429; attempt++) {
       await new Promise((r) => setTimeout(r, wait));
@@ -615,5 +615,5 @@ export async function GET(req: NextRequest) {
     language,
     lang,
     ...(debug ? { trace, debugQid } : {}),
-  });
+  }, debug ? undefined : { headers: { "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800" } });
 }

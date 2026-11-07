@@ -47,7 +47,7 @@ export async function GET(req: NextRequest) {
 
   try {
     const songs = await searchYoutubeMusic(query, apiKey);
-    return NextResponse.json({ songs });
+    return NextResponse.json({ songs }, { headers: { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" } });
   } catch (err) {
     console.error("YouTube-Suche fehlgeschlagen:", err);
     return NextResponse.json(

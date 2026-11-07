@@ -39,7 +39,7 @@ export async function GET(req: NextRequest) {
     for (let i = 0; i < 4; i++) {
       const p = new URLSearchParams({ part: "snippet", maxResults: "50", playlistId: list, key });
       if (page) p.set("pageToken", page);
-      const r = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?${p.toString()}`, { next: { revalidate: 300 } });
+      const r = await fetch(`https://www.googleapis.com/youtube/v3/playlistItems?${p.toString()}`, { cache: "no-store" });
       const d = await r.json();
       if (!r.ok) return NextResponse.json({ error: "not found" }, { status: r.status === 404 ? 404 : 502 });
       for (const it of (d.items ?? []) as Item[]) {
@@ -59,14 +59,14 @@ export async function GET(req: NextRequest) {
     }
     let name = "";
     try {
-      const r = await fetch(`https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${list}&key=${key}`, { next: { revalidate: 300 } });
+      const r = await fetch(`https://www.googleapis.com/youtube/v3/playlists?part=snippet&id=${list}&key=${key}`, { cache: "no-store" });
       const d = await r.json();
       name = decode(d.items?.[0]?.snippet?.title ?? "");
     } catch {
       /* Name optional */
     }
     if (songs.length === 0) return NextResponse.json({ error: "empty" }, { status: 404 });
-    return NextResponse.json({ name, songs });
+    return NextResponse.json({ name, songs }, { headers: { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=600" } });
   } catch {
     return NextResponse.json({ error: "failed" }, { status: 502 });
   }

@@ -66,7 +66,7 @@ async function fetchViewCounts(
 
   const res = await fetch(
     `https://www.googleapis.com/youtube/v3/videos?${params.toString()}`,
-    { next: { revalidate: 60 } }
+    { cache: "no-store" }
   );
 
   const data: YoutubeVideosResponse = await res.json();
@@ -107,7 +107,7 @@ export async function searchYoutubeMusic(
 
   const res = await fetch(
     `https://www.googleapis.com/youtube/v3/search?${params.toString()}`,
-    { next: { revalidate: 60 } }
+    { cache: "no-store" }
   );
 
   const data: YoutubeSearchResponse = await res.json();
