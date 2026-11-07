@@ -84,16 +84,16 @@ export default function ContactSection() {
         ))}
       </nav>
 
-      <div className="mt-6 flex flex-col items-center gap-2 text-center">
+      <div className="hud-card mt-6 flex flex-col items-center gap-3 border-accent p-6 text-center shadow-[0_0_28px_rgba(255,255,255,0.08)]">
         <a
           href="https://ko-fi.com/centaurian"
           target="_blank"
           rel="noopener noreferrer"
-          className="label-mono border border-accent px-4 py-2 text-[11px] uppercase tracking-wide text-accent transition-colors hover:bg-accent hover:text-background"
+          className="label-mono inline-flex items-center gap-2 bg-accent px-8 py-4 text-sm font-bold uppercase tracking-widest text-background transition-transform hover:scale-105"
         >
           ♥ {t("supportKofi")} ↗
         </a>
-        <p className="max-w-md text-xs text-muted">{t("supportKofiSub")}</p>
+        <p className="max-w-md text-sm text-foreground">{t("supportKofiSub")}</p>
       </div>
 
       {/* Fußzeile: Info + Copyright (Nutzerwunsch 02.10.2026 "richtig sortieren" —

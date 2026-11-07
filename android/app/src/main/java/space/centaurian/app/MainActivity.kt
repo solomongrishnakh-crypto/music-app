@@ -1368,6 +1368,22 @@ private fun DrawerContent(
                     Text("FEEDBACK", color = TextMain, fontSize = 11.sp, fontFamily = Mono, letterSpacing = 3.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                     Text("›", color = Accent, fontSize = 16.sp)
                 }
+                val kofiCtx = androidx.compose.ui.platform.LocalContext.current
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp).clip(RoundedCornerShape(12.dp)).background(Accent.copy(alpha = 0.16f))
+                        .border(BorderStroke(1.dp, Accent), RoundedCornerShape(12.dp))
+                        .clickable { try { kofiCtx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://ko-fi.com/centaurian"))) } catch (_: Exception) { } }
+                        .padding(horizontal = 14.dp, vertical = 11.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text("♥", color = Accent, fontSize = 15.sp)
+                    Spacer(Modifier.size(12.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text((if (de) "Centaurian unterstützen" else Tr.t(lang, "Support Centaurian")).uppercase(), color = TextMain, fontSize = 11.sp, fontFamily = Mono, letterSpacing = 2.sp, fontWeight = FontWeight.Bold)
+                        Text(if (de) "Deine Unterstützung entwickelt Centaurian weiter und hält es lebendig." else Tr.t(lang, "Your support helps Centaurian grow and keeps it alive."), color = TextMuted, fontSize = 10.sp, modifier = Modifier.padding(top = 3.dp))
+                    }
+                    Text("↗", color = Accent, fontSize = 16.sp)
+                }
                 Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     listOf(
                         Triple("§", if (de) "Datenschutz" else Tr.t(lang, "Privacy"), onPrivacy),
@@ -1943,12 +1959,6 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                     if (de) "Fehler melden oder Ideen schicken" else Tr.t(lang, "Report a bug or share an idea"),
                     onClick = { onFeedback() },
                     first = true,
-                )
-                SetCard(
-                    "chat", if (de) "Centaurian unterstützen" else Tr.t(lang, "Support Centaurian"),
-                    if (de) "Deine Unterstützung entwickelt Centaurian weiter und hält es lebendig." else Tr.t(lang, "Your support helps Centaurian grow and keeps it alive."),
-                    onClick = { open("https://ko-fi.com/centaurian") },
-                    trailing = { Text("↗", color = Accent, fontSize = 18.sp) },
                 )
                 SetCard(
                     "info", if (de) "Über die App" else Tr.t(lang, "About the app"),
