@@ -227,7 +227,7 @@ export default function Home() {
           </header>
         )}
 
-        {!query.trim() && (
+        {inApp === false && !query.trim() && (
           <div className="mx-auto mb-4 mt-1 flex justify-center">
             <button
               type="button"
