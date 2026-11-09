@@ -84,7 +84,7 @@ fun StartIntro(saver: Boolean, onDone: () -> Unit) {
     val out = ((sec - dur) / 0.3f).coerceIn(0f, 1f)
     val red = Color(0xFFFF4637)
     Box(
-        Modifier.fillMaxSize().background(Color(0xFF050506)).graphicsLayer { alpha = 1f - out }
+        Modifier.fillMaxSize().background(Color(0xFF000000)).graphicsLayer { alpha = 1f - out }
             .pointerInput(Unit) { detectTapGestures { onDone() } },
     ) {
         Canvas(Modifier.fillMaxSize()) {
