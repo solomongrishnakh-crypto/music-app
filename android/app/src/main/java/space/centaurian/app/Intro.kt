@@ -21,6 +21,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
@@ -42,90 +47,102 @@ private val STAR_COLORS = arrayOf(
 )
 
 /**
- * App-Start: Tausende feine Sternteilchen in echten Sternfarben kreisen in die Mitte, formen die flache
- * Scheibe des Logos und gehen weich in das Logo über. Antippen überspringt. Spart-Modus: nur das Logo.
+ * App-Start: ein kleines rotes Raumschiff fliegt von unten durch die Mitte nach oben aus dem Bild: erst ruhig,
+ * in der Bildmitte am langsamsten, dann beschleunigt es. Fahrtwind-Linien laufen kompakt um das Schiff.
+ * Laeuft bewusst ueber withFrameNanos (nicht ueber Animator-Dauer), damit es auch im Akkusparmodus
+ * oder bei ausgeschalteten System-Animationen gleich abspielt. Antippen ueberspringt.
  */
 @Composable
 fun StartIntro(saver: Boolean, onDone: () -> Unit) {
-    val n = if (saver) 0 else 1100
-    val rnd = remember { Random(7) }
-    val pa = remember { FloatArray(n) { rnd.nextFloat() * 6.2832f } }
-    val r0 = remember { FloatArray(n) { 60f + rnd.nextFloat() * 140f } }
-    val fin = remember { FloatArray(n) { 15f + Math.pow(rnd.nextDouble(), 0.8).toFloat() * 40f } }
-    val pw = remember { FloatArray(n) { 0.6f + rnd.nextFloat() * 1.2f } }
-    val pb = remember { FloatArray(n) { 0.15f + 0.85f * Math.pow(rnd.nextDouble(), 3.0).toFloat() } }
-    val pt = remember { FloatArray(n) { rnd.nextFloat() * 6.2832f } }
-    val pc = remember { IntArray(n) { rnd.nextInt(STAR_COLORS.size) } }
+    val dur = 2.8f
+    val rnd = remember { Random(11) }
+    val sx = remember { FloatArray(16) { (rnd.nextFloat() - 0.5f) * 2f } }
+    val sy = remember { FloatArray(16) { rnd.nextFloat() } }
+    val sp = remember { FloatArray(16) { 0.7f + rnd.nextFloat() * 0.9f } }
+    val sl = remember { FloatArray(16) { rnd.nextFloat() } }
+    // Tempo je Wegstrecke q (0..1): sanfter Start, langsamster Punkt in der Mitte, dann schnell
+    val tab = remember {
+        val n = 600
+        val t = FloatArray(n + 1)
+        for (i in 1..n) t[i] = t[i - 1] + 1f / n / introSpeed(i.toFloat() / n)
+        t
+    }
     var tick by remember { mutableLongStateOf(0L) }
-    var e by remember { mutableLongStateOf(0L) } // Millisekunden
+    var e by remember { mutableLongStateOf(0L) }
     LaunchedEffect(Unit) {
         var t0 = 0L
-        var last = 0L
         while (true) {
             val now = withFrameNanos { it }
-            if (t0 == 0L) { t0 = now; last = now }
-            val dt = ((now - last) / 1_000_000_000f).coerceIn(0f, 0.05f)
-            last = now
+            if (t0 == 0L) t0 = now
             val sec = (now - t0) / 1_000_000_000f
-            val k = min(1f, sec / 2.1f)
-            val ease = smooth(k)
-            for (i in 0 until n) {
-                val r = r0[i] + (fin[i] - r0[i]) * ease
-                val sp = (1.2f + ease * 2.6f) * pw[i] * (1f / (0.3f + r / 90f))
-                pa[i] += sp * 0.012f * dt * 60f
-            }
             e = (sec * 1000f).toLong()
             tick++
-            if (sec >= 4.1f) { onDone(); break }
+            if (sec >= dur + 0.35f) { onDone(); break }
         }
     }
     val sec = e / 1000f
-    val out = ((sec - 3.55f) / 0.55f).coerceIn(0f, 1f)
-    val logoA = smooth((sec - 1.55f) / 1.3f)
+    val out = ((sec - dur) / 0.3f).coerceIn(0f, 1f)
+    val red = Color(0xFFFF4637)
     Box(
-        Modifier.fillMaxSize().background(Color(0xFF000000)).graphicsLayer { alpha = 1f - out }
+        Modifier.fillMaxSize().background(Color(0xFF050506)).graphicsLayer { alpha = 1f - out }
             .pointerInput(Unit) { detectTapGestures { onDone() } },
-        contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.fillMaxSize()) {
             tick // Neuzeichnen pro Bild
-            val d = density
+            val u = size.width / 540f
             val cx = size.width / 2f
-            val cy = size.height / 2f
-            val k = min(1f, sec / 2.1f)
-            val ease = smooth(k)
-            val gone = smooth((sec - 1.75f) / 0.85f)
-            val px0 = min(d, 2f)
-            for (i in 0 until n) {
-                val r = (r0[i] + (fin[i] - r0[i]) * ease) * d
-                val a = pa[i]
-                val x = cx + cos(a) * r
-                val y = cy + sin(a) * r * (0.16f + 0.84f * (1f - ease))
-                val al = (0.25f + 0.75f * ease) * pb[i] * (0.85f + 0.15f * sin(sec * 5f + pt[i])) * (1f - gone) * min(1f, sec * 1.4f)
-                if (al < 0.02f) continue
-                val sz = (0.5f + pb[i] * 0.9f) * px0 * (if (pb[i] > 0.7f) 1.3f else 1f)
-                drawRect(STAR_COLORS[pc[i]].copy(alpha = min(1f, al)), Offset(x - sz / 2f, y - sz / 2f), Size(sz, sz))
-            }
-            val ga = 0.12f * ease * (1f - gone)
-            if (ga > 0.005f) {
-                drawCircle(
-                    Brush.radialGradient(listOf(Color(0xFFFFE1C8).copy(alpha = ga), Color(0x00FFE1C8)), center = Offset(cx, cy), radius = 55f * d),
-                    radius = 55f * d, center = Offset(cx, cy),
+            val ph = size.height
+            // Position q aus der Zeit
+            val total = tab[tab.size - 1]
+            val target = (min(sec, dur) / dur) * total
+            var lo = 0
+            var hi = tab.size - 1
+            while (hi - lo > 1) { val m = (lo + hi) ushr 1; if (tab[m] <= target) lo = m else hi = m }
+            val q = min(1f, (lo + (target - tab[lo]) / (tab[lo + 1] - tab[lo])) / (tab.size - 1))
+            val v = introSpeed(q)
+            val env = min(1f, v / 2.3f)
+            // Fahrtwind
+            val span = ph + 200f * u
+            for (i in 0 until 16) {
+                val yy = ((sy[i] * span + q * 1300f * sp[i] * u) % span) - 100f * u
+                val ev = sin(Math.PI.toFloat() * (yy + 100f * u) / span)
+                if (ev <= 0f) continue
+                val xx = cx + sx[i] * 85f * u
+                val len = (12f + env * (30f + sl[i] * 30f)) * u
+                val al = ev * (0.5f + 0.5f * env) * (1f - kotlin.math.abs(sx[i]) * 0.5f)
+                drawLine(
+                    Brush.verticalGradient(listOf(red.copy(alpha = 0f), red.copy(alpha = al.coerceIn(0f, 1f))), startY = yy - len, endY = yy),
+                    Offset(xx, yy - len), Offset(xx, yy), strokeWidth = 1.3f * u, cap = StrokeCap.Round,
                 )
             }
-        }
-        if (logoA > 0f) {
-            Image(
-                painterResource(R.drawable.intro_logo), contentDescription = null,
-                modifier = Modifier.size(112.dp).offset(y = 6.dp).graphicsLayer {
-                    alpha = logoA
-                    val s = 0.8f + 0.2f * logoA
-                    scaleX = s; scaleY = s
-                },
-            )
+            // Schiff
+            val y = (ph + 120f * u) - (ph + 260f * u) * q
+            withTransform({ translate(cx, y); scale(1.15f * u, 1.15f * u, Offset.Zero) }) {
+                val k = env
+                val tl = 40f + 70f * k
+                val trail = Path().apply { moveTo(-5f, 12f); lineTo(5f, 12f); lineTo(1.2f, 12f + tl); lineTo(-1.2f, 12f + tl); close() }
+                drawPath(trail, Brush.verticalGradient(listOf(red.copy(alpha = 0.75f), red.copy(alpha = 0f)), startY = 10f, endY = 10f + tl))
+                drawCircle(
+                    Brush.radialGradient(listOf(red.copy(alpha = 0.45f), red.copy(alpha = 0f)), center = Offset(0f, 8f), radius = 46f),
+                    radius = 46f, center = Offset(0f, 8f),
+                )
+                val hull = Path().apply {
+                    moveTo(0f, -34f); lineTo(8f, -6f); lineTo(22f, 16f); lineTo(8f, 10f); lineTo(5f, 16f)
+                    lineTo(-5f, 16f); lineTo(-8f, 10f); lineTo(-22f, 16f); lineTo(-8f, -6f); close()
+                }
+                drawPath(hull, red.copy(alpha = 0.14f))
+                drawPath(hull, red, style = Stroke(width = 1.8f, join = StrokeJoin.Round))
+                drawLine(Color(0xFFFFAA9B).copy(alpha = 0.9f), Offset(0f, -22f), Offset(0f, -6f), strokeWidth = 1.4f)
+                val fl = 16f + 8f + 6f * k + 1.5f * sin(sec * 60f)
+                val flame = Path().apply { moveTo(-3f, 16f); lineTo(3f, 16f); lineTo(0f, fl); close() }
+                drawPath(flame, Color(0xFFFFC8B4).copy(alpha = 0.95f))
+            }
         }
     }
 }
+
+private fun introSpeed(q: Float): Float =
+    if (q < 0.45f) 0.8f - 0.45f * smooth(q / 0.45f) else 0.35f + 2.0f * smooth((q - 0.45f) / 0.55f)
 
 /**
  * Seitenwechsel: dünne Lichtlinie wächst aus der Mitte, ein Lichtpunkt gleitet immer wieder hindurch.
