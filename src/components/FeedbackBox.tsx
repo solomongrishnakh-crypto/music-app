@@ -111,7 +111,7 @@ export default function FeedbackBox() {
     "w-full rounded-md border border-white/10 bg-white/5 px-2.5 py-1.5 text-xs text-white placeholder-white/35 outline-none transition focus:border-accent/80 focus:bg-white/10";
   const pos = { bottom: "calc(env(safe-area-inset-bottom, 0px) + 84px)" } as const;
   // Sternenhimmel: kein schwebender Button, Feedback steckt im Menue der Ansicht
-  const sky = /\/sternenhimmel\/?$/.test(pathname);
+  const sky = /\/(sternenhimmel|night-sky)\/?$/.test(pathname);
 
   if (!open) {
     if (sky) return null;
