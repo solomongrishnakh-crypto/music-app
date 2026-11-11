@@ -308,8 +308,10 @@ export async function searchEmpires(query: string, lang: Lang): Promise<EmpireHi
 
   let order: string[];
   if (picked.length) {
-    const extra = [...exact.keys()].filter((n) => !picked.includes(n));
-    order = [...picked, ...extra];
+    // Genauer Treffer zuerst ("Heiliges Römisches Reich" darf nicht hinter allen
+    // römischen Reichen landen, nur weil der Name mit "Römisches Reich" beginnt).
+    const exactNames = [...exact.keys()];
+    order = [...exactNames, ...picked.filter((n) => !exact.has(n))];
   } else {
     order = [...direct.entries()]
       .sort((a, b) => b[1] - a[1] || (d.spans.get(a[0])?.from ?? 0) - (d.spans.get(b[0])?.from ?? 0))
