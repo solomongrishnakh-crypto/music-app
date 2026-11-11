@@ -4,7 +4,7 @@ import { findTopic } from "@/lib/probeTopics";
 
 const topic = findTopic("golden-record")!;
 export const metadata = topicMetadata(topic, "de");
-export const revalidate = 3600;
+export const revalidate = false;
 
 export default function Page() {
   if (!topic) notFound();

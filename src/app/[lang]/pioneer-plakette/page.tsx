@@ -6,7 +6,7 @@ import { findTopic } from "@/lib/probeTopics";
 /** Nur Englisch (/en/pioneer-plaque); andere Sprachen gibt es für diese Seite noch nicht. */
 const topic = findTopic("pioneer-plaque")!;
 type Props = { params: Promise<{ lang: string }> };
-export const revalidate = 3600;
+export const revalidate = false;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { lang } = await params;
