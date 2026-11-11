@@ -498,7 +498,6 @@ class MainActivity : ComponentActivity() {
         MusicBridge.appCtx = applicationContext
         ClickSound.init(applicationContext)
         Offline.start(applicationContext)
-        Thread { Eq.apply(applicationContext) }.start()
         try {
             @Suppress("DEPRECATION")
             val best = windowManager.defaultDisplay.supportedModes.maxByOrNull { it.refreshRate }

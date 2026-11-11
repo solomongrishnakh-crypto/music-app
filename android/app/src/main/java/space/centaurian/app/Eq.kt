@@ -15,7 +15,7 @@ object Eq {
 
     private fun sp(c: Context) = c.getSharedPreferences("cn", Context.MODE_PRIVATE)
 
-    @Synchronized private fun release() {
+    @Synchronized fun release() {
         try { eq?.release() } catch (_: Exception) { }
         try { bb?.release() } catch (_: Exception) { }
         try { le?.release() } catch (_: Exception) { }
@@ -54,7 +54,9 @@ object Eq {
 
     fun set(c: Context, b: Int, m: Int, t: Int, l: Boolean) {
         sp(c).edit().putInt("eq_b", b.coerceIn(-10, 10)).putInt("eq_m", m.coerceIn(-10, 10)).putInt("eq_t", t.coerceIn(-10, 10)).putBoolean("eq_l", l).apply()
-        apply(c)
+        // Nur anwenden, solange die App-Musik spielt: die Effekte liegen auf dem globalen
+        // Ausgang und wuerden sonst auch Spotify & Co. veraendern/daempfen.
+        if (MusicBridge.playing) apply(c) else release()
     }
 
     fun state(c: Context): String {

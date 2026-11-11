@@ -85,6 +85,7 @@ object MusicBridge {
         val c = appCtx ?: return
         if (on) try { Eq.ensure(c) } catch (_: Throwable) { }
         if (!on) {
+            try { Eq.release() } catch (_: Throwable) { }
             try { viz?.enabled = false; viz?.release() } catch (_: Exception) { }
             viz = null; level = -1f; return
         }
