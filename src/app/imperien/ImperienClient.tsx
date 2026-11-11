@@ -1074,9 +1074,21 @@ export default function ImperienClient() {
     if (!leafletReady || !mapContainerRef.current || mapRef.current) return;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const L = (window as any).L;
+    // Zurück von einer Reich-Seite: Kartenausschnitt wiederherstellen
+    let startCenter: [number, number] = [25, 15];
+    let startZoom = 2;
+    try {
+      const v = JSON.parse(sessionStorage.getItem("cn_imperien_view_v1") || "null");
+      if (v && Number.isFinite(v.lat) && Number.isFinite(v.lng) && Number.isFinite(v.zoom)) {
+        startCenter = [v.lat, v.lng];
+        startZoom = Math.min(7, Math.max(1, v.zoom));
+      }
+    } catch {
+      /* ignorieren */
+    }
     const map = L.map(mapContainerRef.current, {
-      center: [25, 15],
-      zoom: 2,
+      center: startCenter,
+      zoom: startZoom,
       minZoom: 1,
       maxZoom: 7,
       worldCopyJump: true,
@@ -1164,6 +1176,12 @@ export default function ImperienClient() {
     // Nach dem Verschieben: neu sichtbare Gebiete bekommen ihren Namen.
     let moveT: number | undefined;
     map.on("moveend", () => {
+      try {
+        const c = map.getCenter();
+        sessionStorage.setItem("cn_imperien_view_v1", JSON.stringify({ lat: c.lat, lng: c.lng, zoom: map.getZoom() }));
+      } catch {
+        /* ignorieren */
+      }
       layoutLabelsRef.current();
       window.clearTimeout(moveT);
       moveT = window.setTimeout(() => {
