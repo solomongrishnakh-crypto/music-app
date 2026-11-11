@@ -1091,6 +1091,9 @@ export default function ImperienClient() {
       zoom: startZoom,
       minZoom: 1,
       maxZoom: 7,
+      // Karte sperren: nicht über Nord-/Südrand hinaus verschiebbar (sonst schwarze Fläche)
+      maxBounds: [[-85, -540], [85, 540]],
+      maxBoundsViscosity: 1.0,
       worldCopyJump: true,
       fadeAnimation: false,
       markerZoomAnimation: false,
