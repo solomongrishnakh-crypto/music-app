@@ -95,11 +95,12 @@ export async function GET(req: NextRequest) {
     if ((authFails.get(ip) || []).length > 10) return NextResponse.json({ error: "rate limit" }, { status: 429 });
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
-  const blobs: { pathname: string; uploadedAt: Date }[] = [];
+  const blobs: { pathname: string; url: string; uploadedAt: Date }[] = [];
+  const errors: string[] = [];
   let cursor: string | undefined;
   for (let i = 0; i < 5; i++) {
     const res = await list({ prefix: PREFIX, cursor, limit: 200 });
-    for (const b of res.blobs) blobs.push({ pathname: b.pathname, uploadedAt: new Date(b.uploadedAt) });
+    for (const b of res.blobs) blobs.push({ pathname: b.pathname, url: b.url, uploadedAt: new Date(b.uploadedAt) });
     if (!res.hasMore) break;
     cursor = res.cursor;
   }
@@ -109,19 +110,28 @@ export async function GET(req: NextRequest) {
   for (let i = 0; i < top.length; i += 20) {
     const part = await Promise.all(
       top.slice(i, i + 20).map(async (b) => {
+        const parse = (t: string) => ({ id: b.pathname, ...(JSON.parse(t) as Record<string, unknown>) });
         try {
           const r = await get(b.pathname, { access: "private" });
-          if (!r || r.statusCode !== 200 || !r.stream) return null;
-          const data = JSON.parse(await new Response(r.stream).text()) as Record<string, unknown>;
-          return { id: b.pathname, ...data };
-        } catch {
-          return null;
+          if (r && r.statusCode === 200 && r.stream) return parse(await new Response(r.stream).text());
+          errors.push("get: Status " + (r ? r.statusCode : "leer"));
+        } catch (e) {
+          errors.push("get: " + (e instanceof Error ? e.message : String(e)));
         }
+        try {
+          const token = process.env.BLOB_READ_WRITE_TOKEN || "";
+          const r = await fetch(b.url, { headers: { authorization: "Bearer " + token }, cache: "no-store" });
+          if (r.ok) return parse(await r.text());
+          errors.push("fetch: Status " + r.status);
+        } catch (e) {
+          errors.push("fetch: " + (e instanceof Error ? e.message : String(e)));
+        }
+        return null;
       })
     );
     for (const p of part) if (p) items.push(p);
   }
-  return NextResponse.json({ items, total: blobs.length });
+  return NextResponse.json({ items, total: blobs.length, errors: errors.slice(0, 5) });
 }
 
 export async function DELETE(req: NextRequest) {

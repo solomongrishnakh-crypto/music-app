@@ -29,6 +29,7 @@ export default function FeedbackAdminPage() {
   const [items, setItems] = useState<Item[] | null>(null);
   const [total, setTotal] = useState(0);
   const [err, setErr] = useState("");
+  const [loadErr, setLoadErr] = useState("");
   const [busy, setBusy] = useState(false);
 
   async function load(key: string) {
@@ -40,7 +41,8 @@ export default function FeedbackAdminPage() {
       else if (r.status === 429) setErr("Zu viele Versuche, bitte spaeter erneut");
       else if (!r.ok) setErr("Fehler " + r.status);
       else {
-        const j = (await r.json()) as { items: Item[]; total: number };
+        const j = (await r.json()) as { items: Item[]; total: number; errors?: string[] };
+        setLoadErr((j.errors || []).join(" | "));
         setItems(j.items);
         setTotal(j.total);
         try {
@@ -104,7 +106,8 @@ export default function FeedbackAdminPage() {
               neu laden
             </button>
           </p>
-          {items.length === 0 && <p>Noch kein Feedback.</p>}
+          {items.length === 0 && <p>{total > 0 ? "Nachrichten vorhanden, aber nicht lesbar." : "Noch kein Feedback."}</p>}
+          {loadErr && <p style={{ color: "#ff6b6b", fontSize: 12, marginBottom: 12, wordBreak: "break-word" }}>Fehler: {loadErr}</p>}
           <div style={{ display: "grid", gap: 12 }}>
             {items.map((it) => (
               <article key={it.id} style={{ border: "1px solid #333", borderRadius: 10, padding: 14, background: "rgba(255,255,255,.04)" }}>
