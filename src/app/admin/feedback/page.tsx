@@ -28,6 +28,7 @@ export default function FeedbackAdminPage() {
   const [pw, setPw] = useState("");
   const [items, setItems] = useState<Item[] | null>(null);
   const [total, setTotal] = useState(0);
+  const [apk, setApk] = useState<{ total: number; last7: number } | null>(null);
   const [err, setErr] = useState("");
   const [loadErr, setLoadErr] = useState("");
   const [busy, setBusy] = useState(false);
@@ -41,7 +42,8 @@ export default function FeedbackAdminPage() {
       else if (r.status === 429) setErr("Zu viele Versuche, bitte spaeter erneut");
       else if (!r.ok) setErr("Fehler " + r.status);
       else {
-        const j = (await r.json()) as { items: Item[]; total: number; errors?: string[] };
+        const j = (await r.json()) as { items: Item[]; total: number; errors?: string[]; apk?: { total: number; last7: number } };
+        setApk(j.apk ?? null);
         setLoadErr((j.errors || []).join(" | "));
         setItems(j.items);
         setTotal(j.total);
@@ -101,6 +103,7 @@ export default function FeedbackAdminPage() {
       ) : (
         <div>
           <p style={{ opacity: 0.7, marginBottom: 16 }}>
+            {apk && <span style={{ display: "block", marginBottom: 6 }}>APK-Downloads (Webseite): {apk.total} gesamt · {apk.last7} in den letzten 7 Tagen</span>}
             {total} Nachrichten (neueste zuerst){" "}
             <button onClick={() => void load(readKey() || pw)} style={{ marginLeft: 8, textDecoration: "underline" }}>
               neu laden

@@ -131,7 +131,25 @@ export async function GET(req: NextRequest) {
     );
     for (const p of part) if (p) items.push(p);
   }
-  return NextResponse.json({ items, total: blobs.length, errors: errors.slice(0, 5) });
+  // APK-Downloads zaehlen (Dateien unter apk-dl/)
+  let apkTotal = 0;
+  let apk7 = 0;
+  try {
+    const weekAgo = Date.now() - 7 * 24 * 3600 * 1000;
+    let c: string | undefined;
+    for (let i = 0; i < 10; i++) {
+      const r = await list({ prefix: "apk-dl/", cursor: c, limit: 1000 });
+      for (const b of r.blobs) {
+        apkTotal++;
+        if (new Date(b.uploadedAt).getTime() >= weekAgo) apk7++;
+      }
+      if (!r.hasMore) break;
+      c = r.cursor;
+    }
+  } catch {
+    /* ignorieren */
+  }
+  return NextResponse.json({ items, total: blobs.length, errors: errors.slice(0, 5), apk: { total: apkTotal, last7: apk7 } });
 }
 
 export async function DELETE(req: NextRequest) {

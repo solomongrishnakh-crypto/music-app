@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 
-const APK_URL = "https://github.com/solomongrishnakh-crypto/music-app/releases/download/app-latest/Centaurian-web.apk";
+// Läuft über /api/apk (zählt den Download und leitet zu GitHub weiter)
+const APK_URL = "/api/apk";
 
 export default function DownloadRedirect() {
   useEffect(() => {
