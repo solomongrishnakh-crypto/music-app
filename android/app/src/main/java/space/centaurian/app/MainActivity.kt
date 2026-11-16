@@ -86,6 +86,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -1301,7 +1308,26 @@ private fun DrawerContent(
         val inf = androidx.compose.animation.core.rememberInfiniteTransition(label = "menu")
         inf.animateFloat(0f, 1f, androidx.compose.animation.core.infiniteRepeatable(androidx.compose.animation.core.tween(1800, easing = androidx.compose.animation.core.FastOutSlowInEasing), androidx.compose.animation.core.RepeatMode.Reverse), label = "pulse").value
     } else 0.5f
-    Box(Modifier.fillMaxSize()) {
+    val menuCtx = androidx.compose.ui.platform.LocalContext.current
+    val saver = remember(active) {
+        try { (menuCtx.getSystemService(android.content.Context.POWER_SERVICE) as android.os.PowerManager).isPowerSaveMode } catch (_: Exception) { false }
+    }
+    val finger = remember { FingerState() }
+    var origin by remember { mutableStateOf(Offset.Zero) }
+    CompositionLocalProvider(LocalFinger provides finger, LocalPowerSave provides saver) {
+    Box(
+        Modifier.fillMaxSize()
+            .onGloballyPositioned { origin = it.positionInRoot() }
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val ev = awaitPointerEvent(androidx.compose.ui.input.pointer.PointerEventPass.Initial)
+                        val c = ev.changes.firstOrNull()
+                        finger.pos = if (c != null && c.pressed) origin + c.position else null
+                    }
+                }
+            },
+    ) {
         if (anim) StarDust(active, Modifier.fillMaxSize())
         Column(Modifier.fillMaxSize().statusBarsPadding().navigationBarsPadding().verticalScroll(rememberScrollState()).padding(bottom = 12.dp)) {
             Row(Modifier.fillMaxWidth().clickable { onHome() }.padding(horizontal = 18.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -1333,7 +1359,7 @@ private fun DrawerContent(
                 if (f.isNotEmpty()) {
                     val isOpen = q.isNotBlank() || openGroup == title
                     Row(
-                        Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp).clip(RoundedCornerShape(10.dp))
+                        Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp).pressFx(RoundedCornerShape(10.dp))
                             .background(androidx.compose.ui.graphics.Brush.horizontalGradient(if (isOpen) listOf(Color(0x44FF5A4D), Color(0x0FFF5A4D)) else listOf(Color(0x1AFFFFFF), Color(0x05FFFFFF))))
                             .border(BorderStroke(1.dp, if (isOpen) Accent.copy(alpha = 0.35f + 0.45f * pulse) else LineSoft), RoundedCornerShape(10.dp))
                             .clickable(back = isOpen) { if (q.isBlank()) openGroup = if (isOpen) null else title }
@@ -1351,7 +1377,12 @@ private fun DrawerContent(
                         exit = androidx.compose.animation.shrinkVertically() + androidx.compose.animation.fadeOut(),
                     ) {
                         Column {
-                            f.forEach { sec -> DrawerRow("%02d".format(all.indexOf(sec) + 1), if (de) sec.de else sec.en, false) { onOpen(sec) } }
+                            f.chunked(2).forEach { pair ->
+                                Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 3.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    pair.forEach { sec -> DrawerTile(sectionIcon(sec.path), if (de) sec.de else sec.en, Modifier.weight(1f)) { onOpen(sec) } }
+                                    if (pair.size == 1) Spacer(Modifier.weight(1f))
+                                }
+                            }
                             Spacer(Modifier.height(4.dp))
                         }
                     }
@@ -1360,7 +1391,7 @@ private fun DrawerContent(
             if (q.isBlank()) {
                 Spacer(Modifier.height(10.dp))
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp).glassBox().clickable { onFeedback() }.padding(horizontal = 14.dp, vertical = 11.dp),
+                    Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp).pressFx(RoundedCornerShape(2.dp)).glassBox().clickable { onFeedback() }.padding(horizontal = 14.dp, vertical = 11.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text("✉", color = Accent, fontSize = 14.sp)
@@ -1370,7 +1401,7 @@ private fun DrawerContent(
                 }
                 val kofiCtx = androidx.compose.ui.platform.LocalContext.current
                 Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp).clip(RoundedCornerShape(12.dp)).background(Accent.copy(alpha = 0.14f))
+                    Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 2.dp).pressFx(RoundedCornerShape(12.dp)).background(Accent.copy(alpha = 0.14f))
                         .border(BorderStroke(1.dp, Accent), RoundedCornerShape(12.dp))
                         .clickable { try { kofiCtx.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://ko-fi.com/centaurian"))) } catch (_: Exception) { } }
                         .padding(horizontal = 14.dp, vertical = 8.dp),
@@ -1391,7 +1422,7 @@ private fun DrawerContent(
                         Triple("⚙", if (de) "Einstellungen" else Tr.t(lang, "Settings"), onSettings),
                     ).forEach { (ic, label, act) ->
                         Column(
-                            Modifier.weight(1f).clip(RoundedCornerShape(10.dp)).background(Color(0x0DFFFFFF))
+                            Modifier.weight(1f).pressFx(RoundedCornerShape(10.dp)).background(Color(0x0DFFFFFF))
                                 .border(BorderStroke(1.dp, LineSoft), RoundedCornerShape(10.dp)).clickable { act() }.padding(vertical = 10.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
@@ -1402,6 +1433,7 @@ private fun DrawerContent(
                 }
             }
         }
+    }
     }
 }
 
@@ -1443,6 +1475,95 @@ private fun StarDust(active: Boolean, modifier: Modifier = Modifier) {
             val f = kotlin.math.sin(t * 6.283f / p[6] + p[5]).coerceAtLeast(0f).let { it * it * it * it * it * it }
             drawCircle(Color(0xFFFFD9CC).copy(alpha = 0.22f + 0.78f * f), radius = p[4] * d * (1f + 0.5f * f), center = Offset(x, y))
         }
+    }
+}
+
+
+// ---------------------------------------------------------------- Druck-Effekt im Menue
+/** Merkt sich, wo der Finger gerade auf dem Menue liegt (Fensterkoordinaten). */
+private class FingerState { var pos by mutableStateOf<Offset?>(null) }
+private val LocalFinger = androidx.compose.runtime.compositionLocalOf { FingerState() }
+private val LocalPowerSave = androidx.compose.runtime.compositionLocalOf { false }
+
+/**
+ * Druck-Effekt: das Feld unter dem Finger federt leicht ein (bouncy) und ein Leuchtfleck folgt dem Finger.
+ * Im Energiesparmodus von Android gibt es nur das Federn, kein Leuchten.
+ */
+@Composable
+private fun Modifier.pressFx(shape: androidx.compose.ui.graphics.Shape): Modifier {
+    val finger = LocalFinger.current
+    val saver = LocalPowerSave.current
+    var rect by remember { mutableStateOf<androidx.compose.ui.geometry.Rect?>(null) }
+    val p = finger.pos
+    val r = rect
+    val inside = p != null && r != null && r.contains(p)
+    val local = if (inside) p!! - r!!.topLeft else null
+    var last by remember { mutableStateOf(Offset.Zero) }
+    SideEffect { if (local != null) last = local }
+    val scale by androidx.compose.animation.core.animateFloatAsState(
+        if (inside) 0.95f else 1f,
+        androidx.compose.animation.core.spring(
+            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+            stiffness = androidx.compose.animation.core.Spring.StiffnessMedium,
+        ),
+        label = "pressScale",
+    )
+    val glow by androidx.compose.animation.core.animateFloatAsState(
+        if (inside && !saver) 1f else 0f,
+        androidx.compose.animation.core.tween(180),
+        label = "pressGlow",
+    )
+    return this
+        .onGloballyPositioned { rect = it.boundsInRoot() }
+        .graphicsLayer { scaleX = scale; scaleY = scale }
+        .clip(shape)
+        .drawWithContent {
+            drawContent()
+            if (glow > 0.01f) {
+                val rad = 90.dp.toPx()
+                drawCircle(
+                    androidx.compose.ui.graphics.Brush.radialGradient(
+                        listOf(Color(0xFFFF7864).copy(alpha = 0.55f * glow), Color(0xFFFF5A4D).copy(alpha = 0.18f * glow), Color.Transparent),
+                        center = last, radius = rad,
+                    ),
+                    radius = rad, center = last,
+                )
+            }
+        }
+}
+
+private fun sectionIcon(path: String): String = when {
+    path.contains("#maschine") -> "∞"
+    path.contains("space-news") -> "◍"
+    path.startsWith("/sternenhimmel") -> "◉"
+    path.startsWith("/sonnensystem") -> "☉"
+    path.startsWith("/sternbilder") -> "✧"
+    path.startsWith("/himmel-heute") -> "☾"
+    path.startsWith("/groessenvergleich") -> "⇔"
+    path.startsWith("/weltraum-rechner") -> "∑"
+    path.startsWith("/reisezeit") -> "➤"
+    path.startsWith("/geburtstag") -> "✺"
+    path.startsWith("/imperien") -> "◈"
+    else -> "✦"
+}
+
+/** Kompakte Glas-Kachel fuer einen Menue-Eintrag (ohne Nummer). */
+@Composable
+private fun DrawerTile(icon: String, title: String, modifier: Modifier, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(8.dp)
+    Row(
+        modifier
+            .heightIn(min = 38.dp)
+            .pressFx(shape)
+            .background(Color(0x0DFFFFFF))
+            .border(BorderStroke(1.dp, LineSoft), shape)
+            .clickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null) { onClick() }
+            .padding(horizontal = 9.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(icon, color = Accent, fontSize = 12.sp, modifier = Modifier.width(16.dp))
+        Spacer(Modifier.size(6.dp))
+        Text(title.uppercase(), color = TextMain, fontSize = 9.sp, fontFamily = Mono, letterSpacing = 1.sp, lineHeight = 11.sp, maxLines = 2)
     }
 }
 
