@@ -263,7 +263,7 @@ class MusicService : Service() {
                     artUrl = c
                     Thread {
                         try {
-                            val bm = cropCover(java.net.URL(c).openStream().use { BitmapFactory.decodeStream(it) })
+                            val bm = cropCover((java.net.URL(c).openConnection().apply { connectTimeout = 8000; readTimeout = 8000 }).getInputStream().use { BitmapFactory.decodeStream(it) })
                             handler.post { art = bm; refresh() }
                         } catch (_: Exception) { }
                     }.start()
