@@ -81,11 +81,19 @@ object MusicBridge {
     private var viz: android.media.audiofx.Visualizer? = null
     private var vizMax = 40f
 
+    /** Alle Audio-Effekte sofort beenden (App wird geschlossen / Dienst endet), damit andere Apps (Spotify) nicht beeinflusst werden. */
+    @Synchronized fun shutdownFx() {
+        try { Eq.release() } catch (_: Throwable) { }
+        try { viz?.enabled = false; viz?.release() } catch (_: Exception) { }
+        viz = null; level = -1f
+    }
+
     @Synchronized fun vizSync(on: Boolean) {
         val c = appCtx ?: return
         if (on) try { Eq.ensure(c) } catch (_: Throwable) { }
         if (!on) {
-            try { Eq.release() } catch (_: Throwable) { }
+            // Verzoegert freigeben: kurze Aussetzer (Songwechsel, Laden) duerfen den Equalizer nicht zuruecksetzen.
+            try { Eq.releaseSoon() } catch (_: Throwable) { }
             try { viz?.enabled = false; viz?.release() } catch (_: Exception) { }
             viz = null; level = -1f; return
         }
@@ -173,6 +181,7 @@ object MusicBridge {
             }
         }
         want = false
+        shutdownFx()
     }
 
     fun click(kind0: String) {
@@ -394,6 +403,7 @@ class MusicService : Service() {
         handler.removeCallbacks(tick)
         session?.release()
         session = null
+        MusicBridge.shutdownFx()
         super.onDestroy()
     }
 }
