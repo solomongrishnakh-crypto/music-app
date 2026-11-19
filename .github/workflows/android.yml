@@ -88,3 +88,12 @@ jobs:
           path: android/app/build/outputs/bundle/playRelease/*.aab
           if-no-files-found: warn
           retention-days: 30
+      - name: AAB zusaetzlich im Release bereitstellen (zum Herunterladen ohne Login)
+        if: github.ref == 'refs/heads/main'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          F=$(ls android/app/build/outputs/bundle/playRelease/*.aab | head -1)
+          cp "$F" out/Centaurian-play.aab
+          gh release upload app-latest out/Centaurian-play.aab --clobber
