@@ -7,7 +7,7 @@ mkdir -p $O
 R=$O/report.txt
 shot() { adb exec-out screencap -p > "$O/$1.png"; }
 echo "== Emulator-Test ==" > $R
-adb install -r android/app/build/outputs/apk/debug/app-debug.apk >> $R 2>&1
+adb install -r android/app/build/outputs/apk/web/debug/app-web-debug.apk >> $R 2>&1
 adb shell pm grant $P android.permission.POST_NOTIFICATIONS >> $R 2>&1
 adb shell pm grant $P android.permission.RECORD_AUDIO >> $R 2>&1
 adb shell pm grant $P android.permission.ACCESS_FINE_LOCATION >> $R 2>&1

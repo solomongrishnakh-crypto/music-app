@@ -64,6 +64,7 @@ object Updater {
     }
 
     fun check(ctx: Context, manual: Boolean) {
+        if (!BuildConfig.SELF_UPDATE) return // Play-Variante: Updates macht der Store
         val app = ctx.applicationContext
         restore(app)
         if (!manual) {

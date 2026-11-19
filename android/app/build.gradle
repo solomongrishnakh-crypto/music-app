@@ -17,6 +17,20 @@ android {
         versionName "2.${vc}"
     }
 
+    // Zwei Varianten: "web" = APK von der Webseite (mit Selbst-Update),
+    // "play" = Play Store (ohne Selbst-Update, ohne Install-Berechtigung).
+    flavorDimensions 'dist'
+    productFlavors {
+        web {
+            dimension 'dist'
+            buildConfigField 'boolean', 'SELF_UPDATE', 'true'
+        }
+        play {
+            dimension 'dist'
+            buildConfigField 'boolean', 'SELF_UPDATE', 'false'
+        }
+    }
+
     // Signatur: im CI mit privatem Schluessel aus den GitHub-Secrets (CEN_KS / CEN_KS_PW),
     // lokal faellt sie auf den alten Test-Schluessel zurueck.
     signingConfigs {
@@ -36,9 +50,23 @@ android {
         }
     }
 
+    // Release (Play Store): gleicher Schluessel-Mechanismus wie oben. Ohne Schluessel entsteht ein unsigniertes Bundle.
+    signingConfigs {
+        release {
+            def rks = System.getenv('CEN_KS')
+            if (rks) {
+                storeFile file(rks)
+                storePassword System.getenv('CEN_KS_PW')
+                keyAlias 'centaurian'
+                keyPassword System.getenv('CEN_KS_PW')
+            }
+        }
+    }
+
     buildTypes {
         release {
             minifyEnabled false
+            if (System.getenv('CEN_KS')) signingConfig signingConfigs.release
         }
     }
     compileOptions {
@@ -50,6 +78,7 @@ android {
     }
     buildFeatures {
         compose true
+        buildConfig true
     }
 }
 

@@ -39,7 +39,7 @@ jobs:
           else
             echo "Signatur: alter Test-Schluessel"
           fi
-          if ! gradle -p android assembleDebug --no-daemon -Pvc=${{ github.run_number }} > "$RUNNER_TEMP/build.log" 2>&1; then
+          if ! gradle -p android assembleWebDebug --no-daemon -Pvc=${{ github.run_number }} > "$RUNNER_TEMP/build.log" 2>&1; then
             grep -E '^e: |error:|What went wrong' -A2 "$RUNNER_TEMP/build.log" | head -20 | while read -r l; do echo "::error::${l:0:300}"; done
             exit 1
           fi
@@ -47,7 +47,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: Centaurian-App
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          path: android/app/build/outputs/apk/web/debug/app-web-debug.apk
           retention-days: 30
       - name: Update fuer die App veroeffentlichen
         if: github.ref == 'refs/heads/main'
@@ -55,7 +55,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p out
-          cp android/app/build/outputs/apk/debug/app-debug.apk out/Centaurian.apk
+          cp android/app/build/outputs/apk/web/debug/app-web-debug.apk out/Centaurian.apk
           SHA=$(sha256sum out/Centaurian.apk | cut -d' ' -f1)
           SIZE=$(stat -c%s out/Centaurian.apk)
           echo "{\"code\": ${{ github.run_number }}, \"name\": \"2.${{ github.run_number }}\", \"sha256\": \"$SHA\", \"size\": $SIZE}" > out/version.json
@@ -69,3 +69,22 @@ jobs:
           gh release edit app-latest --notes "$(printf 'Automatische Updates fuer die Centaurian-App\nweb-downloads: %s' "$TOTAL")" || true
           cp out/Centaurian.apk out/Centaurian-web.apk
           gh release upload app-latest out/Centaurian.apk out/Centaurian-web.apk out/version.json --clobber
+
+      - name: Play-Store-Bundle bauen (AAB, ohne Selbst-Update)
+        continue-on-error: true
+        env:
+          KS_B64: ${{ secrets.KEYSTORE_B64 }}
+          CEN_KS_PW: ${{ secrets.KEYSTORE_PASSWORD }}
+        run: |
+          if [ -n "$KS_B64" ]; then
+            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+            export CEN_KS="$RUNNER_TEMP/release.jks"
+          fi
+          gradle -p android bundlePlayRelease --no-daemon -Pvc=${{ github.run_number }}
+      - name: AAB bereitstellen
+        uses: actions/upload-artifact@v4
+        with:
+          name: Centaurian-Play-AAB
+          path: android/app/build/outputs/bundle/playRelease/*.aab
+          if-no-files-found: warn
+          retention-days: 30

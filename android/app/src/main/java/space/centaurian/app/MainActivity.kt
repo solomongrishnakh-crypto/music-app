@@ -2055,6 +2055,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
             }
             GroupTitle("App")
             SetGroup {
+                if (BuildConfig.SELF_UPDATE) {
                 SetCard(
                     "update", if (de) "Nach Updates suchen" else Tr.t(lang, "Check for updates"),
                     when (Updater.msg) {
@@ -2066,6 +2067,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                     onClick = { Updater.check(ctx, true) },
                     first = true,
                 )
+                }
                 SetCard(
                     "share", if (de) "App teilen" else Tr.t(lang, "Share app"), if (de) "Link an Freunde schicken" else Tr.t(lang, "Send the link to friends"),
                     onClick = {
@@ -2073,6 +2075,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
                         ctx.startActivity(Intent.createChooser(i, "Centaurian"))
                     },
                     trailing = { Text("↗", color = Accent, fontSize = 18.sp) },
+                    first = !BuildConfig.SELF_UPDATE,
                 )
                 SetCard(
                     "lock", if (de) "Berechtigungen" else Tr.t(lang, "Permissions"),
