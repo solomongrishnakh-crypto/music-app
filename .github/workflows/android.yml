@@ -70,17 +70,21 @@ jobs:
           cp out/Centaurian.apk out/Centaurian-web.apk
           gh release upload app-latest out/Centaurian.apk out/Centaurian-web.apk out/version.json --clobber
 
-      - name: Play-Store-Bundle bauen (AAB, ohne Selbst-Update)
+      - name: Play-Store-Bundle bauen (AAB, signiert mit Upload-Schluessel)
         continue-on-error: true
         env:
-          KS_B64: ${{ secrets.KEYSTORE_B64 }}
-          CEN_KS_PW: ${{ secrets.KEYSTORE_PASSWORD }}
+          PLAY_KS_B64: ${{ secrets.PLAY_KS_B64 }}
+          CEN_UPLOAD_KS_PW: ${{ secrets.PLAY_KS_PW }}
         run: |
-          if [ -n "$KS_B64" ]; then
-            echo "$KS_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
-            export CEN_KS="$RUNNER_TEMP/release.jks"
+          if [ -z "$PLAY_KS_B64" ] || [ -z "$CEN_UPLOAD_KS_PW" ]; then
+            echo "::error::Secrets PLAY_KS_B64 und PLAY_KS_PW fehlen. Ohne Upload-Schluessel wird kein AAB gebaut."
+            exit 1
           fi
+          echo "$PLAY_KS_B64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          export CEN_UPLOAD_KS="$RUNNER_TEMP/upload.jks"
           gradle -p android bundlePlayRelease --no-daemon -Pvc=${{ github.run_number }}
+          # Pruefen, dass das Bundle wirklich signiert ist
+          jarsigner -verify android/app/build/outputs/bundle/playRelease/*.aab | head -3
       - name: AAB bereitstellen
         uses: actions/upload-artifact@v4
         with:

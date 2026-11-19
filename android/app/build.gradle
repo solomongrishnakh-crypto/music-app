@@ -50,15 +50,16 @@ android {
         }
     }
 
-    // Release (Play Store): gleicher Schluessel-Mechanismus wie oben. Ohne Schluessel entsteht ein unsigniertes Bundle.
+    // Release (Play Store): Upload-Schluessel kommt nur aus GitHub-Secrets (CEN_UPLOAD_KS / CEN_UPLOAD_KS_PW),
+    // nie aus dem Repo. Ohne Schluessel entsteht ein unsigniertes Bundle (das der Store ablehnt).
     signingConfigs {
         release {
-            def rks = System.getenv('CEN_KS')
-            if (rks) {
-                storeFile file(rks)
-                storePassword System.getenv('CEN_KS_PW')
-                keyAlias 'centaurian'
-                keyPassword System.getenv('CEN_KS_PW')
+            def uks = System.getenv('CEN_UPLOAD_KS')
+            if (uks) {
+                storeFile file(uks)
+                storePassword System.getenv('CEN_UPLOAD_KS_PW')
+                keyAlias 'upload'
+                keyPassword System.getenv('CEN_UPLOAD_KS_PW')
             }
         }
     }
@@ -66,7 +67,7 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            if (System.getenv('CEN_KS')) signingConfig signingConfigs.release
+            if (System.getenv('CEN_UPLOAD_KS')) signingConfig signingConfigs.release
         }
     }
     compileOptions {
