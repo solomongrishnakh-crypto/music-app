@@ -6,9 +6,9 @@ import { isPrefixedLang } from "@/lib/seoI18n";
 
 type Props = { params: Promise<{ lang: string; id: string }> };
 
-// 14 Sprachen × viele Objekte: erst beim ersten Aufruf erzeugen, dann stündlich auffrischen
+// 14 Sprachen × viele Objekte: erst beim ersten Aufruf erzeugen, dann täglich auffrischen
 export const dynamicParams = true;
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export function generateStaticParams() {
   return [];

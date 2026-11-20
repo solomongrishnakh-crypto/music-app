@@ -8,7 +8,7 @@ type Props = { params: Promise<{ id: string }> };
 
 export const dynamicParams = false;
 // Positionen von Planeten und Sonden stündlich neu berechnen
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export function generateStaticParams() {
   return SKY_ENTRIES.map((e) => ({ id: e.id }));

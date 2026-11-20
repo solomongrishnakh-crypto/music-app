@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import SkyTodayView, { skyTodayMetadata } from "@/components/space/SkyTodayView";
 import { isPrefixedLang } from "@/lib/seoI18n";
 
-/** Himmel heute in den anderen Sprachen (/en/himmel-heute …). Stündlich neu erzeugt. */
-export const revalidate = 3600;
+/** Himmel heute in den anderen Sprachen (/en/himmel-heute …). Täglich neu erzeugt. */
+export const revalidate = 86400;
 
 type Props = { params: Promise<{ lang: string }> };
 
