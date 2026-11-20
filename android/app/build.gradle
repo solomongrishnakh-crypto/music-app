@@ -6,12 +6,12 @@ plugins {
 
 android {
     namespace 'space.centaurian.app'
-    compileSdk 35
+    compileSdk 36
 
     defaultConfig {
         applicationId 'space.centaurian.app'
         minSdk 24
-        targetSdk 35
+        targetSdk 36
         def vc = (project.findProperty('vc') ?: '2').toInteger()
         versionCode vc
         versionName "2.${vc}"
