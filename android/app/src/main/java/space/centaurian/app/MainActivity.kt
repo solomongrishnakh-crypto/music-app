@@ -2112,7 +2112,7 @@ private fun SettingsScreen(lang: String, anim: Boolean, onBack: () -> Unit, onLa
             }
             GroupTitle(if (de) "Kontakt" else Tr.t(lang, "Contact"))
             Row(Modifier.fillMaxWidth().padding(horizontal = 14.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                listOf("plane" to "https://t.me/Perseus641", "x" to "https://x.com/capone_835").forEach { (ic, url) ->
+                listOf("plane" to "https://t.me/Perseus641").forEach { (ic, url) ->
                     Box(
                         Modifier.weight(1f).height(46.dp).clip(RoundedCornerShape(16.dp))
                             .background(androidx.compose.ui.graphics.Brush.linearGradient(listOf(Color(0x1FFF5A4D), Color(0x0DFFFFFF))))

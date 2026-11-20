@@ -96,7 +96,7 @@ export default function RootLayout({
                 name: "Centaurian",
                 url: "https://centaurianspace.com",
                 logo: "https://centaurianspace.com/icon.png",
-                sameAs: ["https://t.me/Perseus641", "https://x.com/capone_835"],
+                sameAs: ["https://t.me/Perseus641"],
               },
             }),
           }}

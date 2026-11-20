@@ -13,15 +13,6 @@ const CONTACTS = [
       </svg>
     ),
   },
-  {
-    label: "X",
-    href: "https://x.com/capone_835",
-    icon: (
-      <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        <path d="M13.6 10.6 21 2h-2l-6.4 7.4L7.6 2H2l7.7 11.2L2 22h2l6.8-7.9L16.4 22H22l-8.4-11.4Zm-2.4 2.8-.8-1.1L4.2 3.5h2.6l5 7.2.8 1.1 6.6 9.5h-2.6l-5.4-7.9Z" />
-      </svg>
-    ),
-  },
 ];
 
 /**
