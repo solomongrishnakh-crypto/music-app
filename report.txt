@@ -1,0 +1,31 @@
+== Emulator-Test ==
+Performing Streamed Install
+Success
+Starting: Intent { cmp=space.centaurian.app/.MainActivity }
+trace_00
+
+== Ruckeln (gfxinfo) ==
+Total frames rendered: 1
+Janky frames: 1 (100.00%)
+Janky frames (legacy): 1 (100.00%)
+50th percentile: 48ms
+90th percentile: 48ms
+95th percentile: 48ms
+99th percentile: 48ms
+50th gpu percentile: 18ms
+90th gpu percentile: 18ms
+95th gpu percentile: 18ms
+99th gpu percentile: 18ms
+
+== Abstuerze / ANR waehrend des Tests ==
+(Ende der Liste)
+
+== Sternenhimmel: Abstuerze / ANR ==
+(Ende der Liste)
+Total frames rendered: 1
+Janky frames: 1 (100.00%)
+Janky frames (legacy): 1 (100.00%)
+
+== Nach Wegwischen aus der Liste ==
+Prozess laeuft noch: 2058
+MusicService aktiv: 0
