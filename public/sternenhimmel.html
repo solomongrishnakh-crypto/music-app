@@ -1657,17 +1657,7 @@ function draw() {
     ctx.stroke(); ctx.restore();
   }
   // Himmelsgradnetz (Äquatorial: Rektaszension/Deklination), Schalter im Menü, standardmäßig aus
-  if (S.showGrid) {
-    // Auch am Tag sichtbar: heller und etwas kräftiger, damit es sich vom blauen Himmel abhebt
-    const gDay = 1 - starFade, gc = (n, d) => Math.round(n + (d - n) * gDay);
-    ctx.save(); ctx.lineWidth = 1;
-    const gl = (f) => { ctx.beginPath(); let pv = false; for (let t = 0; t <= 360; t += 3) { const q = f(t * DEG); const v = eqToEnu(q[0], Math.sin(q[1]), Math.cos(q[1]), tmpV); const ok = project(v, P) && P.z > -0.3 && (!S.atmo || v[2] > -0.02); if (ok) pv ? ctx.lineTo(P.x, P.y) : ctx.moveTo(P.x, P.y); pv = ok; } ctx.stroke(); };
-    ctx.strokeStyle = `rgba(${gc(120, 235)},${gc(170, 245)},255,${0.28 + 0.27 * gDay})`;
-    for (let d = -75; d <= 75; d += 15) { if (d === 0) continue; gl((t) => [t, d * DEG]); }
-    for (let h = 0; h < 24; h++) gl((t) => [h * 15 * DEG, (t > Math.PI ? t - 2 * Math.PI : t) / 2]);
-    ctx.strokeStyle = `rgba(${gc(120, 255)},${gc(200, 255)},255,${0.5 + 0.3 * gDay})`; ctx.lineWidth = 1.4; gl((t) => [t, 0]);
-    ctx.restore();
-  }
+  if (S.showGrid) drawSkyGrid(starFade, false);
   // Sternbilder (unter dem Horizont schwächer, wie durch Wasser).
   // Nutzerwunsch 03.10.2026: Linien nur beim Sternbild, auf das die Kamera
   // schaut (oder knapp daneben), weich ein-/ausgeblendet; feiner, mit Glanz.
@@ -2509,6 +2499,30 @@ function groundPath() {
   if (!nadirInside) path.rect(-2e5, -2e5, 4e5, 4e5);
   return path;
 }
+// Himmelsgradnetz (Äquatorial: Rektaszension/Deklination). Am Tag heller, damit es sich vom
+// blauen Himmel abhebt; below=true zeichnet den Teil unter dem Horizont (auf dem Wasser, gedämpft).
+function drawSkyGrid(starFade, below) {
+  const gDay = 1 - starFade, gc = (n, d) => Math.round(n + (d - n) * gDay);
+  ctx.save(); ctx.lineWidth = 1;
+  if (below) ctx.globalAlpha = 0.45;
+  const gl = (f) => {
+    ctx.beginPath(); let pv = false;
+    for (let t = 0; t <= 360; t += 3) {
+      const q = f(t * DEG);
+      const v = eqToEnu(q[0], Math.sin(q[1]), Math.cos(q[1]), tmpV);
+      const side = !S.atmo || (below ? v[2] <= 0.02 : v[2] >= -0.02);
+      const ok = project(v, P) && P.z > -0.3 && side;
+      if (ok) pv ? ctx.lineTo(P.x, P.y) : ctx.moveTo(P.x, P.y);
+      pv = ok;
+    }
+    ctx.stroke();
+  };
+  ctx.strokeStyle = `rgba(${gc(120, 235)},${gc(170, 245)},255,${0.28 + 0.27 * gDay})`;
+  for (let d = -75; d <= 75; d += 15) { if (d === 0) continue; gl((t) => [t, d * DEG]); }
+  for (let h = 0; h < 24; h++) gl((t) => [h * 15 * DEG, (t > Math.PI ? t - 2 * Math.PI : t) / 2]);
+  ctx.strokeStyle = `rgba(${gc(120, 255)},${gc(200, 255)},255,${0.5 + 0.3 * gDay})`; ctx.lineWidth = 1.4; gl((t) => [t, 0]);
+  ctx.restore();
+}
 function drawGround(day) {
   const gp = groundPath();
   ctx.beginPath();
@@ -2517,6 +2531,7 @@ function drawGround(day) {
   ctx.save();
   ctx.clip(gp, "evenodd");
   drawReflections(day);
+  if (S.showGrid && S.atmo) drawSkyGrid(Math.pow(1 - day, 3), true);
   ctx.restore();
   // gegenüberliegendes Ufer: Hügel + Baumreihe, fest an der Himmelsrichtung,
   // dazu ihr Spiegelbild im Wasser
