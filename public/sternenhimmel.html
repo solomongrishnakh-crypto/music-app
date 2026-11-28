@@ -501,7 +501,7 @@ resize();
 // und rötliche Gasnebel. Unter dem Horizont: Spiegelung im Wasser.
 let camOn = false;
 const glCanvas = document.getElementById("skygl");
-const glSky = (() => {
+function initGlSky() {
   let gl = null;
   try { gl = glCanvas.getContext("webgl", { alpha: false, antialias: false, preserveDrawingBuffer: true }); } catch { gl = null; }
   if (!gl) { glCanvas.style.display = "none"; return null; }
@@ -755,6 +755,7 @@ void main(){
   return {
     resize,
     render(day, fade, top, hor, water) {
+      if (gl.isContextLost()) return;
       if (glCanvas.width !== Math.round(W * gDpr) || glCanvas.height !== Math.round(H * gDpr)) resize();
       gl.uniform2f(U.uRes, glCanvas.width, glCanvas.height); gl.uniform1f(U.uDpr, gDpr); gl.uniform1f(U.uScale, cam.scale);
       gl.uniform1f(U.uLst, LST); gl.uniform1f(U.uSL, SL); gl.uniform1f(U.uCL, CL);
@@ -782,7 +783,12 @@ void main(){
       gl.drawArrays(gl.TRIANGLES, 0, 3);
     },
   };
-})();
+}
+let glSky = initGlSky();
+// Handy verwirft die Grafikfläche (z. B. nach dem Beenden der Kamera): Himmel sonst dauerhaft schwarz.
+// Dann Himmel nach Wiederherstellung der Grafikfläche neu aufbauen.
+glCanvas.addEventListener("webglcontextlost", (e) => { e.preventDefault(); }, false);
+glCanvas.addEventListener("webglcontextrestored", () => { glSky = initGlSky(); if (glSky) { glCanvas.style.display = ""; glSky.resize(); } }, false);
 
 
 // Himmelsrichtung → Einheitsvektor im Horizontsystem (x = Ost, y = Nord, z = oben)
@@ -3694,6 +3700,8 @@ function camStop() {
   camStream = null; camVid.srcObject = null;
   camOn = false; document.body.classList.remove("cam"); tCam.setAttribute("aria-pressed", "false"); camBox.hidden = true;
   glCanvas.style.opacity = "";
+  // Himmel nach dem Kamera-Ende neu aufbauen (sonst bleibt er auf manchen Handys schwarz)
+  if (glSky) { glCanvas.style.display = "none"; void glCanvas.offsetHeight; glCanvas.style.display = ""; glSky.resize(); }
   if (camFov0 !== null) { S.fov = camFov0; camFov0 = null; }
 }
 tCam.onclick = () => { if (camOn) camStop(); else camStart(); };
